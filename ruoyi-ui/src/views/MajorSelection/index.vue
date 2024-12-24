@@ -116,7 +116,6 @@ export default {
           }
         ]
       };
-
       // 使用刚定义的配置项更新图表
       myChart.setOption(option);
     }
