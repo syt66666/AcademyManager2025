@@ -71,12 +71,16 @@
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport"
           v-hasPermi="['student:student:export']">导出</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImport"
+          v-hasPermi="['system:user:import']">导入学生数据</el-button>
+      </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="studentList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" align="center" prop="id" />
+      <!-- <el-table-column label="序号" align="center" prop="id" /> -->
       <el-table-column label="学号" align="center" prop="学号" />
       <el-table-column label="姓名" align="center" prop="姓名" />
       <el-table-column label="管理部门" align="center" prop="管理部门" />
@@ -130,9 +134,9 @@
         <el-form-item label="性别" prop="性别">
           <el-input v-model="form.性别" placeholder="请输入性别" />
         </el-form-item>
-        <el-form-item label="密码" prop="password">
+        <!-- <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" placeholder="请输入密码" />
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
