@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.student.mapper.StudentMapper">
+    
+    <resultMap type="Student" id="StudentResult">
+        <result property="id"    column="id"    />
+        <result property="学号"    column="学号"    />
+        <result property="姓名"    column="姓名"    />
+        <result property="管理部门"    column="管理部门"    />
+        <result property="系统内专业"    column="系统内专业"    />
+        <result property="招生录取专业"    column="招生录取专业"    />
+        <result property="行政班"    column="行政班"    />
+        <result property="备注"    column="备注"    />
+        <result property="分流形式"    column="分流形式"    />
+        <result property="国家和高校专项计划学生标志"    column="国家和高校专项计划学生标志"    />
+        <result property="英文姓名"    column="英文姓名"    />
+        <result property="性别"    column="性别"    />
+        <result property="password"    column="password"    />
+    </resultMap>
+
+    <sql id="selectStudentVo">
+        select id, 学号, 姓名, 管理部门, 系统内专业, 招生录取专业, 行政班, 备注, 分流形式, 国家和高校专项计划学生标志, 英文姓名, 性别, password from student
+    </sql>
+
+    <select id="selectStudentList" parameterType="Student" resultMap="StudentResult">
+        <include refid="selectStudentVo"/>
+        <where>  
+            <if test="学号 != null  and 学号 != ''"> and 学号 = #{学号}</if>
+            <if test="姓名 != null  and 姓名 != ''"> and 姓名 = #{姓名}</if>
+            <if test="管理部门 != null  and 管理部门 != ''"> and 管理部门 = #{管理部门}</if>
+            <if test="系统内专业 != null  and 系统内专业 != ''"> and 系统内专业 = #{系统内专业}</if>
+            <if test="招生录取专业 != null  and 招生录取专业 != ''"> and 招生录取专业 = #{招生录取专业}</if>
+            <if test="行政班 != null  and 行政班 != ''"> and 行政班 = #{行政班}</if>
+            <if test="备注 != null  and 备注 != ''"> and 备注 = #{备注}</if>
+            <if test="分流形式 != null  and 分流形式 != ''"> and 分流形式 = #{分流形式}</if>
+            <if test="国家和高校专项计划学生标志 != null "> and 国家和高校专项计划学生标志 = #{国家和高校专项计划学生标志}</if>
+            <if test="英文姓名 != null  and 英文姓名 != ''"> and 英文姓名 = #{英文姓名}</if>
+            <if test="性别 != null  and 性别 != ''"> and 性别 = #{性别}</if>
+            <if test="password != null  and password != ''"> and password = #{password}</if>
+        </where>
+    </select>
+    
+    <select id="selectStudentById" parameterType="Long" resultMap="StudentResult">
+        <include refid="selectStudentVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertStudent" parameterType="Student" useGeneratedKeys="true" keyProperty="id">
+        insert into student
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="学号 != null and 学号 != ''">学号,</if>
+            <if test="姓名 != null and 姓名 != ''">姓名,</if>
+            <if test="管理部门 != null">管理部门,</if>
+            <if test="系统内专业 != null">系统内专业,</if>
+            <if test="招生录取专业 != null">招生录取专业,</if>
+            <if test="行政班 != null">行政班,</if>
+            <if test="备注 != null">备注,</if>
+            <if test="分流形式 != null">分流形式,</if>
+            <if test="国家和高校专项计划学生标志 != null">国家和高校专项计划学生标志,</if>
+            <if test="英文姓名 != null">英文姓名,</if>
+            <if test="性别 != null">性别,</if>
+            <if test="password != null and password != ''">password,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="学号 != null and 学号 != ''">#{学号},</if>
+            <if test="姓名 != null and 姓名 != ''">#{姓名},</if>
+            <if test="管理部门 != null">#{管理部门},</if>
+            <if test="系统内专业 != null">#{系统内专业},</if>
+            <if test="招生录取专业 != null">#{招生录取专业},</if>
+            <if test="行政班 != null">#{行政班},</if>
+            <if test="备注 != null">#{备注},</if>
+            <if test="分流形式 != null">#{分流形式},</if>
+            <if test="国家和高校专项计划学生标志 != null">#{国家和高校专项计划学生标志},</if>
+            <if test="英文姓名 != null">#{英文姓名},</if>
+            <if test="性别 != null">#{性别},</if>
+            <if test="password != null and password != ''">#{password},</if>
+         </trim>
+    </insert>
+
+    <update id="updateStudent" parameterType="Student">
+        update student
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="学号 != null and 学号 != ''">学号 = #{学号},</if>
+            <if test="姓名 != null and 姓名 != ''">姓名 = #{姓名},</if>
+            <if test="管理部门 != null">管理部门 = #{管理部门},</if>
+            <if test="系统内专业 != null">系统内专业 = #{系统内专业},</if>
+            <if test="招生录取专业 != null">招生录取专业 = #{招生录取专业},</if>
+            <if test="行政班 != null">行政班 = #{行政班},</if>
+            <if test="备注 != null">备注 = #{备注},</if>
+            <if test="分流形式 != null">分流形式 = #{分流形式},</if>
+            <if test="国家和高校专项计划学生标志 != null">国家和高校专项计划学生标志 = #{国家和高校专项计划学生标志},</if>
+            <if test="英文姓名 != null">英文姓名 = #{英文姓名},</if>
+            <if test="性别 != null">性别 = #{性别},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteStudentById" parameterType="Long">
+        delete from student where id = #{id}
+    </delete>
+
+    <delete id="deleteStudentByIds" parameterType="String">
+        delete from student where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
