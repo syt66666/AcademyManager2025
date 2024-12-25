@@ -1,6 +1,8 @@
 package com.ruoyi.system.service.impl;
 
 import com.ruoyi.system.domain.StudentInformation;
+import com.ruoyi.system.domain.StudentUserInformation;
+import com.ruoyi.system.domain.StudentUserRole;
 import com.ruoyi.system.mapper.StudentInformationMapper;
 import com.ruoyi.system.service.StudentInformationService;
 import org.apache.poi.ss.usermodel.Row;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -29,7 +32,9 @@ public class StudentInformationServiceImpl implements StudentInformationService 
      */
     @Override
     public void multipleInsertStudent(MultipartFile file) {
-        List<StudentInformation> list = new LinkedList<>();
+        List<StudentInformation> studentInformationList = new LinkedList<>();
+        List<StudentUserInformation> studentUserInformationList = new LinkedList<>();
+        List<StudentUserRole> studentUserRoleList = new LinkedList<>();
         Workbook workbook = null;
         try {
             // 创建一个工作簿对象
@@ -59,6 +64,7 @@ public class StudentInformationServiceImpl implements StudentInformationService 
             for (int i = 0; i < numberOfCells; i++) {
                 stu[i] = row.getCell(i).getStringCellValue();
             }
+            //学生信息表信息
             StudentInformation studentInformation = new StudentInformation();
             studentInformation.setStudentId(stu[0]);
             studentInformation.setStudentName(stu[1]);
@@ -71,10 +77,26 @@ public class StudentInformationServiceImpl implements StudentInformationService 
             studentInformation.setHaveQualification("是".equals(stu[8]) ? true : false);
             studentInformation.setEnglishName(stu[9]);
             studentInformation.setStudentSex(stu[10]);
-            studentInformation.setPassword("123");
-            list.add(studentInformation);
+            studentInformationList.add(studentInformation);
+            //系统登录用户表信息
+            StudentUserInformation studentUserInformation = new StudentUserInformation();
+            studentUserInformation.setStudentId(stu[0]);
+            studentUserInformation.setStudentName(stu[1]);
+            studentUserInformation.setStudentSex("男".equals(stu[10]) ? "0" : "1");
+            studentUserInformation.setCreateTime(LocalDateTime.now());
+            studentUserInformationList.add(studentUserInformation);
         }
-        studentInformationMapper.multipleInsertStudent(list);
+        studentInformationMapper.multipleInsertStudent(studentInformationList);
+        studentInformationMapper.multipleInsertStudentAccount(studentUserInformationList);
+        List<Integer> ids = studentInformationMapper.getInsertStudentAccountIds(studentUserInformationList);
+        for(Integer id : ids){
+            StudentUserRole studentUserRole = new StudentUserRole();
+            studentUserRole.setRoleId(101);
+            studentUserRole.setUserId(id);
+            studentUserRoleList.add(studentUserRole);
+        }
+        studentInformationMapper.multipleInsertUserRole(studentUserRoleList);
+
         System.out.println(132);
     }
 }

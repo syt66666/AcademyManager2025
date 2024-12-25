@@ -17,11 +17,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="国家和高校专项计划学生标志"    column="国家和高校专项计划学生标志"    />
         <result property="英文姓名"    column="英文姓名"    />
         <result property="性别"    column="性别"    />
-        <result property="password"    column="password"    />
     </resultMap>
 
     <sql id="selectStudentVo">
-        select id, 学号, 姓名, 管理部门, 系统内专业, 招生录取专业, 行政班, 备注, 分流形式, 国家和高校专项计划学生标志, 英文姓名, 性别, password from student
+        select id, 学号, 姓名, 管理部门, 系统内专业, 招生录取专业, 行政班, 备注, 分流形式, 国家和高校专项计划学生标志, 英文姓名, 性别 from student
     </sql>
 
     <select id="selectStudentList" parameterType="Student" resultMap="StudentResult">
@@ -38,7 +37,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="国家和高校专项计划学生标志 != null "> and 国家和高校专项计划学生标志 = #{国家和高校专项计划学生标志}</if>
             <if test="英文姓名 != null  and 英文姓名 != ''"> and 英文姓名 = #{英文姓名}</if>
             <if test="性别 != null  and 性别 != ''"> and 性别 = #{性别}</if>
-            <if test="password != null  and password != ''"> and password = #{password}</if>
         </where>
     </select>
     
@@ -61,7 +59,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="国家和高校专项计划学生标志 != null">国家和高校专项计划学生标志,</if>
             <if test="英文姓名 != null">英文姓名,</if>
             <if test="性别 != null">性别,</if>
-            <if test="password != null and password != ''">password,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="学号 != null and 学号 != ''">#{学号},</if>
@@ -75,7 +72,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="国家和高校专项计划学生标志 != null">#{国家和高校专项计划学生标志},</if>
             <if test="英文姓名 != null">#{英文姓名},</if>
             <if test="性别 != null">#{性别},</if>
-            <if test="password != null and password != ''">#{password},</if>
          </trim>
     </insert>
 
@@ -93,7 +89,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="国家和高校专项计划学生标志 != null">国家和高校专项计划学生标志 = #{国家和高校专项计划学生标志},</if>
             <if test="英文姓名 != null">英文姓名 = #{英文姓名},</if>
             <if test="性别 != null">性别 = #{性别},</if>
-            <if test="password != null and password != ''">password = #{password},</if>
         </trim>
         where id = #{id}
     </update>

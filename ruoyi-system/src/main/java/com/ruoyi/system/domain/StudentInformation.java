@@ -1,5 +1,8 @@
 package com.ruoyi.system.domain;
 
+/**
+ * 学生信息实体类
+ */
 public class StudentInformation {
     /**
      * 学生学号

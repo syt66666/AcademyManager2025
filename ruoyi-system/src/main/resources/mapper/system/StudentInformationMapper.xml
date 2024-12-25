@@ -5,11 +5,38 @@
 <mapper namespace="com.ruoyi.system.mapper.StudentInformationMapper">
     <insert id="multipleInsertStudent" parameterType="java.util.List">
         <!-- 向 sys_role_dept 表插入角色和部门的关联 -->
-        insert into student (学号, 姓名, 管理部门, 系统内专业, 招生录取专业, 行政班, 备注, 分流形式, 国家和高校专项计划学生标志, 英文姓名, 性别, password)
+        insert into student (学号, 姓名, 管理部门, 系统内专业, 招生录取专业, 行政班, 备注, 分流形式, 国家和高校专项计划学生标志, 英文姓名, 性别)
         values
         <foreach collection="list" item="student" separator=",">
             (#{student.studentId}, #{student.studentName}, #{student.studentAddress}, #{student.systemMajor}, #{student.enrollmentMajor}, #{student.studentClass},
-             #{student.studentNote}, #{student.studentDiversionForm}, #{student.haveQualification}, #{student.englishName}, #{student.studentSex}, #{student.password})
+             #{student.studentNote}, #{student.studentDiversionForm}, #{student.haveQualification}, #{student.englishName}, #{student.studentSex})
+        </foreach>
+    </insert>
+
+    <insert id="multipleInsertStudentAccount" parameterType="java.util.List">
+        <!-- 向 sys_role_dept 表插入角色和部门的关联 -->
+        insert into sys_user (user_name, nick_name, sex, password, create_time, remark)
+        values
+        <foreach collection="list" item="student" separator=",">
+            (#{student.studentId}, #{student.studentName}, #{student.studentSex}, #{student.password}, #{student.createTime}, #{student.remark})
+        </foreach>
+    </insert>
+
+    <select id="getInsertStudentAccountIds" parameterType="java.util.List" resultType="java.lang.Integer">
+        SELECT user_id
+        FROM sys_user
+        WHERE user_name IN
+        <foreach collection="list" item="student" open="(" separator="," close=")">
+            #{student.studentId}
+        </foreach>
+    </select>
+
+    <insert id="multipleInsertUserRole" parameterType="java.util.List">
+        <!-- 向 sys_role_dept 表插入角色和部门的关联 -->
+        insert into sys_user_role (user_id, role_id)
+        values
+        <foreach collection="list" item="student" separator=",">
+            (#{student.userId}, #{student.roleId})
         </foreach>
     </insert>
 </mapper>
