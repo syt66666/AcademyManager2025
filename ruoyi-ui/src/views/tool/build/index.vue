@@ -164,7 +164,7 @@ export default {
   },
   data() {
     return {
-      logo,
+      // logo,
       idGlobal: 100,
       formConf,
       inputComponents,
