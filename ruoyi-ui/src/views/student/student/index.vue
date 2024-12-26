@@ -103,44 +103,44 @@
 
     <!-- 添加或修改学生管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="姓名" prop="姓名">
-          <el-input v-model="form.姓名" placeholder="请输入姓名" />
-        </el-form-item>
-        <el-form-item label="管理部门" prop="管理部门">
-          <el-input v-model="form.管理部门" placeholder="请输入管理部门" />
-        </el-form-item>
-        <el-form-item label="系统内专业" prop="系统内专业">
-          <el-input v-model="form.系统内专业" placeholder="请输入系统内专业" />
-        </el-form-item>
-        <el-form-item label="招生录取专业" prop="招生录取专业">
-          <el-input v-model="form.招生录取专业" placeholder="请输入招生录取专业" />
-        </el-form-item>
-        <el-form-item label="行政班" prop="行政班">
-          <el-input v-model="form.行政班" placeholder="请输入行政班" />
-        </el-form-item>
-        <el-form-item label="备注" prop="备注">
-          <el-input v-model="form.备注" placeholder="请输入备注" />
-        </el-form-item>
-        <el-form-item label="分流形式" prop="分流形式">
-          <el-input v-model="form.分流形式" placeholder="请输入分流形式" />
-        </el-form-item>
-        <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
-          <el-input v-model="form.国家和高校专项计划学生标志" placeholder="请输入国家和高校专项计划学生标志" />
-        </el-form-item>
-        <el-form-item label="英文姓名" prop="英文姓名">
-          <el-input v-model="form.英文姓名" placeholder="请输入英文姓名" />
-        </el-form-item>
-        <el-form-item label="性别" prop="性别">
-          <el-input v-model="form.性别" placeholder="请输入性别" />
-        </el-form-item>
-        <!-- <el-form-item label="密码" prop="password">
-          <el-input v-model="form.password" placeholder="请输入密码" />
-        </el-form-item> -->
+      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
+        <form-item label="姓名" prop="name" v-model="form.name" placeholder="请输入姓名" />
+        <form-item label="管理部门" prop="department" v-model="form.department" placeholder="请输入管理部门" />
+        <form-item label="系统内专业" prop="majorInSystem" v-model="form.majorInSystem" placeholder="请输入系统内专业" />
+        <form-item label="招生录取专业" prop="admissionMajor" v-model="form.admissionMajor" placeholder="请输入招生录取专业" />
+        <form-item label="行政班" prop="administrativeClass" v-model="form.administrativeClass" placeholder="请输入行政班" />
+        <form-item label="备注" prop="remark" v-model="form.remark" placeholder="请输入备注" />
+        <form-item label="分流形式" prop="diversionForm" v-model="form.diversionForm" placeholder="请输入分流形式" />
+        <form-item label="国家和高校专项计划学生标志" prop="specialPlanFlag" v-model="form.specialPlanFlag"
+          placeholder="请输入国家和高校专项计划学生标志" />
+        <form-item label="英文姓名" prop="englishName" v-model="form.englishName" placeholder="请输入英文姓名" />
+        <form-item label="性别" prop="gender" v-model="form.gender" placeholder="请输入性别" />
+        <!-- <form-item label="密码" prop="password" v-model="form.password" placeholder="请输入密码" /> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 用户导入对话框 -->
+    <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
+      <el-upload ref="upload" :limit="1" accept=".xlsx, .xls" :headers="upload.headers"
+        :action="upload.url + '?updateSupport=' + upload.updateSupport" :disabled="upload.isUploading"
+        :on-progress="handleFileUploadProgress" :on-success="handleFileSuccess" :auto-upload="false" drag>
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div class="el-upload__tip text-center" slot="tip">
+          <div class="el-upload__tip" slot="tip">
+            <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据
+          </div>
+          <span>仅允许导入xls、xlsx格式文件。</span>
+          <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline"
+            @click="importTemplate">下载模板</el-link>
+        </div>
+      </el-upload>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFileForm">确 定</el-button>
+        <el-button @click="upload.open = false">取 消</el-button>
       </div>
     </el-dialog>
   </div>
@@ -148,11 +148,26 @@
 
 <script>
 import { listStudent, getStudent, delStudent, addStudent, updateStudent } from "@/api/student/student";
-
+import { getToken } from "@/utils/auth";
 export default {
   name: "Student",
   data() {
     return {
+      // 用户导入参数
+      upload: {
+        // 是否显示弹出层（用户导入）
+        open: false,
+        // 弹出层标题（用户导入）
+        title: "",
+        // 是否禁用上传
+        isUploading: false,
+        // 是否更新已经存在的用户数据
+        updateSupport: 0,
+        // 设置上传的请求头部
+        headers: { Authorization: "Bearer " + getToken() },
+        // 上传的地址
+        url: process.env.VUE_APP_BASE_API + "/student/excel/upload"
+      },
       // 遮罩层
       loading: true,
       // 选中数组
@@ -217,6 +232,33 @@ export default {
         this.loading = false;
       });
     },
+    /** 导入按钮操作 */
+    handleImport() {
+      this.upload.title = "用户导入";
+      this.upload.open = true;
+    },
+    /** 下载模板操作 */
+    importTemplate() {
+      this.download('system/user/importTemplate', {
+      }, `user_template_${new Date().getTime()}.xlsx`)
+    },
+    // 文件上传中处理
+    handleFileUploadProgress(event, file, fileList) {
+      this.upload.isUploading = true;
+    },
+    // 文件上传成功处理
+    handleFileSuccess(response, file, fileList) {
+      this.upload.open = false;
+      this.upload.isUploading = false;
+      this.$refs.upload.clearFiles();
+      this.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", { dangerouslyUseHTMLString: true });
+      this.getList();
+    },
+    // 提交上传文件
+    submitFileForm() {
+      this.$refs.upload.submit();
+    },
+
     // 取消按钮
     cancel() {
       this.open = false;
@@ -239,6 +281,7 @@ export default {
         性别: null,
         password: null
       };
+
       this.resetForm("form");
     },
     /** 搜索按钮操作 */
@@ -321,5 +364,10 @@ export default {
 <style scoped>
 .right-buttons {
   text-align: right;
+}
+
+/* 添加样式以优化布局 */
+.el-form-item {
+  margin-bottom: 15px;
 }
 </style>
