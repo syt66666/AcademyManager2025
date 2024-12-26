@@ -3,44 +3,51 @@
     <div class="questionnaire-form">
       <div v-for="(question, index) in currentDisplay" :key="question.id" class="question-container">
         <div class="question-box">
-          <h2>{{ index + 1 }}.{{ question.text }}</h2>
+          <h2>{{ index + 1 }}. {{ question.text }}</h2>
           <div class="options">
             <label v-for="option in question.options" :key="option.id">
               <input
                 type="radio"
                 :value="option.id"
                 v-model="selectedOptions[index]"
-
-                @click="selectOption(option, index)"/>
-<!--            :disabled="option.disabled || completed"-->
-
+                @click="handleOptionClick(option, index)"
+              />
               {{ option.text }}
             </label>
           </div>
         </div>
       </div>
-      <button v-if="completed " @click="submitQuestionnaire" class="submit-button">提交</button>
+      <button v-if="completed" @click="showConfirmDialog" class="submit-button">提交</button>
 
-
-
-      <!-- 弹窗内容 -->
-      <el-dialog :visible.sync="showEndMessage"  style="height: auto; width: auto" >
-        <el-card class="endMessageCard">
-        <div  class="end-message">
-
-          <h2>问卷结束，感谢您的参与！</h2>
-           <el-button @click="closeModal">关闭</el-button>
+      <!-- 提交确认弹窗 -->
+      <div v-if="showConfirmDialogFlag" class="dialog-container">
+        <div class="dialog-box">
+          <h2>确认提交</h2>
+          <p>您确定要提交问卷吗？</p>
+          <div class="dialog-footer">
+            <el-button @click="handleCancel">取消</el-button>
+            <el-button type="primary" @click="submitQuestionnaire" class="confirm-button">确认提交</el-button>
+          </div>
         </div>
-        </el-card>
-      </el-dialog>
+      </div>
 
+      <!-- 提交完成弹窗 -->
+      <div v-if="showEndMessage" class="dialog-container">
+        <div class="dialog-box end-message">
+          <span class="close-btn" @click="closeModal">&times;</span> <!-- 关闭按钮 -->
+          <h2>问卷结束，感谢您的参与！</h2>
+          <el-button @click="closeModal">关闭</el-button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
+
+
 <script>
 export default {
-  name: 'Questionnaire',
+  name: "Questionnaire",
   data() {
     return {
       questionnaire: [
@@ -250,123 +257,295 @@ export default {
           options: []
         }
       ],
-      displayedQuestions: [],
-      completed: false, //选中某专业
-      showEndMessage: false,// 控制结束消息的显示
-      currentDisplay: [], //当前展示的问题的数组
-      selectedOptions: []
+      currentDisplay: [], // 当前显示的问题列表
+      selectedOptions: [], // 用户选择的答案
+      completed: false, // 是否已完成
+      showEndMessage: false, // 弹窗显示状态
+      showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
     };
   },
-  computed: {
-
-  },
   methods: {
-    closeModal() {
-      this.showEndMessage = false; // 关闭弹窗
+    showConfirmDialog() {
+      this.showConfirmDialogFlag = true;  // 显示确认弹窗
     },
-    selectOption(option, index) {
-      this.completed = false;
-      if (option.next === null) {
-        this.completed = true;
-        // return;
-      }
+    // 初始化问卷
+    initializeQuestionnaire() {
+      this.currentDisplay.push(this.questionnaire[0]);
+    },
+    // 处理选项点击事件
+    handleOptionClick(option, index) {
+      this.completed = option.next === null;
       this.selectedOptions[index] = option.id;
-      //option.disabled = true;
-
-      // 清空当前显示的问题，除了第一个问题
       this.currentDisplay = this.currentDisplay.slice(0, index + 1);
-
-      // 添加新的问题到当前显示的问题列表
-      if (this.questionnaire[option.next - 1]) {
+      if (option.next !== null) {
         this.currentDisplay.push(this.questionnaire[option.next - 1]);
       }
     },
+    // 提交问卷
     submitQuestionnaire() {
-      this.showEndMessage = true;
-
+      this.showConfirmDialogFlag = false;  // 关闭确认弹窗
+      this.showEndMessage = true;  // 显示结束弹窗
     },
+    // 关闭弹窗
+    closeModal() {
+      this.showEndMessage = false;
+    },
+    // 取消提交
+    handleCancel() {
+      this.showConfirmDialogFlag = false;  // 关闭确认弹窗
+    }
   },
   mounted() {
-    // 初始化显示第一个问题
-    this.currentDisplay.push(this.questionnaire[0]);
-  }
+    this.initializeQuestionnaire();
+  },
 };
 </script>
 
 <style scoped>
-
 /* 问卷容器样式 */
 .questionnaire {
-  max-width: 600px; /* 问卷最大宽度 */
-  margin: 20px auto; /* 问卷居中显示 */
-  padding: 20px; /* 内边距 */
-  background-color: #f9f9f9; /* 背景颜色 */
-  border-radius: 8px; /* 圆角 */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 阴影 */
-  font-family: 'Arial', sans-serif; /* 字体 */
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  font-family: "Arial", sans-serif;
 }
 
-/* 问题标题样式 */
+/* 问题标题 */
 .questionnaire h2 {
-  margin-bottom: 10px; /* 下边距 */
-  font-size: 18px; /* 字体大小 */
-  color: #333; /* 字体颜色 */
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #333;
 }
 
-/* 单选题选项样式 */
-.questionnaire .option-button[type="radio"] {
-  margin-right: 5px; /* 右边距 */
+/* 选项样式 */
+.options label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #555;
 }
 
-/* 选项文本样式 */
-.questionnaire label {
-  display: inline-block; /* 行内块显示 */
-  margin-right: 20px; /* 右边距 */
-  font-size: 16px; /* 字体大小 */
-  color: #555; /* 字体颜色 */
+.options input[type="radio"] {
+  margin-right: 10px;
 }
 
-/* 提交按钮样式 */
+/* 提交按钮 */
 .submit-button {
-  display: block; /* 块级元素 */
-  width: 100%; /* 宽度100% */
-  padding: 10px; /* 内边距 */
-  margin-top: 20px; /* 上边距 */
-  background-color: #007bff; /* 背景颜色 */
-  color: white; /* 字体颜色 */
-  border: none; /* 无边框 */
-  border-radius: 5px; /* 圆角 */
-  cursor: pointer; /* 鼠标指针 */
-  font-size: 16px; /* 字体大小 */
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 20px;
+  background: linear-gradient(to right, #395cdc, #2b76de); /* 渐变背景 */
+  color: white;
+  border: none;
+  border-radius: 25px; /* 圆角按钮 */
+  cursor: pointer;
+  font-size: 18px; /* 增加字体大小 */
+  font-weight: bold;
+  text-align: center;
+  transition: all 0.3s ease; /* 增加动画效果 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 阴影效果 */
 }
 
-/* 提交按钮悬停效果 */
 .submit-button:hover {
-  background-color: #0056b3; /* 悬停时背景颜色 */
+  background: linear-gradient(to right,  #2b76de,#395cdc ); /* 反转渐变颜色 */
+  transform: translateY(-2px); /* 微微上移 */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* 增强阴影 */
 }
-.modal-background {
+
+.submit-button:active {
+  transform: translateY(1px); /* 按下时微微下移 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 减弱阴影 */
+}
+
+
+.dialog-container {
+  position: fixed; /* 固定定位，确保弹窗始终居中 */
+  top: 0;
+  left: 0;
+  width: 100vw; /* 全屏宽度 */
+  height: 100vh; /* 全屏高度 */
+  display: flex; /* 使用 Flexbox 布局 */
+  justify-content: center; /* 横向居中 */
+  align-items: center; /* 纵向居中 */
+  background-color: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+  z-index: 9999; /* 确保弹窗在最上层 */
+  animation: fadeIn 0.3s ease-out; /* 弹窗淡入动画 */
+}
+
+/* 弹窗内容容器 */
+.dialog-box {
+  background-color: #fff; /* 卡片背景颜色 */
+  border-radius: 12px; /* 圆角效果 */
+  padding: 40px 30px; /* 内边距 */
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); /* 卡片阴影 */
+  text-align: center;
+  width: 100%; /* 设置宽度为100%，确保容器自适应 */
+  max-width: 500px; /* 设置最大宽度 */
+  box-sizing: border-box; /* 包括内边距在内的宽度计算 */
+}
+
+/* 弹窗标题 */
+.dialog-box h2 {
+  font-size: 22px;
+  color: #395cdc; /* 蓝色字体 */
+  margin-bottom: 20px;
+}
+
+/* 弹窗内容 */
+.dialog-box p {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 30px; /* 增加底部间距 */
+}
+
+/* 弹窗按钮 */
+.dialog-footer {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+}
+
+.dialog-footer el-button {
+  width: 100px;
+}
+
+/* 确认弹窗按钮样式 */
+.confirm-button {
+  background-color: #395cdc; /* 蓝色背景 */
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.confirm-button:hover {
+  background-color: #2b76de; /* 蓝色渐变 */
+}
+
+.confirm-button:active {
+  background-color: #1f5bb5; /* 按下时颜色变化 */
+}
+
+/* 结束弹窗的具体样式调整 */
+.end-message h2 {
+  font-size: 24px;
+  color: #00b16a; /* 绿色字体 */
+}
+
+/* 弹窗动画 */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+/* 弹窗容器通用样式 */
+.dialog-container {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-out;
 }
 
-/* 弹窗内容样式 */
-.end-message {
-  background-color: white;
-  padding: 20px;
-  border-radius: 5px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+/* 弹窗内容容器 */
+.dialog-box {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 40px 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
   text-align: center;
+  width: 100%;
+  max-width: 500px;
+  position: relative; /* 使得子元素可以定位 */
+  box-sizing: border-box;
 }
 
-/* 关闭按钮样式 */
-.modal-content button {
-  margin-top: 10px;
+/* 右上角关闭按钮 */
+.dialog-box .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.dialog-box .close-btn:hover {
+  color: #000; /* 悬停时改变颜色 */
+}
+
+/* 弹窗标题 */
+.dialog-box h2 {
+  font-size: 22px;
+  color: #395cdc;
+  margin-bottom: 20px;
+}
+
+/* 弹窗内容 */
+.dialog-box p {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+/* 弹窗按钮 */
+.dialog-footer {
+  display: flex;
+  justify-content: space-around;
+  gap: 15px;
+}
+
+.dialog-footer el-button {
+  width: 100px;
+}
+
+/* 确认弹窗按钮样式 */
+.confirm-button {
+  background-color: #395cdc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.confirm-button:hover {
+  background-color: #2b76de;
+}
+
+.confirm-button:active {
+  background-color: #1f5bb5;
+}
+
+/* 结束弹窗的具体样式调整 */
+.end-message h2 {
+  font-size: 24px;
+  color: #00b16a;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>
+
+
