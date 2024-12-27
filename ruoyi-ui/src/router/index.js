@@ -29,8 +29,6 @@ import Layout from '@/layout'
  */
 
 
-
-
 // 公共路由
 export const constantRoutes = [
   //配置问卷路由
@@ -58,12 +56,6 @@ export const constantRoutes = [
       path: '/questionnaire/4',
       component: () => import('@/views/Questionnaires/Questionnaire4'),
       name: 'Questionnaire4',
-      props: true
-    },
-    {
-      path: '/questionnaire/5',
-      component: () => import('@/views/Questionnaires/Questionnaire5'),
-      name: 'Questionnaire5',
       props: true
     },
   {

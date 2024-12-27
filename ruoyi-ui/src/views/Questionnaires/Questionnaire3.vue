@@ -66,9 +66,9 @@ export default {
           id: 2,
           text: '如果进行类内任选，将选择的普通专业是 [单选题]',
           options: [
-            {id: 1, text: '设计学类——视觉传达设计', next: 3},
-            {id: 2, text: '设计学类——环境设计', next: 4},
-            {id: 3, text: '设计学类——雕塑', next: 5},
+            {id: 1, text: '设计学类——视觉传达设计', next: null},
+            {id: 2, text: '设计学类——环境设计', next: null},
+            {id: 3, text: '设计学类——雕塑', next: null},
           ]
         },
         {
@@ -82,11 +82,11 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
+      finalAnswerText : ' '
     };
   },
 
   methods: {
-
     showConfirmDialog() {
       this.showConfirmDialogFlag = true;  // 显示确认弹窗
     },
@@ -96,30 +96,39 @@ export default {
     },
     // 处理选项点击事件
     handleOptionClick(option, index) {
+      // 更新最后一个选项
+      this.finalAnswerText=option.text;
+      // 使用 Vue 的响应式方法确保 selectedOptions 更新正确
+      this.$set(this.selectedOptions, index, option.id);
+
+      // 更新 completed 状态：如果选择了最后一个问题，则完成问卷
       this.completed = option.next === null;
-      this.selectedOptions[index] = option.id;
-      this.currentDisplay = this.currentDisplay.slice(0, index + 1);
+
+      // 根据选项的 next 属性更新显示的问题
+      this.currentDisplay = this.currentDisplay.slice(0, index + 1);  // 保持当前已经回答的问题
+
       if (option.next !== null) {
-        this.currentDisplay.push(this.questionnaire[option.next - 1]);
+        const nextQuestion = this.questionnaire.find(q => q.id === option.next);
+        if (nextQuestion) {
+          this.currentDisplay.push(nextQuestion);  // 添加下一个问题
+        }
       }
     },
-    // 提交问卷
+
+
+    //提交问卷
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false;  // 关闭确认弹窗
       this.showEndMessage = true;  // 显示结束弹窗
-      console.log('questionnaireId');
-      // 获取用户最后一个问题的答案
-      const finalAnswer = this.selectedOptions[this.selectedOptions.length - 1];
 
-      // 提交答案到后台
+      // 提交最后一个问题的答案到后台
       axios
         .post('http://localhost:3000/questionnaire/submit', {
-        user_id: 66666, // 用户ID，示例为1
-        questionnaire_id: this.questionnaireId, // 确保包含 questionnaireId
-        answer: finalAnswer// 最后一个问题的答案
-      })
+          user_id: 1, // 用户ID，示例为1
+          questionnaire_id: this.questionnaireId,
+          answer: this.finalAnswerText  // 只提交最后一个问题的答案
+        })
         .then(response => {
-          console.log("问卷提交成功:", response);
           setTimeout(() => {
             this.$router.push('/Questionnaires');
           }, 2000);  // 2000毫秒即2秒
@@ -140,10 +149,9 @@ export default {
   },
   mounted() {
     this.initializeQuestionnaire();
-    // 使用 questionnaireId 来加载问卷的详细数据
-    console.log('加载问卷详情 ID:', this.questionnaireId);
   }
 };
+
 
 </script>
 

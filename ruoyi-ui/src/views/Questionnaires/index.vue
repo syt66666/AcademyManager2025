@@ -22,7 +22,6 @@ export default {
         {id: 2, title: '问卷2', description: '可类内任选，并转专业'},
         {id: 3, title: '问卷3', description: '可类内任选，不能转专业'},
         {id: 4, title: '问卷4', description: '可域内任选，并转专业'},
-        {id: 5, title: '问卷5', description: '测试'}
       ]
     };
   },
@@ -45,12 +44,6 @@ export default {
   text-align: center;
 }
 
-.title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #395cdc;
-  margin-bottom: 30px;
-}
 
 .questionnaire-grid {
   display: grid;

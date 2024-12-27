@@ -44,12 +44,14 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
 
   name: "Questionnaire",
   data() {
     return {
-      questionnaireId: this.$route.params.id, // 获取动态路由参数
+      questionnaireId: this.$route.query.num, // 获取动态路由参数
       questionnaire: [
         {
           id: 1,
@@ -262,11 +264,10 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
+      finalAnswerText : ' '
     };
   },
-
   methods: {
-
     showConfirmDialog() {
       this.showConfirmDialogFlag = true;  // 显示确认弹窗
     },
@@ -276,22 +277,46 @@ export default {
     },
     // 处理选项点击事件
     handleOptionClick(option, index) {
+      // 更新最后一个选项
+      this.finalAnswerText=option.text;
+      // 使用 Vue 的响应式方法确保 selectedOptions 更新正确
+      this.$set(this.selectedOptions, index, option.id);
+
+      // 更新 completed 状态：如果选择了最后一个问题，则完成问卷
       this.completed = option.next === null;
-      this.selectedOptions[index] = option.id;
-      this.currentDisplay = this.currentDisplay.slice(0, index + 1);
+
+      // 根据选项的 next 属性更新显示的问题
+      this.currentDisplay = this.currentDisplay.slice(0, index + 1);  // 保持当前已经回答的问题
+
       if (option.next !== null) {
-        this.currentDisplay.push(this.questionnaire[option.next - 1]);
+        const nextQuestion = this.questionnaire.find(q => q.id === option.next);
+        if (nextQuestion) {
+          this.currentDisplay.push(nextQuestion);  // 添加下一个问题
+        }
       }
     },
-    // 提交问卷
+
+
+    //提交问卷
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false;  // 关闭确认弹窗
       this.showEndMessage = true;  // 显示结束弹窗
 
-      // 2s后跳转到原来的选择问卷页面
-      setTimeout(() => {
-        this.$router.push('/Questionnaires');
-      }, 2000);  // 2000毫秒即2秒
+      // 提交最后一个问题的答案到后台
+      axios
+        .post('http://localhost:3000/questionnaire/submit', {
+          user_id: 1, // 用户ID，示例为1
+          questionnaire_id: this.questionnaireId,
+          answer: this.finalAnswerText  // 只提交最后一个问题的答案
+        })
+        .then(response => {
+          setTimeout(() => {
+            this.$router.push('/Questionnaires');
+          }, 2000);  // 2000毫秒即2秒
+        })
+        .catch(error => {
+          console.error('提交失败:', error);
+        });
     },
 
     // 关闭弹窗
@@ -305,10 +330,9 @@ export default {
   },
   mounted() {
     this.initializeQuestionnaire();
-      // 使用 questionnaireId 来加载问卷的详细数据
-      console.log('加载问卷详情 ID:', this.questionnaireId);
-  },
+  }
 };
+
 
 </script>
 
