@@ -4,9 +4,7 @@
       <el-form-item label="模板名称" prop="name">
         <el-input v-model="queryParams.name" placeholder="请输入模板名称" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="创建人ID" prop="userId">
-        <el-input v-model="queryParams.userId" placeholder="请输入创建人ID" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -38,9 +36,6 @@
       <el-table-column label="序号" align="center" prop="id" />
       <el-table-column label="问卷名称" align="center" prop="name" />
       <el-table-column label="问卷描述" align="center" prop="descr" />
-      <!-- <el-table-column label="封面图" align="center" prop="img" /> -->
-      <!-- <el-table-column label="使用次数" align="center" prop="count" /> -->
-      <!--      <el-table-column label="创建人ID" align="center" prop="userId" />-->
       <el-table-column label="是否公开" align="center" prop="open" />
       <el-table-column label="是否发布" align="center" prop="saved" />
       <el-table-column label="创建时间" align="center" prop="createTime" />
@@ -65,12 +60,6 @@
         </el-form-item>
         <el-form-item label="模板介绍" prop="descr">
           <el-input v-model="form.descr" placeholder="请输入模板介绍" />
-        </el-form-item>
-        <el-form-item label="封面图" prop="img">
-          <el-input v-model="form.img" placeholder="请输入封面图" />
-        </el-form-item>
-        <el-form-item label="创建人ID" prop="userId">
-          <el-input v-model="form.userId" placeholder="请输入创建人ID" />
         </el-form-item>
         <el-form-item label="是否公开" prop="open">
           <el-input v-model="form.open" placeholder="请输入是否公开" />
@@ -117,7 +106,6 @@ export default {
         pageNum: 1,
         pageSize: 10,
         name: null,
-        userId: null,
       },
       // 表单参数
       form: {},
@@ -150,9 +138,6 @@ export default {
         id: null,
         name: null,
         descr: null,
-        img: null,
-        count: null,
-        userId: null,
         createTime: null,
         open: null,
         saved: null
