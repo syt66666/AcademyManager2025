@@ -1,20 +1,25 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+    <!-- <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+      <el-form-item label="创建时间" prop="createdAt">
+        <el-date-picker clearable v-model="queryParams.createdAt" type="date" value-format="yyyy-MM-dd"
+          placeholder="请选择创建时间">
+        </el-date-picker>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
-
+ -->
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-          v-hasPermi="['system:questions:add']">新增</el-button>
+          v-hasPermi="['system:questions:add']">新增试题</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate"
-          v-hasPermi="['system:questions:edit']">修改</el-button>
+          v-hasPermi="['system:questions:edit']">修改试题</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete"
@@ -30,15 +35,18 @@
     <el-table v-loading="loading" :data="questionsList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" />
-      <el-table-column label="${comment}" align="center" prop="questionnaireId" />
-      <el-table-column label="${comment}" align="center" prop="text" />
-      <el-table-column label="${comment}" align="center" prop="type" />
-      <el-table-column label="${comment}" align="center" prop="orderIndex" />
-      <el-table-column label="${comment}" align="center" prop="nextQuestionId" />
+      <el-table-column label="问卷编号" align="center" prop="questionnaireId" />
+      <el-table-column label="题目类型" align="center" prop="text" />
+      <!-- <el-table-column label="题目类型" align="center" prop="type" /> -->
+      <el-table-column label="创建时间" align="center" prop="createdAt" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.createdAt, '{y}-{m}-{d}') }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:questions:edit']">修改</el-button>
+            v-hasPermi="['system:questions:edit']">编辑</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
             v-hasPermi="['system:questions:remove']">删除</el-button>
         </template>
@@ -51,18 +59,29 @@
     <!-- 添加或修改试题管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="${comment}" prop="questionnaireId">
-          <el-input v-model="form.questionnaireId" placeholder="请输入${comment}" />
+        <el-form-item label="问卷类型" prop="questionnaireId">
+          <el-input v-model="form.questionnaireId" placeholder="请输入问卷类型" />
         </el-form-item>
-        <el-form-item label="${comment}" prop="text">
-          <el-input v-model="form.text" type="textarea" placeholder="请输入内容" />
+
+        <el-form-item label="题目类型">
+          <el-select v-model="form.text" placeholder="请选择题目类型">
+            <el-option label="单选题" value="单选题"></el-option>
+            <el-option label="多选题" value="多选题"></el-option>
+            <el-option label="单文本" value="单文本"></el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="${comment}" prop="orderIndex">
-          <el-input v-model="form.orderIndex" placeholder="请输入${comment}" />
+        <el-form-item label="题目排序" prop="orderIndex">
+          <el-input v-model="form.orderIndex" placeholder="请输入题目排序" />
         </el-form-item>
-        <el-form-item label="${comment}" prop="nextQuestionId">
-          <el-input v-model="form.nextQuestionId" placeholder="请输入${comment}" />
+        <el-form-item label="下一题id" prop="nextQuestionId">
+          <el-input v-model="form.nextQuestionId" placeholder="请输入下一题id" />
         </el-form-item>
+
+        <!--  <el-form-item label="下一题" prop="createdAt">
+          <el-date-picker clearable v-model="form.createdAt" type="date" value-format="yyyy-MM-dd"
+            placeholder="请选择${comment}">
+          </el-date-picker>
+        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -101,22 +120,15 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        text: null,
         type: null,
+        createdAt: null
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
-        questionnaireId: [
-          { required: true, message: "$comment不能为空", trigger: "blur" }
-        ],
         text: [
-          { required: true, message: "$comment不能为空", trigger: "blur" }
-        ],
-        type: [
-          { required: true, message: "$comment不能为空", trigger: "change" }
-        ],
-        orderIndex: [
           { required: true, message: "$comment不能为空", trigger: "blur" }
         ],
       }
@@ -148,7 +160,9 @@ export default {
         text: null,
         type: null,
         orderIndex: null,
-        nextQuestionId: null
+        nextQuestionId: null,
+        nextQuestionType: '',
+        createdAt: null
       };
       this.resetForm("form");
     },

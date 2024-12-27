@@ -20,7 +20,7 @@ export function getStudent(id) {
 // 新增学生管理
 export function addStudent(data) {
   return request({
-    url: '/student/student',
+    url: '/student/insert',
     method: 'post',
     data: data
   })

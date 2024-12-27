@@ -1,5 +1,7 @@
 package com.ruoyi.system.domain;
 
+import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
@@ -32,12 +34,14 @@ public class Questions extends BaseEntity
     private String type;
 
     /** $column.columnComment */
-    @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
     private Long orderIndex;
 
     /** $column.columnComment */
-    @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
     private Long nextQuestionId;
+
+    /** $column.columnComment */
+    @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
+    private Date createdAt;
 
     public void setId(Long id) 
     {
@@ -93,6 +97,15 @@ public class Questions extends BaseEntity
     {
         return nextQuestionId;
     }
+    public void setCreatedAt(Date createdAt) 
+    {
+        this.createdAt = createdAt;
+    }
+
+    public Date getCreatedAt() 
+    {
+        return createdAt;
+    }
 
     @Override
     public String toString() {
@@ -103,6 +116,7 @@ public class Questions extends BaseEntity
             .append("type", getType())
             .append("orderIndex", getOrderIndex())
             .append("nextQuestionId", getNextQuestionId())
+            .append("createdAt", getCreatedAt())
             .toString();
     }
 }
