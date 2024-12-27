@@ -7,25 +7,25 @@ public class StudentUserRole {
     /**
      * 用户id
      */
-    private Integer userId;
+    private int userId;
     /**
      * 角色id
      */
-    private Integer roleId;
+    private int roleId;
 
-    public Integer getRoleId() {
+    public int getRoleId() {
         return roleId;
     }
 
-    public void setRoleId(Integer roleId) {
+    public void setRoleId(int roleId) {
         this.roleId = roleId;
     }
 
-    public Integer getUserId() {
+    public int getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(int userId) {
         this.userId = userId;
     }
 }

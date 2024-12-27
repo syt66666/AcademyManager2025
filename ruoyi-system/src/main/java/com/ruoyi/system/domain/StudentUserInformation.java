@@ -7,6 +7,10 @@ import java.time.LocalDateTime;
  */
 public class StudentUserInformation {
     /**
+     * 主键id
+     */
+    private int id;
+    /**
      * 学号
      */
     private String studentId;
@@ -78,5 +82,13 @@ public class StudentUserInformation {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }
