@@ -51,8 +51,8 @@ public class StudentInformation {
 
     /**
      *登录密码（默认123）
-     */
-    private String password;
+     *//*
+    private String password;*/
 
     public String getStudentId() {
         return studentId;
@@ -142,11 +142,11 @@ public class StudentInformation {
         this.studentDiversionForm = studentDiversionForm;
     }
 
-    public String getPassword() {
+   /* public String getPassword() {
         return password;
     }
 
     public void setPassword(String password) {
         this.password = password;
-    }
+    }*/
 }

@@ -11,16 +11,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="type"    column="type"    />
         <result property="orderIndex"    column="order_index"    />
         <result property="nextQuestionId"    column="next_question_id"    />
+        <result property="createdAt"    column="created_at"    />
     </resultMap>
 
     <sql id="selectQuestionsVo">
-        select id, questionnaire_id, text, type, order_index, next_question_id from questions
+        select id, questionnaire_id, text, type, order_index, next_question_id, created_at from questions
     </sql>
 
     <select id="selectQuestionsList" parameterType="Questions" resultMap="QuestionsResult">
         <include refid="selectQuestionsVo"/>
         <where>  
+            <if test="text != null  and text != ''"> and text = #{text}</if>
             <if test="type != null  and type != ''"> and type = #{type}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
         </where>
     </select>
     
@@ -34,16 +37,18 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="questionnaireId != null">questionnaire_id,</if>
             <if test="text != null and text != ''">text,</if>
-            <if test="type != null and type != ''">type,</if>
+            <if test="type != null">type,</if>
             <if test="orderIndex != null">order_index,</if>
             <if test="nextQuestionId != null">next_question_id,</if>
+            <if test="createdAt != null">created_at,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="questionnaireId != null">#{questionnaireId},</if>
             <if test="text != null and text != ''">#{text},</if>
-            <if test="type != null and type != ''">#{type},</if>
+            <if test="type != null">#{type},</if>
             <if test="orderIndex != null">#{orderIndex},</if>
             <if test="nextQuestionId != null">#{nextQuestionId},</if>
+            <if test="createdAt != null">#{createdAt},</if>
          </trim>
     </insert>
 
@@ -52,9 +57,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="questionnaireId != null">questionnaire_id = #{questionnaireId},</if>
             <if test="text != null and text != ''">text = #{text},</if>
-            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="type != null">type = #{type},</if>
             <if test="orderIndex != null">order_index = #{orderIndex},</if>
             <if test="nextQuestionId != null">next_question_id = #{nextQuestionId},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
         </trim>
         where id = #{id}
     </update>

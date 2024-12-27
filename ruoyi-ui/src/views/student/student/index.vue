@@ -103,19 +103,43 @@
 
     <!-- 添加或修改学生管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-        <form-item label="姓名" prop="name" v-model="form.name" placeholder="请输入姓名" />
-        <form-item label="管理部门" prop="department" v-model="form.department" placeholder="请输入管理部门" />
-        <form-item label="系统内专业" prop="majorInSystem" v-model="form.majorInSystem" placeholder="请输入系统内专业" />
-        <form-item label="招生录取专业" prop="admissionMajor" v-model="form.admissionMajor" placeholder="请输入招生录取专业" />
-        <form-item label="行政班" prop="administrativeClass" v-model="form.administrativeClass" placeholder="请输入行政班" />
-        <form-item label="备注" prop="remark" v-model="form.remark" placeholder="请输入备注" />
-        <form-item label="分流形式" prop="diversionForm" v-model="form.diversionForm" placeholder="请输入分流形式" />
-        <form-item label="国家和高校专项计划学生标志" prop="specialPlanFlag" v-model="form.specialPlanFlag"
-          placeholder="请输入国家和高校专项计划学生标志" />
-        <form-item label="英文姓名" prop="englishName" v-model="form.englishName" placeholder="请输入英文姓名" />
-        <form-item label="性别" prop="gender" v-model="form.gender" placeholder="请输入性别" />
-        <!-- <form-item label="密码" prop="password" v-model="form.password" placeholder="请输入密码" /> -->
+      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+        <el-form-item label="学号" prop="学号">
+          <el-input v-model="form.学号" placeholder="请输入学号" />
+        </el-form-item>
+        <el-form-item label="姓名" prop="姓名">
+          <el-input v-model="form.姓名" placeholder="请输入姓名" />
+        </el-form-item>
+        <el-form-item label="管理部门" prop="管理部门">
+          <el-input v-model="form.管理部门" placeholder="请输入管理部门" />
+        </el-form-item>
+        <el-form-item label="系统内专业" prop="系统内专业">
+          <el-input v-model="form.系统内专业" placeholder="请输入系统内专业" />
+        </el-form-item>
+        <el-form-item label="招生录取专业" prop="招生录取专业">
+          <el-input v-model="form.招生录取专业" placeholder="请输入招生录取专业" />
+        </el-form-item>
+        <el-form-item label="行政班" prop="行政班">
+          <el-input v-model="form.行政班" placeholder="请输入行政班" />
+        </el-form-item>
+        <el-form-item label="备注" prop="备注">
+          <el-input v-model="form.备注" placeholder="请输入备注" />
+        </el-form-item>
+        <el-form-item label="分流形式" prop="分流形式">
+          <el-input v-model="form.分流形式" placeholder="请输入分流形式" />
+        </el-form-item>
+        <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
+          <el-input v-model="form.国家和高校专项计划学生标志" placeholder="请输入国家和高校专项计划学生标志" />
+        </el-form-item>
+        <el-form-item label="英文姓名" prop="英文姓名">
+          <el-input v-model="form.英文姓名" placeholder="请输入英文姓名" />
+        </el-form-item>
+        <el-form-item label="性别" prop="性别">
+          <el-input v-model="form.性别" placeholder="请输入性别" />
+        </el-form-item>
+        <!-- <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" placeholder="请输入密码" />
+        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -201,7 +225,7 @@ export default {
         国家和高校专项计划学生标志: null,
         英文姓名: null,
         性别: null,
-        password: null
+
       },
       // 表单参数
       form: {},
@@ -213,9 +237,7 @@ export default {
         姓名: [
           { required: true, message: "姓名不能为空", trigger: "blur" }
         ],
-        password: [
-          { required: true, message: "密码不能为空", trigger: "blur" }
-        ]
+
       }
     };
   },
@@ -279,7 +301,7 @@ export default {
         国家和高校专项计划学生标志: null,
         英文姓名: null,
         性别: null,
-        password: null
+
       };
 
       this.resetForm("form");
