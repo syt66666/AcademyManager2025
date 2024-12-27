@@ -21,24 +21,21 @@ export default {
         {id: 1, title: '问卷1', description: '仅可转专业'},
         {id: 2, title: '问卷2', description: '可类内任选，并转专业'},
         {id: 3, title: '问卷3', description: '可类内任选，不能转专业'},
-        {id: 4, title: '问卷4', description: '可域内任选，并转专业'}
+        {id: 4, title: '问卷4', description: '可域内任选，并转专业'},
+        {id: 5, title: '问卷5', description: '测试'}
       ]
     };
   },
   methods: {
-    goToQuestionnaire(id) {
-      // 根据 id 跳转到相应的问卷页面
-      if (id === 1) {
-        this.$router.push('/questionnaire1');
-      } else if (id === 2) {
-        this.$router.push('/questionnaire2');
-      } else if (id === 3) {
-        this.$router.push('/questionnaire3');
-      } else if (id === 4) {
-        this.$router.push('/questionnaire4');
+      goToQuestionnaire(id) {
+        // 动态跳转到对应问卷页面
+        this.$router.push({
+          path:`/questionnaire/${id}`,
+          query: { num: id }
+        });
+
       }
     }
-  }
 };
 </script>
 

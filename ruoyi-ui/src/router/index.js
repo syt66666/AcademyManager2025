@@ -29,31 +29,43 @@ import Layout from '@/layout'
  */
 
 
+
+
 // 公共路由
 export const constantRoutes = [
   //配置问卷路由
-  {
-    path: '/questionnaire1',
-    component: () => import('@/views/Questionnaires/Questionnaire1'),
-    name: 'Questionnaire1',
-  },
-  {
-    path: '/questionnaire2',
-    component: () => import('@/views/Questionnaires/Questionnaire2'),
-    name: 'Questionnaire2',
 
-  },
   {
-    path: '/questionnaire3',
-    component: () => import('@/views/Questionnaires/Questionnaire3'),
-    name: 'Questionnaire3',
-  },
-  {
-    path: '/questionnaire4',
-    component: () => import('@/views/Questionnaires/Questionnaire4'),
-    name: 'Questionnaire3',
-  },
+      path: '/questionnaire/1',
+      component: () => import('@/views/Questionnaires/Questionnaire1'),
+      name: 'Questionnaire1',
+      props: true
+    },
+    {
+      path: '/questionnaire/2',
+      component: () => import('@/views/Questionnaires/Questionnaire2'),
+      name: 'Questionnaire2',
+      props: true
 
+    },
+    {
+      path: '/questionnaire/3',
+      component: () => import('@/views/Questionnaires/Questionnaire3'),
+      name: 'Questionnaire3',
+      props: true
+    },
+    {
+      path: '/questionnaire/4',
+      component: () => import('@/views/Questionnaires/Questionnaire4'),
+      name: 'Questionnaire4',
+      props: true
+    },
+    {
+      path: '/questionnaire/5',
+      component: () => import('@/views/Questionnaires/Questionnaire5'),
+      name: 'Questionnaire5',
+      props: true
+    },
   {
     path: '/redirect',
     component: Layout,

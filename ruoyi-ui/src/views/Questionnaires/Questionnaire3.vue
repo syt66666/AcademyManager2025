@@ -44,12 +44,15 @@
 </template>
 
 <script>
-export default {
 
+
+import axios from "axios";
+
+export default {
   name: "Questionnaire",
   data() {
     return {
-      questionnaireId: this.$route.params.id, // 获取动态路由参数
+      questionnaireId: this.$route.query.num, // 获取动态路由参数
       questionnaire: [
         {
           id: 1,
@@ -104,11 +107,26 @@ export default {
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false;  // 关闭确认弹窗
       this.showEndMessage = true;  // 显示结束弹窗
+      console.log('questionnaireId');
+      // 获取用户最后一个问题的答案
+      const finalAnswer = this.selectedOptions[this.selectedOptions.length - 1];
 
-      // 2s后跳转到原来的选择问卷页面
-      setTimeout(() => {
-        this.$router.push('/Questionnaires');
-      }, 2000);  // 2000毫秒即2秒
+      // 提交答案到后台
+      axios
+        .post('http://localhost:3000/questionnaire/submit', {
+        user_id: 66666, // 用户ID，示例为1
+        questionnaire_id: this.questionnaireId, // 确保包含 questionnaireId
+        answer: finalAnswer// 最后一个问题的答案
+      })
+        .then(response => {
+          console.log("问卷提交成功:", response);
+          setTimeout(() => {
+            this.$router.push('/Questionnaires');
+          }, 2000);  // 2000毫秒即2秒
+        })
+        .catch(error => {
+          console.error('提交失败:', error);
+        });
     },
 
     // 关闭弹窗
@@ -124,7 +142,7 @@ export default {
     this.initializeQuestionnaire();
     // 使用 questionnaireId 来加载问卷的详细数据
     console.log('加载问卷详情 ID:', this.questionnaireId);
-  },
+  }
 };
 
 </script>
