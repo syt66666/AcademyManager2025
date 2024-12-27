@@ -6,7 +6,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     
     <resultMap type="Questions" id="QuestionsResult">
         <result property="id"    column="id"    />
-        <result property="questionnaireId"    column="questionnaire_id"    />
+        <result property="pagesId"    column="pages_id"    />
         <result property="text"    column="text"    />
         <result property="type"    column="type"    />
         <result property="orderIndex"    column="order_index"    />
@@ -15,7 +15,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectQuestionsVo">
-        select id, questionnaire_id, text, type, order_index, next_question_id, created_at from questions
+        select id, pages_id, text, type, order_index, next_question_id, created_at from questions
     </sql>
 
     <select id="selectQuestionsList" parameterType="Questions" resultMap="QuestionsResult">
@@ -35,7 +35,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <insert id="insertQuestions" parameterType="Questions" useGeneratedKeys="true" keyProperty="id">
         insert into questions
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="questionnaireId != null">questionnaire_id,</if>
+            <if test="pagesId != null">pages_id,</if>
             <if test="text != null and text != ''">text,</if>
             <if test="type != null">type,</if>
             <if test="orderIndex != null">order_index,</if>
@@ -43,7 +43,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="createdAt != null">created_at,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="questionnaireId != null">#{questionnaireId},</if>
+            <if test="pagesId != null">#{pagesId},</if>
             <if test="text != null and text != ''">#{text},</if>
             <if test="type != null">#{type},</if>
             <if test="orderIndex != null">#{orderIndex},</if>
@@ -55,7 +55,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <update id="updateQuestions" parameterType="Questions">
         update questions
         <trim prefix="SET" suffixOverrides=",">
-            <if test="questionnaireId != null">questionnaire_id = #{questionnaireId},</if>
+            <if test="pagesId != null">pages_id = #{pagesId},</if>
             <if test="text != null and text != ''">text = #{text},</if>
             <if test="type != null">type = #{type},</if>
             <if test="orderIndex != null">order_index = #{orderIndex},</if>

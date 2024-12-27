@@ -36,14 +36,14 @@
     <el-table v-loading="loading" :data="pagesList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" />
-      <el-table-column label="模板名称" align="center" prop="name" />
-      <el-table-column label="模板介绍" align="center" prop="descr" />
-      <el-table-column label="封面图" align="center" prop="img" />
-      <el-table-column label="使用次数" align="center" prop="count" />
+      <el-table-column label="问卷名称" align="center" prop="name" />
+      <el-table-column label="问卷描述" align="center" prop="descr" />
+      <!-- <el-table-column label="封面图" align="center" prop="img" /> -->
+      <!-- <el-table-column label="使用次数" align="center" prop="count" /> -->
       <!--      <el-table-column label="创建人ID" align="center" prop="userId" />-->
-      <el-table-column label="创建时间" align="center" prop="createTime" />
       <el-table-column label="是否公开" align="center" prop="open" />
       <el-table-column label="是否发布" align="center" prop="saved" />
+      <el-table-column label="创建时间" align="center" prop="createTime" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"

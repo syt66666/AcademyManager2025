@@ -23,7 +23,7 @@ public class Questions extends BaseEntity
 
     /** $column.columnComment */
     @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
-    private Long questionnaireId;
+    private Long pagesId;
 
     /** $column.columnComment */
     @Excel(name = "${comment}", readConverterExp = "$column.readConverterExp()")
@@ -52,14 +52,14 @@ public class Questions extends BaseEntity
     {
         return id;
     }
-    public void setQuestionnaireId(Long questionnaireId) 
+    public void setPagesId(Long pagesId)
     {
-        this.questionnaireId = questionnaireId;
+        this.pagesId = pagesId;
     }
 
-    public Long getQuestionnaireId() 
+    public Long getPagesId() 
     {
-        return questionnaireId;
+        return pagesId;
     }
     public void setText(String text) 
     {
@@ -111,7 +111,7 @@ public class Questions extends BaseEntity
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
             .append("id", getId())
-            .append("questionnaireId", getQuestionnaireId())
+            .append("pagesId", getPagesId())
             .append("text", getText())
             .append("type", getType())
             .append("orderIndex", getOrderIndex())

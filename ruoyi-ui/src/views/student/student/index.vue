@@ -237,6 +237,9 @@ export default {
         姓名: [
           { required: true, message: "姓名不能为空", trigger: "blur" }
         ],
+        管理部门: [
+          { required: true, message: '请输入管理部门', trigger: 'blur' }
+        ],
 
       }
     };
