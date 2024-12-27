@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.QuestionsMapper">
+    
+    <resultMap type="Questions" id="QuestionsResult">
+        <result property="id"    column="id"    />
+        <result property="questionnaireId"    column="questionnaire_id"    />
+        <result property="text"    column="text"    />
+        <result property="type"    column="type"    />
+        <result property="orderIndex"    column="order_index"    />
+        <result property="nextQuestionId"    column="next_question_id"    />
+    </resultMap>
+
+    <sql id="selectQuestionsVo">
+        select id, questionnaire_id, text, type, order_index, next_question_id from questions
+    </sql>
+
+    <select id="selectQuestionsList" parameterType="Questions" resultMap="QuestionsResult">
+        <include refid="selectQuestionsVo"/>
+        <where>  
+            <if test="type != null  and type != ''"> and type = #{type}</if>
+        </where>
+    </select>
+    
+    <select id="selectQuestionsById" parameterType="Long" resultMap="QuestionsResult">
+        <include refid="selectQuestionsVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertQuestions" parameterType="Questions" useGeneratedKeys="true" keyProperty="id">
+        insert into questions
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="questionnaireId != null">questionnaire_id,</if>
+            <if test="text != null and text != ''">text,</if>
+            <if test="type != null and type != ''">type,</if>
+            <if test="orderIndex != null">order_index,</if>
+            <if test="nextQuestionId != null">next_question_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="questionnaireId != null">#{questionnaireId},</if>
+            <if test="text != null and text != ''">#{text},</if>
+            <if test="type != null and type != ''">#{type},</if>
+            <if test="orderIndex != null">#{orderIndex},</if>
+            <if test="nextQuestionId != null">#{nextQuestionId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateQuestions" parameterType="Questions">
+        update questions
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="questionnaireId != null">questionnaire_id = #{questionnaireId},</if>
+            <if test="text != null and text != ''">text = #{text},</if>
+            <if test="type != null and type != ''">type = #{type},</if>
+            <if test="orderIndex != null">order_index = #{orderIndex},</if>
+            <if test="nextQuestionId != null">next_question_id = #{nextQuestionId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteQuestionsById" parameterType="Long">
+        delete from questions where id = #{id}
+    </delete>
+
+    <delete id="deleteQuestionsByIds" parameterType="String">
+        delete from questions where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
