@@ -95,8 +95,38 @@ public class StudentInformationServiceImpl implements StudentInformationService 
             studentUserRole.setUserId(id);
             studentUserRoleList.add(studentUserRole);
         }
+        //向关联表中插入数据
         studentInformationMapper.multipleInsertUserRole(studentUserRoleList);
+    }
 
-        System.out.println(132);
+    /**
+     * 插入一条学生数据
+     * @param studentInformation
+     */
+    @Override
+    public void insertOneStudent(StudentInformation studentInformation) {
+        List<StudentInformation> studentInformationList = new LinkedList<>();
+        studentInformationList.add(studentInformation);
+        //插入学生数据
+        studentInformationMapper.multipleInsertStudent(studentInformationList);
+
+        List<StudentUserInformation> studentUserInformationList = new LinkedList<>();
+        StudentUserInformation studentUserInformation = new StudentUserInformation();
+        studentUserInformation.setStudentId(studentInformation.getStudentId());
+        studentUserInformation.setStudentName(studentInformation.getStudentName());
+        studentUserInformation.setStudentSex("男".equals(studentInformation.getStudentSex()) ? "0" : "1");
+        studentUserInformation.setCreateTime(LocalDateTime.now());
+        studentUserInformationList.add(studentUserInformation);
+        //插入学生账号数据
+        studentInformationMapper.multipleInsertStudentAccount(studentUserInformationList);
+
+        List<Integer> ids = studentInformationMapper.getInsertStudentAccountIds(studentUserInformationList);
+        List<StudentUserRole> studentUserRoleList = new LinkedList<>();
+        StudentUserRole studentUserRole = new StudentUserRole();
+        studentUserRole.setRoleId(101);
+        studentUserRole.setUserId(ids.get(0));
+        studentUserRoleList.add(studentUserRole);
+        //向关联表中插入数据
+        studentInformationMapper.multipleInsertUserRole(studentUserRoleList);
     }
 }

@@ -3,6 +3,7 @@ package com.ruoyi.system.mapper;
 import com.ruoyi.system.domain.StudentInformation;
 import com.ruoyi.system.domain.StudentUserInformation;
 import com.ruoyi.system.domain.StudentUserRole;
+import org.apache.ibatis.annotations.Insert;
 
 import java.util.List;
 

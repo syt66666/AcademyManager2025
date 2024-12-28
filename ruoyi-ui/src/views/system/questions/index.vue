@@ -35,9 +35,14 @@
     <el-table v-loading="loading" :data="questionsList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="序号" align="center" prop="id" />
-      <el-table-column label="问卷编号" align="center" prop="questionnaireId" />
-      <el-table-column label="题目类型" align="center" prop="text" />
-      <!-- <el-table-column label="题目类型" align="center" prop="type" /> -->
+      <!-- <el-table-column label="问卷编号" align="center" prop="pagesId" /> -->
+      <el-table-column label="问卷编号" align="center">
+        <template slot-scope="scope">
+          问卷{{ scope.row.pagesId }}
+        </template>
+      </el-table-column>
+      <el-table-column label="题目信息" align="center" prop="text" />
+      <el-table-column label="题目类型" align="center" prop="type" />
       <el-table-column label="创建时间" align="center" prop="createdAt" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.createdAt, '{y}-{m}-{d}') }}</span>
@@ -59,12 +64,12 @@
     <!-- 添加或修改试题管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="问卷类型" prop="questionnaireId">
-          <el-input v-model="form.questionnaireId" placeholder="请输入问卷类型" />
+        <el-form-item label="问卷类型" prop="pagesId">
+          <el-input v-model="form.pagesId" placeholder="请输入问卷类型" />
         </el-form-item>
 
         <el-form-item label="题目类型">
-          <el-select v-model="form.text" placeholder="请选择题目类型">
+          <el-select v-model="form.type" placeholder="请选择题目类型">
             <el-option label="单选题" value="单选题"></el-option>
             <el-option label="多选题" value="多选题"></el-option>
             <el-option label="单文本" value="单文本"></el-option>
@@ -156,7 +161,7 @@ export default {
     reset() {
       this.form = {
         id: null,
-        questionnaireId: null,
+        pagesId: null,
         text: null,
         type: null,
         orderIndex: null,

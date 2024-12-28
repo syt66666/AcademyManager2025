@@ -101,7 +101,7 @@
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
       @pagination="getList" />
 
-    <!-- 添加或修改学生管理对话框 -->
+    <!-- 修改学生管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="学号" prop="学号">
@@ -144,6 +144,51 @@
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+    <!-- 添加学生管理对话框 -->
+    <el-dialog :title="title" :visible.sync="openInsert" width="500px" append-to-body>
+      <el-form ref="form" :model="studentForm" :rules="insertRules" label-width="80px">
+        <el-form-item label="学号" prop="学号">
+          <el-input v-model="studentForm.studentId" placeholder="请输入学号" />
+        </el-form-item>
+        <el-form-item label="姓名" prop="姓名">
+          <el-input v-model="studentForm.studentName" placeholder="请输入姓名" />
+        </el-form-item>
+        <el-form-item label="管理部门" prop="管理部门">
+          <el-input v-model="studentForm.studentAddress" placeholder="请输入管理部门" />
+        </el-form-item>
+        <el-form-item label="系统内专业" prop="系统内专业">
+          <el-input v-model="studentForm.systemMajor" placeholder="请输入系统内专业" />
+        </el-form-item>
+        <el-form-item label="招生录取专业" prop="招生录取专业">
+          <el-input v-model="studentForm.enrollmentMajor" placeholder="请输入招生录取专业" />
+        </el-form-item>
+        <el-form-item label="行政班" prop="行政班">
+          <el-input v-model="studentForm.studentClass" placeholder="请输入行政班" />
+        </el-form-item>
+        <el-form-item label="备注" prop="备注">
+          <el-input v-model="studentForm.studentNote" placeholder="请输入备注" />
+        </el-form-item>
+        <el-form-item label="分流形式" prop="分流形式">
+          <el-input v-model="studentForm.studentDiversionForm" placeholder="请输入分流形式" />
+        </el-form-item>
+        <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
+          <el-input v-model="studentForm.haveQualification" placeholder="请输入国家和高校专项计划学生标志" />
+        </el-form-item>
+        <el-form-item label="英文姓名" prop="英文姓名">
+          <el-input v-model="studentForm.englishName" placeholder="请输入英文姓名" />
+        </el-form-item>
+        <el-form-item label="性别" prop="性别">
+          <el-input v-model="studentForm.studentSex" placeholder="请输入性别" />
+        </el-form-item>
+        <!-- <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" placeholder="请输入密码" />
+        </el-form-item> -->
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+        <el-button @click="studentCancel">取 消</el-button>
       </div>
     </el-dialog>
     <!-- 用户导入对话框 -->
@@ -208,8 +253,10 @@ export default {
       studentList: [],
       // 弹出层标题
       title: "",
-      // 是否显示弹出层
+      // 是否显示更新弹出层
       open: false,
+      // 是否显示插入弹出层
+      openInsert: false,
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -229,12 +276,39 @@ export default {
       },
       // 表单参数
       form: {},
-      // 表单校验
+      // 新增一个学生的学生信息参数
+      studentForm: {
+        studentId : null,
+        studentName : null,
+        studentAddress : null,
+        systemMajor : null,
+        enrollmentMajor : null,
+        studentClass : null,
+        studentNote : null,
+        studentDiversionForm : null,
+        haveQualification : null,
+        englishName : null,
+        studentSex : null,
+      },
+      // 修改表单校验
       rules: {
         学号: [
           { required: true, message: "学号不能为空", trigger: "blur" }
         ],
         姓名: [
+          { required: true, message: "姓名不能为空", trigger: "blur" }
+        ],
+        管理部门: [
+          { required: true, message: '请输入管理部门', trigger: 'blur' }
+        ],
+
+      },
+      // 插入表单校验
+      insertRules: {
+        studentId: [
+          { required: true, message: "学号不能为空", trigger: "blur" }
+        ],
+        studentName: [
           { required: true, message: "姓名不能为空", trigger: "blur" }
         ],
 
@@ -282,7 +356,7 @@ export default {
     },
 
     // 取消按钮
-    cancel() {
+      cancel() {
       this.open = false;
       this.reset();
     },
@@ -306,6 +380,31 @@ export default {
 
       this.resetForm("form");
     },
+    // 取消增加用户表单按钮
+    studentCancel() {
+      this.openInsert = false;
+      this.studentReset();
+    },
+    // 增加用户表单重置
+    studentReset() {
+      this.studentForm = {
+        id: null,
+        studentId : '',
+        studentName : '',
+        studentAddress : '',
+        systemMajor : '',
+        enrollmentMajor : '',
+        studentClass : '',
+        studentNote : '',
+        studentDiversionForm : '',
+        haveQualification : '',
+        englishName : '',
+        studentSex : '',
+
+      };
+
+      this.resetForm("studentForm");
+    },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
@@ -324,8 +423,8 @@ export default {
     },
     /** 新增按钮操作 */
     handleAdd() {
-      this.reset();
-      this.open = true;
+      this.studentReset();
+      this.openInsert = true;
       this.title = "添加学生管理";
     },
     /** 修改按钮操作 */
@@ -349,9 +448,16 @@ export default {
               this.getList();
             });
           } else {
-            addStudent(this.form).then(response => {
+            this.studentForm.haveQualification = this.studentForm.haveQualification === "是" ? true : false;
+            addStudent(this.studentForm).then(response => {
               this.$modal.msgSuccess("新增成功");
-              this.open = false;
+              this.openInsert = false;
+              this.getList();
+            }).catch(error => {
+              // 处理addStudent函数中可能抛出的异常
+              console.error("新增学生失败：", error);
+              this.$modal.msgError("新增学生失败");
+              this.openInsert = false;
               this.getList();
             });
           }

@@ -8,4 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface StudentInformationService {
     public void multipleInsertStudent(MultipartFile file);
+
+    public void insertOneStudent(StudentInformation studentInformation);
 }
