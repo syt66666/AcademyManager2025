@@ -45,7 +45,7 @@
 
 <script>
 import axios from "axios";
-
+import store from "@/store";
 export default {
 
   name: "Questionnaire",
@@ -191,7 +191,8 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
-      finalAnswerText : ' '
+      finalAnswerText : ' ',//最后选择答案
+      userId:store.state.user.id//将缓存的用户id赋值给userId
     };
   },
   methods: {
@@ -232,7 +233,7 @@ export default {
       // 提交最后一个问题的答案到后台
       axios
         .post('http://localhost:3000/questionnaire/submit', {
-          user_id: 1, // 用户ID，示例为1
+          user_id: this.userId, // 用户ID，示例为1
           questionnaire_id: this.questionnaireId,
           answer: this.finalAnswerText  // 只提交最后一个问题的答案
         })
