@@ -16,12 +16,11 @@
 export default {
   data() {
     return {
+
       // 模拟问卷数据
       questionnaires: [
-        {id: 1, title: '问卷1', description: '仅可转专业'},
-        {id: 2, title: '问卷2', description: '可类内任选，并转专业'},
-        {id: 3, title: '问卷3', description: '可类内任选，不能转专业'},
-        {id: 4, title: '问卷4', description: '可域内任选，并转专业'},
+        {id: 1, title: '问卷1', description: '书院专业分流调查问卷'},
+        {id: 2, title: '问卷2', description: '之后可添加问卷'},
       ]
     };
   },

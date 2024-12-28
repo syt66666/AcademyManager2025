@@ -47,14 +47,81 @@
 import axios from "axios";
 import store from "@/store";
 
-
 export default {
-
   name: "Questionnaire",
   data() {
     return {
       questionnaireId: this.$route.query.num, // 获取动态路由参数
-      questionnaire: [
+      questionnaire: [], // 用于存放问卷
+      currentDisplay: [], // 当前显示的问题列表
+      selectedOptions: [], // 用户选择的答案
+      completed: false, // 是否已完成
+      showEndMessage: false, // 弹窗显示状态
+      showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
+      finalAnswerText: ' ', // 最后选择答案
+      userName: store.state.user.name, // 获取用户名
+      splitFlow: '', // 分流形式
+    };
+  },
+  methods: {
+    // 显示确认弹窗
+    showConfirmDialog() {
+      this.showConfirmDialogFlag = true;
+    },
+    // 初始化问卷
+    initializeQuestionnaire() {
+      axios
+        .get(`http://localhost:3000/api/users/${this.userName}`)
+        .then(response => {
+          const userData = response.data;  // 获取用户数据
+          console.log(userData);  // 输出用户信息
+
+          // 获取学生信息
+          this.splitFlow = userData.分流形式; // 分流形式
+          this.studentName = userData.姓名; // 姓名
+          this.studentId = userData.学号; // 学号
+          this.major = userData.招生录取专业; // 招生录取专业
+          this.department = userData.管理部门; // 管理部门
+          this.specialty = userData.系统内专业; // 系统内专业
+          console.log(this.studentId, this.studentName, this.splitFlow, this.major, this.department, this.specialty);
+
+          // 根据分流形式加载不同的问卷
+          this.loadQuestionnaireBySplitFlow();
+        })
+        .catch(error => {
+          console.error('获取用户信息失败', error); // 错误处理
+        })
+    },
+
+    // 根据分流形式加载不同的问卷
+    loadQuestionnaireBySplitFlow() {
+      switch (this.splitFlow) {
+        case '仅可转专业':
+          this.questionnaire = this.getQuestionnaireA();
+          break;
+        case '可类内任选，并转专业':
+          this.questionnaire = this.getQuestionnaireB();
+          break;
+        case '可类内任选，不能转专业':
+          this.questionnaire = this.getQuestionnaireC();
+          break;
+        case '可域内任选，并转专业':
+          this.questionnaire = this.getQuestionnaireD();
+          break;
+        default:
+          this.questionnaire = []; // 默认空的问卷
+          break;
+      }
+
+      // 初始化显示第一个问题
+      if (this.questionnaire.length > 0) {
+        this.currentDisplay.push(this.questionnaire[0]);
+      }
+    },
+
+    // A类型的问卷数据
+    getQuestionnaireA() {
+      return [
         {
           id: 1,
           text: '满足相应要求，是否决定跨学域转专业 [单选题] *',
@@ -186,84 +253,324 @@ export default {
           text: '问卷结束，感谢您的参与！',
           options: []
         }
-      ],
-      currentDisplay: [], // 当前显示的问题列表
-      selectedOptions: [], // 用户选择的答案
-      completed: false, // 是否已完成
-      showEndMessage: false, // 弹窗显示状态
-      showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
-      finalAnswerText : ' ',//最后选择答案
-      userId:store.state.user.id//将缓存的用户id赋值给userId
-    };
-  },
-
-  methods: {
-    showConfirmDialog() {
-      this.showConfirmDialogFlag = true;  // 显示确认弹窗
+      ]
     },
-    // 初始化问卷
-    initializeQuestionnaire() {
-      this.currentDisplay.push(this.questionnaire[0]);
-    },
-    // 处理选项点击事件
-    handleOptionClick(option, index) {
-      // 更新最后一个选项
-      this.finalAnswerText=option.text;
-      // 使用 Vue 的响应式方法确保 selectedOptions 更新正确
-      this.$set(this.selectedOptions, index, option.id);
 
-      // 更新 completed 状态：如果选择了最后一个问题，则完成问卷
-      this.completed = option.next === null;
-
-      // 根据选项的 next 属性更新显示的问题
-      this.currentDisplay = this.currentDisplay.slice(0, index + 1);  // 保持当前已经回答的问题
-
-      if (option.next !== null) {
-        const nextQuestion = this.questionnaire.find(q => q.id === option.next);
-        if (nextQuestion) {
-          this.currentDisplay.push(nextQuestion);  // 添加下一个问题
+    // B类型的问卷数据
+    getQuestionnaireB() {
+      return [
+        {
+          id: 1,
+          text: '请先确定专业选择方案 [单选题] *',
+          options: [
+            {id: 1, text: '保持现有专业', next: null},
+            {id: 2, text: '类内任选专业', next: 10},
+            {id: 3, text: '跨学域转专业', next: 2}
+          ]
+        },
+        {
+          id: 2,
+          text: '意向书院学域 [单选题] *',
+          options: [
+            {id: 1, text: '大煜书院——物质创造学域', next: 3},
+            {id: 2, text: '伯川书院——智能制造学域', next: 4},
+            {id: 3, text: '笃学书院——理科强基学域', next: 5},
+            {id: 4, text: '令希书院——智能建造学域', next: 6},
+            {id: 5, text: '厚德书院——人文社科学域', next: 7},
+            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
+          ]
+        },
+        {
+          id: 3,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '化学工程与工艺', next: null},
+            {id: 2, text: '精细化工', next: null},
+            {id: 3, text: '制药工程', next: null},
+            {id: 4, text: '高分子材料与工程', next: null},
+            {id: 5, text: '安全工程', next: null},
+            {id: 6, text: '过程装备与控制工程', next: null},
+            {id: 7, text: '环境工程', next: null},
+            {id: 8, text: '环境科学', next: null},
+            {id: 9, text: '生物工程', next: null}
+          ]
+        },
+        {
+          id: 4,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '智能制造工程', next: null},
+            {id: 2, text: '能源与动力工程', next: null},
+            {id: 3, text: '机械设计制造及其自动化', next: null},
+            {id: 4, text: '车辆工程（英语强化）', next: null},
+            {id: 5, text: '测控技术与仪器', next: null},
+            {id: 6, text: '金属材料工程', next: null},
+            {id: 7, text: '功能材料', next: null},
+            {id: 8, text: '材料成型及控制工程', next: null},
+            {id: 9, text: '生物医学工程', next: null}
+          ]
+        },
+        {
+          id: 5,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '数学与应用数学', next: null},
+            {id: 2, text: '信息科学与计算科学', next: null}
+          ]
+        },
+        {
+          id: 6,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '工程力学', next: null},
+            {id: 2, text: '飞行器设计与工程', next: null},
+            {id: 3, text: '船舶与海洋工程', next: null},
+            {id: 4, text: '智能建造', next: null},
+            {id: 5, text: '水利水电工程', next: null},
+            {id: 6, text: '港口航道与海岸工程', next: null},
+            {id: 7, text: '海洋资源开发技术', next: null},
+            {id: 8, text: '交通工程', next: null},
+            {id: 9, text: '工程管理', next: null},
+            {id: 10, text: '建筑环境与能源应用工程', next: null},
+            {id: 11, text: '土木工程', next: null}
+          ]
+        },
+        {
+          id: 7,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '工商管理类——金融学', next: null},
+            {id: 2, text: '工商管理类——工商管理', next: null},
+            {id: 3, text: '工商管理类——物流管理', next: null},
+            {id: 4, text: '工商管理类——国际经济与贸易', next: null},
+            {id: 5, text: '公共事业管理、哲学类、新闻传播学类——知识产权', next: null},
+            {id: 6, text: '公共事业管理、哲学类、新闻传播学类——公共事业管理', next: null},
+            {id: 7, text: '公共事业管理、哲学类、新闻传播学类——马克思主义理论', next: null},
+            {id: 8, text: '公共事业管理、哲学类、新闻传播学类——哲学', next: null},
+            {id: 9, text: '公共事业管理、哲学类、新闻传播学类——广播电视学', next: null},
+            {id: 10, text: '公共事业管理、哲学类、新闻传播学类——汉语言文学', next: null},
+            {id: 11, text: '英语、日语——英语', next: null},
+            {id: 12, text: '英语、日语——翻译', next: null},
+            {id: 13, text: '英语、日语——日语', next: null},
+            {id: 14, text: '建筑类——建筑学', next: null},
+            {id: 15, text: '建筑类——城乡规划', next: null},
+            {id: 16, text: '建筑类——工业设计', next: null},
+            {id: 17, text: '设计学类——视觉传达设计', next: null},
+            {id: 18, text: '设计学类——环境设计', next: null},
+            {id: 19, text: '设计学类——雕塑', next: null},
+            {id: 20, text: '运动训练——运动训练', next: null}
+          ]
+        },
+        {
+          id: 8,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '电气工程及其自动化', next: null},
+            {id: 2, text: '自动化', next: null},
+            {id: 3, text: '电子信息工程', next: null},
+            {id: 4, text: '计算机科学与技术', next: null},
+            {id: 5, text: '生物医学工程', next: null},
+            {id: 6, text: '光电信息科学与工程', next: null},
+            {id: 7, text: '大数据管理与应用', next: null},
+            {id: 8, text: '信息管理与信息系统', next: null}
+          ]
+        },
+        {
+          id: 9,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '软件工程', next: null},
+            {id: 2, text: '网络工程', next: null},
+            {id: 3, text: '集成电路设计与集成系统', next: null},
+            {id: 4, text: '电子科学与技术', next: null}
+          ]
+        },
+        {
+          id: 10,
+          text: '材料类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '金属材料工程', next: null},
+            {id: 2, text: '功能材料', next: null},
+            {id: 3, text: '材料成型及控制工程', next: null}
+          ]
+        },
+        {
+          id: 11,
+          text: '管理科学与工程类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '大数据管理与应用', next: null},
+            {id: 2, text: '信息管理与信息系统', next: null}
+          ]
+        },
+        {
+          id: 12,
+          text: '化工与制药类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '化学工程与工艺', next: null},
+            {id: 2, text: '精细化工', next: null},
+            {id: 3, text: '制药工程', next: null},
+            {id: 4, text: '高分子材料与工程', next: null},
+            {id: 5, text: '安全工程', next: null}
+          ]
+        },
+        {
+          id: 13,
+          text: '环境科学与工程类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '环境科学', next: null},
+            {id: 2, text: '环境工程', next: null}
+          ]
+        },
+        {
+          id: 14,
+          text: '新闻传播学类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '广播电视学', next: null},
+            {id: 2, text: '汉语言文学', next: null}
+          ]
+        },
+        {
+          id: 15,
+          text: '智能建造 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '智能建造', next: null},
+            {id: 2, text: '水利水电工程', next: null},
+            {id: 3, text: '港口航道与海岸工程', next: null},
+            {id: 4, text: '海洋资源开发技术', next: null},
+            {id: 5, text: '交通工程', next: null},
+            {id: 6, text: '工程管理', next: null},
+            {id: 7, text: '建筑环境与能源应用工程', next: null},
+            {id: 8, text: '土木工程', next: null}
+          ]
+        },
+        {
+          id: 16,
+          text: '智能制造工程 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '智能制造工程', next: null},
+            {id: 2, text: '能源与动力工程', next: null},
+            {id: 3, text: '机械设计制造及其自动化', next: null},
+            {id: 4, text: '车辆工程（英语强化）', next: null},
+            {id: 5, text: '测控技术与仪器', next: null},
+            {id: 6, text: '金属材料工程', next: null},
+            {id: 7, text: '功能材料', next: null},
+            {id: 8, text: '材料成型及控制工程', next: null},
+            {id: 9, text: '生物医学工程', next: null}
+          ]
+        },
+        {
+          id: 999,
+          text: '问卷结束，感谢您的参与！',
+          options: []
         }
-      }
+      ];
     },
 
+    // C类型的问卷数据
+    getQuestionnaireC() {
+      return [
+        {
+          id: 1,
+          text: 'C问卷问题1',
+          options: [
+            {id: 1, text: '选项1'},
+            {id: 2, text: '选项2'}
+          ]
+        },
+        {
+          id: 2,
+          text: 'C问卷问题2',
+          options: [
+            {id: 1, text: '选项1'},
+            {id: 2, text: '选项2'}
+          ]
+        },
+        // 更多问题
+      ];
+    },
 
-    //提交问卷
+    // D类型的问卷数据
+    getQuestionnaireD() {
+      return [
+        {
+          id: 1,
+          text: '请先确定专业选择方案 [单选题] *',
+          options: [
+            {id: 1, text: '保持现有专业', next: null},
+            {id: 2, text: '类内任选专业', next: 2},
+          ]
+        },
+        {
+          id: 2,
+          text: '如果进行类内任选，将选择的普通专业是 [单选题]',
+          options: [
+            {id: 1, text: '设计学类——视觉传达设计', next: null},
+            {id: 2, text: '设计学类——环境设计', next: null},
+            {id: 3, text: '设计学类——雕塑', next: null},
+          ]
+        },
+        {
+          id: 999,
+          text: '问卷结束，感谢您的参与！',
+          options: []
+        }
+      ];
+    },
+
+    // 提交问卷
     submitQuestionnaire() {
-      this.showConfirmDialogFlag = false;  // 关闭确认弹窗
-      this.showEndMessage = true;  // 显示结束弹窗
+      this.showConfirmDialogFlag = false; // 关闭确认弹窗
+      this.showEndMessage = true; // 显示结束弹窗
 
       // 提交最后一个问题的答案到后台
       axios
         .post('http://localhost:3000/questionnaire/submit', {
-          user_id: this.userId, // 用户ID，示例为1
-          questionnaire_id: this.questionnaireId,
+          user_name: this.userName, // 用户名称
+          questionnaire_id: this.questionnaireId, // 问卷编号
           answer: this.finalAnswerText  // 只提交最后一个问题的答案
         })
         .then(response => {
           setTimeout(() => {
             this.$router.push('/Questionnaires');
-          }, 2000);  // 2000毫秒即2秒
+          }, 2000);  // 2秒后跳转
         })
         .catch(error => {
           console.error('提交失败:', error);
         });
     },
 
+    // 处理选项点击事件
+    handleOptionClick(option, index) {
+      this.finalAnswerText = option.text;
+      this.$set(this.selectedOptions, index, option.id);
+      this.completed = option.next === null;
+      this.currentDisplay = this.currentDisplay.slice(0, index + 1);
+
+      if (option.next !== null) {
+        const nextQuestion = this.questionnaire.find(q => q.id === option.next);
+        if (nextQuestion) {
+          this.currentDisplay.push(nextQuestion);
+        }
+      }
+    },
+
     // 关闭弹窗
     closeModal() {
       this.showEndMessage = false;
     },
+
     // 取消提交
     handleCancel() {
-      this.showConfirmDialogFlag = false;  // 关闭确认弹窗
+      this.showConfirmDialogFlag = false;
     }
   },
   mounted() {
     this.initializeQuestionnaire();
   }
 };
-
 </script>
+
 
 <style scoped>
 /* 问卷容器样式 */
@@ -314,7 +621,7 @@ export default {
 }
 
 .submit-button:hover {
-  background: linear-gradient(to right,  #2b76de,#395cdc ); /* 反转渐变颜色 */
+  background: linear-gradient(to right, #2b76de, #395cdc); /* 反转渐变颜色 */
   transform: translateY(-2px); /* 微微上移 */
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* 增强阴影 */
 }

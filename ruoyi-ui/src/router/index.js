@@ -46,18 +46,7 @@ export const constantRoutes = [
       props: true
 
     },
-    {
-      path: '/questionnaire/3',
-      component: () => import('@/views/Questionnaires/Questionnaire3'),
-      name: 'Questionnaire3',
-      props: true
-    },
-    {
-      path: '/questionnaire/4',
-      component: () => import('@/views/Questionnaires/Questionnaire4'),
-      name: 'Questionnaire4',
-      props: true
-    },
+
   {
     path: '/redirect',
     component: Layout,
