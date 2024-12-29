@@ -38,6 +38,13 @@ export default {
         path: `/Questionnaires/Questionnaire1`,
         // 可根据需要添加其他参数，此处暂未添加
       });
+    },
+    goToQuestionnaire2() {
+      // 动态跳转到对应问卷页面
+      this.$router.push({
+        path: `/Questionnaires/Questionnaire2`,
+        // 可根据需要添加其他参数，此处暂未添加
+      });
     }
   }
 };
