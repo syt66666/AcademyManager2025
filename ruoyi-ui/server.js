@@ -25,19 +25,37 @@ app.get('/api/users/:userName', async (req, res) => {
   const { userName } = req.params;
 
   try {
-    // 使用连接池并使用 promise() 获取 Promise 对象
     const [rows] = await db.promise().execute('SELECT s2.学号,s2.姓名,s2.分流形式,s2.管理部门,s2.系统内专业,s2.招生录取专业 FROM sys_user s1 join student s2 on s1.user_name=s2.学号 WHERE user_name = ?', [userName]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: '用户未找到' });
     }
 
-    // 返回查询到的用户信息
     res.json(rows[0]);
-
   } catch (err) {
     console.error('查询失败:', err);
     return res.status(500).json({ message: '服务器内部错误' });
+  }
+});
+
+// 检查用户是否已经回答过问卷
+app.get('/api/check-questionnaire-completed', async (req, res) => {
+  const { userName, questionnaireId } = req.query;
+
+  try {
+    const [rows] = await db.promise().execute(
+      'SELECT * FROM user_questionnaire_answers WHERE user_name = ? AND questionnaire_id = ?',
+      [userName, questionnaireId]
+    );
+
+    if (rows.length > 0) {
+      return res.json({ completed: true });
+    } else {
+      return res.json({ completed: false });
+    }
+  } catch (error) {
+    console.error('查询失败:', error);
+    return res.status(500).json({ error: '服务器内部错误' });
   }
 });
 

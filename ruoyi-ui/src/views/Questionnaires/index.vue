@@ -1,47 +1,84 @@
 <template>
   <div class="questionnaire-list">
     <div class="questionnaire-grid">
-      <div class="questionnaire-card">
+      <div
+        v-for="questionnaire in questionnaires"
+        :key="questionnaire.id"
+        class="questionnaire-card"
+      >
         <div class="card-content">
-          <h3>问卷1</h3>
-          <p>书院专业分流调查问卷</p >
+          <h3>{{ questionnaire.title }}</h3>
+          <p>{{ questionnaire.description }}</p>
         </div>
-        <button @click="goToQuestionnaire1()" class="btn">进入问卷</button>
-      </div>
-      <div class="questionnaire-card">
-        <div class="card-content">
-          <h3>问卷2</h3>
-          <p>之后可添加问卷</p >
-        </div>
-        <button @click="goToQuestionnaire2()" class="btn">进入问卷</button>
+        <button
+          :disabled="questionnaire.completed"
+          @click="goToQuestionnaire(questionnaire.id)"
+          class="btn"
+        >
+          {{ questionnaire.completed ? '已完成' : '进入问卷' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+import store from "../../store";
+
 export default {
   data() {
     return {
-
-      // 模拟问卷数据
+      userName: store.state.user.name, // 获取用户名
       questionnaires: [
-        {id: 1, title: '问卷1', description: '书院专业分流调查问卷'},
-        {id: 2, title: '问卷2', description: '之后可添加问卷'},
+        { id: 1, title: '问卷1', description: '书院专业分流调查问卷', completed: false },
+        { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false }
       ]
     };
   },
   methods: {
-    goToQuestionnaire1() {
-      // 动态跳转到对应问卷页面
-      this.$router.push({
-        path: `/Questionnaires/Questionnaire1`,
-        // 可根据需要添加其他参数，此处暂未添加
-      });
+    async checkQuestionnaireStatus() {
+      console.log("开始检查问卷状态..."); // 测试日志
+      try {
+        for (const questionnaire of this.questionnaires) {
+          console.log(`检查问卷 ${questionnaire.id} 的状态...`); // 测试日志
+          const response = await axios.get('http://localhost:3000/api/check-questionnaire-completed', {
+            params: {
+              userName:  this.userName,
+              questionnaireId: questionnaire.id
+            }
+          });
+          questionnaire.completed = response.data.completed;
+          console.log(
+            `问卷 ${questionnaire.id} 的完成状态：${response.data.completed ? '已完成' : '未完成'}`
+          );
+        }
+      } catch (error) {
+        console.error('检查问卷状态失败:', error);
+      }
+    },
+    goToQuestionnaire(questionnaireId) {
+      console.log(`尝试进入问卷 ${questionnaireId} ...`); // 测试日志
+      const questionnaire = this.questionnaires.find(q => q.id === questionnaireId);
+      if (questionnaire.completed) {
+        console.log(`问卷 ${questionnaireId} 已完成，无法进入。`); // 测试日志
+      } else {
+        console.log(`跳转到问卷 ${questionnaireId}`); // 测试日志
+        this.$router.push({
+          path: `/Questionnaires/Questionnaire${questionnaireId}`
+        });
+      }
     }
+  },
+  created() {
+    // 页面加载时检查问卷完成状态
+    console.log("页面加载，初始化检查问卷完成状态..."); // 测试日志
+    this.checkQuestionnaireStatus();
   }
 };
 </script>
+
+
 
 <style scoped>
 .questionnaire-list {
@@ -97,4 +134,12 @@ export default {
   background-color: #2b76de;
   transform: scale(1.05);
 }
+
+.btn:disabled {
+  background-color: #ccc; /* 灰色背景 */
+  cursor: not-allowed;   /* 禁止光标 */
+  color: #666;           /* 更浅的文本颜色 */
+  transform: none;       /* 禁用悬停时的放大效果 */
+}
+
 </style>

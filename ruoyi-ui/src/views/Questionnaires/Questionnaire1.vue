@@ -5,7 +5,7 @@
         <div class="question-box">
           <h2>{{ index + 1 }}. {{ question.text }}</h2>
           <div class="options">
-            <label v-for="option in question.options" :key="option.id">
+            <label v-for="option in getFilteredOptions(question.options)" :key="option.id">
               <input
                 type="radio"
                 :value="option.id"
@@ -43,6 +43,7 @@
   </div>
 </template>
 
+
 <script>
 import axios from "axios";
 import store from "@/store";
@@ -61,9 +62,38 @@ export default {
       finalAnswerText: ' ', // 最后选择答案
       userName: store.state.user.name, // 获取用户名
       splitFlow: '', // 分流形式
+      num: null  // 转换书院信息
     };
   },
   methods: {
+    //设置num值，书院的对应值
+    setNumBasedOnDepartment(department) {
+      switch (department) {
+        case '大煜书院':
+          this.num = 3;
+          break;
+        case '伯川书院':
+          this.num = 4;
+          break;
+        case '笃学书院':
+          this.num = 5;
+          break;
+        case '令希书院':
+          this.num = 6;
+          break;
+        case '厚德书院':
+          this.num = 7;
+          break;
+        case '知行书院':
+          this.num = 8;
+          break;
+        case '求实书院':
+          this.num = 9;
+          break;
+        default:
+          this.num = null;  // 如果department不匹配，设置num为null
+      }
+    },
     // 显示确认弹窗
     showConfirmDialog() {
       this.showConfirmDialogFlag = true;
@@ -83,7 +113,7 @@ export default {
           this.major = userData.招生录取专业; // 招生录取专业
           this.department = userData.管理部门; // 管理部门
           this.specialty = userData.系统内专业; // 系统内专业
-          console.log(this.studentId, this.studentName, this.splitFlow, this.major, this.department, this.specialty);
+          this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
 
           // 根据分流形式加载不同的问卷
           this.loadQuestionnaireBySplitFlow();
@@ -472,29 +502,6 @@ export default {
       return [
         {
           id: 1,
-          text: 'C问卷问题1',
-          options: [
-            {id: 1, text: '选项1'},
-            {id: 2, text: '选项2'}
-          ]
-        },
-        {
-          id: 2,
-          text: 'C问卷问题2',
-          options: [
-            {id: 1, text: '选项1'},
-            {id: 2, text: '选项2'}
-          ]
-        },
-        // 更多问题
-      ];
-    },
-
-    // D类型的问卷数据
-    getQuestionnaireD() {
-      return [
-        {
-          id: 1,
           text: '请先确定专业选择方案 [单选题] *',
           options: [
             {id: 1, text: '保持现有专业', next: null},
@@ -518,22 +525,166 @@ export default {
       ];
     },
 
+    // D类型的问卷数据
+    getQuestionnaireD() {
+      return [
+        {
+          id: 1,
+          text: '请先确定专业选择方案 [单选题] *',
+          options: [
+            {id: 1, text: '保持现有专业', next: null},
+            {id: 2, text: '域内任选专业', next: this.num},
+            {id: 3, text: '跨学域转专业', next: 2}
+          ]
+        },
+        {
+          id: 2,
+          text: '意向书院学域 [单选题] *',
+          options: [
+            {id: 1, text: '大煜书院——物质创造学域', next: 3},
+            {id: 2, text: '伯川书院——智能制造学域', next: 4},
+            {id: 3, text: '笃学书院——理科强基学域', next: 5},
+            {id: 4, text: '令希书院——智能建造学域', next: 6},
+            {id: 5, text: '厚德书院——人文社科学域', next: 7},
+            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
+          ]
+        },
+        {
+          id: 3,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '化学工程与工艺', next: null},
+            {id: 2, text: '精细化工', next: null},
+            {id: 3, text: '制药工程', next: null},
+            {id: 4, text: '高分子材料与工程', next: null},
+            {id: 5, text: '安全工程', next: null},
+            {id: 6, text: '过程装备与控制工程', next: null},
+            {id: 7, text: '环境工程', next: null},
+            {id: 8, text: '环境科学', next: null},
+            {id: 9, text: '生物工程', next: null}
+          ]
+        },
+        {
+          id: 4,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '智能制造工程', next: null},
+            {id: 2, text: '能源与动力工程', next: null},
+            {id: 3, text: '机械设计制造及其自动化', next: null},
+            {id: 4, text: '车辆工程（英语强化）', next: null},
+            {id: 5, text: '测控技术与仪器', next: null},
+            {id: 6, text: '金属材料工程', next: null},
+            {id: 7, text: '功能材料', next: null},
+            {id: 8, text: '材料成型及控制工程', next: null},
+            {id: 9, text: '生物医学工程', next: null}
+          ]
+        },
+        {
+          id: 5,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '数学与应用数学', next: null},
+            {id: 2, text: '信息科学与计算科学', next: null}
+          ]
+        },
+        {
+          id: 6,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '工程力学', next: null},
+            {id: 2, text: '飞行器设计与工程', next: null},
+            {id: 3, text: '船舶与海洋工程', next: null},
+            {id: 4, text: '智能建造', next: null},
+            {id: 5, text: '水利水电工程', next: null},
+            {id: 6, text: '港口航道与海岸工程', next: null},
+            {id: 7, text: '海洋资源开发技术', next: null},
+            {id: 8, text: '交通工程', next: null},
+            {id: 9, text: '工程管理', next: null},
+            {id: 10, text: '建筑环境与能源应用工程', next: null},
+            {id: 11, text: '土木工程', next: null}
+          ]
+        },
+        {
+          id: 7,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '工商管理类——金融学', next: null},
+            {id: 2, text: '工商管理类——工商管理', next: null},
+            {id: 3, text: '工商管理类——物流管理', next: null},
+            {id: 4, text: '工商管理类——国际经济与贸易', next: null},
+            {id: 5, text: '公共事业管理、哲学类、新闻传播学类——知识产权', next: null},
+            {id: 6, text: '公共事业管理、哲学类、新闻传播学类——公共事业管理', next: null},
+            {id: 7, text: '公共事业管理、哲学类、新闻传播学类——马克思主义理论', next: null},
+            {id: 8, text: '公共事业管理、哲学类、新闻传播学类——哲学', next: null},
+            {id: 9, text: '公共事业管理、哲学类、新闻传播学类——广播电视学', next: null},
+            {id: 10, text: '公共事业管理、哲学类、新闻传播学类——汉语言文学', next: null},
+            {id: 11, text: '英语、日语——英语', next: null},
+            {id: 12, text: '英语、日语——翻译', next: null},
+            {id: 13, text: '英语、日语——日语', next: null},
+            {id: 14, text: '建筑类——建筑学', next: null},
+            {id: 15, text: '建筑类——城乡规划', next: null},
+            {id: 16, text: '建筑类——工业设计', next: null},
+            {id: 17, text: '设计学类——视觉传达设计', next: null},
+            {id: 18, text: '设计学类——环境设计', next: null},
+            {id: 19, text: '设计学类——雕塑', next: null},
+            {id: 20, text: '运动训练——运动训练', next: null}
+          ]
+        },
+        {
+          id: 8,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '电气工程及其自动化', next: null},
+            {id: 2, text: '自动化', next: null},
+            {id: 3, text: '电子信息工程', next: null},
+            {id: 4, text: '计算机科学与技术', next: null},
+            {id: 5, text: '生物医学工程', next: null},
+            {id: 6, text: '光电信息科学与工程', next: null},
+            {id: 7, text: '大数据管理与应用', next: null},
+            {id: 8, text: '信息管理与信息系统', next: null}
+          ]
+        },
+        {
+          id: 9,
+          text: '意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '软件工程', next: null},
+            {id: 2, text: '网络工程', next: null},
+            {id: 3, text: '集成电路设计与集成系统', next: null},
+            {id: 4, text: '电子科学与技术', next: null}
+          ]
+        },
+        {
+          id: 999,
+          text: '问卷结束，感谢您的参与！',
+          options: []
+        }
+      ];
+    },
+
     // 提交问卷
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
 
+      if (this.finalAnswerText === "保持现有专业") {
+        this.finalAnswerText = this.major;
+      }
+
       // 提交最后一个问题的答案到后台
       axios
         .post('http://localhost:3000/questionnaire/submit', {
           user_name: this.userName, // 用户名称
-          questionnaire_id: this.questionnaireId, // 问卷编号
-          answer: this.finalAnswerText  // 只提交最后一个问题的答案
+          questionnaire_id: 1, // 问卷编号
+          answer: this.finalAnswerText // 只提交最后一个问题的答案
         })
         .then(response => {
+          console.log('提交成功:', response.data);
           setTimeout(() => {
-            this.$router.push('/Questionnaires');
-          }, 2000);  // 2秒后跳转
+            // 跳转回问卷页面
+            this.$router.go(-1);
+          }, 2000); // 2秒后跳转
         })
         .catch(error => {
           console.error('提交失败:', error);
@@ -542,6 +693,7 @@ export default {
 
     // 处理选项点击事件
     handleOptionClick(option, index) {
+      //记录最后一次点击的内容
       this.finalAnswerText = option.text;
       this.$set(this.selectedOptions, index, option.id);
       this.completed = option.next === null;
@@ -563,6 +715,16 @@ export default {
     // 取消提交
     handleCancel() {
       this.showConfirmDialogFlag = false;
+    },
+
+    getFilteredOptions(options) {
+      // 根据 department 和 major 字段来过滤选项，隐藏含有 department 或 major 的选项
+      return options.filter(option => !this.isOptionHidden(option));
+    },
+
+    isOptionHidden(option) {
+      // 如果选项的文本包含当前的 department 或 major，返回 true（表示隐藏该选项）
+      return option.text.includes(this.department) || option.text.includes(this.major);
     }
   },
   mounted() {
@@ -570,7 +732,6 @@ export default {
   }
 };
 </script>
-
 
 <style scoped>
 /* 问卷容器样式 */
