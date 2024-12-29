@@ -1,12 +1,19 @@
 <template>
   <div class="questionnaire-list">
     <div class="questionnaire-grid">
-      <div v-for="questionnaire in questionnaires" :key="questionnaire.id" class="questionnaire-card">
+      <div class="questionnaire-card">
         <div class="card-content">
-          <h3>{{ questionnaire.title }}</h3>
-          <p>{{ questionnaire.description }}</p>
+          <h3>问卷1</h3>
+          <p>书院专业分流调查问卷</p >
         </div>
-        <button @click="goToQuestionnaire(questionnaire.id)" class="btn">进入问卷</button>
+        <button @click="goToQuestionnaire1()" class="btn">进入问卷</button>
+      </div>
+      <div class="questionnaire-card">
+        <div class="card-content">
+          <h3>问卷2</h3>
+          <p>之后可添加问卷</p >
+        </div>
+        <button @click="goToQuestionnaire2()" class="btn">进入问卷</button>
       </div>
     </div>
   </div>
@@ -25,15 +32,14 @@ export default {
     };
   },
   methods: {
-      goToQuestionnaire(id) {
-        // 动态跳转到对应问卷页面
-        this.$router.push({
-          path:`/questionnaire/${id}`,
-          query: { num: id }
-        });
-
-      }
+    goToQuestionnaire1() {
+      // 动态跳转到对应问卷页面
+      this.$router.push({
+        path: `/Questionnaires/Questionnaire1`,
+        // 可根据需要添加其他参数，此处暂未添加
+      });
     }
+  }
 };
 </script>
 

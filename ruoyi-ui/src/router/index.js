@@ -33,19 +33,19 @@ import Layout from '@/layout'
 export const constantRoutes = [
   //配置问卷路由
 
-  {
-      path: '/questionnaire/1',
-      component: () => import('@/views/Questionnaires/Questionnaire1'),
-      name: 'Questionnaire1',
-      props: true
-    },
-    {
-      path: '/questionnaire/2',
-      component: () => import('@/views/Questionnaires/Questionnaire2'),
-      name: 'Questionnaire2',
-      props: true
-
-    },
+  // {
+  //     path: '/questionnaire/1',
+  //     component: () => import('@/views/Questionnaires/Questionnaire1'),
+  //     name: 'Questionnaire1',
+  //     props: true
+  //   },
+  //   {
+  //     path: '/questionnaire/2',
+  //     component: () => import('@/views/Questionnaires/Questionnaire2'),
+  //     name: 'Questionnaire2',
+  //     props: true
+  //
+  //   },
 
   {
     path: '/redirect',
