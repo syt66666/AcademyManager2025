@@ -50,13 +50,13 @@
             <el-form-item>
               <div style="display: flex; align-items: center;">
                 <span class="form-item-label" style="font-size: 16px;">时间</span>
-                <el-date-picker v-model="formData.time" type="datetime" style="width: 100%; flex: 1;"></el-date-picker>
+                <el-date-picker v-model="formData.reportDate" type="datetime" style="width: 100%; flex: 1;"></el-date-picker>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
                 <span class="form-item-label" style="font-size: 16px;">讲座简介</span>
-                <el-input v-model="formData.introduction" type="textarea" style="width: 100%; flex: 1;"></el-input>
+                <el-input v-model="formData.reportContent" type="textarea" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
@@ -108,7 +108,8 @@
 
 <script>
 import axios from "axios";
-
+import {upLoad} from "@/api/student/letcure";
+import {formatDate} from "@/utils";
 export default {
   data() {
     return {
@@ -119,11 +120,11 @@ export default {
       formData: {
         title: '',
         reporter: '',
-        time: '',
-        introduction: '',
+        reportDate: '',
+        reportContent: '',
         link: '',
-        experienceFile: null,
-        imageFiles: []
+        reportFeeling: null,
+        picture: null
       },
     };
   },
@@ -165,12 +166,13 @@ export default {
     submitForm() {
       this.$refs.form.validate((valid) => {
         if (valid) {
+          //将本地时间转为 ISO 格式的 UTC 时间
+          this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
           // 在这里编写提交表单的逻辑，例如将表单数据发送到后端
           console.log('表单数据:', this.formData);
           // 可以使用 axios 或 fetch 发送请求
           // 例如：
-          axios.post('/Lecture/insert', this.formData)
-          .then(response => {
+          upLoad(this.formData).then(response => {
              console.log("+++++++++",response);
            })
           .catch(error => {
