@@ -62,11 +62,14 @@ export default {
       finalAnswerText: ' ', // 最后选择答案
       userName: store.state.user.name, // 获取用户名
       splitFlow: '', // 分流形式
-      num: null  // 转换书院信息
+      num: null , // 转换书院信息
+      num2: null, //转换专业类信息
+      num3: null //转换厚德书院专业类信息
+
     };
   },
   methods: {
-    //设置num值，书院的对应值
+    //设置num1值，书院的对应值
     setNumBasedOnDepartment(department) {
       switch (department) {
         case '大煜书院':
@@ -94,6 +97,54 @@ export default {
           this.num = null;  // 如果department不匹配，设置num为null
       }
     },
+    //设置num2值，书院的对应值
+    setNumBasedOnMajor(major) {
+      switch (major) {
+        case '材料类':
+          this.num2 = 10;
+          break;
+        case '管理科学与工程类':
+          this.num2 = 11;
+          break;
+        case '化工与制药类':
+          this.num2 = 12;
+          break;
+        case '环境科学与工程类':
+          this.num2 = 13;
+          break;
+        case '新闻传播学类':
+          this.num2 = 14;
+          break;
+        case '智能建造':
+          this.num2 = 15;
+          break;
+        case '智能制造工程':
+          this.num2 = 16;
+          break;
+        default:
+          this.num2 = null;
+      }
+    },
+    //设置num3值，书院的对应值
+    setNumBasedOnSpecialty(specialty) {
+      switch (specialty) {
+        case '工商管理类':
+          this.num3 = 10;
+          break;
+        case '公共事业管理、哲学类、新闻传播学类':
+          this.num3 = 11;
+          break;
+        case '英语、日语':
+          this.num3 = 12;
+          break;
+        case '建筑类':
+          this.num3 = 13;
+          break;
+        default:
+          this.num3 = this.num;
+      }
+      console.log(this.num3)
+    },
     // 显示确认弹窗
     showConfirmDialog() {
       this.showConfirmDialogFlag = true;
@@ -114,7 +165,8 @@ export default {
           this.department = userData.管理部门; // 管理部门
           this.specialty = userData.系统内专业; // 系统内专业
           this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
-
+          this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
+          this.setNumBasedOnSpecialty(this.specialty);//得到专业类别对应num3,用于问卷选项加载
           // 根据分流形式加载不同的问卷
           this.loadQuestionnaireBySplitFlow();
         })
@@ -232,26 +284,26 @@ export default {
           id: 7,
           text: '意向专业 [单选题] *',
           options: [
-            {id: 1, text: '工商管理类——金融学', next: null},
-            {id: 2, text: '工商管理类——工商管理', next: null},
-            {id: 3, text: '工商管理类——物流管理', next: null},
-            {id: 4, text: '工商管理类——国际经济与贸易', next: null},
-            {id: 5, text: '公共事业管理、哲学类、新闻传播学类——知识产权', next: null},
-            {id: 6, text: '公共事业管理、哲学类、新闻传播学类——公共事业管理', next: null},
-            {id: 7, text: '公共事业管理、哲学类、新闻传播学类——马克思主义理论', next: null},
-            {id: 8, text: '公共事业管理、哲学类、新闻传播学类——哲学', next: null},
-            {id: 9, text: '公共事业管理、哲学类、新闻传播学类——广播电视学', next: null},
-            {id: 10, text: '公共事业管理、哲学类、新闻传播学类——汉语言文学', next: null},
-            {id: 11, text: '英语、日语——英语', next: null},
-            {id: 12, text: '英语、日语——翻译', next: null},
-            {id: 13, text: '英语、日语——日语', next: null},
-            {id: 14, text: '建筑类——建筑学', next: null},
-            {id: 15, text: '建筑类——城乡规划', next: null},
-            {id: 16, text: '建筑类——工业设计', next: null},
-            {id: 17, text: '设计学类——视觉传达设计', next: null},
-            {id: 18, text: '设计学类——环境设计', next: null},
-            {id: 19, text: '设计学类——雕塑', next: null},
-            {id: 20, text: '运动训练——运动训练', next: null}
+            {id: 1, text: '金融学', next: null},
+            {id: 2, text: '工商管理', next: null},
+            {id: 3, text: '物流管理', next: null},
+            {id: 4, text: '国际经济与贸易', next: null},
+            {id: 5, text: '知识产权', next: null},
+            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 7, text: '马克思主义理论', next: null},
+            {id: 8, text: '哲学', next: null},
+            {id: 9, text: '广播电视学', next: null},
+            {id: 10, text: '汉语言文学', next: null},
+            {id: 11, text: '英语', next: null},
+            {id: 12, text: '翻译', next: null},
+            {id: 13, text: '日语', next: null},
+            {id: 14, text: '建筑学', next: null},
+            {id: 15, text: '城乡规划', next: null},
+            {id: 16, text: '工业设计', next: null},
+            {id: 17, text: '视觉传达设计', next: null},
+            {id: 18, text: '环境设计', next: null},
+            {id: 19, text: '雕塑', next: null},
+            {id: 20, text: '运动训练', next: null}
           ]
         },
         {
@@ -294,7 +346,7 @@ export default {
           text: '请先确定专业选择方案 [单选题] *',
           options: [
             {id: 1, text: '保持现有专业', next: null},
-            {id: 2, text: '类内任选专业', next: 10},
+            {id: 2, text: '类内任选专业', next: this.num2},
             {id: 3, text: '跨学域转专业', next: 2}
           ]
         },
@@ -370,26 +422,26 @@ export default {
           id: 7,
           text: '意向专业 [单选题] *',
           options: [
-            {id: 1, text: '工商管理类——金融学', next: null},
-            {id: 2, text: '工商管理类——工商管理', next: null},
-            {id: 3, text: '工商管理类——物流管理', next: null},
-            {id: 4, text: '工商管理类——国际经济与贸易', next: null},
-            {id: 5, text: '公共事业管理、哲学类、新闻传播学类——知识产权', next: null},
-            {id: 6, text: '公共事业管理、哲学类、新闻传播学类——公共事业管理', next: null},
-            {id: 7, text: '公共事业管理、哲学类、新闻传播学类——马克思主义理论', next: null},
-            {id: 8, text: '公共事业管理、哲学类、新闻传播学类——哲学', next: null},
-            {id: 9, text: '公共事业管理、哲学类、新闻传播学类——广播电视学', next: null},
-            {id: 10, text: '公共事业管理、哲学类、新闻传播学类——汉语言文学', next: null},
-            {id: 11, text: '英语、日语——英语', next: null},
-            {id: 12, text: '英语、日语——翻译', next: null},
-            {id: 13, text: '英语、日语——日语', next: null},
-            {id: 14, text: '建筑类——建筑学', next: null},
-            {id: 15, text: '建筑类——城乡规划', next: null},
-            {id: 16, text: '建筑类——工业设计', next: null},
-            {id: 17, text: '设计学类——视觉传达设计', next: null},
-            {id: 18, text: '设计学类——环境设计', next: null},
-            {id: 19, text: '设计学类——雕塑', next: null},
-            {id: 20, text: '运动训练——运动训练', next: null}
+            {id: 1, text: '金融学', next: null},
+            {id: 2, text: '工商管理', next: null},
+            {id: 3, text: '物流管理', next: null},
+            {id: 4, text: '国际经济与贸易', next: null},
+            {id: 5, text: '知识产权', next: null},
+            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 7, text: '马克思主义理论', next: null},
+            {id: 8, text: '哲学', next: null},
+            {id: 9, text: '广播电视学', next: null},
+            {id: 10, text: '汉语言文学', next: null},
+            {id: 11, text: '英语', next: null},
+            {id: 12, text: '翻译', next: null},
+            {id: 13, text: '日语', next: null},
+            {id: 14, text: '建筑学', next: null},
+            {id: 15, text: '城乡规划', next: null},
+            {id: 16, text: '工业设计', next: null},
+            {id: 17, text: '视觉传达设计', next: null},
+            {id: 18, text: '环境设计', next: null},
+            {id: 19, text: '雕塑', next: null},
+            {id: 20, text: '运动训练', next: null}
           ]
         },
         {
@@ -533,7 +585,7 @@ export default {
           text: '请先确定专业选择方案 [单选题] *',
           options: [
             {id: 1, text: '保持现有专业', next: null},
-            {id: 2, text: '域内任选专业', next: this.num},
+            {id: 2, text: '域内任选专业', next: this.num3},
             {id: 3, text: '跨学域转专业', next: 2}
           ]
         },
@@ -609,26 +661,26 @@ export default {
           id: 7,
           text: '意向专业 [单选题] *',
           options: [
-            {id: 1, text: '工商管理类——金融学', next: null},
-            {id: 2, text: '工商管理类——工商管理', next: null},
-            {id: 3, text: '工商管理类——物流管理', next: null},
-            {id: 4, text: '工商管理类——国际经济与贸易', next: null},
-            {id: 5, text: '公共事业管理、哲学类、新闻传播学类——知识产权', next: null},
-            {id: 6, text: '公共事业管理、哲学类、新闻传播学类——公共事业管理', next: null},
-            {id: 7, text: '公共事业管理、哲学类、新闻传播学类——马克思主义理论', next: null},
-            {id: 8, text: '公共事业管理、哲学类、新闻传播学类——哲学', next: null},
-            {id: 9, text: '公共事业管理、哲学类、新闻传播学类——广播电视学', next: null},
-            {id: 10, text: '公共事业管理、哲学类、新闻传播学类——汉语言文学', next: null},
-            {id: 11, text: '英语、日语——英语', next: null},
-            {id: 12, text: '英语、日语——翻译', next: null},
-            {id: 13, text: '英语、日语——日语', next: null},
-            {id: 14, text: '建筑类——建筑学', next: null},
-            {id: 15, text: '建筑类——城乡规划', next: null},
-            {id: 16, text: '建筑类——工业设计', next: null},
-            {id: 17, text: '设计学类——视觉传达设计', next: null},
-            {id: 18, text: '设计学类——环境设计', next: null},
-            {id: 19, text: '设计学类——雕塑', next: null},
-            {id: 20, text: '运动训练——运动训练', next: null}
+            {id: 1, text: '金融学', next: null},
+            {id: 2, text: '工商管理', next: null},
+            {id: 3, text: '物流管理', next: null},
+            {id: 4, text: '国际经济与贸易', next: null},
+            {id: 5, text: '知识产权', next: null},
+            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 7, text: '马克思主义理论', next: null},
+            {id: 8, text: '哲学', next: null},
+            {id: 9, text: '广播电视学', next: null},
+            {id: 10, text: '汉语言文学', next: null},
+            {id: 11, text: '英语', next: null},
+            {id: 12, text: '翻译', next: null},
+            {id: 13, text: '日语', next: null},
+            {id: 14, text: '建筑学', next: null},
+            {id: 15, text: '城乡规划', next: null},
+            {id: 16, text: '工业设计', next: null},
+            {id: 17, text: '视觉传达设计', next: null},
+            {id: 18, text: '环境设计', next: null},
+            {id: 19, text: '雕塑', next: null},
+            {id: 20, text: '运动训练', next: null}
           ]
         },
         {
@@ -656,6 +708,46 @@ export default {
           ]
         },
         {
+          id: 10,
+          text: '工商管理类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '金融学', next: null},
+            {id: 2, text: '工商管理', next: null},
+            {id: 3, text: '物流管理', next: null},
+            {id: 4, text: '国际经济与贸易', next: null},
+          ]
+        },
+        {
+          id: 11,
+          text: '公共事业管理、哲学类、新闻传播学类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '知识产权', next: null},
+            {id: 2, text: '公共事业管理', next: null},
+            {id: 3, text: '马克思主义理论', next: null},
+            {id: 4, text: '哲学', next: null},
+            {id: 5, text: '广播电视学', next: null},
+            {id: 6, text: '汉语言文学', next: null},
+          ]
+        },
+        {
+          id: 12,
+          text: '英语、日语 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '英语', next: null},
+            {id: 2, text: '翻译', next: null},
+            {id: 3, text: '日语', next: null},
+          ]
+        },
+        {
+          id: 13,
+          text: '建筑类 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '建筑学', next: null},
+            {id: 2, text: '城乡规划', next: null},
+            {id: 3, text: '工业设计', next: null},
+          ]
+        },
+        {
           id: 999,
           text: '问卷结束，感谢您的参与！',
           options: []
@@ -668,7 +760,7 @@ export default {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
 
-      if (this.finalAnswerText === "保持现有专业") {
+      if (this.finalAnswerText === "保持现有专业"||this.finalAnswerText === "否") {
         this.finalAnswerText = this.major;
       }
 
