@@ -107,6 +107,8 @@
 </template>
 
 <script>
+import axios from "axios";
+
 export default {
   data() {
     return {
@@ -167,43 +169,18 @@ export default {
           console.log('表单数据:', this.formData);
           // 可以使用 axios 或 fetch 发送请求
           // 例如：
-          // axios.post('/api/submit-form', this.formData)
-          // .then(response => {
-          //    console.log(response);
-          //  })
-          // .catch(error => {
-          //    console.error(error);
-          //  });
+          axios.post('/Lecture/insert', this.formData)
+          .then(response => {
+             console.log("+++++++++",response);
+           })
+          .catch(error => {
+             console.error(error);
+           });
         } else {
           this.$message.error('请填写完整表单信息');
         }
       });
     },
-    handleFileUpload(event) {
-      this.selectedFile = event.target.files[0];
-    },
-    submitReport() {
-      if (this.selectedFile) {
-        // 创建一个 FormData 对象，用于存储文件数据
-        const formData = new FormData();
-        formData.append('report', this.selectedFile);
-        // 发起 POST 请求上传文件
-        fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        })
-          .then(response => response.json())
-          .then(data => {
-            this.uploadMessage = data.message;
-          })
-          .catch(error => {
-            this.uploadMessage = '上传失败，请稍后重试。';
-            console.error(error);
-          });
-      } else {
-        this.uploadMessage = '请先选择一个文件。';
-      }
-    }
   }
 };
 </script>
