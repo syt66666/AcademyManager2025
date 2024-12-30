@@ -37,60 +37,59 @@
           <el-form ref="form" :model="formData" label-width="120px" label-position="right">
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">题目</span>
+                <span class="form-item-label" style="font-size: 16px;width:70px">题目</span>
                 <el-input v-model="formData.title" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">报告人</span>
+                <span class="form-item-label" style="font-size: 16px;width:70px">报告人</span>
                 <el-input v-model="formData.reporter" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">时间</span>
+                <span class="form-item-label" style="font-size: 16px;width:70px">时间</span>
                 <el-date-picker v-model="formData.reportDate" type="datetime" style="width: 100%; flex: 1;"></el-date-picker>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">讲座简介</span>
-                <el-input v-model="formData.reportContent" type="textarea" style="width: 100%; flex: 1;"></el-input>
+                <span class="form-item-label" style="font-size: 16px;width:70px">讲座简介</span>
+                <el-input v-model="formData.reportContent" type="textarea" style="width: 100%; flex: 1;margin-left: 10px"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">连接</span>
+                <span class="form-item-label" style="font-size: 16px;width:70px">连接</span>
                 <el-input v-model="formData.link" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">报告心得体会上传</span>
+                <span class="form-item-label" style="font-size: 16px;width:70px;height: auto">报告心得体会上传</span>
                 <el-upload
-                  action="/api/upload-experience"
-                  :on-success="handleExperienceUploadSuccess"
-                  :show-file-list="false"
-                  :before-upload="beforeExperienceUpload"
-                  :auto-upload="true"
-                >
-                  <el-button size="small" type="primary">点击上传</el-button>
+                  class="upload-demo"
+                  drag
+                  action="https://jsonplaceholder.typicode.com/posts/"
+                  style="margin-left: 10px"
+                  multiple>
+                  <i class="el-icon-upload"></i>
+                  <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                 </el-upload>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">图片上传</span>
+                <span class="form-item-label" style="font-size: 16px;width:70px">图片上传</span>
                 <el-upload
-                  action="/api/upload-image"
-                  :on-success="handleImageUploadSuccess"
-                  :show-file-list="true"
-                  :before-upload="beforeImageUpload"
-                  :auto-upload="true"
-                  list-type="picture-card"
-                >
-                  <i class="el-icon-plus"></i>
+                  class="upload-demo"
+                  drag
+                  action="https://jsonplaceholder.typicode.com/posts/"
+                  style="margin-left: 10px"
+                  multiple>
+                  <i class="el-icon-upload"></i>
+                  <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
                 </el-upload>
               </div>
             </el-form-item>
