@@ -5,37 +5,17 @@
         <router-view v-if="!$route.meta.link" :key="key" />
       </keep-alive>
     </transition>
-    <div class="welcome-card">
-      <p class="welcome-message">你好，{{ studentName }}！</p>
-      <div class="user-info">
-        <p>书院：{{ department }}</p>
-        <p>系统内专业：{{ major }}</p>
-        <p>招生录取专业：{{ specialty }}</p>
-        <p>分流形式：{{ splitFlow }}</p>
-      </div>
       <iframe-toggle />
-    </div>
   </section>
 </template>
 
 <script>
 import iframeToggle from "./IframeToggle/index";
-import axios from "axios";
-import store from "@/store";
+
 
 export default {
   name: 'AppMain',
   components: { iframeToggle },
-  data() {
-    return {
-      splitFlow: '',
-      studentName: '',
-      studentId: '',
-      major: '',
-      department: '',
-      specialty: ''
-    };
-  },
   computed: {
     userName() {
       return this.$store.state.user.name; // 响应式的用户名
@@ -62,25 +42,6 @@ export default {
       if (name && this.$route.meta.link && !this.$store.state.tagsView.iframeViews.includes(name)) {
         this.$store.dispatch('tagsView/addIframeView', this.$route);
       }
-    },
-    initializeQuestionnaire() {
-      axios
-        .get(`http://localhost:3000/api/users/${this.userName}`)
-        .then(response => {
-          const userData = response.data;
-          console.log(userData);
-
-          this.splitFlow = userData.分流形式;
-          this.studentName = userData.姓名;
-          this.studentId = userData.学号;
-          this.major = userData.招生录取专业;
-          this.department = userData.管理部门;
-          this.specialty = userData.系统内专业;
-        })
-        .catch(error => {
-          console.error('获取用户信息失败', error);
-          this.$message.error('获取用户信息失败');
-        });
     },
   }
 }
