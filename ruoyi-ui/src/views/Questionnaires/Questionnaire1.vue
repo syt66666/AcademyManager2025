@@ -64,8 +64,8 @@ export default {
       splitFlow: '', // 分流形式
       num: null , // 转换书院信息
       num2: null, //转换专业类信息
-      num3: null //转换厚德书院专业类信息
-
+      num3: null, //转换厚德书院专业类信息
+      filter:true //是否过滤
     };
   },
   methods: {
@@ -203,6 +203,7 @@ export default {
 
     // A类型的问卷数据
     getQuestionnaireA() {
+      this.filter=true;
       return [
         {
           id: 1,
@@ -340,14 +341,14 @@ export default {
 
     // B类型的问卷数据
     getQuestionnaireB() {
+      this.filter=false;
       return [
         {
           id: 1,
           text: '请先确定专业选择方案 [单选题] *',
           options: [
-            {id: 1, text: '保持现有专业', next: null},
-            {id: 2, text: '类内任选专业', next: this.num2},
-            {id: 3, text: '跨学域转专业', next: 2}
+            {id: 1, text: '类内任选专业', next: this.num2},
+            {id: 2, text: '跨学域转专业', next: 2}
           ]
         },
         {
@@ -365,7 +366,7 @@ export default {
         },
         {
           id: 3,
-          text: '意向专业 [单选题] *',
+          text: '大煜书院——物质创造学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
             {id: 2, text: '精细化工', next: null},
@@ -380,7 +381,7 @@ export default {
         },
         {
           id: 4,
-          text: '意向专业 [单选题] *',
+          text: '伯川书院——智能制造学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '智能制造工程', next: null},
             {id: 2, text: '能源与动力工程', next: null},
@@ -395,7 +396,7 @@ export default {
         },
         {
           id: 5,
-          text: '意向专业 [单选题] *',
+          text: '笃学书院——理科强基学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
             {id: 2, text: '信息科学与计算科学', next: null}
@@ -403,7 +404,7 @@ export default {
         },
         {
           id: 6,
-          text: '意向专业 [单选题] *',
+          text: '令希书院——智能建造学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '工程力学', next: null},
             {id: 2, text: '飞行器设计与工程', next: null},
@@ -420,7 +421,7 @@ export default {
         },
         {
           id: 7,
-          text: '意向专业 [单选题] *',
+          text: '厚德书院——人文社科学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '金融学', next: null},
             {id: 2, text: '工商管理', next: null},
@@ -446,7 +447,7 @@ export default {
         },
         {
           id: 8,
-          text: '意向专业 [单选题] *',
+          text: '知行书院——信息技术学域（一） 意向专业 [单选题] *',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
             {id: 2, text: '自动化', next: null},
@@ -460,7 +461,7 @@ export default {
         },
         {
           id: 9,
-          text: '意向专业 [单选题] *',
+          text: '求实书院——信息技术学域（二）意向专业 [单选题] *',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
@@ -551,22 +552,15 @@ export default {
 
     // C类型的问卷数据
     getQuestionnaireC() {
+      this.filter=false;
       return [
         {
           id: 1,
-          text: '请先确定专业选择方案 [单选题] *',
-          options: [
-            {id: 1, text: '保持现有专业', next: null},
-            {id: 2, text: '类内任选专业', next: 2},
-          ]
-        },
-        {
-          id: 2,
           text: '如果进行类内任选，将选择的普通专业是 [单选题]',
           options: [
-            {id: 1, text: '设计学类——视觉传达设计', next: null},
-            {id: 2, text: '设计学类——环境设计', next: null},
-            {id: 3, text: '设计学类——雕塑', next: null},
+            {id: 1, text: '视觉传达设计', next: null},
+            {id: 2, text: '环境设计', next: null},
+            {id: 3, text: '雕塑', next: null},
           ]
         },
         {
@@ -579,6 +573,7 @@ export default {
 
     // D类型的问卷数据
     getQuestionnaireD() {
+      this.filter=true;
       return [
         {
           id: 1,
@@ -811,7 +806,10 @@ export default {
 
     getFilteredOptions(options) {
       // 根据 department 和 major 字段来过滤选项，隐藏含有 department 或 major 的选项
-      return options.filter(option => !this.isOptionHidden(option));
+      if(this.filter){
+        return options.filter(option => !this.isOptionHidden(option));
+      }
+        else return options
     },
 
     isOptionHidden(option) {
