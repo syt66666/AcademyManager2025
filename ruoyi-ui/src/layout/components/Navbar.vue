@@ -59,14 +59,14 @@ import RuoYiDoc from '@/components/RuoYi/Doc'
 
 export default {
   components: {
-    Breadcrumb,
+    // Breadcrumb,
     TopNav,
     Hamburger,
     Screenfull,
     SizeSelect,
-    Search,
-    RuoYiGit,
-    RuoYiDoc
+    // Search,
+    // RuoYiGit,
+    // RuoYiDoc
   },
   computed: {
     ...mapGetters([
