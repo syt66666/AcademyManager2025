@@ -43,7 +43,6 @@
   </div>
 </template>
 
-
 <script>
 import axios from "axios";
 import store from "@/store";
@@ -189,13 +188,13 @@ export default {
           console.log(userData);  // 输出用户信息
 
           // 获取学生信息
-          this.splitFlow = userData.分流形式; // 分流形式
-          this.studentName = userData.姓名; // 姓名
-          this.studentId = userData.学号; // 学号
-          this.major = userData.招生录取专业; // 招生录取专业
-          this.department = userData.管理部门; // 管理部门
-          this.specialty = userData.系统内专业; // 系统内专业
-          this.specialClass=userData.创新班或拔尖班;//0：不是 1：是
+          this.splitFlow = userData.divertForm // 分流形式
+          this.studentName = userData.studentName; // 姓名
+          this.studentId = userData.studentId; // 学号
+          this.major = userData.Major; // 招生录取专业
+          this.department = userData.adress; // 管理部门
+          this.specialty = userData.systemMajor; // 系统内专业
+          this.specialClass=userData.studentClass;//0：不是 1：是
           this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
           this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
           this.setNumBasedOnSpecialty(this.specialty);//得到专业类别对应num3,用于问卷选项加载
@@ -376,7 +375,7 @@ export default {
       ]
     },
 
-    // B类型的问卷数据
+    // 类内任选，并转专业 类型的问卷数据
     getQuestionnaireB() {
       this.filter=false;
       return [

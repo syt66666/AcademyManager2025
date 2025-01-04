@@ -25,7 +25,7 @@ app.get('/api/users/:userName', async (req, res) => {
   const { userName } = req.params;
 
   try {
-    const [rows] = await db.promise().execute('SELECT s2.学号,s2.姓名,s2.分流形式,s2.管理部门,s2.系统内专业,s2.招生录取专业,s2.创新班或拔尖班 FROM sys_user s1 join student s2 on s1.user_name=s2.学号 WHERE user_name = ?', [userName]);
+    const [rows] = await db.promise().execute('SELECT s2.studentId,s2.studentName,s2.adress,s2.divertForm,s2.systemMajor,s2.Major,s2.studentClass FROM sys_user s1 join student s2 on s1.user_name=s2.studentId WHERE user_name = ?', [userName]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: '用户未找到' });
