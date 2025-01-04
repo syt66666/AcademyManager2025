@@ -45,8 +45,8 @@ export default {
           this.splitFlow = userData.divertForm // 分流形式
           this.studentName = userData.studentName; // 姓名
           this.studentId = userData.studentId; // 学号
-          this.major = userData.Major; // 招生录取专业
-          this.department = userData.adress; // 管理部门
+          this.major = userData.major; // 招生录取专业
+          this.department = userData.academy; // 管理部门
           this.specialty = userData.systemMajor; // 系统内专业
         })
         .catch(error => {

@@ -59,13 +59,15 @@ export default {
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
       finalAnswerText: ' ', // 最后选择答案
+      finalAnswerText2: ' ', // 最后选择答案
       userName: store.state.user.name, // 获取用户名
       splitFlow: '', // 分流形式
       num: null , // 转换书院信息
       num2: null, //转换专业类信息
       num3: null, //转换厚德书院专业类信息
       num4: null, //转换创新班专业信息
-      filter:true //是否过滤
+      filter:true, //是否过滤
+      userSelections: [],
     };
   },
   methods: {
@@ -191,15 +193,16 @@ export default {
           this.splitFlow = userData.divertForm // 分流形式
           this.studentName = userData.studentName; // 姓名
           this.studentId = userData.studentId; // 学号
-          this.major = userData.Major; // 招生录取专业
-          this.department = userData.adress; // 管理部门
+          this.major = userData.major; // 招生录取专业
+          this.department = userData.academy; // 管理部门
           this.specialty = userData.systemMajor; // 系统内专业
-          this.specialClass=userData.studentClass;//0：不是 1：是
+          this.specialClass=userData.InnovationClass;//0：不是 1：是
           this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
           this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
           this.setNumBasedOnSpecialty(this.specialty);//得到专业类别对应num3,用于问卷选项加载
           this.setNumBasedOnClass(this.specialty);//得到创新班专业类别对应num4,用于问卷选项加载
           this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
+          this.getLastAnswerForQuestion(questionId);
         })
         .catch(error => {
           console.error('获取用户信息失败', error); // 错误处理
@@ -253,13 +256,13 @@ export default {
           id: 2,
           text: '意向书院学域 [单选题] *',
           options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 3},
-            {id: 2, text: '伯川书院——智能制造学域', next: 4},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
-            {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
+            {id: 1, text: '大煜书院', next: 3},
+            {id: 2, text: '伯川书院', next: 4},
+            {id: 3, text: '笃学书院', next: 5},
+            {id: 4, text: '令希书院—', next: 6},
+            {id: 5, text: '厚德书院', next: 7},
+            {id: 6, text: '知行书院', next: 8},
+            {id: 7, text: '求实书院', next: 9}
           ]
         },
         {
@@ -398,13 +401,13 @@ export default {
           id: 2,
           text: '如果您满足转专业要求您期望转入的专业是 [单选题] *',
           options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 3},
-            {id: 2, text: '伯川书院——智能制造学域', next: 4},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
-            {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
+            {id: 1, text: '大煜书院', next: 3},
+            {id: 2, text: '伯川书院', next: 4},
+            {id: 3, text: '笃学书院', next: 5},
+            {id: 4, text: '令希书院', next: 6},
+            {id: 5, text: '厚德书院', next: 7},
+            {id: 6, text: '知行书院', next: 8},
+            {id: 7, text: '求实书院', next: 9}
           ]
         },
         {
@@ -638,13 +641,13 @@ export default {
           id: 2,
           text: '如果您满足转专业要求您期望转入的专业是 [单选题] *',
           options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 14},
-            {id: 2, text: '伯川书院——智能制造学域', next: 15},
-            {id: 3, text: '笃学书院——理科强基学域', next: 16},
-            {id: 4, text: '令希书院——智能建造学域', next: 17},
-            {id: 5, text: '厚德书院——人文社科学域', next: 18},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 19},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 20}
+            {id: 1, text: '大煜书院', next: 14},
+            {id: 2, text: '伯川书院', next: 15},
+            {id: 3, text: '笃学书院', next: 16},
+            {id: 4, text: '令希书院', next: 17},
+            {id: 5, text: '厚德书院', next: 18},
+            {id: 6, text: '知行书院', next: 19},
+            {id: 7, text: '求实书院', next: 20}
           ]
         },
         {
@@ -937,17 +940,122 @@ export default {
           id: 2,
           text: '如果您满足转专业要求您期望转入的专业是 [单选题] *',
           options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 3},
-            {id: 2, text: '伯川书院——智能制造学域', next: 4},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
-            {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
+            {id: 1, text: '大煜书院', next: 13},
+            {id: 2, text: '伯川书院', next: 14},
+            {id: 3, text: '笃学书院', next: 15},
+            {id: 4, text: '令希书院', next: 16},
+            {id: 5, text: '厚德书院', next: 17},
+            {id: 6, text: '知行书院', next: 18},
+            {id: 7, text: '求实书院', next: 19}
           ]
         },
         {
           id: 3,
+          text: '大煜书院——物质创造学域 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '化学工程与工艺', next: 20},
+            {id: 2, text: '精细化工', next: 20},
+            {id: 3, text: '制药工程', next: 20},
+            {id: 4, text: '高分子材料与工程', next: 20},
+            {id: 5, text: '安全工程', next: 20},
+            {id: 6, text: '过程装备与控制工程', next: 20},
+            {id: 7, text: '环境工程', next: 20},
+            {id: 8, text: '环境科学', next: 20},
+            {id: 9, text: '生物工程', next: 20}
+          ]
+        },
+        {
+          id: 4,
+          text: '伯川书院——智能制造学域 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '智能制造工程', next: 20},
+            {id: 2, text: '能源与动力工程', next: 20},
+            {id: 3, text: '机械设计制造及其自动化', next: 20},
+            {id: 4, text: '车辆工程（英语强化）', next: 20},
+            {id: 5, text: '测控技术与仪器', next: 20},
+            {id: 6, text: '金属材料工程', next: 20},
+            {id: 7, text: '功能材料', next: 20},
+            {id: 8, text: '材料成型及控制工程', next: 20},
+            {id: 9, text: '生物医学工程', next: 20}
+          ]
+        },
+        {
+          id: 5,
+          text: '笃学书院——理科强基学域 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '数学与应用数学', next: 20},
+            {id: 2, text: '信息科学与计算科学', next: 20}
+          ]
+        },
+        {
+          id: 6,
+          text: '令希书院——智能建造学域 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '工程力学', next: 20},
+            {id: 2, text: '飞行器设计与工程', next: 20},
+            {id: 3, text: '船舶与海洋工程', next: 20},
+            {id: 4, text: '智能建造', next: 20},
+            {id: 5, text: '水利水电工程', next: 20},
+            {id: 6, text: '港口航道与海岸工程', next: 20},
+            {id: 7, text: '海洋资源开发技术', next: 20},
+            {id: 8, text: '交通工程', next: 20},
+            {id: 9, text: '工程管理', next: 20},
+            {id: 10, text: '建筑环境与能源应用工程', next: 20},
+            {id: 11, text: '土木工程', next: 20}
+          ]
+        },
+        {
+          id: 7,
+          text: '厚德书院——人文社科学域 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '金融学', next: 20},
+            {id: 2, text: '工商管理', next: 20},
+            {id: 3, text: '物流管理', next: 20},
+            {id: 4, text: '国际经济与贸易', next: 20},
+            {id: 5, text: '知识产权', next: 20},
+            {id: 6, text: '公共事业管理、公共事业管理', next: 20},
+            {id: 7, text: '马克思主义理论', next: 20},
+            {id: 8, text: '哲学', next: 20},
+            {id: 9, text: '广播电视学', next: 20},
+            {id: 10, text: '汉语言文学', next: 20},
+            {id: 11, text: '英语', next: 20},
+            {id: 12, text: '翻译', next: 20},
+            {id: 13, text: '日语', next: 20},
+            {id: 14, text: '建筑学', next: 20},
+            {id: 15, text: '城乡规划', next: 20},
+            {id: 16, text: '工业设计', next: 20},
+            {id: 17, text: '视觉传达设计', next: 20},
+            {id: 18, text: '环境设计', next:20},
+            {id: 19, text: '雕塑', next: 20},
+            {id: 20, text: '运动训练', next: 20}
+          ]
+        },
+        {
+          id: 8,
+          text: '知行书院——信息技术学域（一） 意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '电气工程及其自动化', next: 20},
+            {id: 2, text: '自动化', next: 20},
+            {id: 3, text: '电子信息工程', next: 20},
+            {id: 4, text: '计算机科学与技术', next: 20},
+            {id: 5, text: '生物医学工程', next: 20},
+            {id: 6, text: '光电信息科学与工程', next: 20},
+            {id: 7, text: '大数据管理与应用', next: 20},
+            {id: 8, text: '信息管理与信息系统', next: 20}
+          ]
+        },
+        {
+          id: 9,
+          text: '求实书院——信息技术学域（二）意向专业 [单选题] *',
+          options: [
+            {id: 1, text: '软件工程', next: 20},
+            {id: 2, text: '网络工程', next: 20},
+            {id: 3, text: '集成电路设计与集成系统', next: 20},
+            {id: 4, text: '电子科学与技术', next: 20}
+          ]
+        },
+        {
+          id: 13,
           text: '大煜书院——物质创造学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
@@ -962,7 +1070,7 @@ export default {
           ]
         },
         {
-          id: 4,
+          id: 14,
           text: '伯川书院——智能制造学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '智能制造工程', next: null},
@@ -977,7 +1085,7 @@ export default {
           ]
         },
         {
-          id: 5,
+          id: 15,
           text: '笃学书院——理科强基学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
@@ -985,7 +1093,7 @@ export default {
           ]
         },
         {
-          id: 6,
+          id: 16,
           text: '令希书院——智能建造学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '工程力学', next: null},
@@ -1002,7 +1110,7 @@ export default {
           ]
         },
         {
-          id: 7,
+          id: 17,
           text: '厚德书院——人文社科学域 意向专业 [单选题] *',
           options: [
             {id: 1, text: '金融学', next: null},
@@ -1028,7 +1136,7 @@ export default {
           ]
         },
         {
-          id: 8,
+          id: 18,
           text: '知行书院——信息技术学域（一） 意向专业 [单选题] *',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
@@ -1042,7 +1150,7 @@ export default {
           ]
         },
         {
-          id: 9,
+          id: 19,
           text: '求实书院——信息技术学域（二）意向专业 [单选题] *',
           options: [
             {id: 1, text: '软件工程', next: null},
@@ -1051,7 +1159,6 @@ export default {
             {id: 4, text: '电子科学与技术', next: null}
           ]
         },
-
         {
           id: 100,
           text: '请选择您所在拔尖班、创新班的内设专业 [单选题] *',
@@ -1133,21 +1240,85 @@ export default {
       ];
     },
 
+    // 处理选项点击事件
+    handleOptionClick(option, index) {
+      //记录最后一次点击的内容
+      this.finalAnswerText = option.text;
+
+      this.$set(this.selectedOptions, index, option.id);
+      this.completed = option.next === null;
+      this.currentDisplay = this.currentDisplay.slice(0, index + 1);
+
+      // 将选择的详细信息存入 userSelections
+      const question = this.currentDisplay[index];
+      this.userSelections[index] = {
+        questionId: question.id,
+        questionText: question.text,
+        selectedOptionId: option.id,
+        selectedOptionText: option.text,
+      };
+      console.log(this.userSelections[index])
+      if (option.next !== null) {
+        const nextQuestion = this.questionnaire.find(q => q.id === option.next);
+        if (nextQuestion) {
+          this.currentDisplay.push(nextQuestion);
+        }
+      }
+    },
+
     // 提交问卷
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
-
-      if (this.finalAnswerText === "保持现有专业"||this.finalAnswerText === "否") {
+      //第一种问卷
+      if (this.finalAnswerText === "是"&&this.splitFlow==="仅可转专业") {
+        this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
+      }else if(this.splitFlow==="仅可转专业"){
         this.finalAnswerText = this.major;
+        this.finalAnswerText2 = this.department;
       }
-
+      //第二种问卷
+      else if(this.splitFlow==="可类内任选，并转专业"&&this.finalAnswerText==="否"){
+        this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
+        this.finalAnswerText2=this.department;
+      }
+      else if(this.splitFlow==="可类内任选，并转专业"){
+        this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
+      }
+      //第三种问卷
+      else if(this.splitFlow==="可类内任选，不能转专业"){
+        this.finalAnswerText2=this.department;
+      }
+      else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="保持现有专业"&&this.specialClass===0){
+        this.finalAnswerText=this.major;
+        this.finalAnswerText2=this.department;
+      }
+      else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.specialClass===0){
+        this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
+        this.finalAnswerText2=this.department;
+      }
+      else if(this.splitFlow==="可域内任选，并转专业"&&this.specialClass===0){
+        this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
+      }
+      else if(this.specialClass===1&&this.finalAnswerText==="否"){
+        if(this.getLastAnswerForQuestion(50).selectedOptionText==="否"){
+          this.finalAnswerText=this.getLastAnswerForQuestion(this.num4).selectedOptionText;
+          this.finalAnswerText2=this.department;
+        }else{
+          this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
+          this.finalAnswerText2=this.department;
+        }
+      }
+      else if(this.specialClass===1){
+        this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
+      }
       // 提交最后一个问题的答案到后台
       axios
         .post('http://localhost:3000/questionnaire/submit', {
           user_name: this.userName, // 用户名称
           questionnaire_id: 1, // 问卷编号
-          answer: this.finalAnswerText // 只提交最后一个问题的答案
+          change_adress: this.finalAnswerText2,//提交问卷的书院
+          change_major: this.finalAnswerText // 只提交最后一个问题的答案
         })
         .then(response => {
           console.log('提交成功:', response.data);
@@ -1160,22 +1331,13 @@ export default {
           console.error('提交失败:', error);
         });
     },
+    //过滤问卷答案
+    getLastAnswerForQuestion(questionId) {
+      // 过滤出所有 questionId=2 的记录
+      const filteredAnswers = this.userSelections.filter(selection => selection.questionId === questionId);
 
-    // 处理选项点击事件
-    handleOptionClick(option, index) {
-      //记录最后一次点击的内容
-      this.finalAnswerText = option.text;
-
-      this.$set(this.selectedOptions, index, option.id);
-      this.completed = option.next === null;
-      this.currentDisplay = this.currentDisplay.slice(0, index + 1);
-
-      if (option.next !== null) {
-        const nextQuestion = this.questionnaire.find(q => q.id === option.next);
-        if (nextQuestion) {
-          this.currentDisplay.push(nextQuestion);
-        }
-      }
+      // 如果找到记录，返回最后一个；否则返回 null
+      return filteredAnswers.length > 0 ? filteredAnswers[filteredAnswers.length - 1] : null;
     },
 
     // 关闭弹窗
