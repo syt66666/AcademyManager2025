@@ -9,13 +9,29 @@
         <div class="card-content">
           <h3>{{ questionnaire.title }}</h3>
           <p>{{ questionnaire.description }}</p>
+          <!-- 显示问卷的开始和结束时间 -->
+          <div class="questionnaire-time">
+            <div class="time-field">
+              <strong>开始时间：</strong>
+              <span>{{ formatDate(questionnaire.start_time) }}</span>
+            </div>
+            <div class="time-field">
+              <strong>结束时间：</strong>
+              <span>{{ formatDate(questionnaire.end_time) }}</span>
+            </div>
+          </div>
         </div>
         <button
-          :disabled="questionnaire.completed"
+          :class="{'not-allowed': !questionnaire.isInTimeRange && !questionnaire.completed}"
+          :disabled="questionnaire.completed || !questionnaire.isInTimeRange"
           @click="goToQuestionnaire(questionnaire.id)"
           class="btn"
         >
-          {{ questionnaire.completed ? '已完成' : '进入问卷' }}
+          {{
+            questionnaire.completed
+              ? '已完成'
+              : (!questionnaire.isInTimeRange ? '不可作答' : '进入问卷')
+          }}
         </button>
       </div>
     </div>
@@ -30,18 +46,17 @@ export default {
   data() {
     return {
       userName: store.state.user.name, // 获取用户名
+
       questionnaires: [
-        { id: 1, title: '问卷1', description: '书院专业分流调查问卷', completed: false },
-        { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false }
+        { id: 1, title: '问卷1', description: '书院专业分流调查问卷', completed: false, start_time: '2025-01-01T00:00:00', end_time: '2026-01-1T00:00:00' },
+        { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false, start_time: '2025-02-01T00:00:00', end_time: '2026-01-1T00:00:00' }
       ]
     };
   },
   methods: {
     async checkQuestionnaireStatus() {
-      console.log("开始检查问卷状态..."); // 测试日志
       try {
         for (const questionnaire of this.questionnaires) {
-          console.log(`检查问卷 ${questionnaire.id} 的状态...`); // 测试日志
           const response = await axios.get('http://localhost:3000/api/check-questionnaire-completed', {
             params: {
               userName:  this.userName,
@@ -57,35 +72,52 @@ export default {
         console.error('检查问卷状态失败:', error);
       }
     },
-    goToQuestionnaire(questionnaireId) {
-      console.log(`尝试进入问卷 ${questionnaireId} ...`); // 测试日志
-      const questionnaire = this.questionnaires.find(q => q.id === questionnaireId);
-      if (questionnaire.completed) {
-        console.log(`问卷 ${questionnaireId} 已完成，无法进入。`); // 测试日志
-      } else {
-        console.log(`跳转到问卷 ${questionnaireId}`); // 测试日志
-        this.$router.push({
-          path: `/Questionnaires/Questionnaire${questionnaireId}`
-        });
+    async checkQuestionnaireTime() {
+      try {
+        const now = new Date();
+        for (const questionnaire of this.questionnaires) {
+          const response = await axios.get('http://localhost:3000/api/get-questionnaire-time', {
+            params: { questionnaireId: questionnaire.id },
+          });
+          questionnaire.start_time = response.data.start_time;
+          questionnaire.end_time = response.data.end_time;
+          const startTime = new Date(questionnaire.start_time);
+          const endTime = new Date(questionnaire.end_time);
+          questionnaire.isInTimeRange = now >= startTime && now <= endTime;
+        }
+      } catch (error) {
+        console.error('检查问卷时间失败:', error);
       }
+    },
+    goToQuestionnaire(questionnaireId) {
+      const questionnaire = this.questionnaires.find(q => q.id === questionnaireId);
+      if (questionnaire.completed || !questionnaire.isInTimeRange) {
+        console.log(`无法进入问卷 ${questionnaireId}`); // 测试日志
+      } else {
+        this.$router.push({ path: `/Questionnaires/Questionnaire${questionnaireId}` });
+      }
+    },
+    // 格式化日期为更友好的显示方式
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleString(); // 格式化为本地日期时间字符串
     }
   },
   created() {
     // 页面加载时检查问卷完成状态
     console.log("页面加载，初始化检查问卷完成状态..."); // 测试日志
-    this.checkQuestionnaireStatus();
+    this.checkQuestionnaireStatus();//查询问卷是否被该学生回答过
+    this.checkQuestionnaireTime();//查询该问卷是否在可回答时间内
   }
+
 };
 </script>
-
-
 
 <style scoped>
 .questionnaire-list {
   padding: 40px 20px;
   text-align: center;
 }
-
 
 .questionnaire-grid {
   display: grid;
@@ -119,6 +151,29 @@ export default {
   margin-top: 10px;
 }
 
+.questionnaire-time {
+  margin-top: 15px;
+  font-size: 1rem;
+  color: #666;
+}
+
+.time-field {
+  margin-bottom: 0; /* Remove margin between the fields */
+  display: inline-flex; /* Align items horizontally */
+  justify-content: flex-start;
+  font-size: 0.95rem;
+  padding-right: 15px; /* Add spacing between the fields */
+}
+
+.time-field strong {
+  color: #395cdc; /* 强调标签 */
+  margin-right: 5px; /* Add a small space between label and date */
+}
+
+.time-field span {
+  color: #555;
+}
+
 .btn {
   background-color: #395cdc;
   color: white;
@@ -137,9 +192,22 @@ export default {
 
 .btn:disabled {
   background-color: #ccc; /* 灰色背景 */
-  cursor: not-allowed;   /* 禁止光标 */
-  color: #666;           /* 更浅的文本颜色 */
-  transform: none;       /* 禁用悬停时的放大效果 */
+  cursor: not-allowed; /* 禁止光标 */
+  color: #666; /* 更浅的文本颜色 */
+  transform: none; /* 禁用悬停时的放大效果 */
+}
+
+/* 不可作答按钮的样式 */
+.btn:not(:disabled).not-allowed {
+  background-color: #f5c6cb; /* 浅红色背景 */
+  color: #721c24; /* 深红色字体 */
+  border: 1px solid #f5c6cb;
+  cursor: not-allowed; /* 禁止光标 */
+  box-shadow: none;
+}
+
+.btn:not(:disabled).not-allowed:hover {
+  background-color: #f8d7da; /* 更浅的红色 */
 }
 
 </style>

@@ -41,12 +41,13 @@ export default {
       axios
         .get(`http://localhost:3000/api/users/${this.userName}`)
         .then(response => {
-          const userData = response.data;
-          this.studentName = userData.姓名;
-          this.department = userData.管理部门;
-          this.major = userData.系统内专业;
-          this.specialty = userData.招生录取专业;
-          this.splitFlow = userData.分流形式;
+          const userData = response.data;  // 获取用户数据
+          this.splitFlow = userData.divertForm // 分流形式
+          this.studentName = userData.studentName; // 姓名
+          this.studentId = userData.studentId; // 学号
+          this.major = userData.Major; // 招生录取专业
+          this.department = userData.adress; // 管理部门
+          this.specialty = userData.systemMajor; // 系统内专业
         })
         .catch(error => {
           console.error("获取用户信息失败", error);

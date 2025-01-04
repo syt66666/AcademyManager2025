@@ -25,7 +25,7 @@ app.get('/api/users/:userName', async (req, res) => {
   const { userName } = req.params;
 
   try {
-    const [rows] = await db.promise().execute('SELECT s2.学号,s2.姓名,s2.分流形式,s2.管理部门,s2.系统内专业,s2.招生录取专业 FROM sys_user s1 join student s2 on s1.user_name=s2.学号 WHERE user_name = ?', [userName]);
+    const [rows] = await db.promise().execute('SELECT s2.studentId,s2.studentName,s2.adress,s2.divertForm,s2.systemMajor,s2.Major,s2.studentClass FROM sys_user s1 join student s2 on s1.user_name=s2.studentId WHERE user_name = ?', [userName]);
 
     if (rows.length === 0) {
       return res.status(404).json({ message: '用户未找到' });
@@ -56,6 +56,34 @@ app.get('/api/check-questionnaire-completed', async (req, res) => {
   } catch (error) {
     console.error('查询失败:', error);
     return res.status(500).json({ error: '服务器内部错误' });
+  }
+});
+
+// 获取特定问卷的开始时间和结束时间
+app.get('/api/get-questionnaire-time', async (req, res) => {
+  const { questionnaireId } = req.query; // 获取问卷ID
+
+  if (!questionnaireId) {
+    return res.status(400).send('问卷ID是必填的');
+  }
+
+  try {
+    // 查询数据库，获取特定问卷的开始时间和结束时间
+    const query = "SELECT start_time, end_time FROM questionnaire WHERE questionnaire_Id = ?";
+    const [rows] = await db.promise().execute(query, [questionnaireId]);
+
+    if (rows.length === 0) {
+      return res.status(404).send('未找到该问卷');
+    }
+
+    const questionnaire = rows[0];
+    res.json({
+      start_time: questionnaire.start_time,
+      end_time: questionnaire.end_time,
+    });
+  } catch (error) {
+    console.error('查询问卷时间出错:', error);
+    res.status(500).send('服务器错误');
   }
 });
 
