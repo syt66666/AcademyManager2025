@@ -1,13 +1,13 @@
-package com.ruoyi.student.mapper;
+package com.ruoyi.system.mapper;
 
 import java.util.List;
-import com.ruoyi.student.domain.Student;
+import com.ruoyi.system.domain.Student;
 
 /**
  * 学生管理Mapper接口
  * 
- * @author ruoyiiiiiii
- * @date 2024-12-25
+ * @author ruoyi
+ * @date 2025-01-04
  */
 public interface StudentMapper 
 {

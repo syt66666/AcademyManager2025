@@ -11,7 +11,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  * @author ruoyiiiiiii
  * @date 2024-12-25
  */
-public class Student extends BaseEntity
+public class Student1 extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 

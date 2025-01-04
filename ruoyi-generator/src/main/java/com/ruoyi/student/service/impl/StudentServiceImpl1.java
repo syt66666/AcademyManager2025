@@ -3,9 +3,9 @@ package com.ruoyi.student.service.impl;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.ruoyi.student.mapper.StudentMapper;
-import com.ruoyi.student.domain.Student;
-import com.ruoyi.student.service.IStudentService;
+import com.ruoyi.student.mapper.StudentMapper1;
+import com.ruoyi.student.domain.Student1;
+import com.ruoyi.student.service.IStudentService1;
 
 /**
  * 学生管理Service业务层处理
@@ -14,10 +14,10 @@ import com.ruoyi.student.service.IStudentService;
  * @date 2024-12-25
  */
 @Service
-public class StudentServiceImpl implements IStudentService 
+public class StudentServiceImpl1 implements IStudentService1
 {
     @Autowired
-    private StudentMapper studentMapper;
+    private StudentMapper1 studentMapper;
 
     /**
      * 查询学生管理
@@ -26,7 +26,7 @@ public class StudentServiceImpl implements IStudentService
      * @return 学生管理
      */
     @Override
-    public Student selectStudentById(Long id)
+    public Student1 selectStudentById(Long id)
     {
         return studentMapper.selectStudentById(id);
     }
@@ -38,7 +38,7 @@ public class StudentServiceImpl implements IStudentService
      * @return 学生管理
      */
     @Override
-    public List<Student> selectStudentList(Student student)
+    public List<Student1> selectStudentList(Student1 student)
     {
         return studentMapper.selectStudentList(student);
     }
@@ -50,7 +50,7 @@ public class StudentServiceImpl implements IStudentService
      * @return 结果
      */
     @Override
-    public int insertStudent(Student student)
+    public int insertStudent(Student1 student)
     {
         return studentMapper.insertStudent(student);
     }
@@ -62,7 +62,7 @@ public class StudentServiceImpl implements IStudentService
      * @return 结果
      */
     @Override
-    public int updateStudent(Student student)
+    public int updateStudent(Student1 student)
     {
         return studentMapper.updateStudent(student);
     }

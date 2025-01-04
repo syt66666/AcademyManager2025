@@ -1,4 +1,4 @@
-package com.ruoyi.student.controller;
+package com.ruoyi.system.controller;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
@@ -16,28 +16,41 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
-import com.ruoyi.student.domain.Student;
-import com.ruoyi.student.service.IStudentService;
+import com.ruoyi.system.domain.Student;
+import com.ruoyi.system.service.IStudentService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
 /**
  * 学生管理Controller
  * 
- * @author ruoyiiiiiii
- * @date 2024-12-25
+ * @author ruoyi
+ * @date 2025-01-04
  */
 @RestController
-@RequestMapping("/student/student")
+@RequestMapping("/system/student")
 public class StudentController extends BaseController
 {
     @Autowired
     private IStudentService studentService;
 
     /**
+     * 查询不同学院转专业人数
+     */
+    @GetMapping("/echarts1")
+    public AjaxResult echarts1()
+    {
+        try {
+            return AjaxResult.success(studentService.echarts1());
+        } catch (Exception e) {
+            return AjaxResult.error("获取数据失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 查询学生管理列表
      */
-    @PreAuthorize("@ss.hasPermi('student:student:list')")
+    @PreAuthorize("@ss.hasPermi('system:student:list')")
     @GetMapping("/list")
     public TableDataInfo list(Student student)
     {
@@ -49,7 +62,7 @@ public class StudentController extends BaseController
     /**
      * 导出学生管理列表
      */
-    @PreAuthorize("@ss.hasPermi('student:student:export')")
+    @PreAuthorize("@ss.hasPermi('system:student:export')")
     @Log(title = "学生管理", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, Student student)
@@ -62,7 +75,7 @@ public class StudentController extends BaseController
     /**
      * 获取学生管理详细信息
      */
-    @PreAuthorize("@ss.hasPermi('student:student:query')")
+    @PreAuthorize("@ss.hasPermi('system:student:query')")
     @GetMapping(value = "/{id}")
     public AjaxResult getInfo(@PathVariable("id") Long id)
     {
@@ -72,7 +85,7 @@ public class StudentController extends BaseController
     /**
      * 新增学生管理
      */
-    @PreAuthorize("@ss.hasPermi('student:student:add')")
+    @PreAuthorize("@ss.hasPermi('system:student:add')")
     @Log(title = "学生管理", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody Student student)
@@ -83,7 +96,7 @@ public class StudentController extends BaseController
     /**
      * 修改学生管理
      */
-    @PreAuthorize("@ss.hasPermi('student:student:edit')")
+    @PreAuthorize("@ss.hasPermi('system:student:edit')")
     @Log(title = "学生管理", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody Student student)
@@ -94,7 +107,7 @@ public class StudentController extends BaseController
     /**
      * 删除学生管理
      */
-    @PreAuthorize("@ss.hasPermi('student:student:remove')")
+    @PreAuthorize("@ss.hasPermi('system:student:remove')")
     @Log(title = "学生管理", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{ids}")
     public AjaxResult remove(@PathVariable Long[] ids)
