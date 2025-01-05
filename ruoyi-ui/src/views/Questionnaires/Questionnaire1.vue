@@ -1330,7 +1330,18 @@ export default {
         .catch(error => {
           console.error('提交失败:', error);
         });
+
+      axios
+        .post('http://localhost:3000/updateStudent', {
+          studentId: this.userName,
+          afterMajor: this.finalAnswerText,
+          afterAcademy: this.finalAnswerText2
+        })
+        .catch(error => {
+          console.error('提交失败:', error);
+        });
     },
+    // 提交最后一个问题的答案到后台
     //过滤问卷答案
     getLastAnswerForQuestion(questionId) {
       // 过滤出所有 questionId=2 的记录

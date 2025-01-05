@@ -1,23 +1,23 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
-const mysql = require('mysql2');  // 引入 mysql2 库
-const questionnaireRouter = require('./src/api/questionnaire/submit'); // 引入其他路由文件
+const mysql = require('mysql2');
+
+const questionnaireRouter = require('./src/api/questionnaire/submit');
 
 const app = express();
 
-// 配置 CORS (跨域资源共享)
+// 配置 CORS
 app.use(cors());
 
-// 使用 bodyParser 中间件来解析请求体
-app.use(bodyParser.json());
+// 使用内置中间件解析 JSON
+app.use(express.json());
 
 // 配置 MySQL 数据库连接池
 const db = mysql.createPool({
-  host: '47.99.65.198',  // 数据库主机
-  user: 'dlut',       // 数据库用户名
-  password: 'dlut211@',       // 数据库密码
-  database: 'academymanager', // 你的数据库名称
+  host: '47.99.65.198',
+  user: 'dlut',
+  password: 'dlut211@',
+  database: 'academymanager',
 });
 
 // 获取用户信息的 API
@@ -37,7 +37,6 @@ app.get('/api/users/:userName', async (req, res) => {
     return res.status(500).json({ message: '服务器内部错误' });
   }
 });
-
 // 检查用户是否已经回答过问卷
 app.get('/api/check-questionnaire-completed', async (req, res) => {
   const { userName, questionnaireId } = req.query;
@@ -58,6 +57,7 @@ app.get('/api/check-questionnaire-completed', async (req, res) => {
     return res.status(500).json({ error: '服务器内部错误' });
   }
 });
+
 
 // 获取特定问卷的开始时间和结束时间
 app.get('/api/get-questionnaire-time', async (req, res) => {
@@ -87,8 +87,30 @@ app.get('/api/get-questionnaire-time', async (req, res) => {
   }
 });
 
+// 提交问卷答案的 API
+app.post('/updateStudent', async (req, res) => {
+  const { studentId, afterMajor, afterAcademy } = req.body;
+
+  if (!studentId || !afterMajor || !afterAcademy) {
+    return res.status(400).json({ message: '缺少必要的参数' });
+  }
+
+  try {
+    const [result] = await db.promise().query('UPDATE student SET afterMajor = ?, afterAcademy = ? WHERE studentId = ?', [afterMajor, afterAcademy, studentId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: '未找到对应的学生ID' });
+    }
+
+    res.status(200).json({ message: '更新成功' });
+  } catch (err) {
+    console.error('数据库更新失败:', err);
+    return res.status(500).json({ message: '更新失败' });
+  }
+});
+
 // 注册其他路由
-app.use('/questionnaire', questionnaireRouter);  // 所有 /questionnaire 路径的请求将交给 questionnaireRouter 处理
+app.use('/questionnaire', questionnaireRouter);
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
