@@ -71,7 +71,7 @@ export default {
 
       const option = {
         title: {
-          text: "分学院统计"
+          text: "分书院统计"
         },
         tooltip: {
           trigger: 'axis',
@@ -129,7 +129,7 @@ export default {
       var myChart = echarts.init(chartDom);
       let xData = [];
       let yData = [];
-      for(let [k1, v1] of Object.entries(data.before)) {
+      for(let [k1, v1] of Object.entries(data.after)) {
         if(k1 === academy) {
           for(let [k2, v2] of Object.entries(v1)) {
             xData.push(k2);

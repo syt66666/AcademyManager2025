@@ -27,10 +27,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-<!--      <el-form-item label="转前学院" prop="academy">
+<!--      <el-form-item label="转前书院" prop="academy">
         <el-input
           v-model="queryParams.academy"
-          placeholder="请输入转前学院"
+          placeholder="请输入转前书院"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -83,10 +83,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="转后学院" prop="afterAcademy">
+      <el-form-item label="转后书院" prop="afterAcademy">
         <el-input
           v-model="queryParams.afterAcademy"
-          placeholder="请输入转后学院"
+          placeholder="请输入转后书院"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -150,7 +150,7 @@
         <el-table-column v-if="columns[0].visible" label="学号" align="center" prop="studentId" width="120" fixed/>
         <el-table-column v-if="columns[1].visible" label="姓名" align="center" prop="studentName" width="80" show-overflow-tooltip/>
         <el-table-column v-if="columns[2].visible" label="性别" align="center" prop="studentSex" width="50"/>
-        <el-table-column v-if="columns[3].visible" label="转前学院" align="center" prop="academy" >
+        <el-table-column v-if="columns[3].visible" label="转前书院" align="center" prop="academy" >
           <template slot-scope="scope">
             <el-tag size="mini" type="primary">{{ scope.row.academy }}</el-tag>
           </template>
@@ -164,7 +164,7 @@
         <el-table-column v-if="columns[6].visible" label="行政班" align="center" prop="studentClass" />
         <el-table-column v-if="columns[7].visible" label="分流形式" align="center" prop="divertForm" show-overflow-tooltip/>
         <el-table-column v-if="columns[8].visible" label="创新班或拔尖班" align="center" prop="innovationClass" />
-        <el-table-column v-if="columns[9].visible" label="转后学院" align="center" prop="afterAcademy">
+        <el-table-column v-if="columns[9].visible" label="转后书院" align="center" prop="afterAcademy">
           <template slot-scope="scope">
             <el-tag v-if="scope.row.afterAcademy" size="mini" type="success">{{ scope.row.afterAcademy }}</el-tag>
           </template>
@@ -212,8 +212,8 @@
         <el-form-item label="姓名" prop="studentName">
           <el-input v-model="form.studentName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="转前学院" prop="academy">
-          <el-input v-model="form.academy" placeholder="请输入转前学院" />
+        <el-form-item label="转前书院" prop="academy">
+          <el-input v-model="form.academy" placeholder="请输入转前书院" />
         </el-form-item>
         <el-form-item label="系统内专业" prop="systemMajor">
           <el-input v-model="form.systemMajor" placeholder="请输入系统内专业" />
@@ -233,8 +233,8 @@
         <el-form-item label="转后专业" prop="afterMajor">
           <el-input v-model="form.afterMajor" placeholder="请输入转后专业" />
         </el-form-item>
-        <el-form-item label="转后学院" prop="afterAcademy">
-          <el-input v-model="form.afterAcademy" placeholder="请输入转后学院" />
+        <el-form-item label="转后书院" prop="afterAcademy">
+          <el-input v-model="form.afterAcademy" placeholder="请输入转后书院" />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -308,13 +308,13 @@ export default {
         {key: 1, label: '学号', visible: true},
         {key: 2, label: '姓名', visible: true},
         {key: 3, label: '性别', visible: true},
-        {key: 4, label: '转前学院', visible: true},
+        {key: 4, label: '转前书院', visible: true},
         {key: 5, label: '系统内专业', visible: false},
         {key: 5, label: '转前专业', visible: true},
         {key: 6, label: '行政班', visible: false},
         {key: 7, label: '分流形式', visible: false},
         {key: 8, label: '创新班或拔尖班', visible: false},
-        {key: 9, label: '转后学院', visible: true},
+        {key: 9, label: '转后书院', visible: true},
         {key: 10, label: '转后专业', visible: true},
       ]
     };
