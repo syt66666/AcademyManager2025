@@ -7,47 +7,17 @@
       <el-form-item label="姓名" prop="studentName">
         <el-input v-model="queryParams.studentName" placeholder="请输入姓名" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="管理部门" prop="academy">
-        <el-input v-model="queryParams.academy" placeholder="请输入管理部门" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <!--   <el-form-item label="systemMajor" prop="systemMajor">
-        <el-input v-model="queryParams.systemMajor" placeholder="请输入systemMajor" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="major" prop="major">
-        <el-input v-model="queryParams.major" placeholder="请输入major" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item> -->
-      <!--  <el-form-item label="studentClass" prop="studentClass">
-        <el-input
-          v-model="queryParams.studentClass"
-          placeholder="请输入studentClass"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="备注" prop="备注">
-        <el-input
-          v-model="queryParams.备注"
-          placeholder="请输入备注"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item> -->
-      <el-form-item label="分流形式" prop="divertForm">
-        <el-input v-model="queryParams.divertForm" placeholder="请输入分流形式" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <!--   <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
-        <el-input v-model="queryParams.国家和高校专项计划学生标志" placeholder="请输入国家和高校专项计划学生标志" clearable
-          @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="英文studentName" prop="英文studentName">
-        <el-input v-model="queryParams.英文studentName" placeholder="请输入英文studentName" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="性别" prop="性别">
-        <el-input v-model="queryParams.性别" placeholder="请输入性别" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item>
-      <el-form-item label="密码" prop="password">
-        <el-input v-model="queryParams.password" placeholder="请输入密码" clearable @keyup.enter.native="handleQuery" />
-      </el-form-item> -->
+        <el-form-item label="书院" prop="academy">
+          <el-select v-model="queryParams.academy" placeholder="请选择书院" clearable @change="handleQuery">
+            <el-option
+              v-for="(academy, index) in academyList"
+              :key="index"
+              :label="academy"
+              :value="academy"
+            />
+          </el-select>
+        </el-form-item>
+
       <el-form-item class="right-buttons">
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -57,49 +27,48 @@
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd"
-          v-hasPermi="['student:student:add']">新增</el-button>
+                   v-hasPermi="['student:student:add']">新增</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate"
-          v-hasPermi="['student:student:edit']">修改</el-button>
+                   v-hasPermi="['student:student:edit']">修改</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete"
-          v-hasPermi="['student:student:remove']">删除</el-button>
+                   v-hasPermi="['student:student:remove']">删除</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport"
-          v-hasPermi="['student:student:export']">导出</el-button>
+                   v-hasPermi="['student:student:export']">导出</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImport"
-          v-hasPermi="['system:user:import']">导入学生数据</el-button>
+                   v-hasPermi="['system:user:import']">导入学生数据</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="studentList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <!-- <el-table-column label="序号" align="center" prop="id" /> -->
-      <el-table-column label="学号" align="center" prop="studentId" />
-      <el-table-column label="姓名" align="center" prop="studentName" />
-      <el-table-column label="管理部门" align="center" prop="academy" />
-      <el-table-column label="系统内专业" align="center" prop="systemMajor" />
-      <el-table-column label="招生录取专业" align="center" prop="major" />
-      <el-table-column label="行政班" align="center" prop="studentClass" />
-      <el-table-column label="分流形式" align="center" prop="divertForm" />
+      <el-table-column label="学号" align="center" prop="studentId" sortable />
+      <el-table-column label="姓名" align="center" prop="studentName" sortable />
+      <el-table-column label="书院" align="center" prop="academy" sortable/>
+      <el-table-column label="系统内专业" align="center" prop="systemMajor" sortable/>
+      <el-table-column label="招生录取专业" align="center" prop="major" sortable/>
+      <el-table-column label="行政班" align="center" prop="studentClass" sortable/>
+      <el-table-column label="分流形式" align="center" prop="divertForm" sortable/>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
-            v-hasPermi="['student:student:edit']">修改</el-button>
+                     v-hasPermi="['student:student:edit']">修改</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)"
-            v-hasPermi="['student:student:remove']">删除</el-button>
+                     v-hasPermi="['student:student:remove']">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <pagination v-show="total > 0" :total="total" :page.sync="queryParams.pageNum" :limit.sync="queryParams.pageSize"
-      @pagination="getList" />
+                @pagination="getList" />
 
     <!-- 修改学生管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
@@ -110,8 +79,8 @@
         <el-form-item label="姓名" prop="studentName">
           <el-input v-model="form.studentName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="管理部门" prop="academy">
-          <el-input v-model="form.academy" placeholder="请输入管理部门" />
+        <el-form-item label="书院" prop="academy">
+          <el-input v-model="form.academy" placeholder="请输入所属书院" />
         </el-form-item>
         <el-form-item label="系统内专业" prop="systemMajor">
           <el-input v-model="form.systemMajor" placeholder="请输入系统内专业" />
@@ -122,24 +91,9 @@
         <el-form-item label="行政班" prop="studentClass">
           <el-input v-model="form.studentClass" placeholder="请输入行政班" />
         </el-form-item>
-        <el-form-item label="备注" prop="备注">
-          <el-input v-model="form.备注" placeholder="请输入备注" />
-        </el-form-item>
         <el-form-item label="分流形式" prop="divertForm">
           <el-input v-model="form.divertForm" placeholder="请输入分流形式" />
         </el-form-item>
-        <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
-          <el-input v-model="form.国家和高校专项计划学生标志" placeholder="请输入国家和高校专项计划学生标志" />
-        </el-form-item>
-        <el-form-item label="英文studentName" prop="英文studentName">
-          <el-input v-model="form.英文studentName" placeholder="请输入英文studentName" />
-        </el-form-item>
-        <el-form-item label="性别" prop="sex">
-          <el-input v-model="form.sex" placeholder="请输入性别" />
-        </el-form-item>
-        <!-- <el-form-item label="密码" prop="password">
-          <el-input v-model="form.password" placeholder="请输入密码" />
-        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -155,8 +109,8 @@
         <el-form-item label="姓名" prop="studentName">
           <el-input v-model="studentForm.studentName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="管理部门" prop="academy">
-          <el-input v-model="studentForm.studentAddress" placeholder="请输入管理部门" />
+        <el-form-item label="书院" prop="academy">
+          <el-input v-model="studentForm.studentAddress" placeholder="请输入所属书院" />
         </el-form-item>
         <el-form-item label="系统内专业" prop="systemMajor">
           <el-input v-model="studentForm.systemMajor" placeholder="请输入系统内专业" />
@@ -167,18 +121,9 @@
         <el-form-item label="行政班" prop="studentClass">
           <el-input v-model="studentForm.studentClass" placeholder="请输入行政班" />
         </el-form-item>
-        <el-form-item label="备注" prop="备注">
-          <el-input v-model="studentForm.studentNote" placeholder="请输入备注" />
-        </el-form-item>
         <el-form-item label="分流形式" prop="divertForm">
           <el-input v-model="studentForm.studentDiversionForm" placeholder="请输入分流形式" />
         </el-form-item>
-        <el-form-item label="性别" prop="sex">
-          <el-input v-model="studentForm.studentSex" placeholder="请输入性别" />
-        </el-form-item>
-        <!-- <el-form-item label="密码" prop="password">
-          <el-input v-model="form.password" placeholder="请输入密码" />
-        </el-form-item> -->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -188,8 +133,8 @@
     <!-- 用户导入对话框 -->
     <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
       <el-upload ref="upload" :limit="1" accept=".xlsx, .xls" :headers="upload.headers"
-        :action="upload.url + '?updateSupport=' + upload.updateSupport" :disabled="upload.isUploading"
-        :on-progress="handleFileUploadProgress" :on-success="handleFileSuccess" :auto-upload="false" drag>
+                 :action="upload.url + '?updateSupport=' + upload.updateSupport" :disabled="upload.isUploading"
+                 :on-progress="handleFileUploadProgress" :on-success="handleFileSuccess" :auto-upload="false" drag>
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <div class="el-upload__tip text-center" slot="tip">
@@ -198,7 +143,7 @@
           </div>
           <span>仅允许导入xls、xlsx格式文件。</span>
           <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline"
-            @click="importTemplate">下载模板</el-link>
+                   @click="importTemplate">下载模板</el-link>
         </div>
       </el-upload>
       <div slot="footer" class="dialog-footer">
@@ -216,6 +161,16 @@ export default {
   name: "Student",
   data() {
     return {
+      //书院选择下拉框
+      academyList: [
+        '伯川书院',
+        '笃学书院',
+        '令希书院',
+        '厚德书院',
+        '知行书院',
+        '求实书院',
+        '厚德书院'
+      ],
       // 用户导入参数
       upload: {
         // 是否显示弹出层（用户导入）
@@ -261,10 +216,7 @@ export default {
         systemMajor: null,
         major: null,
         studentClass: null,
-        备注: null,
         divertForm: null,
-        国家和高校专项计划学生标志: null,
-        英文studentName: null,
         sex: null,
 
       },
@@ -350,7 +302,7 @@ export default {
     },
 
     // 取消按钮
-      cancel() {
+    cancel() {
       this.open = false;
       this.reset();
     },
@@ -364,12 +316,7 @@ export default {
         systemMajor: null,
         major: null,
         studentClass: null,
-        备注: null,
         divertForm: null,
-        国家和高校专项计划学生标志: null,
-        英文studentName: null,
-        性别: null,
-
       };
 
       this.resetForm("form");
