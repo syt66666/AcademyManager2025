@@ -1,39 +1,41 @@
 <template>
   <!-- 创建el-card组件 -->
-  <div>
-
-    <el-card class="chart-card">
+  <div class="container">
+    <el-card class="custom-card">
       <!-- 用于放置Echarts图表的DOM元素，设置合适的宽高 -->
-      <div id="echarts1" style="width: 100%; height: 300px;"></div>
-      <el-select v-model="selected" filterable placeholder="请选择" @change="getEcharts3">
-        <el-option
-          v-for="item in options"
-          :key="item"
-          :label="item"
-          :value="item">
-        </el-option>
-      </el-select>
-      <div id="echarts3" style="width: 100%; height: 400px;"></div>
-      <div id="echarts2" style="width: 100%; height: 300px;"></div>
+      <div id="echarts1" style="width: 100%; height: 300px;"/>
+      <div id="echarts3" style="width: 100%; height: 400px;"/>
+      <div id="echarts2" style="width: 100%; height: 300px;"/>
     </el-card>
+    <div class="custom-card">
+      <student-index ref="student"/>
+    </div>
   </div>
 
 </template>
 
 <script>
 import * as echarts from 'echarts';
+import StudentIndex from '@/views/Qstatistics/student';
 import {echarts1} from '@/api/system/student';
 export default {
+  components: { StudentIndex },
   data() {
     return {
       selected: "求实书院",
-      options:["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
+      options: ["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
     }
   },
   mounted() {
     this.getEcharts1();
     this.getEcharts3();
     this.echarts2();
+  },
+  watch: {
+    selected(newVal, oldVal) {
+      // 当 academy 发生变化时，刷新数据
+      this.getEcharts3();
+    }
   },
   methods:{
     getEcharts1() {
@@ -42,17 +44,17 @@ export default {
       });
     },
     getEcharts3() {
+      console.log("changed");
       echarts1().then(res => {
         this.echarts3(res.data, this.selected);
       });
     },
     echarts1(data){
-      console.log("data",data)
       var chartDom = document.getElementById('echarts1');
       var myChart = echarts.init(chartDom);
 
       const cnt = {};
-      for(let [k1, v1] of Object.entries(data.before)) {
+      for(let [k1, v1] of Object.entries(data.after)) {
         let count = 0;
         for(let [k2, v2] of Object.entries(v1)) {
           count += v2.length;
@@ -69,6 +71,9 @@ export default {
       }
 
       const option = {
+        title: {
+          text: "分学院统计"
+        },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
@@ -92,12 +97,33 @@ export default {
             showBackground: true,
             backgroundStyle: {
               color: 'rgba(180, 180, 180, 0.2)'
+            },
+            itemStyle: {
+              normal: {
+                color: function(params) {
+                  const colorList = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622', '#ca7788'];
+                  return colorList[params.dataIndex];
+                }
+              }
             }
           }
         ]
       };
-
       option && myChart.setOption(option);
+
+      // 注册事件前先销毁点击事件（避免点击事件会重复执行）
+      myChart.getZr().off('click');
+      const that = this;
+      // 注册区域的点击事件，解决数据较少时不方便点击柱状图的问题
+      myChart.getZr().on('click', function(param) {
+        const pointInPixel= [param.offsetX, param.offsetY];
+        if (myChart.containPixel('grid',pointInPixel)) {
+          const xIndex = myChart.convertFromPixel({seriesIndex:0},[param.offsetX, param.offsetY])[0];
+          const value = option.xAxis.data[xIndex];
+          that.$refs.student.academy = value;
+          that.selected = value;
+        }
+      });
     },
     echarts3(data, academy){
       var chartDom = document.getElementById('echarts3');
@@ -114,6 +140,9 @@ export default {
       }
 
       const option = {
+        title: {
+          text: "分专业统计"
+        },
         grid: {
           bottom: 150
         },
@@ -150,6 +179,18 @@ export default {
       };
       myChart.resize();
       option && myChart.setOption(option);
+
+      // 注册事件前先销毁点击事件（避免点击事件会重复执行）
+      myChart.getZr().off('click');
+      const that = this;
+      // 注册区域的点击事件，解决数据较少时不方便点击柱状图的问题
+      myChart.getZr().on('click', function(param) {
+        const pointInPixel= [param.offsetX, param.offsetY];
+        if (myChart.containPixel('grid',pointInPixel)) {
+          const xIndex = myChart.convertFromPixel({seriesIndex:0},[param.offsetX, param.offsetY])[0];
+          that.$refs.student.major = option.xAxis.data[xIndex];
+        }
+      });
     },
     echarts2() {
       const chartDom = document.getElementById('echarts2');
@@ -303,15 +344,24 @@ export default {
         ]
       };
       option && myChart.setOption(option);
-    }
+    },
   },
 };
 </script>
 
 <style scoped>
-.chart-card {
+.container {
+  width: 100%;
+  height: 90vh;
+  display: flex;
+  justify-content: space-around;
+}
+
+.custom-card {
   width: 50%;
-  margin: 10px;
+  flex: 1;
+  margin: 5px;
+  overflow-y: auto;
   border: 1px solid #ccc;
 }
 </style>
