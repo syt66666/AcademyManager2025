@@ -647,7 +647,7 @@ export default {
             {id: 4, text: '令希书院', next: 17},
             {id: 5, text: '厚德书院', next: 18},
             {id: 6, text: '知行书院', next: 19},
-            {id: 7, text: '求实书院', next: 20}
+            {id: 7, text: '求实书院', next: 21}
           ]
         },
         {
