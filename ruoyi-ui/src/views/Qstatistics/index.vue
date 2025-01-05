@@ -5,7 +5,7 @@
       <!-- 用于放置Echarts图表的DOM元素，设置合适的宽高 -->
       <div id="echarts1" style="width: 100%; height: 300px;"/>
       <div id="echarts3" style="width: 100%; height: 400px;"/>
-      <div id="echarts2" style="width: 100%; height: 300px;"/>
+<!--      <div id="echarts2" style="width: 100%; height: 300px;"/>-->
     </el-card>
     <div class="custom-card">
       <student-index ref="student"/>
@@ -44,7 +44,6 @@ export default {
       });
     },
     getEcharts3() {
-      console.log("changed");
       echarts1().then(res => {
         this.echarts3(res.data, this.selected);
       });
@@ -101,7 +100,7 @@ export default {
             itemStyle: {
               normal: {
                 color: function(params) {
-                  const colorList = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622', '#ca7788'];
+                  const colorList = ['#c23531', '#2f4554', '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622'];
                   return colorList[params.dataIndex];
                 }
               }
@@ -361,7 +360,6 @@ export default {
   width: 50%;
   flex: 1;
   margin: 5px;
-  overflow-y: auto;
   border: 1px solid #ccc;
 }
 </style>

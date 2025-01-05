@@ -27,14 +27,14 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="转前学院" prop="academy">
+<!--      <el-form-item label="转前学院" prop="academy">
         <el-input
           v-model="queryParams.academy"
           placeholder="请输入转前学院"
           clearable
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>
+      </el-form-item>-->
 <!--      <el-form-item label="系统内专业" prop="systemMajor">
         <el-input
           v-model="queryParams.systemMajor"
@@ -43,14 +43,14 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>-->
-      <el-form-item label="转前专业" prop="major">
+<!--      <el-form-item label="转前专业" prop="major">
         <el-input
           v-model="queryParams.major"
           placeholder="请输入转前专业"
           clearable
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>
+      </el-form-item>-->
 <!--      <el-form-item label="行政班" prop="studentClass">
         <el-input
           v-model="queryParams.studentClass"
@@ -75,7 +75,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>-->
-      <el-form-item label="转后专业" prop="afterMajor">
+<!--      <el-form-item label="转后专业" prop="afterMajor">
         <el-input
           v-model="queryParams.afterMajor"
           placeholder="请输入转后专业"
@@ -90,7 +90,7 @@
           clearable
           @keyup.enter.native="handleQuery"
         />
-      </el-form-item>
+      </el-form-item>-->
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -145,10 +145,10 @@
         <right-toolbar :showSearch.sync="showSearch" :columns.sync="columns"/>
       </el-row>
 
-      <el-table ref="table" height="550" v-loading="loading" :data="studentList" @selection-change="handleSelectionChange">
+      <el-table style="width: 100%" ref="table" height="550" v-loading="loading" :data="studentList" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" align="center" />
         <el-table-column v-if="columns[0].visible" label="学号" align="center" prop="studentId" width="120" fixed/>
-        <el-table-column v-if="columns[1].visible" label="姓名" align="center" prop="studentName" />
+        <el-table-column v-if="columns[1].visible" label="姓名" align="center" prop="studentName" width="80" show-overflow-tooltip/>
         <el-table-column v-if="columns[2].visible" label="性别" align="center" prop="studentSex" width="50"/>
         <el-table-column v-if="columns[3].visible" label="转前学院" align="center" prop="academy" >
           <template slot-scope="scope">
@@ -459,7 +459,7 @@ export default {
 
 .search-bar {
   width: 99%;
-  height: 13vh;
+  height: 8vh;
   margin: 1vh;
   padding-left: 2vw;
   display: flex;
@@ -482,6 +482,5 @@ export default {
   display: flex;
   flex-direction: column;
   align-content: center;
-  overflow-y: auto;
 }
 </style>
