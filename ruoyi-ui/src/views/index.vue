@@ -2,7 +2,7 @@
   <div class="welcome-container">
     <div class="welcome-card">
       <h1 class="welcome-message">欢迎回来，{{ studentName }}！</h1>
-      <p class="user-info">
+      <p class="user-info" v-if="this.userName !== 'admin'">
         书院：{{ department }}<br />
         系统内专业：{{ major }}<br />
         招生录取专业：{{ specialty }}<br />
@@ -34,10 +34,15 @@ export default {
     }
   },
   mounted() {
+    console.log(this.userName)
     this.initializeUserData();
   },
   methods: {
     initializeUserData() {
+      if(this.userName === 'admin'){
+        this.studentName = '管理员'
+      }
+      else{
       axios
         .get(`http://localhost:3000/api/users/${this.userName}`)
         .then(response => {
@@ -53,6 +58,7 @@ export default {
           console.error("获取用户信息失败", error);
           this.$message.error("获取用户信息失败");
         });
+    }
     }
   }
 };

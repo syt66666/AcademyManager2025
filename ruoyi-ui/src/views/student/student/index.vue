@@ -1,25 +1,25 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学号" prop="学号">
-        <el-input v-model="queryParams.学号" placeholder="请输入学号" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="学号" prop="studentId">
+        <el-input v-model="queryParams.studentId" placeholder="请输入学号" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="姓名" prop="姓名">
-        <el-input v-model="queryParams.姓名" placeholder="请输入姓名" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="姓名" prop="studentName">
+        <el-input v-model="queryParams.studentName" placeholder="请输入姓名" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="管理部门" prop="管理部门">
-        <el-input v-model="queryParams.管理部门" placeholder="请输入管理部门" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="管理部门" prop="academy">
+        <el-input v-model="queryParams.academy" placeholder="请输入管理部门" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <!--   <el-form-item label="系统内专业" prop="系统内专业">
-        <el-input v-model="queryParams.系统内专业" placeholder="请输入系统内专业" clearable @keyup.enter.native="handleQuery" />
+      <!--   <el-form-item label="systemMajor" prop="systemMajor">
+        <el-input v-model="queryParams.systemMajor" placeholder="请输入systemMajor" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="招生录取专业" prop="招生录取专业">
-        <el-input v-model="queryParams.招生录取专业" placeholder="请输入招生录取专业" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="major" prop="major">
+        <el-input v-model="queryParams.major" placeholder="请输入major" clearable @keyup.enter.native="handleQuery" />
       </el-form-item> -->
-      <!--  <el-form-item label="行政班" prop="行政班">
+      <!--  <el-form-item label="studentClass" prop="studentClass">
         <el-input
-          v-model="queryParams.行政班"
-          placeholder="请输入行政班"
+          v-model="queryParams.studentClass"
+          placeholder="请输入studentClass"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -32,15 +32,15 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item> -->
-      <el-form-item label="分流形式" prop="分流形式">
-        <el-input v-model="queryParams.分流形式" placeholder="请输入分流形式" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="分流形式" prop="divertForm">
+        <el-input v-model="queryParams.divertForm" placeholder="请输入分流形式" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <!--   <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
         <el-input v-model="queryParams.国家和高校专项计划学生标志" placeholder="请输入国家和高校专项计划学生标志" clearable
           @keyup.enter.native="handleQuery" />
       </el-form-item>
-      <el-form-item label="英文姓名" prop="英文姓名">
-        <el-input v-model="queryParams.英文姓名" placeholder="请输入英文姓名" clearable @keyup.enter.native="handleQuery" />
+      <el-form-item label="英文studentName" prop="英文studentName">
+        <el-input v-model="queryParams.英文studentName" placeholder="请输入英文studentName" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
       <el-form-item label="性别" prop="性别">
         <el-input v-model="queryParams.性别" placeholder="请输入性别" clearable @keyup.enter.native="handleQuery" />
@@ -81,13 +81,13 @@
     <el-table v-loading="loading" :data="studentList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <!-- <el-table-column label="序号" align="center" prop="id" /> -->
-      <el-table-column label="学号" align="center" prop="学号" />
-      <el-table-column label="姓名" align="center" prop="姓名" />
-      <el-table-column label="管理部门" align="center" prop="管理部门" />
-      <el-table-column label="系统内专业" align="center" prop="系统内专业" />
-      <el-table-column label="招生录取专业" align="center" prop="招生录取专业" />
-      <el-table-column label="行政班" align="center" prop="行政班" />
-      <el-table-column label="分流形式" align="center" prop="分流形式" />
+      <el-table-column label="学号" align="center" prop="studentId" />
+      <el-table-column label="姓名" align="center" prop="studentName" />
+      <el-table-column label="管理部门" align="center" prop="academy" />
+      <el-table-column label="系统内专业" align="center" prop="systemMajor" />
+      <el-table-column label="招生录取专业" align="center" prop="major" />
+      <el-table-column label="行政班" align="center" prop="studentClass" />
+      <el-table-column label="分流形式" align="center" prop="divertForm" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-edit" @click="handleUpdate(scope.row)"
@@ -104,38 +104,38 @@
     <!-- 修改学生管理对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="学号" prop="学号">
-          <el-input v-model="form.学号" placeholder="请输入学号" />
+        <el-form-item label="学号" prop="studentId">
+          <el-input v-model="form.studentId" placeholder="请输入学号" />
         </el-form-item>
-        <el-form-item label="姓名" prop="姓名">
-          <el-input v-model="form.姓名" placeholder="请输入姓名" />
+        <el-form-item label="姓名" prop="studentName">
+          <el-input v-model="form.studentName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="管理部门" prop="管理部门">
-          <el-input v-model="form.管理部门" placeholder="请输入管理部门" />
+        <el-form-item label="管理部门" prop="academy">
+          <el-input v-model="form.academy" placeholder="请输入管理部门" />
         </el-form-item>
-        <el-form-item label="系统内专业" prop="系统内专业">
-          <el-input v-model="form.系统内专业" placeholder="请输入系统内专业" />
+        <el-form-item label="系统内专业" prop="systemMajor">
+          <el-input v-model="form.systemMajor" placeholder="请输入系统内专业" />
         </el-form-item>
-        <el-form-item label="招生录取专业" prop="招生录取专业">
-          <el-input v-model="form.招生录取专业" placeholder="请输入招生录取专业" />
+        <el-form-item label="招生录取专业" prop="major">
+          <el-input v-model="form.major" placeholder="请输入招生录取专业" />
         </el-form-item>
-        <el-form-item label="行政班" prop="行政班">
-          <el-input v-model="form.行政班" placeholder="请输入行政班" />
+        <el-form-item label="行政班" prop="studentClass">
+          <el-input v-model="form.studentClass" placeholder="请输入行政班" />
         </el-form-item>
         <el-form-item label="备注" prop="备注">
           <el-input v-model="form.备注" placeholder="请输入备注" />
         </el-form-item>
-        <el-form-item label="分流形式" prop="分流形式">
-          <el-input v-model="form.分流形式" placeholder="请输入分流形式" />
+        <el-form-item label="分流形式" prop="divertForm">
+          <el-input v-model="form.divertForm" placeholder="请输入分流形式" />
         </el-form-item>
         <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
           <el-input v-model="form.国家和高校专项计划学生标志" placeholder="请输入国家和高校专项计划学生标志" />
         </el-form-item>
-        <el-form-item label="英文姓名" prop="英文姓名">
-          <el-input v-model="form.英文姓名" placeholder="请输入英文姓名" />
+        <el-form-item label="英文studentName" prop="英文studentName">
+          <el-input v-model="form.英文studentName" placeholder="请输入英文studentName" />
         </el-form-item>
-        <el-form-item label="性别" prop="性别">
-          <el-input v-model="form.性别" placeholder="请输入性别" />
+        <el-form-item label="性别" prop="sex">
+          <el-input v-model="form.sex" placeholder="请输入性别" />
         </el-form-item>
         <!-- <el-form-item label="密码" prop="password">
           <el-input v-model="form.password" placeholder="请输入密码" />
@@ -149,37 +149,31 @@
     <!-- 添加学生管理对话框 -->
     <el-dialog :title="title" :visible.sync="openInsert" width="500px" append-to-body>
       <el-form ref="form" :model="studentForm" :rules="insertRules" label-width="80px">
-        <el-form-item label="学号" prop="学号">
+        <el-form-item label="学号" prop="studentId">
           <el-input v-model="studentForm.studentId" placeholder="请输入学号" />
         </el-form-item>
-        <el-form-item label="姓名" prop="姓名">
+        <el-form-item label="姓名" prop="studentName">
           <el-input v-model="studentForm.studentName" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="管理部门" prop="管理部门">
+        <el-form-item label="管理部门" prop="academy">
           <el-input v-model="studentForm.studentAddress" placeholder="请输入管理部门" />
         </el-form-item>
-        <el-form-item label="系统内专业" prop="系统内专业">
+        <el-form-item label="系统内专业" prop="systemMajor">
           <el-input v-model="studentForm.systemMajor" placeholder="请输入系统内专业" />
         </el-form-item>
-        <el-form-item label="招生录取专业" prop="招生录取专业">
+        <el-form-item label="招生录取专业" prop="major">
           <el-input v-model="studentForm.enrollmentMajor" placeholder="请输入招生录取专业" />
         </el-form-item>
-        <el-form-item label="行政班" prop="行政班">
+        <el-form-item label="行政班" prop="studentClass">
           <el-input v-model="studentForm.studentClass" placeholder="请输入行政班" />
         </el-form-item>
         <el-form-item label="备注" prop="备注">
           <el-input v-model="studentForm.studentNote" placeholder="请输入备注" />
         </el-form-item>
-        <el-form-item label="分流形式" prop="分流形式">
+        <el-form-item label="分流形式" prop="divertForm">
           <el-input v-model="studentForm.studentDiversionForm" placeholder="请输入分流形式" />
         </el-form-item>
-        <el-form-item label="国家和高校专项计划学生标志" prop="国家和高校专项计划学生标志">
-          <el-input v-model="studentForm.haveQualification" placeholder="请输入国家和高校专项计划学生标志" />
-        </el-form-item>
-        <el-form-item label="英文姓名" prop="英文姓名">
-          <el-input v-model="studentForm.englishName" placeholder="请输入英文姓名" />
-        </el-form-item>
-        <el-form-item label="性别" prop="性别">
+        <el-form-item label="性别" prop="sex">
           <el-input v-model="studentForm.studentSex" placeholder="请输入性别" />
         </el-form-item>
         <!-- <el-form-item label="密码" prop="password">
@@ -261,17 +255,17 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        学号: null,
-        姓名: null,
-        管理部门: null,
-        系统内专业: null,
-        招生录取专业: null,
-        行政班: null,
+        studentId: null,
+        studentName: null,
+        academy: null,
+        systemMajor: null,
+        major: null,
+        studentClass: null,
         备注: null,
-        分流形式: null,
+        divertForm: null,
         国家和高校专项计划学生标志: null,
-        英文姓名: null,
-        性别: null,
+        英文studentName: null,
+        sex: null,
 
       },
       // 表单参数
@@ -292,13 +286,13 @@ export default {
       },
       // 修改表单校验
       rules: {
-        学号: [
+        studentId: [
           { required: true, message: "学号不能为空", trigger: "blur" }
         ],
-        姓名: [
+        studentName: [
           { required: true, message: "姓名不能为空", trigger: "blur" }
         ],
-        管理部门: [
+        academy: [
           { required: true, message: '请输入管理部门', trigger: 'blur' }
         ],
 
@@ -364,16 +358,16 @@ export default {
     reset() {
       this.form = {
         id: null,
-        学号: null,
-        姓名: null,
-        管理部门: null,
-        系统内专业: null,
-        招生录取专业: null,
-        行政班: null,
+        studentId: null,
+        studentName: null,
+        academy: null,
+        systemMajor: null,
+        major: null,
+        studentClass: null,
         备注: null,
-        分流形式: null,
+        divertForm: null,
         国家和高校专项计划学生标志: null,
-        英文姓名: null,
+        英文studentName: null,
         性别: null,
 
       };

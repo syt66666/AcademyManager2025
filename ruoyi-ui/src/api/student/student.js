@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 查询学生管理列表
 export function listStudent(query) {
   return request({
-    url: '/student/student/list',
+    url: '/system/student/list',
     method: 'get',
     params: query
   })
@@ -12,7 +12,7 @@ export function listStudent(query) {
 // 查询学生管理详细
 export function getStudent(id) {
   return request({
-    url: '/student/student/' + id,
+    url: '/system/student/' + id,
     method: 'get'
   })
 }
@@ -20,7 +20,7 @@ export function getStudent(id) {
 // 新增学生管理
 export function addStudent(data) {
   return request({
-    url: '/student/insert',
+    url: '/system/insert',
     method: 'post',
     data: data
   })
@@ -29,7 +29,7 @@ export function addStudent(data) {
 // 修改学生管理
 export function updateStudent(data) {
   return request({
-    url: '/student/student',
+    url: '/system/student',
     method: 'put',
     data: data
   })
@@ -38,7 +38,7 @@ export function updateStudent(data) {
 // 删除学生管理
 export function delStudent(id) {
   return request({
-    url: '/student/student/' + id,
+    url: '/system/student/' + id,
     method: 'delete'
   })
 }
