@@ -6,7 +6,6 @@
         书院：{{ department }}<br />
         系统内专业：{{ major }}<br />
         招生录取专业：{{ specialty }}<br />
-        分流形式：{{ splitFlow }}<br />
       </p>
       <p class="greeting-message">祝你今天有个愉快的一天！😊</p>
     </div>
@@ -25,7 +24,6 @@ export default {
       department: '',
       major: '',
       specialty: '',
-      splitFlow: ''
     };
   },
   computed: {

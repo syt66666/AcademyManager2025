@@ -58,9 +58,10 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
-      finalAnswerText: ' ', // 最后选择答案
-      finalAnswerText2: ' ', // 最后选择答案
-      finalAnswerText3: ' ',
+      finalAnswerText: ' ', // 不转专业的专业选择
+      finalAnswerText2: ' ', // 转专业的书院选择
+      finalAnswerText3: ' ',//转专业的专业选择
+      finalAnswerText4: 0,//分流类型记录
       userName: store.state.user.name, // 获取用户名
       splitFlow: '', // 分流形式
       num: null , // 转换书院信息
@@ -1277,21 +1278,25 @@ export default {
       if (this.finalAnswerText === "否"&&this.splitFlow==="仅可转专业") {
         this.finalAnswerText = this.major;
         this.finalAnswerText2 = '否';
-        this.finalAnswerText3='否'
+        this.finalAnswerText3='否';
+        this.finalAnswerText4=1;
       }else if(this.splitFlow==="仅可转专业"){
         this.finalAnswerText = this.major;
         this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
+        this.finalAnswerText4=4;
       }
 
       //第二种问卷（测试完成）
       else if(this.splitFlow==="可类内任选，并转专业"&&this.finalAnswerText==="否"){
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
         this.finalAnswerText2='否';
-        this.finalAnswerText3='否'
+        this.finalAnswerText3='否';
+        this.finalAnswerText4=5;
       }
       else if(this.splitFlow==="可类内任选，并转专业"){//转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
         this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
+        this.finalAnswerText4=5;
       }
 
 
@@ -1299,6 +1304,7 @@ export default {
       else if(this.splitFlow==="可类内任选，不能转专业"){
         this.finalAnswerText2='否';
         this.finalAnswerText3='否'
+        this.finalAnswerText4=3;
       }
 
       //第四种问卷（测试完成）
@@ -1306,14 +1312,17 @@ export default {
         this.finalAnswerText=this.major;
         this.finalAnswerText2='否';
         this.finalAnswerText3='否';
+        this.finalAnswerText4=1;
       }
       else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.specialClass===0){//不转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
         this.finalAnswerText2='否';
+        this.finalAnswerText4=2;
       }
       else if(this.splitFlow==="可域内任选，并转专业"&&this.specialClass===0){
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
         this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
+        this.finalAnswerText4=5;
       }
 
       //第五种问卷
@@ -1322,19 +1331,23 @@ export default {
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num4).selectedOptionText;
           this.finalAnswerText2='否';
           this.finalAnswerText3='否';
+          this.finalAnswerText4=4;
         }else{//放弃创新班身份
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
           this.finalAnswerText2='否';
           this.finalAnswerText3='否';
+          this.finalAnswerText4=2;
         }
       }
       else if(this.specialClass===1){
         if(this.getLastAnswerForQuestion(50).selectedOptionText==="否"){//不放弃创新班身份
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num4).selectedOptionText;
           this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
+          this.finalAnswerText4=5;
         }else{//放弃创新班身份
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
           this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
+          this.finalAnswerText4=5;
         }
       }
 
@@ -1346,7 +1359,8 @@ export default {
           change_adress:this.department ,//提交问卷的书院
           change_major: this.finalAnswerText, // 只提交最后一个问题的答案
           after_change_adress:this.finalAnswerText2,
-          after_change_major:this.finalAnswerText3
+          after_change_major:this.finalAnswerText3,
+          change_major_type:this.finalAnswerText4
         })
         .then(response => {
           console.log('提交成功:', response.data);
