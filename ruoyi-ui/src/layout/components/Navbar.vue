@@ -4,7 +4,7 @@
 
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" v-if="!topNav"/>
     <top-nav id="topmenu-container" class="topmenu-container" v-if="topNav"/>
-
+    <search id="header-search" class="right-menu-item" />
     <div class="right-menu">
       <template v-if="device!=='mobile'">
         <search id="header-search" class="right-menu-item" />
@@ -114,21 +114,22 @@ export default {
             this.$message.error("获取用户信息失败");
           });
       }
-    }
-  },
-  toggleSideBar() {
-    this.$store.dispatch('app/toggleSideBar')
-  },
-  async logout() {
-    this.$confirm('确定注销并退出系统吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      this.$store.dispatch('LogOut').then(() => {
-        location.href = '/index';
-      })
-    }).catch(() => {});
+    },
+    toggleSideBar() {
+      this.$store.dispatch('app/toggleSideBar')
+    },
+    async logout() {
+      this.$confirm('确定注销并退出系统吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$store.dispatch('LogOut').then(() => {
+          location.href = '/index';
+        })
+      }).catch(() => {});
+    },
+
   }
 };
 
@@ -142,16 +143,16 @@ export default {
   background: #fff;
   box-shadow: 0 1px 4px rgba(0,21,41,.08);
 
-  .user-info {
-    display: inline-block;
-    padding: 10px;
-    margin: 10px auto; /* 垂直方向居中 */
-    font-size: 14px; /* 字体大小 */
-    color: #333; /* 字体颜色 */
-    line-height: 1.6; /* 行间距 */
-    white-space: pre-line; /* 保留换行格式 */
-    text-align: center; /* 文本居中 */
-  }
+  //.user-info {
+  //  display: inline-block;
+  //  padding: 10px;
+  //  margin: 10px auto; /* 垂直方向居中 */
+  //  font-size: 14px; /* 字体大小 */
+  //  color: #333; /* 字体颜色 */
+  //  line-height: 1.6; /* 行间距 */
+  //  white-space: pre-line; /* 保留换行格式 */
+  //  text-align: center; /* 文本居中 */
+  //}
   .hamburger-container {
     line-height: 46px;
     height: 100%;
