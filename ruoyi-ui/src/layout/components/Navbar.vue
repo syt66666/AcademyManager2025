@@ -7,14 +7,15 @@
     <search id="header-search" class="right-menu-item" />
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <search id="header-search" class="right-menu-item" />
         <span class="user-info" v-if="this.userName !== 'admin'">
           姓名：{{studentName}}
           学号：{{userName}}
           书院：{{ department }}
           系统内专业：{{ major }}
           招生录取专业：{{ specialty }}
+          分流形式：{{ splitFlow }}
         </span>
+        <search id="header-search" class="right-menu-item" />
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
       </template>
 
@@ -54,6 +55,7 @@ export default {
       department: '',
       major: '',
       specialty: '',
+      splitFlow:''
     };
   },
   components: {
@@ -143,16 +145,16 @@ export default {
   background: #fff;
   box-shadow: 0 1px 4px rgba(0,21,41,.08);
 
-  //.user-info {
+.user-info {
   //  display: inline-block;
   //  padding: 10px;
-  //  margin: 10px auto; /* 垂直方向居中 */
-  //  font-size: 14px; /* 字体大小 */
-  //  color: #333; /* 字体颜色 */
+  margin: 10px auto; /* 垂直方向居中 */
+font-size: 14px; /* 字体大小 */
+color: #5d5d5d; /* 字体颜色 */
   //  line-height: 1.6; /* 行间距 */
   //  white-space: pre-line; /* 保留换行格式 */
-  //  text-align: center; /* 文本居中 */
-  //}
+  text-align: center; /* 文本居中 */
+}
   .hamburger-container {
     line-height: 46px;
     height: 100%;

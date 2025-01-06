@@ -1444,11 +1444,17 @@ export default {
   max-width: 700px;
   margin: 20px auto;
   padding: 20px;
-  background-color: #ffffff;
+  background-color: #f4f7fc;
   border-radius: 8px;
   font-family: "Arial", sans-serif;
 }
-
+/* 每个问题的容器 */
+.question-container {
+  margin-bottom: 20px; /* 每个问题间距 */
+  padding: 15px;
+  background-color: #ffffff; /* 背景色 */
+  border-radius: 10px; /* 圆角 */
+}
 /* 问题标题 */
 .questionnaire h2 {
   margin-bottom: 10px;

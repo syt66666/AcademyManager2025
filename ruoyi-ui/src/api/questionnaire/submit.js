@@ -19,6 +19,7 @@ db.connect((err) => {
   console.log('数据库连接成功');
 });
 
+
 // 提交问卷答案的 API
 router.post('/submit', (req, res) => {
   const { user_name, questionnaire_id, change_adress,change_major,after_change_major,after_change_adress,change_major_type } = req.body;

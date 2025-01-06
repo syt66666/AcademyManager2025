@@ -12,6 +12,7 @@ app.use(cors());
 // 使用内置中间件解析 JSON
 app.use(express.json());
 
+//todo: fix the api
 // 配置 MySQL 数据库连接池
 const db = mysql.createPool({
   host: '47.99.65.198',
@@ -58,7 +59,9 @@ app.get('/api/check-questionnaire-completed', async (req, res) => {
   }
 });
 
-
+/**
+ *
+ */
 // 获取特定问卷的开始时间和结束时间
 app.get('/api/get-questionnaire-time', async (req, res) => {
   const { questionnaireId } = req.query; // 获取问卷ID
