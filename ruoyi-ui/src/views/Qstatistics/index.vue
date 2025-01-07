@@ -9,11 +9,9 @@
         <div id="changeTypeChart" class="echart-container" />
       </el-card>
     </div>
-    <!-- 右侧部分 (学生组件) -->
     <div class="right-container">
-      <!-- 饼图容器，id 设置为你需要的名字 -->
-      <div id="echarts-container" style="width: 100%; height: 400px;"></div>
-      <div class="custom-card">
+      <div id="echarts-container" class="echart-container"></div>
+      <div class="student">
         <student-index  ref="student"/>
       </div>
     </div>
@@ -28,6 +26,7 @@ export default {
   components: { StudentIndex },
   data() {
     return {
+      academyChangeType : { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 },
       selected: null,
       options: ["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
     }
@@ -43,16 +42,6 @@ export default {
     }
   },
   methods:{
-    getEcharts1() {
-      echarts1().then(res => {
-        this.echarts1(res.data);
-      });
-    },
-    getEcharts3() {
-      echarts1().then(res => {
-        this.echarts3(res.data, this.selected);
-      });
-    },
     echarts1(data) {
       var chartDom = document.getElementById('echarts1');
       var myChart = echarts.init(chartDom);
@@ -71,7 +60,6 @@ export default {
 
       // 处理转专业后的数据
       for (let [academy, majors] of Object.entries(data.after)) {
-        let academyChangeType = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };  // 初始化书院内的转专业类型统计
         let count = 0;
         for (let [major, students] of Object.entries(majors)) {
           count += students.length;
@@ -82,15 +70,15 @@ export default {
             const changeType = student.change_major_type || 'Unknown';
             if (afterMajorChangeType[major][changeType] !== undefined) {
               afterMajorChangeType[major][changeType]++;
-              academyChangeType[changeType]++;
+              this.academyChangeType[changeType]++;
             } else {
               afterMajorChangeType[major]['Unknown']++;
-              academyChangeType['Unknown']++;
+              this.academyChangeType['Unknown']++;
             }
           });
         }
         afterCnt[academy] = count;
-        console.log(`书院 ${academy} 的转专业类型统计:`, academyChangeType);
+        console.log(`书院 ${academy} 的转专业类型统计:`, this.academyChangeType);
       }
 
       let xData = [];
@@ -231,6 +219,11 @@ export default {
       };
 
       option && myChart.setOption(option);
+
+      // 在数据更新完成后，调用饼图渲染
+      this.$nextTick(() => {
+        this.renderChangeTypePieChart(this.academyChangeType, 'echarts-container');
+      });
       //注册点击事件（可选）
       myChart.getZr().off('click');
       const that = this;
@@ -244,7 +237,138 @@ export default {
           that.selected = value;
         }
       });
+
+
     },
+    // 获取转专业类型名称
+    getChangeTypeName(changeType) {
+      const typeMapping = {
+        '1': '保持当前专业',
+        '2': '域内任选专业',
+        '3': '类内任选专业',
+        '4': '创新班政策内任选专业',
+        '5': '转专业',
+        'Unknown': '未知类型'
+      };
+      return typeMapping[changeType] || changeType;
+    },
+
+    // 渲染转专业类型饼图
+    renderChangeTypePieChart(academyChangeTypeData, chartDomId) {
+      // 检查数据
+      console.log('Received Academy Change Type Data:', academyChangeTypeData);
+      const chartData =  Object.entries(academyChangeTypeData)
+        .filter(([changeType, count]) => changeType !== 'Unknown' && count > 0)
+        .map(([changeType, count]) => ({
+          name: this.getChangeTypeName(changeType),
+          value: count
+        }));
+
+      const option = {
+        backgroundColor: '#ffffff',
+        title: {
+          text: '全体学生转专业类型分布',
+          left: 'center',
+          textStyle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#333'
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} ({d}%)',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          textStyle: {
+            color: '#fff'
+          }
+        },
+        legend: {
+          orient: 'vertical',
+          right: 'right',
+          top: 'center',
+          data: chartData.map(item => item.name),
+          textStyle: {
+            fontSize: 14,
+            color: '#555'
+          }
+        },
+        series: [
+          {
+            name: '转专业类型',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            data: chartData,
+            emphasis: {
+              itemStyle: {
+                color: '#f77f00',
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'outside',
+              fontSize: 14,
+              color: '#333',
+              formatter: '{b}: {c} ({d}%)',
+              textStyle: {
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: true,
+              length: 15,
+              lineStyle: {
+                width: 2,
+                color: '#aaa'
+              }
+            },
+            itemStyle: {
+              normal: {
+                borderWidth: 2,
+                borderColor: '#fff',
+                borderRadius: 5,
+                color: function (params) {
+                  const colors = [
+                    '#ff7f50', '#87cefa', '#32cd32', '#ff6347', '#7b68ee', '#ffa07a',
+                    '#3cb371', '#f0e68c', '#dda0dd', '#ff69b4'
+                  ];
+                  return colors[params.dataIndex % colors.length];
+                }
+              }
+            },
+            animationType: 'scale',
+            animationEasing: 'elasticOut',
+            animationDuration: 1500
+          }
+        ]
+      };
+
+      // 获取 DOM 容器并渲染图表
+      const chartDom = document.getElementById(chartDomId);
+      if (!chartDom) {
+        console.error(`Chart container with ID ${chartDomId} not found!`);
+        return;
+      }
+
+      const myChart = echarts.init(chartDom);
+      myChart.setOption(option);
+    },
+
+    getEcharts1() {
+      echarts1().then(res => {
+        this.echarts1(res.data);
+      });
+    },
+    getEcharts3() {
+      echarts1().then(res => {
+        this.echarts3(res.data, this.selected);
+      });
+    },
+
 
     echarts3(data, academy) {
       var chartDom = document.getElementById('echarts3');
@@ -549,12 +673,18 @@ export default {
 
 .right-container {
   width: 40%; /* 右侧部分占屏幕的35% */
+  flex-direction: column; /* 垂直排列图表 */
+
 }
 
 .echart-container {
   width: 100%;
   height: 300px; /* 适当调整图表的高度 */
   min-height: 200px; /* 最小高度 */
+}
+.student{
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0);
 }
 
 /* 在小屏幕上重新调整 */
@@ -578,9 +708,6 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 20px;
-  }
-  .echart-container {
-    height: 200px; /* 小屏幕下减少图表高度 */
   }
 }
 </style>

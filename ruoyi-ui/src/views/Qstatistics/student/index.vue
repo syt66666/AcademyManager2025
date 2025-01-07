@@ -22,12 +22,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-          <el-button
-            icon="el-icon-refresh"
-            size="mini"
-            @click="resetQuery"
-            class="reset-btn"
-          >重置</el-button>
+          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery" class="reset-btn">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -40,16 +35,8 @@
         :data="studentList"
         @selection-change="handleSelectionChange"
         border
-        max-height="none"
-      >
-        <el-table-column
-          v-if="columns[1].visible"
-          label="姓名"
-          align="center"
-          prop="studentName"
-          width="120"
-          show-overflow-tooltip
-        />
+        max-height="none">
+        <el-table-column v-if="columns[1].visible" label="姓名" align="center" prop="studentName" show-overflow-tooltip/>
         <el-table-column v-if="columns[3].visible" label="转前书院" align="center" prop="academy">
           <template slot-scope="scope">
             <el-tag size="mini" type="primary">{{ scope.row.academy }}</el-tag>
@@ -70,7 +57,7 @@
             <el-tag v-if="scope.row.afterMajor" size="mini" type="success">{{ scope.row.afterMajor }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column v-if="columns[11].visible" label="专业分流类型" align="center" prop="change_major_type">
+        <el-table-column v-if="columns[11].visible" label="分流类型" align="center" prop="change_major_type">
           <template slot-scope="scope">
             <el-tag v-if="scope.row.change_major_type" size="mini" type="primary">{{ divertTypeMap[scope.row.change_major_type] || ' ' }}</el-tag>
           </template>
@@ -88,7 +75,6 @@
     </el-card>
   </div>
 </template>
-
 
 <script>
 import { listStudent, getStudent, delStudent, addStudent, updateStudent } from "@/api/system/student";
@@ -176,7 +162,7 @@ export default {
       handler() {
         this.$nextTick(() => {
           this.$refs.table.doLayout();
-        })
+        });
       }
     },
   },
@@ -223,7 +209,6 @@ export default {
       this.major=null;
       this.academy=null;
       this.type=null;
-
     },
   }
 };
@@ -232,33 +217,22 @@ export default {
 <style scoped>
 .student-container {
   width: 100%;
-  height: auto;
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-content: center;
+  align-items: center;
 }
 
 .search-bar {
-  width: 99%;
-  height: 8vh;
-  margin: 1vh;
-  padding-left: 2vw;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-radius: 8px;
-  border: 1px solid rgba(235, 239, 245, 0.4);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, .1);
-  background: linear-gradient(145deg, #ffffff, #ffffff);
-}
-
-.search-bar .el-form-item--small {
-  margin: 0 25px 0 0;
+  width: 100%;
+  margin-bottom: 10px;
+  background-color: #ffffff;
+  //border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .select-field {
-  width: 200px;
+  width: 150px;
 }
 
 .reset-btn {
@@ -272,17 +246,17 @@ export default {
 }
 
 .table-bar {
-  width: 99%;
-  margin: 0 1vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  align-content: center;
+  justify-content: flex-start;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
 }
 
 .pagination {
   display: flex;
   justify-content: center;
-  margin-top: 20px;
+  margin-top: 15px;
 }
 </style>
-
