@@ -1,17 +1,23 @@
 <template>
-  <!-- 创建el-card组件 -->
   <div class="container">
-    <el-card class="custom-card">
-      <!-- 用于放置Echarts图表的DOM元素，设置合适的宽高 -->
-      <div id="echarts1" style="width: 100%; height: 300px;"/>
-      <div id="echarts3" style="width: 100%; height: 400px;"/>
-<!--      <div id="echarts2" style="width: 100%; height: 300px;"/>-->
-    </el-card>
-    <div class="custom-card">
-      <student-index ref="student"/>
+    <!-- 左侧部分 (echarts 图表部分) -->
+    <div class="left-container">
+      <el-card class="custom-card">
+        <!-- 用于放置Echarts图表的DOM元素，设置合适的宽高 -->
+        <div id="echarts1" class="echart-container" />
+        <div id="echarts3" class="echart-container" />
+        <div id="changeTypeChart" class="echart-container" />
+      </el-card>
+    </div>
+    <!-- 右侧部分 (学生组件) -->
+    <div class="right-container">
+      <!-- 饼图容器，id 设置为你需要的名字 -->
+      <div id="echarts-container" style="width: 100%; height: 400px;"></div>
+      <div class="custom-card">
+        <student-index  ref="student"/>
+      </div>
     </div>
   </div>
-
 </template>
 
 <script>
@@ -22,14 +28,13 @@ export default {
   components: { StudentIndex },
   data() {
     return {
-      selected: "求实书院",
+      selected: null,
       options: ["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
     }
   },
   mounted() {
     this.getEcharts1();
     this.getEcharts3();
-    this.echarts2();
   },
   watch: {
     selected(newVal, oldVal) {
@@ -66,11 +71,26 @@ export default {
 
       // 处理转专业后的数据
       for (let [academy, majors] of Object.entries(data.after)) {
+        let academyChangeType = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };  // 初始化书院内的转专业类型统计
         let count = 0;
         for (let [major, students] of Object.entries(majors)) {
           count += students.length;
+          // 按专业分类统计每个学生的 change_major_type
+          let afterMajorChangeType = afterMajorChangeType || {};  // 初始化 afterMajorChangeType
+          afterMajorChangeType[major] = afterMajorChangeType[major] || { '1': 0, '2': 0 ,'3': 0, '4': 0, '5': 0};
+          students.forEach(student => {
+            const changeType = student.change_major_type || 'Unknown';
+            if (afterMajorChangeType[major][changeType] !== undefined) {
+              afterMajorChangeType[major][changeType]++;
+              academyChangeType[changeType]++;
+            } else {
+              afterMajorChangeType[major]['Unknown']++;
+              academyChangeType['Unknown']++;
+            }
+          });
         }
         afterCnt[academy] = count;
+        console.log(`书院 ${academy} 的转专业类型统计:`, academyChangeType);
       }
 
       let xData = [];
@@ -83,19 +103,39 @@ export default {
         beforeData.push(beforeCnt[academy] || 0);  // 如果转专业前没有数据，默认值为0
         afterData.push(count);
       }
+      // 获取用户输入的最大人数限制
+      let maxCount = this.maxCount;
+
 
       const option = {
         title: {
-          text: "专业分流前后书院人数统计"
+          text: "专业分流前后书院人数统计",
+          left: 'center',
+          textStyle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#333'
+          }
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow'
-          }
+          },
+          formatter: '{b}: {a0}人数: {c0} ({d0}%)<br>{a1}人数: {c1} ({d1}%)' // 显示百分比
         },
         legend: {
           data: ['转专业前', '转专业后'],
+          top: '10%',
+          textStyle: {
+            fontSize: 14,
+            color: '#555'
+          }
+        },
+        grid: {
+          bottom: 80,
+          left: 50,
+          right: 50
         },
         xAxis: {
           type: 'category',
@@ -105,55 +145,93 @@ export default {
           },
           axisLabel: {
             interval: 0,
-            rotate: 45
+            rotate: 45,
+            fontSize: 12,
+            color: '#555'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc'
+            }
           }
         },
         yAxis: {
-          type: 'value'
+          type: 'value',
+          axisLabel: {
+            fontSize: 12,
+            color: '#555'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#f2f2f2'
+            }
+          }
         },
         series: [
           {
             name: '转专业前',
             type: 'bar',
             data: beforeData,
-            barWidth: 20,
+            barWidth: 30, // 设置柱子宽度
             itemStyle: {
               normal: {
-                color: '#c23531'  // 设置转专业前的颜色
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [ // 渐变色
+                  { offset: 0, color: '#ff7f7f' },
+                  { offset: 1, color: '#ff3d3d' }
+                ]),
+                borderRadius: [10, 10, 0, 0] // 圆角设置
               }
             },
             label: {
-              show: true,  // 显示标签
-              position: 'top',  // 标签位置在柱子顶部
-              formatter: '{c}',  // 显示数据的值
-              fontSize: 14,  // 标签字体大小
-              color: '#000000'  // 标签字体颜色
+              show: true,
+              position: 'top',
+              formatter: '{c}',
+              fontSize: 14,
+              color: '#333'
+            },
+            emphasis: {
+              itemStyle: {
+                color: '#ff5733'  // 鼠标悬停时的颜色
+              }
             }
           },
           {
             name: '转专业后',
             type: 'bar',
             data: afterData,
-            barWidth: 20,
+            barWidth: 30, // 设置柱子宽度
             itemStyle: {
               normal: {
-                color: '#2b76de'  // 设置转专业后的颜色
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [ // 渐变色
+                  { offset: 0, color: '#4c9aff' },
+                  { offset: 1, color: '#1d76d1' }
+                ]),
+                borderRadius: [10, 10, 0, 0] // 圆角设置
               }
             },
             label: {
-              show: true,  // 显示标签
-              position: 'top',  // 标签位置在柱子顶部
-              formatter: '{c}',  // 显示数据的值
-              fontSize: 14,  // 标签字体大小
-              color: '#000000'  // 标签字体颜色
+              show: true,
+              position: 'top',
+              formatter: '{c}',
+              fontSize: 14,
+              color: '#333'
+            },
+            emphasis: {
+              itemStyle: {
+                color: '#3498db'  // 鼠标悬停时的颜色
+              }
             }
           }
         ]
       };
 
       option && myChart.setOption(option);
-
-      // 注册点击事件（可选）
+      //注册点击事件（可选）
       myChart.getZr().off('click');
       const that = this;
       myChart.getZr().on('click', function(param) {
@@ -162,103 +240,31 @@ export default {
           const xIndex = myChart.convertFromPixel({seriesIndex: 0}, [param.offsetX, param.offsetY])[0];
           const value = option.xAxis.data[xIndex];
           that.$refs.student.academy = value;
+          that.$refs.student.major = null;
           that.selected = value;
         }
       });
     },
-    // echarts3(data, academy){
-    //   console.log(academy)
-    //   var chartDom = document.getElementById('echarts3');
-    //   var myChart = echarts.init(chartDom);
-    //   let xData = [];
-    //   let yData = [];
-    //   for(let [k1, v1] of Object.entries(data.after)) {
-    //     if(k1 === academy) {
-    //       for(let [k2, v2] of Object.entries(v1)) {
-    //         xData.push(k2);
-    //         yData.push(v2.length);
-    //       }
-    //     }
-    //   }
-    //
-    //   const option = {
-    //     title: {
-    //       text: "专业分流后各专业人数统计"
-    //     },
-    //     grid: {
-    //       bottom: 150
-    //     },
-    //     tooltip: {
-    //       trigger: 'axis',
-    //       axisPointer: {
-    //         type: 'shadow'
-    //       }
-    //     },
-    //     xAxis: {
-    //       type: 'category',
-    //       data: xData,
-    //       axisTick: {
-    //         alignWithLabel: true
-    //       },
-    //       axisLabel: {
-    //         interval: 0,
-    //         rotate: 45
-    //       }
-    //     },
-    //     yAxis: {
-    //       type: 'value'
-    //     },
-    //     series: [
-    //       {
-    //         data: yData,
-    //         type: 'bar',
-    //         showBackground: true,
-    //         backgroundStyle: {
-    //           color: 'rgba(180, 180, 180, 0.2)'
-    //         }
-    //       }
-    //     ]
-    //   };
-    //   myChart.resize();
-    //   option && myChart.setOption(option);
-    //
-    //   // 注册事件前先销毁点击事件（避免点击事件会重复执行）
-    //   myChart.getZr().off('click');
-    //   const that = this;
-    //   // 注册区域的点击事件，解决数据较少时不方便点击柱状图的问题
-    //   myChart.getZr().on('click', function(param) {
-    //     const pointInPixel= [param.offsetX, param.offsetY];
-    //     if (myChart.containPixel('grid',pointInPixel)) {
-    //       const xIndex = myChart.convertFromPixel({seriesIndex:0},[param.offsetX, param.offsetY])[0];
-    //       that.$refs.student.major = option.xAxis.data[xIndex];
-    //     }
-    //   });
-    // },
+
     echarts3(data, academy) {
       var chartDom = document.getElementById('echarts3');
       var myChart = echarts.init(chartDom);
 
       // 定义所有可能的专业列表（横坐标）
-      let allMajors;  // 声明变量，作用域外可访问
-      if(academy==='求实书院'){
+      let allMajors;
+      if(academy === '求实书院'){
         allMajors = ["软件工程", "网络工程", "集成电路设计与集成系统", "电子科学与技术"];
-      }
-      else if(academy==='令希书院'){
+      } else if(academy === '令希书院'){
         allMajors = ["智能建造", "水利水电工程", "港口航道与海岸工程", "海洋资源开发技术", "交通工程", "工程管理", "建筑环境与能源应用工程", "土木工程", "工程力学", "飞行器设计与工程", "船舶与海洋工程", "建筑学", "城乡规划"];
-      }
-      else if(academy==='伯川书院'){
-        allMajors = ["智能制造工程", "能源与动力工程", "机械设计制造及其自动化", "车辆工程（英语强化）", "测控技术与仪器", "金属材料工程", "功能材料", "材料成型及控制工程", "生物医学工程", "金属材料工程", "功能材料", "材料成型及控制工程", "能源与动力工程", "生物医学工程"];
-      }
-      else if(academy==='厚德书院'){
+      } else if(academy === '伯川书院'){
+        allMajors = ["智能制造工程", "能源与动力工程", "机械设计制造及其自动化", "车辆工程（英语强化）", "测控技术与仪器", "金属材料工程", "功能材料", "材料成型及控制工程", "生物医学工程"];
+      } else if(academy === '厚德书院'){
         allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
-      }
-      else if(academy==='大煜书院'){
+      } else if(academy === '大煜书院'){
         allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程"];
-      }
-      else if(academy==='知行书院'){
+      } else if(academy === '知行书院'){
         allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统"];
-      }
-      else if(academy==='笃学书院'){
+      } else if(academy === '笃学书院'){
         allMajors = ["数学与应用数学", "信息与计算科学", "应用物理学", "应用化学", "工程力学", "生物工程"];
       }
 
@@ -266,7 +272,7 @@ export default {
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
 
       // 遍历数据，根据数据更新 yData
-      for (let [k1, v1] of Object.entries(data.before)) {
+      for (let [k1, v1] of Object.entries(data.after)) {
         if (k1 === academy) {
           for (let [k2, v2] of Object.entries(v1)) {
             // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
@@ -277,19 +283,27 @@ export default {
           }
         }
       }
-
       const option = {
         title: {
-          text: "专业分流后各专业人数统计"
-        },
-        grid: {
-          bottom: 150
+          text: "专业分流后各专业人数统计",
+          left: 'center',
+          textStyle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#333'
+          }
         },
         tooltip: {
-          trigger: 'axis',
+          trigger: 'item',
           axisPointer: {
             type: 'shadow'
-          }
+          },
+          formatter: '{b}: {c} ({d}%)' // 显示百分比
+        },
+        grid: {
+          bottom: 100,
+          left: 50,
+          right: 50
         },
         xAxis: {
           type: 'category',
@@ -299,17 +313,59 @@ export default {
           },
           axisLabel: {
             interval: 0,
-            rotate: 45
+            rotate: 45,
+            fontSize: 12,
+            color: '#555'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc'
+            }
           }
         },
         yAxis: {
-          type: 'value'
+          type: 'value',
+          axisLabel: {
+            fontSize: 12,
+            color: '#555'
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#ccc'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#f2f2f2'
+            }
+          }
         },
         series: [
           {
             data: yData,
             type: 'bar',
-            showBackground: true,
+            barWidth: '50%', // 设置柱子宽度
+            itemStyle: {
+              normal: {
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#3b82f6' },
+                  { offset: 1, color: '#9333ea' }
+                ]),
+                borderRadius: [10, 10, 0, 0] // 圆角设置
+              }
+            },
+            label: {
+              show: true,
+              position: 'top',
+              formatter: '{c}', // 显示柱状图的值
+              fontSize: 14,
+              color: '#333'
+            },
+            emphasis: {
+              itemStyle: {
+                color: '#f77f00'  // 鼠标悬停时的颜色变化
+              }
+            },
             backgroundStyle: {
               color: 'rgba(180, 180, 180, 0.2)'
             }
@@ -317,191 +373,214 @@ export default {
         ]
       };
 
+
       myChart.resize();
       option && myChart.setOption(option);
-
-      // 注册事件前先销毁点击事件（避免点击事件会重复执行）
-      myChart.getZr().off('click');
       const that = this;
-      // 注册区域的点击事件，解决数据较少时不方便点击柱状图的问题
-      myChart.getZr().on('click', function(param) {
-        const pointInPixel = [param.offsetX, param.offsetY];
-        if (myChart.containPixel('grid', pointInPixel)) {
-          const xIndex = myChart.convertFromPixel({ seriesIndex: 0 }, [param.offsetX, param.offsetY])[0];
-          that.$refs.student.major = option.xAxis.data[xIndex];
+      myChart.on('click', function(param) {
+        if (param.componentType === 'series') {
+          const clickedMajor = param.name;  // 获取点击的专业名称
+          // 获取该专业的转专业类型分布数据
+          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor);
+          // 显示该专业的转专业类型的比例，可以用饼图展示
+          updateChangeTypeChart(majorChangeType);
+          that.$refs.student.major = clickedMajor;
+          that.$refs.student.type = null;
         }
       });
-    },
 
-    echarts2() {
-      const chartDom = document.getElementById('echarts2');
-      const myChart = echarts.init(chartDom);
-      const posList = [
-        'left',
-        'right',
-        'top',
-        'bottom',
-        'inside',
-        'insideTop',
-        'insideLeft',
-        'insideRight',
-        'insideBottom',
-        'insideTopLeft',
-        'insideTopRight',
-        'insideBottomLeft',
-        'insideBottomRight'
-      ];
-      const app = {};
-      app.configParameters = {
-        rotate: {
-          min: -90,
-          max: 90
-        },
-        align: {
-          options: {
-            left: 'left',
-            center: 'center',
-            right: 'right'
-          }
-        },
-        verticalAlign: {
-          options: {
-            top: 'top',
-            middle: 'middle',
-            bottom: 'bottom'
-          }
-        },
-        position: {
-          options: posList.reduce(function (map, pos) {
-            map[pos] = pos;
-            return map;
-          }, {})
-        },
-        distance: {
-          min: 0,
-          max: 100
-        }
-      };
-      app.config = {
-        rotate: 90,
-        align: 'left',
-        verticalAlign: 'middle',
-        position: 'insideBottom',
-        distance: 15,
-        onChange: function () {
-          const labelOption = {
-            rotate: app.config.rotate,
-            align: app.config.align,
-            verticalAlign: app.config.verticalAlign,
-            position: app.config.position,
-            distance: app.config.distance
-          };
-          myChart.setOption({
-            series: [
-              {
-                label: labelOption
-              },
-              {
-                label: labelOption
-              },
-              {
-                label: labelOption
-              },
-              {
-                label: labelOption
+      // 获取该专业的转专业类型分布
+      function getChangeMajorTypeForMajor(data, academy, major) {
+        const afterMajorChangeType = {};  // 统计该专业的转专业类型
+
+        // 遍历数据，统计该专业的转专业类型
+        for (let [k1, v1] of Object.entries(data.after)) {
+          if (k1 === academy) {
+            for (let [k2, students] of Object.entries(v1)) {
+              if (k2 === major) {
+                students.forEach(student => {
+                  const changeType = student.change_major_type || 'Unknown';
+                  afterMajorChangeType[changeType] = afterMajorChangeType[changeType] || 0;
+                  afterMajorChangeType[changeType]++;
+                });
               }
-            ]
-          });
+            }
+          }
         }
-      };
-      const labelOption = {
-        show: true,
-        position: app.config.position,
-        distance: app.config.distance,
-        align: app.config.align,
-        verticalAlign: app.config.verticalAlign,
-        rotate: app.config.rotate,
-        formatter: '{c}  {name|{a}}',
-        fontSize: 16,
-        rich: {
-          name: {}
-        }
-      };
-      const option = {
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          }
-        },
-        legend: {
-          data: ['Forest', 'Steppe']
-        },
-        toolbox: {
-          show: true,
-          orient: 'vertical',
-          left: 'right',
-          top: 'center',
-          feature: {
-            mark: { show: true },
-            dataView: { show: true, readOnly: false },
-            magicType: { show: true, type: ['line', 'bar', 'stack'] },
-            restore: { show: true },
-            saveAsImage: { show: true }
-          }
-        },
-        xAxis: [
-          {
-            type: 'category',
-            axisTick: { show: false },
-            data: ['2012', '2012', '2014', '2015', '2016']
-          }
-        ],
-        yAxis: [
-          {
-            type: 'value'
-          }
-        ],
-        series: [
-          {
-            name: 'Forest',
-            type: 'bar',
-            barGap: 0,
-            label: labelOption,
-            emphasis: {
-              focus: 'series'
-            },
-            data: [320, 332, 301, 334, 390]
+        return afterMajorChangeType;
+      }
+
+      // 更新转专业类型分布图
+      function updateChangeTypeChart(majorChangeType) {
+        var chartDom = document.getElementById('changeTypeChart');
+        var myChart = echarts.init(chartDom);
+
+        // 创建一个映射表，用于替换类型数字
+        const typeMapping = {
+          '1': '保持当前专业',
+          '2': '域内任选专业',
+          '3': '类内任选专业',
+          '4': '创新班政策内任选专业',
+          '5': '转专业',
+          'Unknown': '未知类型'
+        };
+
+        // 根据映射表修改每个类型的名称
+        const data = Object.entries(majorChangeType).map(([type, count]) => ({
+          name: typeMapping[type] || type,  // 如果没有找到映射，则保持原来的类型
+          value: count
+        })).filter(item => item.name !== '未知类型');  // 过滤掉 "未知类型"
+        const option = {
+          title: {
+            text: '专业分流类型分布',
+            left: 'center',  // 标题居中
+            textStyle: {
+              fontSize: 18,
+              fontWeight: 'bold',
+              color: '#333'  // 标题颜色
+            }
           },
-          {
-            name: 'Steppe',
-            type: 'bar',
-            label: labelOption,
-            emphasis: {
-              focus: 'series'
-            },
-            data: [220, 182, 191, 234, 290]
+          tooltip: {
+            trigger: 'item',
+            formatter: '{b}: {c} ({d}%)',
+            backgroundColor: 'rgba(0,0,0,0.7)',  // 设置工具提示背景颜色
+            textStyle: {
+              color: '#fff'  // 设置工具提示文本颜色
+            }
+          },
+          legend: {
+            orient: 'vertical',
+            right: 'right',
+            top: 'center',  // 图例居中
+            data: data.map(item => item.name),
+            textStyle: {
+              fontSize: 14,
+              color: '#555'  // 图例字体颜色
+            }
+          },
+          series: [
+            {
+              name: '专业分流类型',
+              type: 'pie',
+              radius: ['40%', '70%'],  // 设置内外半径，形成环形图
+              data: data,
+              emphasis: {
+                itemStyle: {
+                  color: '#f77f00',  // 强调项的颜色
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowOffsetY: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              },
+              label: {
+                show: true,
+                position: 'outside',
+                fontSize: 14,
+                color: '#333',
+                formatter: '{b}: {c} ({d}%)',  // 显示名称、数量和百分比
+                textStyle: {
+                  fontWeight: 'bold'
+                }
+              },
+              labelLine: {
+                show: true,
+                length: 15,  // 标签线长度
+                lineStyle: {
+                  width: 2,
+                  color: '#aaa'
+                }
+              },
+              itemStyle: {
+                normal: {
+                  borderWidth: 2,
+                  borderColor: '#fff',  // 扇形之间的边框颜色
+                  borderRadius: 5,  // 圆角
+                  color: function (params) {
+                    const colors = [
+                      '#ff7f50', '#87cefa', '#32cd32', '#ff6347', '#7b68ee', '#ffa07a',
+                      '#3cb371', '#f0e68c', '#dda0dd', '#ff69b4'
+                    ];
+                    return colors[params.dataIndex % colors.length];  // 使用不同的颜色
+                  }
+                }
+              },
+              animationType: 'scale',  // 设置动画类型
+              animationEasing: 'elasticOut',  // 动画的缓动效果
+              animationDuration: 1500  // 动画持续时间
+            }
+          ]
+        };
+
+        myChart.setOption(option);
+        myChart.on('click', (params) => {
+          console.log('Clicked on:', params.name, 'with value:', params.value);
+          //that.$refs.student.type = params.name;
+          let type=null;
+          switch (params.name){
+            case '保持当前专业':type=1;break;
+            case '域内任选专业':type=2;break;
+            case '类内任选专业':type=3;break;
+            case '创新班政策内任选专业':type=4;break;
+            case '转专业':type=5;break;
           }
-        ]
-      };
-      option && myChart.setOption(option);
+          that.$refs.student.type=type;
+          // console.log(that.$refs.student.type);
+        });
+
+      }
     },
   },
 };
 </script>
-
 <style scoped>
 .container {
-  width: 100%;
-  height: 90vh;
-  display: flex;
-  justify-content: space-around;
+  display: flex; /* 使用 flex 布局 */
+  justify-content: space-between; /* 在水平上分布子元素 */
+  gap: 20px; /* 设置左右容器之间的间距 */
 }
 
-.custom-card {
-  width: 50%;
-  flex: 1;
-  margin: 5px;
-  border: 1px solid #ccc;
+.left-container {
+  width: 60%; /* 左侧部分占屏幕的60% */
+  display: flex;
+  flex-direction: column; /* 垂直排列图表 */
+  gap: 20px; /* 设置图表之间的间距 */
+}
+
+.right-container {
+  width: 40%; /* 右侧部分占屏幕的35% */
+}
+
+.echart-container {
+  width: 100%;
+  height: 300px; /* 适当调整图表的高度 */
+  min-height: 200px; /* 最小高度 */
+}
+
+/* 在小屏幕上重新调整 */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .left-container, .right-container {
+    width: 100%;
+  }
+
+  .left-container {
+    width: 65%; /* 增加左侧部分宽度 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .right-container {
+    width: 30%; /* 调整右侧部分宽度 */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .echart-container {
+    height: 200px; /* 小屏幕下减少图表高度 */
+  }
 }
 </style>

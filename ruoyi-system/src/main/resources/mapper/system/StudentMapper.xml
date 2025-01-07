@@ -17,10 +17,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="studentSex"    column="studentSex"    />
         <result property="afterMajor"    column="afterMajor"    />
         <result property="afterAcademy"    column="afterAcademy"    />
+        <result property="change_major_type"    column="change_major_type"    />
     </resultMap>
 
     <sql id="selectStudentVo">
-        select id, studentId, studentName, academy, systemMajor, major, studentClass, divertForm, innovationClass, studentSex, afterMajor, afterAcademy from student
+        select id, studentId, studentName, academy, systemMajor, major, studentClass, divertForm, innovationClass, studentSex, afterMajor, afterAcademy,change_major_type from student
     </sql>
 
     <select id="selectStudentList" parameterType="Student" resultMap="StudentResult">
@@ -38,6 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="studentSex != null  and studentSex != ''"> and studentSex = #{studentSex}</if>
             <if test="afterMajor != null  and afterMajor != ''"> and afterMajor = #{afterMajor}</if>
             <if test="afterAcademy != null  and afterAcademy != ''"> and afterAcademy = #{afterAcademy}</if>
+            <if test="change_major_type != null  and change_major_type != ''"> and change_major_type = #{change_major_type}</if>
         </where>
     </select>
     
@@ -73,9 +75,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="studentSex != null">#{studentSex},</if>
             <if test="afterMajor != null">#{afterMajor},</if>
             <if test="afterAcademy != null">#{afterAcademy},</if>
+            <if test="change_major_type != null">#{change_major_type},</if>
          </trim>
     </insert>
-
     <update id="updateStudent" parameterType="Student">
         update student
         <trim prefix="SET" suffixOverrides=",">
@@ -90,6 +92,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="studentSex != null">studentSex = #{studentSex},</if>
             <if test="afterMajor != null">afterMajor = #{afterMajor},</if>
             <if test="afterAcademy != null">afterAcademy = #{afterAcademy},</if>
+            <if test="change_major_type != null">change_major_type = #{change_major_type},</if>
         </trim>
         where id = #{id}
     </update>

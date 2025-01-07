@@ -63,6 +63,10 @@ public class Student extends BaseEntity
     @Excel(name = "转后学院")
     private String afterAcademy;
 
+    /** 转后学院 */
+    @Excel(name = "分流类型")
+    private String change_major_type;
+
     public void setId(Long id) 
     {
         this.id = id;
@@ -162,11 +166,18 @@ public class Student extends BaseEntity
     {
         return afterMajor;
     }
+
     public void setAfterAcademy(String afterAcademy) 
     {
         this.afterAcademy = afterAcademy;
     }
+    public String getChange_major_type() {
+        return change_major_type;
+    }
 
+    public void setChange_major_type(String change_major_type) {
+        this.change_major_type = change_major_type;
+    }
     public String getAfterAcademy() 
     {
         return afterAcademy;
@@ -187,6 +198,9 @@ public class Student extends BaseEntity
             .append("studentSex", getStudentSex())
             .append("afterMajor", getAfterMajor())
             .append("afterAcademy", getAfterAcademy())
+            .append("Change_major_type", getChange_major_type())
             .toString();
     }
+
+
 }
