@@ -92,14 +92,14 @@ app.get('/api/get-questionnaire-time', async (req, res) => {
 
 // 提交问卷答案的 API
 app.post('/updateStudent', async (req, res) => {
-  const { studentId, afterMajor, afterAcademy } = req.body;
+  const { studentId, afterMajor, afterAcademy,change_major_type } = req.body;
 
-  if (!studentId || !afterMajor || !afterAcademy) {
+  if (!studentId || !afterMajor || !afterAcademy||!change_major_type) {
     return res.status(400).json({ message: '缺少必要的参数' });
   }
 
   try {
-    const [result] = await db.promise().query('UPDATE student SET afterMajor = ?, afterAcademy = ? WHERE studentId = ?', [afterMajor, afterAcademy, studentId]);
+    const [result] = await db.promise().query('UPDATE student SET afterMajor = ?, afterAcademy = ? ,change_major_type= ? WHERE studentId = ?', [afterMajor, afterAcademy,change_major_type, studentId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: '未找到对应的学生ID' });

@@ -1377,7 +1377,8 @@ export default {
           .post('http://localhost:3000/updateStudent', {
             studentId: this.userName,
             afterMajor: this.finalAnswerText3,
-            afterAcademy: this.finalAnswerText2
+            afterAcademy: this.finalAnswerText2,
+            change_major_type:this.finalAnswerText4
           })
           .catch(error => {
             console.error('提交失败:', error);
@@ -1388,7 +1389,8 @@ export default {
           .post('http://localhost:3000/updateStudent', {
             studentId: this.userName,
             afterMajor: this.finalAnswerText,
-            afterAcademy: this.department
+            afterAcademy: this.department,
+            change_major_type:this.finalAnswerText4
           })
           .catch(error => {
             console.error('提交失败:', error);
