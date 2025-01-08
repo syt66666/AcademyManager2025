@@ -68,13 +68,12 @@ export default {
       num2: null, //转换专业类信息
       num3: null, //转换厚德书院专业类信息
       num4: null, //转换创新班专业信息
-      filter:true, //是否过滤
+      filter:null, //是否过滤
       userSelections: [],
     };
   },
   methods: {
     //设置num1值，书院的对应值
-
     setNumBasedOnDepartment(department) {
       switch (department) {
         case '大煜书院':
@@ -130,13 +129,13 @@ export default {
           this.num2 = null;
       }
     },
-    //设置num3值，书院的对应值
-    setNumBasedOnSpecialty(specialty) {
-      switch (specialty) {
+    //设置num3值，厚德
+    setNumBasedOnSpecialty(major) {
+      switch (major) {
         case '工商管理类':
           this.num3 = 10;
           break;
-        case '公共事业管理、哲学类、新闻传播学类':
+        case '人文社科学域':
           this.num3 = 11;
           break;
         case '英语、日语类':
@@ -262,11 +261,11 @@ export default {
     },
     // 只可转专业的问卷数据
     getQuestionnaireA() {
-      this.filter=true;
+      this.filter=1;
       return [
         {
           id: 1,
-          text: '满足相应要求，是否决定跨学域转专业 [单选题]',
+          text: '满足相应要求，是否决定转专业 [单选题]',
           options: [
             {id: 1, text: '是', next: 2},
             {id: 2, text: '否', next: null},
@@ -398,9 +397,9 @@ export default {
       ]
     },
 
-    // 类内任选，并转专业 类型的问卷数据
+    //类内任选，并转专业 类型的问卷数据
     getQuestionnaireB() {
-      this.filter=false;
+      this.filter=2;
       return [
         {
           id: 1,
@@ -539,73 +538,73 @@ export default {
           id: 10,
           text: '材料类 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '金属材料工程', next: 20},
-            {id: 2, text: '功能材料', next: 20},
-            {id: 3, text: '材料成型及控制工程', next: 20}
+            {id: 111, text: '金属材料工程', next: 20},
+            {id: 222, text: '功能材料', next: 20},
+            {id: 333, text: '材料成型及控制工程', next: 20}
           ]
         },
         {
           id: 11,
           text: '管理科学与工程类 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '大数据管理与应用', next: 20},
-            {id: 2, text: '信息管理与信息系统', next: 20}
+            {id: 111, text: '大数据管理与应用', next: 20},
+            {id: 222, text: '信息管理与信息系统', next: 20}
           ]
         },
         {
           id: 12,
           text: '化工与制药类 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '化学工程与工艺', next: 20},
-            {id: 2, text: '精细化工', next: 20},
-            {id: 3, text: '制药工程', next: 20},
-            {id: 4, text: '高分子材料与工程', next: 20},
-            {id: 5, text: '安全工程', next: 20}
+            {id: 111, text: '化学工程与工艺', next: 20},
+            {id: 222, text: '精细化工', next: 20},
+            {id: 333, text: '制药工程', next: 20},
+            {id: 444, text: '高分子材料与工程', next: 20},
+            {id: 555, text: '安全工程', next: 20}
           ]
         },
         {
           id: 13,
           text: '环境科学与工程类 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '环境科学', next: 20},
-            {id: 2, text: '环境工程', next: 20}
+            {id: 111, text: '环境科学', next: 20},
+            {id: 222, text: '环境工程', next: 20}
           ]
         },
         {
           id: 14,
           text: '新闻传播学类 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '广播电视学', next: 20},
-            {id: 2, text: '汉语言文学', next: 20}
+            {id: 111, text: '广播电视学', next: 20},
+            {id: 222, text: '汉语言文学', next: 20}
           ]
         },
         {
           id: 15,
           text: '智能建造 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '智能建造', next: 20},
-            {id: 2, text: '水利水电工程', next: 20},
-            {id: 3, text: '港口航道与海岸工程', next: 20},
-            {id: 4, text: '海洋资源开发技术', next: 20},
-            {id: 5, text: '交通工程', next: 20},
-            {id: 6, text: '工程管理', next: 20},
-            {id: 7, text: '建筑环境与能源应用工程', next: 20},
-            {id: 8, text: '土木工程', next: 20}
+            {id: 111, text: '智能建造', next: 20},
+            {id: 222, text: '水利水电工程', next: 20},
+            {id: 333, text: '港口航道与海岸工程', next: 20},
+            {id: 444, text: '海洋资源开发技术', next: 20},
+            {id: 555, text: '交通工程', next: 20},
+            {id: 666, text: '工程管理', next: 20},
+            {id: 777, text: '建筑环境与能源应用工程', next: 20},
+            {id: 888, text: '土木工程', next: 20}
           ]
         },
         {
           id: 16,
           text: '智能制造工程 意向专业 [单选题] ',
           options: [
-            {id: 1, text: '智能制造工程', next: 20},
-            {id: 2, text: '能源与动力工程', next: 20},
-            {id: 3, text: '机械设计制造及其自动化', next: 20},
-            {id: 4, text: '车辆工程（英语强化）', next: 20},
-            {id: 5, text: '测控技术与仪器', next: 20},
-            {id: 6, text: '金属材料工程', next: 20},
-            {id: 7, text: '功能材料', next: 20},
-            {id: 8, text: '材料成型及控制工程', next: 20},
-            {id: 9, text: '生物医学工程', next: 20}
+            {id: 111, text: '智能制造工程', next: 20},
+            {id: 222, text: '能源与动力工程', next: 20},
+            {id: 333, text: '机械设计制造及其自动化', next: 20},
+            {id: 444, text: '车辆工程（英语强化）', next: 20},
+            {id: 555, text: '测控技术与仪器', next: 20},
+            {id: 666, text: '金属材料工程', next: 20},
+            {id: 777, text: '功能材料', next: 20},
+            {id: 888, text: '材料成型及控制工程', next: 20},
+            {id: 999, text: '生物医学工程', next: 20}
           ]
         },
         {
@@ -1449,10 +1448,27 @@ export default {
 
     isOptionHidden(option) {
       // 如果选项的文本包含当前的 department 或 major，返回 true（表示隐藏该选项）
-      if(this.filter){
-        return option.text.includes(this.department) || option.text.includes(this.major);
+      if (this.filter === 1) {
+        return option.text.includes(this.major)
+      } else if (this.filter === 2 && !['111', '222', '333', '444', '555', '666', '777', '888', '999'].includes(option.id.toString())) {
+        switch (this.num2) {
+          case 10:
+            return ['金属材料工程', '功能材料', '材料成型及控制工程'].some(text => option.text.includes(text));
+          case 11:
+            return ['大数据管理与应用', '信息管理与信息系统'].some(text => option.text.includes(text));
+          case 12:
+            return ['化学工程与工艺', '精细化工', '制药工程', '高分子材料与工程', '安全工程'].some(text => option.text.includes(text));
+          case 13:
+            return ['环境科学', '环境工程'].some(text => option.text.includes(text));
+          case 14:
+            return ['广播电视学', '汉语言文学'].some(text => option.text.includes(text));
+          case 15:
+            return ['智能建造', '水利水电工程', '港口航道与海岸工程', '海洋资源开发技术', '交通工程', '工程管理', '建筑环境与能源应用工程', '土木工程'].some(text => option.text.includes(text));
+          case 16:
+            return ['智能制造工程', '能源与动力工程', '机械设计制造及其自动化', '车辆工程（英语强化）', '测控技术与仪器', '金属材料工程', '功能材料', '材料成型及控制工程', '生物医学工程'].some(text => option.text.includes(text));
+        }
       }
-      else return option.text.includes(this.department)
+      //else return option.text.includes(this.department)
 
     },
 
@@ -1473,6 +1489,7 @@ export default {
   border-radius: 8px;
   font-family: "Arial", sans-serif;
 }
+
 /* 每个问题的容器 */
 .question-container {
   margin-bottom: 20px; /* 每个问题间距 */
@@ -1480,6 +1497,7 @@ export default {
   background-color: #ffffff; /* 背景色 */
   border-radius: 10px; /* 圆角 */
 }
+
 /* 问题标题 */
 .questionnaire h2 {
   margin-bottom: 10px;

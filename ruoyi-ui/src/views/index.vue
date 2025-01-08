@@ -4,8 +4,8 @@
       <h1 class="welcome-message">欢迎回来，{{ studentName }}！</h1>
       <p class="user-info" v-if="this.userName !== 'admin'">
         书院：{{ department }}<br />
-        系统内专业：{{ major }}<br />
-        招生录取专业：{{ specialty }}<br />
+        招生录取专业：{{ major }}<br />
+        系统内专业：{{ specialty }}<br />
         是否为创新班/拔尖班：{{ specialClass}}<br />
       </p>
       <p class="greeting-message">祝你今天有个愉快的一天！😊</p>
