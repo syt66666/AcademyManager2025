@@ -267,7 +267,7 @@ export default {
       const option = {
         backgroundColor: '#ffffff',
         title: {
-          text: '全体学生转专业类型分布',
+          text: '全校学生专业分流类型分布',
           left: 'center',
           textStyle: {
             fontSize: 18,
