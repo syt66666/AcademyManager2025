@@ -130,15 +130,18 @@ export default {
       }
     },
     //设置num3值，厚德
-    setNumBasedOnSpecialty(major) {
-      switch (major) {
+    setNumBasedOnSpecialty(specialty) {
+      switch (specialty) {
         case '工商管理类':
           this.num3 = 10;
           break;
         case '人文社科学域':
           this.num3 = 11;
           break;
-        case '英语、日语类':
+        case '英语类':
+          this.num3 = 12;
+          break;
+        case '日语':
           this.num3 = 12;
           break;
         case '建筑类':
@@ -147,11 +150,10 @@ export default {
         default:
           this.num3 = this.num;
       }
-      console.log(this.num3)
     },
-    //设置num4值，专业类的对应值
-    setNumBasedOnClass(specialty) {
-      switch (specialty) {
+    //设置num4值，创新班的逻辑：有的创新班型内部需要任选
+    setNumBasedOnClass(major) {
+      switch (major) {
         case '智能制造工程':
           this.num4 = 100;
           break;
@@ -176,8 +178,6 @@ export default {
         default:
           this.num4 = 200;
       }
-      console.log('num4'+this.num4)
-      console.log(specialty)
     },
     // 显示确认弹窗
     showConfirmDialog() {
@@ -617,7 +617,7 @@ export default {
 
     // C类型的问卷数据
     getQuestionnaireC() {
-      this.filter=false;
+      this.filter=null;
       return [
         {
           id: 1,
@@ -638,13 +638,15 @@ export default {
 
     // D类型的问卷数据
     getQuestionnaireD() {
-      this.filter=true;
+      console.log(this.num3)
+      this.filter=3;
+      if(this.department==='厚德书院') this.filter=4;
       return [
         {
           id: 1,
           text: '您的分流形式是 [单选题]',
           options: [
-            {id: 1, text: '保持现有专业', next: null},
+            {id: 1, text: '保持现有专业', next: 20},
             {id: 2, text: '域内任选专业，并转专业', next: this.num3},
           ]
         },
@@ -671,7 +673,7 @@ export default {
         },
         {
           id: 3,
-          text: '大煜书院——物质创造学域 意向专业 [单选题]',
+          text: '请在 大煜书院——物质创造学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: 20},
             {id: 2, text: '精细化工', next: 20},
@@ -686,7 +688,7 @@ export default {
         },
         {
           id: 4,
-          text: '请在学域内任选专业 [单选题]',
+          text: '请在 伯川书院——智能制造学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: 20},
             {id: 2, text: '能源与动力工程', next: 20},
@@ -701,7 +703,7 @@ export default {
         },
         {
           id: 5,
-          text: '请在学域内任选专业 [单选题]',
+          text: '请在 笃学书院——理科强基学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: 20},
             {id: 2, text: '信息科学与计算科学', next: 20}
@@ -709,7 +711,7 @@ export default {
         },
         {
           id: 6,
-          text: '令希书院——智能建造学域 [单选题]',
+          text: '请在 令希书院——智能建造学域 任选专业[单选题]',
           options: [
             {id: 1, text: '工程力学', next: 20},
             {id: 2, text: '飞行器设计与工程', next: 20},
@@ -726,12 +728,8 @@ export default {
         },
         {
           id: 7,
-          text: '请在学域内任选专业 [单选题]',
+          text: '请在 厚德书院——人文社科学域 任选专业 [单选题]',
           options: [
-            {id: 1, text: '金融学', next: 20},
-            {id: 2, text: '工商管理', next: 20},
-            {id: 3, text: '物流管理', next: 20},
-            {id: 4, text: '国际经济与贸易', next: 20},
             {id: 5, text: '知识产权', next: 20},
             {id: 6, text: '公共事业管理、公共事业管理', next: 20},
             {id: 7, text: '马克思主义理论', next: 20},
@@ -752,7 +750,7 @@ export default {
         },
         {
           id: 8,
-          text: '请在学域内任选专业 [单选题]',
+          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: 20},
             {id: 2, text: '自动化', next: 20},
@@ -766,7 +764,7 @@ export default {
         },
         {
           id: 9,
-          text: '请在学域内任选专业 [单选题]',
+          text: '请在 求实书院——信息技术学域（二） 任选专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: 20},
             {id: 2, text: '网络工程', next: 20},
@@ -778,45 +776,45 @@ export default {
           id: 10,
           text: '请在 工商管理类 任选专业 [单选题]',
           options: [
-            {id: 1, text: '金融学', next: 20},
-            {id: 2, text: '工商管理', next: 20},
-            {id: 3, text: '物流管理', next: 20},
-            {id: 4, text: '国际经济与贸易', next: 20},
+            {id: 111, text: '金融学', next: 20},
+            {id: 222, text: '工商管理', next: 20},
+            {id: 333, text: '物流管理', next: 20},
+            {id: 444, text: '国际经济与贸易', next: 20},
           ]
         },
         {
           id: 11,
-          text: '请在 公共事业管理、哲学类、新闻传播学类 任选专业 [单选题]',
+          text: '请在 人文社科学域 任选专业 [单选题]',
           options: [
-            {id: 1, text: '知识产权', next: 20},
-            {id: 2, text: '公共事业管理', next: 20},
-            {id: 3, text: '马克思主义理论', next: 20},
-            {id: 4, text: '哲学', next: 20},
-            {id: 5, text: '广播电视学', next: 20},
-            {id: 6, text: '汉语言文学', next: 20},
+            {id: 111, text: '知识产权', next: 20},
+            {id: 222, text: '公共事业管理', next: 20},
+            {id: 333, text: '马克思主义理论', next: 20},
+            {id: 444, text: '哲学', next: 20},
+            {id: 555, text: '广播电视学', next: 20},
+            {id: 666, text: '汉语言文学', next: 20},
           ]
         },
         {
           id: 12,
-          text: '请在 英语、日语 任选专业 [单选题]',
+          text: '请在 英语、日语类 任选专业 [单选题]',
           options: [
-            {id: 1, text: '英语', next: null},
-            {id: 2, text: '翻译', next: null},
-            {id: 3, text: '日语', next: null},
+            {id: 111, text: '英语', next: 20},
+            {id: 222, text: '翻译', next: 20},
+            {id: 333, text: '日语', next: 20},
           ]
         },
         {
           id: 13,
           text: '请在 建筑类 任选专业 [单选题]',
           options: [
-            {id: 1, text: '建筑学', next: null},
-            {id: 2, text: '城乡规划', next: null},
-            {id: 3, text: '工业设计', next: null},
+            {id: 111, text: '建筑学', next: 20},
+            {id: 222, text: '城乡规划', next: 20},
+            {id: 333, text: '工业设计', next: 20},
           ]
         },
         {
           id: 14,
-          text: '意向专业 [单选题]',
+          text: '请在 大煜书院——物质创造学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
             {id: 2, text: '精细化工', next: null},
@@ -831,7 +829,7 @@ export default {
         },
         {
           id: 15,
-          text: '意向专业 [单选题]',
+          text: '请在 伯川书院——智能制造学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: null},
             {id: 2, text: '能源与动力工程', next: null},
@@ -846,7 +844,7 @@ export default {
         },
         {
           id: 16,
-          text: '意向专业 [单选题]',
+          text: '请在 笃学书院——理科强基学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
             {id: 2, text: '信息科学与计算科学', next: null}
@@ -854,7 +852,7 @@ export default {
         },
         {
           id: 17,
-          text: '意向专业 [单选题]',
+          text: '请在 令希书院——智能建造学域 任选专业[单选题]',
           options: [
             {id: 1, text: '工程力学', next: null},
             {id: 2, text: '飞行器设计与工程', next: null},
@@ -871,7 +869,7 @@ export default {
         },
         {
           id: 18,
-          text: '意向专业 [单选题]',
+          text: '请在 厚德书院——人文社科学域 任选专业 [单选题]',
           options: [
             {id: 1, text: '金融学', next: null},
             {id: 2, text: '工商管理', next: null},
@@ -897,7 +895,7 @@ export default {
         },
         {
           id: 19,
-          text: '意向专业 [单选题]',
+          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
             {id: 2, text: '自动化', next: null},
@@ -911,7 +909,7 @@ export default {
         },
         {
           id: 21,
-          text: '意向专业 [单选题]',
+          text: '请在 求实书院——信息技术学域（二） [单选题]',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
@@ -930,7 +928,7 @@ export default {
     // E类型的问卷数据（针对于创新班/拔尖班的学生）
     getQuestionnaireE() {
       //只过滤部分信息
-      this.filter=false;
+      this.filter=3;
       return [
         {
           id: 1,
@@ -1246,9 +1244,9 @@ export default {
         },
         {
           id: 200,
-          text: '请选择 '+this.specialty +' 的内设专业 [单选题] *',
+          text: '请选择 '+this.major +' 的内设专业 [单选题] *',
           options: [
-            {id: 1, text: this.specialty, next: 20},
+            {id: 1, text: this.major, next: 20},
           ]
         },
         {
@@ -1276,7 +1274,6 @@ export default {
         selectedOptionId: option.id,
         selectedOptionText: option.text,
       };
-      console.log(this.userSelections[index])
       if (option.next !== null) {
         const nextQuestion = this.questionnaire.find(q => q.id === option.next);
         if (nextQuestion) {
@@ -1304,7 +1301,7 @@ export default {
       }else if(this.splitFlow==="仅可转专业"){
         this.finalAnswerText = this.major;
         this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4=4;
+        this.finalAnswerText4=5;
       }
 
       //第二种问卷（测试完成）
@@ -1312,7 +1309,7 @@ export default {
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
         this.finalAnswerText2='否';
         this.finalAnswerText3='否';
-        this.finalAnswerText4=5;
+        this.finalAnswerText4=3;
       }
       else if(this.splitFlow==="可类内任选，并转专业"){//转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
@@ -1329,11 +1326,16 @@ export default {
       }
 
       //第四种问卷（测试完成）
-      else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="保持现有专业"&&this.specialClass===0){
+      else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.getLastAnswerForQuestion(1).selectedOptionText==="保持现有专业"&&this.specialClass===0){
         this.finalAnswerText=this.major;
         this.finalAnswerText2='否';
         this.finalAnswerText3='否';
         this.finalAnswerText4=1;
+      }
+      else if(this.splitFlow==="可域内任选，并转专业"&&this.getLastAnswerForQuestion(1).selectedOptionText==="保持现有专业"&&this.specialClass===0){
+        this.finalAnswerText=this.major;
+        this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
+        this.finalAnswerText4=5;
       }
       else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.specialClass===0){//不转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
@@ -1374,7 +1376,7 @@ export default {
 
       // 提交最后一个问题的答案到后台
       axios
-        .post('http://localhost:3000/questionnaire/submit', {
+        .post('http://localhost:3000/submit', {
           user_name: this.userName, // 用户名称
           questionnaire_id: 1, // 问卷编号
           change_adress:this.department ,//提交问卷的书院
@@ -1440,7 +1442,7 @@ export default {
 
     getFilteredOptions(options) {
       // 根据 department 和 major 字段来过滤选项，隐藏含有 department 或 major 的选项
-      if (this.major.includes('类')) {
+      if (this.major.includes('类')||this.department==='厚德书院') {
         options=options.filter(option => option.text !== '保持现有专业');
       }
       return options.filter(option => !this.isOptionHidden(option));
@@ -1468,7 +1470,21 @@ export default {
             return ['智能制造工程', '能源与动力工程', '机械设计制造及其自动化', '车辆工程（英语强化）', '测控技术与仪器', '金属材料工程', '功能材料', '材料成型及控制工程', '生物医学工程'].some(text => option.text.includes(text));
         }
       }
-      //else return option.text.includes(this.department)
+      else if(this.filter===3){
+        return option.text.includes(this.department);
+      }
+      else if(this.filter===4&& !['111', '222', '333', '444', '555', '666'].includes(option.id.toString())){
+        switch (this.num3) {
+          case 10:
+            return ['金融学', '工商管理', '物流管理', '国际经济与贸易'].some(text => option.text.includes(text));
+          case 11:
+            return ['知识产权', '公共事业管理', '马克思主义理论', '哲学', '广播电视学', '汉语言文学'].some(text => option.text.includes(text));
+          case 12:
+            return ['英语', '翻译', '日语'].some(text => option.text.includes(text));
+          case 13:
+            return ['建筑学', '城乡规划', '工业设计'].some(text => option.text.includes(text));
+        }
+      }
 
     },
 
