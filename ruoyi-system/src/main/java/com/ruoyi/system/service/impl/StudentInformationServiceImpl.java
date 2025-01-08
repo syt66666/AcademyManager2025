@@ -114,12 +114,10 @@ public class StudentInformationServiceImpl implements StudentInformationService 
         StudentUserInformation studentUserInformation = new StudentUserInformation();
         studentUserInformation.setStudentId(studentInformation.getStudentId());
         studentUserInformation.setStudentName(studentInformation.getStudentName());
-        studentUserInformation.setStudentSex("男".equals(studentInformation.getStudentSex()) ? "0" : "1");
         studentUserInformation.setCreateTime(LocalDateTime.now());
         studentUserInformationList.add(studentUserInformation);
         //插入学生账号数据
         studentInformationMapper.multipleInsertStudentAccount(studentUserInformationList);
-
         List<Integer> ids = studentInformationMapper.getInsertStudentAccountIds(studentUserInformationList);
         List<StudentUserRole> studentUserRoleList = new LinkedList<>();
         StudentUserRole studentUserRole = new StudentUserRole();

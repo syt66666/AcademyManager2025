@@ -35,8 +35,7 @@ export default {
   },
   data() {
     return {
-      title: '书院管理系统',
-      // logo: logoImg
+      title: '书院综合管理系统',
     }
   }
 }

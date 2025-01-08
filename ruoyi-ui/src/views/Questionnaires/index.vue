@@ -49,7 +49,7 @@ export default {
 
       questionnaires: [
         { id: 1, title: '问卷1', description: '书院专业分流调查问卷', completed: false, start_time: '2025-01-01T00:00:00', end_time: '2026-01-1T00:00:00' },
-        { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false, start_time: '2025-02-01T00:00:00', end_time: '2026-01-1T00:00:00' }
+       // { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false, start_time: '2025-02-01T00:00:00', end_time: '2026-01-1T00:00:00' }
       ]
     };
   },
