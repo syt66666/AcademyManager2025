@@ -15,7 +15,7 @@ export default {
     return {
       title: this.$store.state.settings.dynamicTitle && this.$store.state.settings.title,
       titleTemplate: title => {
-        return title ? `${title} - ${process.env.VUE_APP_TITLE}` : '大工书院综合管理系统'
+        return title ? `${title} - ${process.env.VUE_APP_TITLE}` : '书院综合管理系统'
       }
     }
   }

@@ -153,25 +153,25 @@ export default {
     //设置num4值，专业类的对应值
     setNumBasedOnClass(specialty) {
       switch (specialty) {
-        case '智能制造工程（创新班）':
+        case '智能制造工程':
           this.num4 = 100;
           break;
-        case '储能科学与工程（新工科拔尖班）':
+        case '储能科学与工程':
           this.num4 = 101;
           break;
-        case '环境科学与工程类（新工科拔尖班）':
+        case '环境科学与工程类':
           this.num4 = 102;
           break;
-        case '化工与制药类（创新班）':
+        case '化工与制药类':
           this.num4 = 103;
           break;
-        case '建筑类（新工科拔尖班）':
+        case '建筑类':
           this.num4 = 104;
           break;
-        case '大数据管理与应用（新工科拔尖班）':
+        case '大数据管理与应用':
           this.num4 = 105;
           break;
-        case '电子信息类（创新班）':
+        case '电子信息类':
           this.num4 = 106;
           break;
         default:

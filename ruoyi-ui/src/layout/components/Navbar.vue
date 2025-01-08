@@ -14,6 +14,7 @@
           系统内专业：{{ major }}
           招生录取专业：{{ specialty }}
           分流形式：{{ splitFlow }}
+          是否为创新班/拔尖班：{{ specialClass}}
         </span>
         <search id="header-search" class="right-menu-item" />
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
@@ -55,7 +56,8 @@ export default {
       department: '',
       major: '',
       specialty: '',
-      splitFlow:''
+      splitFlow:'',
+      specialClass:''
     };
   },
   components: {
@@ -110,6 +112,11 @@ export default {
             this.major = userData.major; // 招生录取专业
             this.department = userData.academy; // 管理部门
             this.specialty = userData.systemMajor; // 系统内专业
+            if(userData.InnovationClass===1){
+              this.specialClass='是'
+            }else{
+              this.specialClass='否'
+            }
           })
           .catch(error => {
             console.error("获取用户信息失败", error);
