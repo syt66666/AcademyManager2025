@@ -59,36 +59,6 @@ app.get('/api/check-questionnaire-completed', async (req, res) => {
   }
 });
 
-/**
- *
- */
-// 获取特定问卷的开始时间和结束时间
-app.get('/api/get-questionnaire-time', async (req, res) => {
-  const { questionnaireId } = req.query; // 获取问卷ID
-
-  if (!questionnaireId) {
-    return res.status(400).send('问卷ID是必填的');
-  }
-
-  try {
-    // 查询数据库，获取特定问卷的开始时间和结束时间
-    const query = "SELECT start_time, end_time FROM questionnaire WHERE questionnaire_Id = ?";
-    const [rows] = await db.promise().execute(query, [questionnaireId]);
-
-    if (rows.length === 0) {
-      return res.status(404).send('未找到该问卷');
-    }
-
-    const questionnaire = rows[0];
-    res.json({
-      start_time: questionnaire.start_time,
-      end_time: questionnaire.end_time,
-    });
-  } catch (error) {
-    console.error('查询问卷时间出错:', error);
-    res.status(500).send('服务器错误');
-  }
-});
 
 // 提交问卷答案的 API
 app.post('/updateStudent', async (req, res) => {
