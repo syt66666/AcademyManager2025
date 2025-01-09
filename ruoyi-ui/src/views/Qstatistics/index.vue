@@ -78,7 +78,7 @@ export default {
           });
         }
         afterCnt[academy] = count;
-        console.log(`书院 ${academy} 的转专业类型统计:`, this.academyChangeType);
+        console.log(`书院 ${academy} 的专业分流类型统计:`, this.academyChangeType);
       }
 
       let xData = [];
@@ -113,7 +113,7 @@ export default {
           formatter: '{b}: {a0}人数: {c0} ({d0}%)<br>{a1}人数: {c1} ({d1}%)' // 显示百分比
         },
         legend: {
-          data: ['转专业前', '转专业后'],
+          data: ['专业分流前', '专业分流后'],
           top: '10%',
           textStyle: {
             fontSize: 14,
@@ -162,7 +162,7 @@ export default {
         },
         series: [
           {
-            name: '转专业前',
+            name: '专业分流前',
             type: 'bar',
             data: beforeData,
             barWidth: 30, // 设置柱子宽度
@@ -189,7 +189,7 @@ export default {
             }
           },
           {
-            name: '转专业后',
+            name: '专业分流后',
             type: 'bar',
             data: afterData,
             barWidth: 30, // 设置柱子宽度
@@ -246,7 +246,7 @@ export default {
         '1': '保持当前专业',
         '2': '域内任选专业',
         '3': '类内任选专业',
-        '4': '创新班政策内任选专业',
+        '4': '拔尖/创新班政策内任选专业',
         '5': '转专业',
         'Unknown': '未知类型'
       };
@@ -544,7 +544,7 @@ export default {
           '1': '保持当前专业',
           '2': '域内任选专业',
           '3': '类内任选专业',
-          '4': '创新班政策内任选专业',
+          '4': '拔尖/创新班政策内任选专业',
           '5': '转专业',
           'Unknown': '未知类型'
         };
@@ -645,7 +645,7 @@ export default {
             case '保持当前专业':type=1;break;
             case '域内任选专业':type=2;break;
             case '类内任选专业':type=3;break;
-            case '创新班政策内任选专业':type=4;break;
+            case '拔尖/创新班政策内任选专业':type=4;break;
             case '转专业':type=5;break;
           }
           that.$refs.student.type=type;
