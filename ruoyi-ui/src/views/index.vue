@@ -4,8 +4,8 @@
       <h1 class="welcome-message">欢迎回来，{{ studentName }}！</h1>
       <p class="user-info" v-if="this.userName !== 'admin'">
         书院：{{ department }}<br />
-        招生录取专业：{{ major }}<br />
         系统内专业：{{ specialty }}<br />
+        招生录取专业：{{ major }}<br />
         是否为创新班/拔尖班：{{ specialClass}}<br />
       </p>
       <p class="greeting-message">祝你今天有个愉快的一天！😊</p>
@@ -38,32 +38,61 @@ export default {
     this.initializeUserData();
   },
   methods: {
-    initializeUserData() {
-      if(this.userName === 'admin'){
+    async initializeUserData() {
+      if (this.userName === 'admin') {
         this.studentName = '管理员'
-      }
-      else{
-      axios
-        .get(`http://localhost:3000/api/users/${this.userName}`)
-        .then(response => {
-          const userData = response.data;  // 获取用户数据
-          this.splitFlow = userData.divertForm // 分流形式
-          this.studentName = userData.studentName; // 姓名
-          this.studentId = userData.studentId; // 学号
-          this.major = userData.major; // 招生录取专业
-          this.department = userData.academy; // 管理部门
-          this.specialty = userData.systemMajor; // 系统内专业
-          if(userData.InnovationClass===1){
-            this.specialClass='是'
-          }else{
-            this.specialClass='否'
+      } else {
+
+          const response = await axios.get(`http://localhost:8080/api/student/${this.userName}`);
+          const studentInfo = response.data.studentInfo;
+          console.log(studentInfo);
+          this.studentName=studentInfo.studentName;
+          this.department=studentInfo.academy;
+          this.major=studentInfo.major;
+          this.specialty=studentInfo.systemMajor;
+          if(studentInfo.innovationClass===1){
+            this.specialClass='是';
           }
-        })
-        .catch(error => {
-          console.error("获取用户信息失败", error);
-          this.$message.error("获取用户信息失败");
-        });
-    }
+          else {
+            this.specialClass='否';
+          }
+
+
+        //   if (response && response.data && response.data.studentInfo) {
+        //     const studentInfo = response.data.studentInfo;
+        //     console.log(studentInfo);
+        //   } else {
+        //     console.warn("No student info found.");
+        //   }
+        //
+        // } catch (error) {
+        //   console.error("Error fetching student info:", error);
+        // }
+
+
+
+
+        // axios
+        //   .get(`http://localhost:3000/api/users/${this.userName}`)
+        //   .then(response => {
+        //     const userData = response.data;  // 获取用户数据
+        //     this.splitFlow = userData.divertForm // 分流形式
+        //     this.studentName = userData.studentName; // 姓名
+        //     this.studentId = userData.studentId; // 学号
+        //     this.major = userData.major; // 招生录取专业
+        //     this.department = userData.academy; // 管理部门
+        //     this.specialty = userData.systemMajor; // 系统内专业
+        //     if(userData.InnovationClass===1){
+        //       this.specialClass='是'
+        //     }else{
+        //       this.specialClass='否'
+        //     }
+        //   })
+        //   .catch(error => {
+        //     console.error("获取用户信息失败", error);
+        //     this.$message.error("获取用户信息失败");
+        //   });
+      }
     }
   }
 };

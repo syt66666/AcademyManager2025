@@ -117,6 +117,10 @@ public class SecurityConfig
                     .antMatchers("/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/*/api-docs", "/druid/**").permitAll()
                         .antMatchers("/system/questionnaire/times").permitAll()
                         .antMatchers("/api/check-questionnaire-completed").permitAll()
+                        .antMatchers("/api/student").permitAll()
+                        .antMatchers("/questionnaire/submit").permitAll()
+                        .antMatchers("/api/updateStudentAnswer").permitAll()
+                        .antMatchers("/api/**").permitAll()
                         // 除上面外的所有请求全部需要鉴权认证
                     .anyRequest().authenticated();
             })

@@ -97,31 +97,22 @@ export default {
     this.initializeUserData();
   },
   methods: {
-    initializeUserData() {
-      if(this.userName === 'admin'){
+    async initializeUserData() {
+      if (this.userName === 'admin') {
         this.studentName = '管理员'
-      }
-      else{
-        axios
-          .get(`http://localhost:3000/api/users/${this.userName}`)
-          .then(response => {
-            const userData = response.data;  // 获取用户数据
-            this.splitFlow = userData.divertForm // 分流形式
-            this.studentName = userData.studentName; // 姓名
-            this.studentId = userData.studentId; // 学号
-            this.major = userData.major; // 招生录取专业
-            this.department = userData.academy; // 管理部门
-            this.specialty = userData.systemMajor; // 系统内专业
-            if(userData.InnovationClass===1){
-              this.specialClass='是'
-            }else{
-              this.specialClass='否'
-            }
-          })
-          .catch(error => {
-            console.error("获取用户信息失败", error);
-            this.$message.error("获取用户信息失败");
-          });
+      } else {
+        const response = await axios.get(`http://localhost:8080/api/student/${this.userName}`);
+        const studentInfo = response.data.studentInfo;
+        this.studentName = studentInfo.studentName;
+        this.department = studentInfo.academy;
+        this.major = studentInfo.major;
+        this.splitFlow=studentInfo.divertForm;
+        this.specialty = studentInfo.systemMajor;
+        if (studentInfo.innovationClass === 1) {
+          this.specialClass = '是';
+        } else {
+          this.specialClass = '否';
+        }
       }
     },
     toggleSideBar() {

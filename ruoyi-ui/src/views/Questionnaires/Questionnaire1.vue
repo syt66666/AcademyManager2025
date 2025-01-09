@@ -206,29 +206,21 @@ export default {
       this.showConfirmDialogFlag = true;
     },
     // 初始化问卷
-    initializeQuestionnaire() {
-      axios
-        .get(`http://localhost:3000/api/users/${this.userName}`)
-        .then(response => {
-          const userData = response.data;  // 获取用户数据
-          // 获取学生信息
-          this.splitFlow = userData.divertForm // 分流形式
-          this.studentName = userData.studentName; // 姓名
-          this.studentId = userData.studentId; // 学号
-          this.major = userData.major; // 招生录取专业
-          this.department = userData.academy; // 书院
-          this.specialty = userData.systemMajor; // 系统内专业
-          this.specialClass=userData.InnovationClass;//0：不是 1：是
-          this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
-          this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
-          this.setNumBasedOnSpecialty(this.specialty);//得到专业类别对应num3,用于问卷选项加载
-          this.setNumBasedOnClass(this.major,this.specialty);//得到创新班专业类别对应num4,用于问卷选项加载
-          this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
-          this.getLastAnswerForQuestion(questionId);
-        })
-        .catch(error => {
-          console.error('获取用户信息失败', error); // 错误处理
-        })
+    async initializeQuestionnaire() {
+      const response = await axios.get(`http://localhost:8080/api/student/${this.userName}`);
+      const studentInfo = response.data.studentInfo;
+      this.studentName = studentInfo.studentName;
+      this.department = studentInfo.academy;
+      this.major = studentInfo.major;
+      this.splitFlow = studentInfo.divertForm;
+      this.specialty = studentInfo.systemMajor;
+      this.specialClass = studentInfo.innovationClass;
+      this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
+      this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
+      this.setNumBasedOnSpecialty(this.specialty);//得到专业类别对应num3,用于问卷选项加载
+      this.setNumBasedOnClass(this.major, this.specialty);//得到创新班专业类别对应num4,用于问卷选项加载
+      this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
+      this.getLastAnswerForQuestion(questionId);
     },
 
     // 根据分流形式加载不同的问卷
@@ -1432,52 +1424,8 @@ export default {
           this.finalAnswerText4=5;
         }
       }
-
-      // 提交最后一个问题的答案到后台
-      axios
-        .post('http://localhost:3000/submit', {
-          user_name: this.userName, // 用户名称
-          questionnaire_id: 1, // 问卷编号
-          change_adress:this.department ,//提交问卷的书院
-          change_major: this.finalAnswerText, // 只提交最后一个问题的答案
-          after_change_adress:this.finalAnswerText2,
-          after_change_major:this.finalAnswerText3,
-          change_major_type:this.finalAnswerText4
-        })
-        .then(response => {
-          console.log('提交成功:', response.data);
-          setTimeout(() => {
-            // 跳转回问卷页面
-            this.$router.go(-1);
-          }, 2000); // 2秒后跳转
-        })
-        .catch(error => {
-          console.error('提交失败:', error);
-        });
-      if(this.finalAnswerText2!=='否'){
-        axios
-          .post('http://localhost:3000/updateStudent', {
-            studentId: this.userName,
-            afterMajor: this.finalAnswerText3,
-            afterAcademy: this.finalAnswerText2,
-            change_major_type:this.finalAnswerText4
-          })
-          .catch(error => {
-            console.error('提交失败:', error);
-          });
-      }
-      else{
-        axios
-          .post('http://localhost:3000/updateStudent', {
-            studentId: this.userName,
-            afterMajor: this.finalAnswerText,
-            afterAcademy: this.department,
-            change_major_type:this.finalAnswerText4
-          })
-          .catch(error => {
-            console.error('提交失败:', error);
-          });
-      }
+      this.submitData();
+      this.updateStudentData();
     },
     // 提交最后一个问题的答案到后台
     //过滤问卷答案
@@ -1573,6 +1521,56 @@ export default {
 
     },
 
+    submitData() {
+      const url = 'http://localhost:8080/questionnaire/submit';
+      const payload = {
+        userName: this.userName,
+        questionnaireId: 1,
+        changeAdress: this.department ,
+        changeMajor: this.finalAnswerText,
+        afterChangeMajor: this.finalAnswerText2,
+        afterChangeAdress: this.finalAnswerText3,
+        changeMajorType: this.finalAnswerText4
+      };
+      axios.post(url, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(response => {console.log('提交成功:', response.data);
+          setTimeout(() => {
+            // 跳转回问卷页面
+            this.$router.go(-1);
+          }, 2000); // 2秒后跳转
+        })
+        .catch(error => console.error('提交失败:', error));
+    },
+    updateStudentData() {
+      const url = 'http://localhost:8080/api/updateStudentAnswer';
+      let payload={};
+      if(this.finalAnswerText2!=='否'){
+        payload = {
+          studentId: this.userName,
+          afterAcademy: this.finalAnswerText2,
+          afterMajor: this.finalAnswerText3,
+          changeMajorType: this.finalAnswerText4
+        };
+      }else {
+        payload = {
+          studentId: this.userName,
+          afterAcademy: this.department,
+          afterMajor: this.finalAnswerText,
+          changeMajorType: this.finalAnswerText4
+        };
+      }
+      axios.post(url, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(response => console.log('提交成功:', response.data))
+        .catch(error => console.error('提交失败:', error));
+    }
   },
   mounted() {
     this.initializeQuestionnaire();
