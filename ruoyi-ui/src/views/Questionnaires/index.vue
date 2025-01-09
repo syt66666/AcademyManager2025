@@ -76,7 +76,7 @@ export default {
 
       try {
         for (const questionnaire of this.questionnaires) {
-          const response = await axios.get('http://localhost:8080/api/check-questionnaire-completed', {
+          const response = await axios.get(process.env.VUE_APP_BASE_API+'/api/check-questionnaire-completed', {
             params: {
               userName: this.userName,
               questionnaireId: questionnaire.id
@@ -93,7 +93,7 @@ export default {
     },
     async checkQuestionnaireTime() {
       for (const questionnaire of this.questionnaires) {
-        const response = await axios.get(`http://localhost:8080/system/questionnaire/times?questionnaireId=${questionnaire.id}`);
+        const response = await axios.get(process.env.VUE_APP_BASE_API+`/system/questionnaire/times?questionnaireId=${questionnaire.id}`);
 
         if (response.data && response.data.data) {
           const startTime = new Date(response.data.data.startTime);

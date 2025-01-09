@@ -207,7 +207,7 @@ export default {
     },
     // 初始化问卷
     async initializeQuestionnaire() {
-      const response = await axios.get(`http://localhost:8080/api/student/${this.userName}`);
+      const response = await axios.get(process.env.VUE_APP_BASE_API+`/api/student/${this.userName}`);
       const studentInfo = response.data.studentInfo;
       this.studentName = studentInfo.studentName;
       this.department = studentInfo.academy;
@@ -1522,7 +1522,7 @@ export default {
     },
 
     submitData() {
-      const url = 'http://localhost:8080/questionnaire/submit';
+      const url = process.env.VUE_APP_BASE_API+'/questionnaire/submit';
       const payload = {
         userName: this.userName,
         questionnaireId: 1,
@@ -1546,7 +1546,7 @@ export default {
         .catch(error => console.error('提交失败:', error));
     },
     updateStudentData() {
-      const url = 'http://localhost:8080/api/updateStudentAnswer';
+      const url = process.env.VUE_APP_BASE_API+'/api/updateStudentAnswer';
       let payload={};
       if(this.finalAnswerText2!=='否'){
         payload = {

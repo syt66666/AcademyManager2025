@@ -43,7 +43,7 @@ export default {
         this.studentName = '管理员'
       } else {
 
-          const response = await axios.get(`http://localhost:8080/api/student/${this.userName}`);
+          const response = await axios.get(process.env.VUE_APP_BASE_API+`/api/student/${this.userName}`);
           const studentInfo = response.data.studentInfo;
           console.log(studentInfo);
           this.studentName=studentInfo.studentName;

@@ -101,7 +101,7 @@ export default {
       if (this.userName === 'admin') {
         this.studentName = '管理员'
       } else {
-        const response = await axios.get(`http://localhost:8080/api/student/${this.userName}`);
+        const response = await axios.get(process.env.VUE_APP_BASE_API+`/api/student/${this.userName}`);
         const studentInfo = response.data.studentInfo;
         this.studentName = studentInfo.studentName;
         this.department = studentInfo.academy;
