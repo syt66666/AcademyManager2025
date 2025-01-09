@@ -48,8 +48,8 @@ export default {
       userName: store.state.user.name, // 获取用户名
 
       questionnaires: [
-        { id: 1, title: '问卷1', description: '书院专业分流调查问卷', completed: false, start_time: '2025-01-01T00:00:00', end_time: '2026-01-1T00:00:00' },
-       // { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false, start_time: '2025-02-01T00:00:00', end_time: '2026-01-1T00:00:00' }
+        { id: 1, title: '问卷1', description: '书院专业分流调查问卷', completed: false, start_time: '2025-01-01T00:00:00', end_time: '2026-01-01T00:00:00' },
+        { id: 2, title: '问卷2', description: '之后可添加问卷', completed: false, start_time: '2025-02-01T00:00:00', end_time: '2026-01-01T00:00:00' }
       ]
     };
   },
@@ -73,22 +73,32 @@ export default {
       }
     },
     async checkQuestionnaireTime() {
-      try {
-        const now = new Date();
-        for (const questionnaire of this.questionnaires) {
-          const response = await axios.get('http://localhost:3000/api/get-questionnaire-time', {
-            params: { questionnaireId: questionnaire.id },
-          });
-          questionnaire.start_time = response.data.start_time;
-          questionnaire.end_time = response.data.end_time;
-          const startTime = new Date(questionnaire.start_time);
-          const endTime = new Date(questionnaire.end_time);
-          questionnaire.isInTimeRange = now >= startTime && now <= endTime;
+      for (const questionnaire of this.questionnaires) {
+        const response = await axios.get(`http://localhost:8080/system/questionnaire/times?questionnaireId=${questionnaire.id}`);
+
+        if (response.data && response.data.data) {
+          const startTime = new Date(response.data.data.startTime);
+          const endTime = new Date(response.data.data.endTime);
+          // 判断当前时间是否在问卷的时间范围内
+          const now = new Date();
+          questionnaire.isInTimeRange = (now >= startTime && now <= endTime);
+          if (!isNaN(startTime)) {
+            questionnaire.start_time = startTime.toISOString(); // 转换为 ISO 8601 格式
+          } else {
+            questionnaire.start_time = 'Invalid Date';
+          }
+
+          if (!isNaN(endTime)) {
+            questionnaire.end_time = endTime.toISOString(); // 转换为 ISO 8601 格式
+          } else {
+            questionnaire.end_time = 'Invalid Date';
+          }
+        } else {
+          console.error('返回的数据结构异常');
         }
-      } catch (error) {
-        console.error('检查问卷时间失败:', error);
       }
     },
+
     goToQuestionnaire(questionnaireId) {
       const questionnaire = this.questionnaires.find(q => q.id === questionnaireId);
       if (questionnaire.completed || !questionnaire.isInTimeRange) {
@@ -105,7 +115,6 @@ export default {
   },
   created() {
     // 页面加载时检查问卷完成状态
-    console.log("页面加载，初始化检查问卷完成状态..."); // 测试日志
     this.checkQuestionnaireStatus();//查询问卷是否被该学生回答过
     this.checkQuestionnaireTime();//查询该问卷是否在可回答时间内
   }
