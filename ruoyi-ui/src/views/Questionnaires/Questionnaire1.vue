@@ -175,6 +175,15 @@ export default {
         case '电子信息类':
           this.num4 = 106;
           break;
+        case '数学类':
+          this.num4=107;
+          break;
+        case '智能建造':
+          this.num4=108;
+          break;
+        case '材料类':
+          this.num4=109;
+          break;
         default:
           this.num4 = 200;
       }
@@ -1178,7 +1187,7 @@ export default {
         },
         {
           id: 100,
-          text: '请选择您所在拔尖班、创新班的内设专业 [单选题] *',
+          text: '请选择 智能制造工程（创新班） 的内设专业 [单选题] *',
           options: [
             {id: 1, text: '智能制造工程', next: 20},
             {id: 2, text: '车辆工程（英语强化）', next: 20},
@@ -1240,6 +1249,34 @@ export default {
             {id: 4, text: '计算机科学与技术', next: 20},
             {id: 5, text: '生物医学工程', next: 20},
             {id: 6, text: '光电信息科学与工程', next: 20},
+          ]
+        },
+        {
+          id: 107,
+        text: '请选择 数学类（数学类及华罗庚数学国家基础学科拔尖计划班） 的内设专业 [单选题] *',
+        options: [
+        {id: 1, text: '数学与应用数学', next: 20},
+        {id: 2, text: '信息科学与计算科学', next: 20},
+      ]
+    },
+
+        {
+          id: 108,
+          text: '请选择 智能建造（创新班） 的内设专业 [单选题] *',
+          options: [
+            {id: 1, text: '智能建造', next: 20},
+            {id: 2, text: '水利水电工程', next: 20},
+            {id: 3, text: '港口航道与海岸工程', next: 20},
+            {id: 4, text: '土木工程', next: 20},
+          ]
+        },
+        {
+          id: 109,
+          text: '请选择 材料类（新工科拔尖班） 的内设专业 [单选题] *',
+          options: [
+            {id: 1, text: '金属材料工程', next: 20},
+            {id: 2, text: '功能材料', next: 20},
+            {id: 3, text: '材料成型及控制工程', next: 20},
           ]
         },
         {
