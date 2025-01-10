@@ -20,6 +20,14 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="学号" prop="studentId">
+          <el-input
+            v-model="queryParams.studentId"
+            placeholder="请输入学号"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
           <el-button icon="el-icon-refresh" size="mini" @click="resetQuery" class="reset-btn">重置</el-button>
@@ -37,6 +45,7 @@
         border
         max-height="none">
         <el-table-column v-if="columns[1].visible" label="姓名" align="center" prop="studentName" show-overflow-tooltip/>
+        <el-table-column v-if="columns[2].visible" label="学号" align="center" prop="studentId" show-overflow-tooltip/>
         <el-table-column v-if="columns[3].visible" label="转前书院" align="center" prop="academy">
           <template slot-scope="scope">
             <el-tag size="mini" type="primary">{{ scope.row.academy }}</el-tag>
