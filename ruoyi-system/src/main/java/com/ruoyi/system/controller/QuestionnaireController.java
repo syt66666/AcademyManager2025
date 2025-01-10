@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -34,15 +35,21 @@ public class QuestionnaireController {
                 request.getChangeMajorType() == null) {
 
             System.err.println("缺少必要的参数: " + request); // 记录缺少参数的信息
-            return ResponseEntity.badRequest().body(Map.of("message", "缺少必要的参数"));
+            HashMap<String,String> hashMap = new HashMap<>();
+            hashMap.put("message", "缺少必要的参数");
+            return ResponseEntity.badRequest().body(hashMap);
         }
 
         try {
             questionnaireService.submitQuestionnaire(request);
-            return ResponseEntity.ok(Map.of("message", "提交成功"));
+            HashMap<String,String> hashMap = new HashMap<>();
+            hashMap.put("message", "提交成功");
+            return ResponseEntity.ok(hashMap);
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "提交失败"));
+            HashMap<String,String> hashMap = new HashMap<>();
+            hashMap.put("message", "提交失败");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(hashMap);
         }
     }
 }
