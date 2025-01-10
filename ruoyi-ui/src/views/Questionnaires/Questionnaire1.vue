@@ -1333,7 +1333,7 @@ export default {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
       if(this.splitFlow==="不可变更专业"||this.specialty==='化学工程与工艺(国际班)'||this.specialty==='工程力学（钱令希创新班）'){
-        this.finalAnswerText=this.major;
+        this.finalAnswerText=this.specialty;
         this.finalAnswerText2 = '否';
         this.finalAnswerText3='否';
         this.finalAnswerText4=1;
