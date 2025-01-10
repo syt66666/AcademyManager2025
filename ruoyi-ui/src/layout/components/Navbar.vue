@@ -8,10 +8,10 @@
     <div class="right-menu">
       <template v-if="device!=='mobile'">
         <span class="user-info" v-if="this.userName !== 'admin'">
-          姓名：{{studentName}}
-          学号：{{userName}}
+<!--          姓名：{{studentName}}-->
+<!--          学号：{{userName}}-->
           书院：{{ department }}
-          招生录取专业：{{ major }}
+<!--          招生录取专业：{{ major }}-->
           系统内专业：{{ specialty }}
           分流形式：{{ splitFlow }}
           是否为创新班/拔尖班：{{ specialClass}}
