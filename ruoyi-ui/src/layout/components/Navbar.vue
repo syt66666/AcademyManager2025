@@ -7,15 +7,14 @@
     <search id="header-search" class="right-menu-item" />
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <span class="user-info" v-if="this.userName !== 'admin'">
-<!--          姓名：{{studentName}}-->
-<!--          学号：{{userName}}-->
-          书院：{{ department }}
-<!--          招生录取专业：{{ major }}-->
-          系统内专业：{{ specialty }}
-          分流形式：{{ splitFlow }}
-          是否为创新班/拔尖班：{{ specialClass}}
-        </span>
+<span class="user-info" v-if="userName !== 'admin'">
+  <!-- 姓名：<span class="label">姓名：</span>{{ studentName }} -->
+  <!-- 学号：<span class="label">学号：</span>{{ userName }} -->
+  <span class="label">书院：</span>{{ department }}
+  <span class="label">系统内专业：</span>{{ specialty }}
+  <span class="label">招生录取专业：</span>{{ major }}
+  <span class="label">分流形式：</span>{{ splitFlow }}
+</span>
         <search id="header-search" class="right-menu-item" />
         <screenfull id="screenfull" class="right-menu-item hover-effect" />
       </template>
@@ -143,16 +142,6 @@ export default {
   background: #fff;
   box-shadow: 0 1px 4px rgba(0,21,41,.08);
 
-.user-info {
-  //  display: inline-block;
-  //  padding: 10px;
-  margin: 10px auto; /* 垂直方向居中 */
-font-size: 14px; /* 字体大小 */
-color: #5d5d5d; /* 字体颜色 */
-  //  line-height: 1.6; /* 行间距 */
-  //  white-space: pre-line; /* 保留换行格式 */
-  text-align: center; /* 文本居中 */
-}
   .hamburger-container {
     line-height: 46px;
     height: 100%;
@@ -165,6 +154,20 @@ color: #5d5d5d; /* 字体颜色 */
       background: rgba(0, 0, 0, .025)
     }
   }
+  .user-info {
+    display: inline-block;
+    font-size: 14px;
+    color: #333;
+    white-space: nowrap; /* 防止换行 */
+    letter-spacing: 4px;
+  }
+
+  .user-info .label {
+    color: #395cdc; /* 设置冒号前文字为蓝色 */
+    //font-weight: bold; /* 加粗文字以突出显示 */
+    margin-right: 4px; /* 增加冒号后的小间距 */
+  }
+
 
   .breadcrumb-container {
     float: left;

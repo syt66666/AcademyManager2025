@@ -281,7 +281,7 @@ export default {
       return [
         {
           id: 1,
-          text: '满足相应要求，是否决定转专业 [单选题]',
+          text: '如果满足要求，您是否决定转专业？ [单选题]',
           options: [
             {id: 1, text: '是', next: 2},
             {id: 2, text: '否', next: null},
@@ -289,20 +289,20 @@ export default {
         },
         {
           id: 2,
-          text: '意向书院学域 [单选题]',
+          text: '如果您满足转专业要求您期望转入的书院是 [单选题]',
           options: [
-            {id: 1, text: '大煜书院', next: 3},
-            {id: 2, text: '伯川书院', next: 4},
-            {id: 3, text: '笃学书院', next: 5},
-            {id: 4, text: '令希书院', next: 6},
-            {id: 5, text: '厚德书院', next: 7},
-            {id: 6, text: '知行书院', next: 8},
-            {id: 7, text: '求实书院', next: 9}
+            {id: 1, text: '大煜书院——物质创造学域', next: 3},
+            {id: 2, text: '伯川书院——智能制造学域', next: 4},
+            {id: 3, text: '笃学书院——理科强基学域', next: 5},
+            {id: 4, text: '令希书院——智能建造学域', next: 6},
+            {id: 5, text: '厚德书院——人文社科学域', next: 7},
+            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
           ]
         },
         {
           id: 3,
-          text: '请在 大煜书院——物质创造学域 任选专业 [单选题]',
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
             {id: 2, text: '精细化工', next: null},
@@ -317,7 +317,7 @@ export default {
         },
         {
           id: 4,
-          text: '请在 伯川书院——智能制造学域 任选专业 [单选题]',
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: null},
             {id: 2, text: '能源与动力工程', next: null},
@@ -332,7 +332,7 @@ export default {
         },
         {
           id: 5,
-          text: '请在 笃学书院——理科强基学域 任选专业 [单选题]',
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
             {id: 2, text: '信息科学与计算科学', next: null}
@@ -340,7 +340,7 @@ export default {
         },
         {
           id: 6,
-          text: '请在 令希书院——智能建造学域 任选专业 [单选题]',
+          text: '请在 令希书院——智能建造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '工程力学', next: null},
             {id: 2, text: '飞行器设计与工程', next: null},
@@ -357,14 +357,14 @@ export default {
         },
         {
           id: 7,
-          text: '请在 厚德书院——人文社科学域 任选专业 [单选题]',
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '金融学', next: null},
             {id: 2, text: '工商管理', next: null},
             {id: 3, text: '物流管理', next: null},
             {id: 4, text: '国际经济与贸易', next: null},
             {id: 5, text: '知识产权', next: null},
-            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 6, text: '公共事业管理', next: null},
             {id: 7, text: '马克思主义理论', next: null},
             {id: 8, text: '哲学', next: null},
             {id: 9, text: '广播电视学', next: null},
@@ -383,7 +383,7 @@ export default {
         },
         {
           id: 8,
-          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题]',
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
             {id: 2, text: '自动化', next: null},
@@ -397,7 +397,7 @@ export default {
         },
         {
           id: 9,
-          text: '请在 求实书院——信息技术学域（二） 任选专业 [单选题]',
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
@@ -434,20 +434,20 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的专业是 [单选题] ',
+          text: '如果您满足转专业要求您期望转入的书院是 [单选题] ',
           options: [
-            {id: 1, text: '大煜书院', next: 3},
-            {id: 2, text: '伯川书院', next: 4},
-            {id: 3, text: '笃学书院', next: 5},
-            {id: 4, text: '令希书院', next: 6},
-            {id: 5, text: '厚德书院', next: 7},
-            {id: 6, text: '知行书院', next: 8},
-            {id: 7, text: '求实书院', next: 9}
+            {id: 1, text: '大煜书院——物质创造学域', next: 3},
+            {id: 2, text: '伯川书院——智能制造学域 ', next: 4},
+            {id: 3, text: '笃学书院——理科强基学域', next: 5},
+            {id: 4, text: '令希书院——智能建造学域', next: 6},
+            {id: 5, text: '厚德书院——人文社科学域', next: 7},
+            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
           ]
         },
         {
           id: 3,
-          text: '请在 大煜书院——物质创造学域 任选专业 [单选题] ',
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题] ',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
             {id: 2, text: '精细化工', next: null},
@@ -462,7 +462,7 @@ export default {
         },
         {
           id: 4,
-          text: '请在 伯川书院——智能制造学域 任选专业 [单选题] ',
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题] ',
           options: [
             {id: 1, text: '智能制造工程', next: null},
             {id: 2, text: '能源与动力工程', next: null},
@@ -477,7 +477,7 @@ export default {
         },
         {
           id: 5,
-          text: '请在 笃学书院——理科强基学域 任选专业 [单选题] ',
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题] ',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
             {id: 2, text: '信息科学与计算科学', next: null}
@@ -485,7 +485,7 @@ export default {
         },
         {
           id: 6,
-          text: '请在 令希书院——智能建造学域 任选专业 [单选题] ',
+          text: '请在 令希书院——智能建造学域 选择专业 [单选题] ',
           options: [
             {id: 1, text: '工程力学', next: null},
             {id: 2, text: '飞行器设计与工程', next: null},
@@ -502,14 +502,14 @@ export default {
         },
         {
           id: 7,
-          text: '请在 厚德书院——人文社科学域 任选专业 [单选题] ',
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题] ',
           options: [
             {id: 1, text: '金融学', next: null},
             {id: 2, text: '工商管理', next: null},
             {id: 3, text: '物流管理', next: null},
             {id: 4, text: '国际经济与贸易', next: null},
             {id: 5, text: '知识产权', next: null},
-            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 6, text: '公共事业管理', next: null},
             {id: 7, text: '马克思主义理论', next: null},
             {id: 8, text: '哲学', next: null},
             {id: 9, text: '广播电视学', next: null},
@@ -528,7 +528,7 @@ export default {
         },
         {
           id: 8,
-          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题] ',
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题] ',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
             {id: 2, text: '自动化', next: null},
@@ -542,7 +542,7 @@ export default {
         },
         {
           id: 9,
-          text: '请在 求实书院——信息技术学域（二） 任选专业 [单选题] ',
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题] ',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
@@ -637,7 +637,7 @@ export default {
       return [
         {
           id: 1,
-          text: '如果进行类内任选，将选择的普通专业是 [单选题]',
+          text: '请在类内进行专业选择 [单选题]',
           options: [
             {id: 1, text: '视觉传达设计', next: null},
             {id: 2, text: '环境设计', next: null},
@@ -676,20 +676,20 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的专业是 [单选题]',
+          text: '如果您满足转专业要求您期望转入的书院是 [单选题]',
           options: [
-            {id: 1, text: '大煜书院', next: 14},
-            {id: 2, text: '伯川书院', next: 15},
-            {id: 3, text: '笃学书院', next: 16},
-            {id: 4, text: '令希书院', next: 17},
-            {id: 5, text: '厚德书院', next: 18},
-            {id: 6, text: '知行书院', next: 19},
-            {id: 7, text: '求实书院', next: 21}
+            {id: 1, text: '大煜书院——物质创造学域', next: 14},
+            {id: 2, text: '伯川书院——智能制造学域', next: 15},
+            {id: 3, text: '笃学书院——理科强基学域', next: 16},
+            {id: 4, text: '令希书院——智能建造学域', next: 17},
+            {id: 5, text: '厚德书院——人文社科学域', next: 18},
+            {id: 6, text: '知行书院——信息技术学域（一）', next: 19},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 21}
           ]
         },
         {
           id: 3,
-          text: '请在 大煜书院——物质创造学域 任选专业 [单选题]',
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: 20},
             {id: 2, text: '精细化工', next: 20},
@@ -704,7 +704,7 @@ export default {
         },
         {
           id: 4,
-          text: '请在 伯川书院——智能制造学域 任选专业 [单选题]',
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: 20},
             {id: 2, text: '能源与动力工程', next: 20},
@@ -719,7 +719,7 @@ export default {
         },
         {
           id: 5,
-          text: '请在 笃学书院——理科强基学域 任选专业 [单选题]',
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: 20},
             {id: 2, text: '信息科学与计算科学', next: 20}
@@ -727,7 +727,7 @@ export default {
         },
         {
           id: 6,
-          text: '请在 令希书院——智能建造学域 任选专业[单选题]',
+          text: '请在 令希书院——智能建造学域 选择专业[单选题]',
           options: [
             {id: 1, text: '工程力学', next: 20},
             {id: 2, text: '飞行器设计与工程', next: 20},
@@ -744,10 +744,10 @@ export default {
         },
         {
           id: 7,
-          text: '请在 厚德书院——人文社科学域 任选专业 [单选题]',
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
             {id: 5, text: '知识产权', next: 20},
-            {id: 6, text: '公共事业管理、公共事业管理', next: 20},
+            {id: 6, text: '公共事业管理', next: 20},
             {id: 7, text: '马克思主义理论', next: 20},
             {id: 8, text: '哲学', next: 20},
             {id: 9, text: '广播电视学', next: 20},
@@ -766,7 +766,7 @@ export default {
         },
         {
           id: 8,
-          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题]',
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: 20},
             {id: 2, text: '自动化', next: 20},
@@ -780,7 +780,7 @@ export default {
         },
         {
           id: 9,
-          text: '请在 求实书院——信息技术学域（二） 任选专业 [单选题]',
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: 20},
             {id: 2, text: '网络工程', next: 20},
@@ -830,7 +830,7 @@ export default {
         },
         {
           id: 14,
-          text: '请在 大煜书院——物质创造学域 任选专业 [单选题]',
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
             {id: 2, text: '精细化工', next: null},
@@ -845,7 +845,7 @@ export default {
         },
         {
           id: 15,
-          text: '请在 伯川书院——智能制造学域 任选专业 [单选题]',
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: null},
             {id: 2, text: '能源与动力工程', next: null},
@@ -860,7 +860,7 @@ export default {
         },
         {
           id: 16,
-          text: '请在 笃学书院——理科强基学域 任选专业 [单选题]',
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
             {id: 2, text: '信息科学与计算科学', next: null}
@@ -868,7 +868,7 @@ export default {
         },
         {
           id: 17,
-          text: '请在 令希书院——智能建造学域 任选专业[单选题]',
+          text: '请在 令希书院——智能建造学域 选择专业[单选题]',
           options: [
             {id: 1, text: '工程力学', next: null},
             {id: 2, text: '飞行器设计与工程', next: null},
@@ -885,14 +885,14 @@ export default {
         },
         {
           id: 18,
-          text: '请在 厚德书院——人文社科学域 任选专业 [单选题]',
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '金融学', next: null},
             {id: 2, text: '工商管理', next: null},
             {id: 3, text: '物流管理', next: null},
             {id: 4, text: '国际经济与贸易', next: null},
             {id: 5, text: '知识产权', next: null},
-            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 6, text: '公共事业管理', next: null},
             {id: 7, text: '马克思主义理论', next: null},
             {id: 8, text: '哲学', next: null},
             {id: 9, text: '广播电视学', next: null},
@@ -911,7 +911,7 @@ export default {
         },
         {
           id: 19,
-          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题]',
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
             {id: 2, text: '自动化', next: null},
@@ -925,7 +925,7 @@ export default {
         },
         {
           id: 21,
-          text: '请在 求实书院——信息技术学域（二） [单选题]',
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
@@ -948,14 +948,14 @@ export default {
       return [
         {
           id: 1,
-          text: '您的分流形式是 [单选题] *',
+          text: '您的分流形式是 [单选题]',
           options: [
             {id: 1, text: '域内任选专业，并转专业', next: 50},
           ]
         },
         {
           id: 50,
-          text: '您是否放弃现有拔尖班、创新班身份选择普通专业 [单选题] *',
+          text: '您是否放弃现有拔尖班、创新班身份选择普通专业 [单选题]',
           options: [
             {id: 1, text: '是', next: this.num},
             {id: 2, text: '否', next: this.num4},//定制的num4
@@ -963,7 +963,7 @@ export default {
         },
         {
           id: 20,
-          text: '是否选择转专业 [单选题] *',
+          text: '是否选择转专业 [单选题]',
           options: [
             {id: 1, text: '是', next: 2},
             {id: 2, text: '否', next: null},
@@ -971,20 +971,20 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的专业是 [单选题] *',
+          text: '如果您满足转专业要求您期望转入的书院是 [单选题]',
           options: [
-            {id: 1, text: '大煜书院', next: 13},
-            {id: 2, text: '伯川书院', next: 14},
-            {id: 3, text: '笃学书院', next: 15},
-            {id: 4, text: '令希书院', next: 16},
-            {id: 5, text: '厚德书院', next: 17},
-            {id: 6, text: '知行书院', next: 18},
-            {id: 7, text: '求实书院', next: 19}
+            {id: 1, text: '大煜书院——物质创造学域', next: 13},
+            {id: 2, text: '伯川书院——智能制造学域', next: 14},
+            {id: 3, text: '笃学书院——理科强基学域', next: 15},
+            {id: 4, text: '令希书院——智能建造学域', next: 16},
+            {id: 5, text: '厚德书院——人文社科学域', next: 17},
+            {id: 6, text: '知行书院——信息技术学域（一）', next: 18},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 19}
           ]
         },
         {
           id: 3,
-          text: '请在 大煜书院——物质创造学域 任选专业 [单选题] *',
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: 20},
             {id: 2, text: '精细化工', next: 20},
@@ -999,7 +999,7 @@ export default {
         },
         {
           id: 4,
-          text: '请在 伯川书院——智能制造学域 任选专业 [单选题] *',
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: 20},
             {id: 2, text: '能源与动力工程', next: 20},
@@ -1014,7 +1014,7 @@ export default {
         },
         {
           id: 5,
-          text: '请在 笃学书院——理科强基学域 任选专业 [单选题] *',
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: 20},
             {id: 2, text: '信息科学与计算科学', next: 20}
@@ -1022,7 +1022,7 @@ export default {
         },
         {
           id: 6,
-          text: '请在 令希书院——智能建造学域 任选专业 [单选题] *',
+          text: '请在 令希书院——智能建造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '工程力学', next: 20},
             {id: 2, text: '飞行器设计与工程', next: 20},
@@ -1039,14 +1039,14 @@ export default {
         },
         {
           id: 7,
-          text: '请在 厚德书院——人文社科学域 任选专业 [单选题] *',
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '金融学', next: 20},
             {id: 2, text: '工商管理', next: 20},
             {id: 3, text: '物流管理', next: 20},
             {id: 4, text: '国际经济与贸易', next: 20},
             {id: 5, text: '知识产权', next: 20},
-            {id: 6, text: '公共事业管理、公共事业管理', next: 20},
+            {id: 6, text: '公共事业管理', next: 20},
             {id: 7, text: '马克思主义理论', next: 20},
             {id: 8, text: '哲学', next: 20},
             {id: 9, text: '广播电视学', next: 20},
@@ -1065,7 +1065,7 @@ export default {
         },
         {
           id: 8,
-          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题] *',
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: 20},
             {id: 2, text: '自动化', next: 20},
@@ -1079,7 +1079,7 @@ export default {
         },
         {
           id: 9,
-          text: '请在 求实书院——信息技术学域（二） 任选专业 [单选题] *',
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: 20},
             {id: 2, text: '网络工程', next: 20},
@@ -1089,7 +1089,7 @@ export default {
         },
         {
           id: 13,
-          text: '请在 大煜书院——物质创造学域 任选专业 [单选题] *',
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '化学工程与工艺', next: null},
             {id: 2, text: '精细化工', next: null},
@@ -1104,7 +1104,7 @@ export default {
         },
         {
           id: 14,
-          text: '请在 伯川书院——智能制造学域 任选专业 [单选题] *',
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: null},
             {id: 2, text: '能源与动力工程', next: null},
@@ -1119,7 +1119,7 @@ export default {
         },
         {
           id: 15,
-          text: '请在 笃学书院——理科强基学域 任选专业 [单选题] *',
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
             {id: 2, text: '信息科学与计算科学', next: null}
@@ -1127,7 +1127,7 @@ export default {
         },
         {
           id: 16,
-          text: '请在 令希书院——智能建造学域 任选专业 [单选题] *',
+          text: '请在 令希书院——智能建造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '工程力学', next: null},
             {id: 2, text: '飞行器设计与工程', next: null},
@@ -1144,14 +1144,14 @@ export default {
         },
         {
           id: 17,
-          text: '请在 厚德书院——人文社科学域 任选专业 [单选题] *',
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '金融学', next: null},
             {id: 2, text: '工商管理', next: null},
             {id: 3, text: '物流管理', next: null},
             {id: 4, text: '国际经济与贸易', next: null},
             {id: 5, text: '知识产权', next: null},
-            {id: 6, text: '公共事业管理、公共事业管理', next: null},
+            {id: 6, text: '公共事业管理', next: null},
             {id: 7, text: '马克思主义理论', next: null},
             {id: 8, text: '哲学', next: null},
             {id: 9, text: '广播电视学', next: null},
@@ -1170,7 +1170,7 @@ export default {
         },
         {
           id: 18,
-          text: '请在 知行书院——信息技术学域（一） 任选专业 [单选题] *',
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
             {id: 2, text: '自动化', next: null},
@@ -1184,7 +1184,7 @@ export default {
         },
         {
           id: 19,
-          text: '请在 求实书院——信息技术学域（二） 任选专业 [单选题] *',
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
@@ -1194,7 +1194,7 @@ export default {
         },
         {
           id: 100,
-          text: '请选择 智能制造工程（创新班） 的内设专业 [单选题] *',
+          text: '请选择 智能制造工程（创新班） 的内设专业 [单选题]',
           options: [
             {id: 111, text: '智能制造工程', next: 20},
             {id: 222, text: '车辆工程（英语强化）', next: 20},
@@ -1204,7 +1204,7 @@ export default {
         },
         {
           id: 101,
-          text: '请选择 储能科学与工程(新工科拔尖班) 的内设专业 [单选题] *',
+          text: '请选择 储能科学与工程(新工科拔尖班) 的内设专业 [单选题]',
           options: [
             {id: 111, text: '储能科学与工程', next: 20},
             {id: 222, text: '过程装备与控制工程', next: 20},
@@ -1214,7 +1214,7 @@ export default {
         },
         {
           id: 102,
-          text: '请选择 环境科学与工程类(新工科拔尖班) 的内设专业 [单选题] *',
+          text: '请选择 环境科学与工程类(新工科拔尖班) 的内设专业 [单选题]',
           options: [
             {id: 111, text: '环境科学', next: 20},
             {id: 222, text: '环境工程', next: 20},
@@ -1222,7 +1222,7 @@ export default {
         },
         {
           id: 103,
-          text: '请选择 化工与制药类(创新班) 的内设专业 [单选题] *',
+          text: '请选择 化工与制药类(创新班) 的内设专业 [单选题]',
           options: [
             {id: 111, text: '化学工程与工艺', next: 20},
             {id: 222, text: '制药工程', next: 20},
@@ -1232,7 +1232,7 @@ export default {
         },
         {
           id: 104,
-          text: '请选择 建筑类(新工科拔尖班) 的内设专业 [单选题] *',
+          text: '请选择 建筑类(新工科拔尖班) 的内设专业 [单选题]',
           options: [
             {id: 111, text: '建筑学', next: 20},
             {id: 222, text: '城乡规划', next: 20},
@@ -1240,7 +1240,7 @@ export default {
         },
         {
           id: 105,
-          text: '请选择 大数据管理与应用(新工科拔尖班) 的内设专业 [单选题] *',
+          text: '请选择 大数据管理与应用(新工科拔尖班) 的内设专业 [单选题]',
           options: [
             {id: 111, text: '大数据管理与应用', next: 20},
             {id: 222, text: '信息管理与信息系统', next: 20},
@@ -1248,7 +1248,7 @@ export default {
         },
         {
           id: 106,
-          text: '请选择 电子信息类(创新班) 的内设专业 [单选题] *',
+          text: '请选择 电子信息类(创新班) 的内设专业 [单选题]',
           options: [
             {id: 111, text: '电气工程及其自动化', next: 20},
             {id: 222, text: '自动化', next: 20},
@@ -1260,7 +1260,7 @@ export default {
         },
         {
           id: 107,
-          text: '请选择 数学类（数学类及华罗庚数学国家基础学科拔尖计划班） 的内设专业 [单选题] *',
+          text: '请选择 数学类（数学类及华罗庚数学国家基础学科拔尖计划班） 的内设专业 [单选题]',
           options: [
           {id: 111, text: '数学与应用数学', next: 20},
           {id: 222, text: '信息科学与计算科学', next: 20},
@@ -1269,7 +1269,7 @@ export default {
 
         {
           id: 108,
-          text: '请选择 智能建造（创新班） 的内设专业 [单选题] *',
+          text: '请选择 智能建造（创新班） 的内设专业 [单选题]',
           options: [
             {id: 111, text: '智能建造', next: 20},
             {id: 222, text: '水利水电工程', next: 20},
@@ -1279,7 +1279,7 @@ export default {
         },
         {
           id: 109,
-          text: '请选择 材料类（新工科拔尖班） 的内设专业 [单选题] *',
+          text: '请选择 材料类（新工科拔尖班） 的内设专业 [单选题]',
           options: [
             {id: 111, text: '金属材料工程', next: 20},
             {id: 222, text: '功能材料', next: 20},
@@ -1288,7 +1288,7 @@ export default {
         },
         {
           id: 200,
-          text: '请选择 '+this.specialty +' 的内设专业 [单选题] *',
+          text: '请选择 '+this.specialty +' 的内设专业 [单选题]',
           options: [
             {id: 111, text: this.specialty, next: 20},
           ]
@@ -1352,7 +1352,7 @@ export default {
       }
 
       //第二种问卷（测试完成）
-      else if(this.splitFlow==="可类内任选，并转专业"&&this.finalAnswerText==="否"){
+      else if(this.splitFlow==="可类内选择，并转专业"&&this.finalAnswerText==="否"){
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
         this.finalAnswerText2='否';
         this.finalAnswerText3='否';
