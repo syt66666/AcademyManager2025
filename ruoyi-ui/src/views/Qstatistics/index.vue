@@ -43,57 +43,52 @@ export default {
   },
   methods:{
     echarts1(data) {
+      console.log('Received data:', data); // 添加调试信息
+
       var chartDom = document.getElementById('echarts1');
       var myChart = echarts.init(chartDom);
 
-      const beforeCnt = {};  // 转专业前的学生数量
-      const afterCnt = {};   // 转专业后的学生数量
+      const beforeCnt = data.beforeCnt;  // 转专业前的学生数量
+      const afterCnt = data.afterCnt;   // 转专业后的学生数量
+      const afterMajorChangeType = data.afterMajorChangeType;  // 转专业类型统计
 
-      // 处理转专业前的数据
-      for (let [academy, majors] of Object.entries(data.before)) {
-        let count = 0;
-        for (let [major, students] of Object.entries(majors)) {
-          count += students.length;
-        }
-        beforeCnt[academy] = count;
-      }
-
-      // 处理转专业后的数据
-      for (let [academy, majors] of Object.entries(data.after)) {
-        let count = 0;
-        for (let [major, students] of Object.entries(majors)) {
-          count += students.length;
-          // 按专业分类统计每个学生的 change_major_type
-          let afterMajorChangeType = afterMajorChangeType || {};  // 初始化 afterMajorChangeType
-          afterMajorChangeType[major] = afterMajorChangeType[major] || { '1': 0, '2': 0 ,'3': 0, '4': 0, '5': 0};
-          students.forEach(student => {
-            const changeType = student.change_major_type || 'Unknown';
-            if (afterMajorChangeType[major][changeType] !== undefined) {
-              afterMajorChangeType[major][changeType]++;
-              this.academyChangeType[changeType]++;
-            } else {
-              afterMajorChangeType[major]['Unknown']++;
-              this.academyChangeType['Unknown']++;
-            }
-          });
-        }
-        afterCnt[academy] = count;
-        console.log(`书院 ${academy} 的专业分流类型统计:`, this.academyChangeType);
-      }
+      console.log('beforeCnt:', beforeCnt); // 添加调试信息
+      console.log('afterCnt:', afterCnt); // 添加调试信息
+      console.log('afterMajorChangeType:', afterMajorChangeType); // 添加调试信息
 
       let xData = [];
       let beforeData = [];
       let afterData = [];
 
+      this.academyChangeType = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };
       // 准备数据
-      for (let [academy, count] of Object.entries(afterCnt)) {
+      for (let [academy, majors] of Object.entries(afterCnt)) {
         xData.push(academy);
-        beforeData.push(beforeCnt[academy] || 0);  // 如果转专业前没有数据，默认值为0
-        afterData.push(count);
-      }
-      // 获取用户输入的最大人数限制
-      let maxCount = this.maxCount;
 
+        // 计算转专业前的总学生数量
+        let beforeTotal = 0;
+        if (beforeCnt[academy]) {
+          for (let [major, count] of Object.entries(beforeCnt[academy])) {
+            beforeTotal += count;
+          }
+        }
+        beforeData.push(beforeTotal);
+
+        // 计算转专业后的总学生数量
+        let afterTotal = 0;
+        for (let [major, count] of Object.entries(majors)) {
+          afterTotal += count;
+        }
+        afterData.push(afterTotal);
+
+        if (afterMajorChangeType[academy]) {
+          for (let [major, changeTypes] of Object.entries(afterMajorChangeType[academy])) {
+            for (let [changeType, count] of Object.entries(changeTypes)) {
+              this.academyChangeType[changeType] = (this.academyChangeType[changeType] || 0) + count;
+            }
+          }
+        }
+      }
 
       const option = {
         title: {
@@ -264,6 +259,7 @@ export default {
           value: count
         }));
 
+      console.log(chartData)
       const option = {
         backgroundColor: '#ffffff',
         title: {
@@ -361,6 +357,7 @@ export default {
     getEcharts1() {
       echarts1().then(res => {
         this.echarts1(res.data);
+        console.log(res.data);
       });
     },
     getEcharts3() {
@@ -370,43 +367,47 @@ export default {
     },
 
 
+
     echarts3(data, academy) {
+      console.log('Received data in echarts3:', data); // 添加调试信息
+
       var chartDom = document.getElementById('echarts3');
       var myChart = echarts.init(chartDom);
 
       // 定义所有可能的专业列表（横坐标）
       let allMajors;
-      if(academy === '求实书院'){
+      if (academy === '求实书院') {
         allMajors = ["软件工程", "网络工程", "集成电路设计与集成系统", "电子科学与技术"];
-      } else if(academy === '令希书院'){
+      } else if (academy === '令希书院') {
         allMajors = ["智能建造", "水利水电工程", "港口航道与海岸工程", "海洋资源开发技术", "交通工程", "工程管理", "建筑环境与能源应用工程", "土木工程", "工程力学", "飞行器设计与工程", "船舶与海洋工程", "建筑学", "城乡规划"];
-      } else if(academy === '伯川书院'){
+      } else if (academy === '伯川书院') {
         allMajors = ["智能制造工程", "能源与动力工程", "机械设计制造及其自动化", "车辆工程（英语强化）", "测控技术与仪器", "金属材料工程", "功能材料", "材料成型及控制工程", "生物医学工程"];
-      } else if(academy === '厚德书院'){
+      } else if (academy === '厚德书院') {
         allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
-      } else if(academy === '大煜书院'){
+      } else if (academy === '大煜书院') {
         allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程"];
-      } else if(academy === '知行书院'){
+      } else if (academy === '知行书院') {
         allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统"];
-      } else if(academy === '笃学书院'){
+      } else if (academy === '笃学书院') {
         allMajors = ["数学与应用数学", "信息与计算科学", "应用物理学", "应用化学", "工程力学", "生物工程"];
+      } else {
+        allMajors = []; // 默认为空数组
       }
 
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
 
       // 遍历数据，根据数据更新 yData
-      for (let [k1, v1] of Object.entries(data.after)) {
-        if (k1 === academy) {
-          for (let [k2, v2] of Object.entries(v1)) {
-            // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
-            let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
-            if (majorIndex !== -1) {
-              yData[majorIndex] += v2.length; // 增加该专业的学生人数
-            }
+      if (data.afterCnt && data.afterCnt[academy]) {
+        for (let [k2, v2] of Object.entries(data.afterCnt[academy])) {
+          // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
+          let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
+          if (majorIndex !== -1) {
+            yData[majorIndex] += v2; // 增加该专业的学生人数
           }
         }
       }
+
       const option = {
         title: {
           text: "专业分流后各专业人数统计",
@@ -418,11 +419,11 @@ export default {
           }
         },
         tooltip: {
-          trigger: 'item',
+          trigger: 'axis',
           axisPointer: {
             type: 'shadow'
           },
-          formatter: '{b}: {c} ({d}%)' // 显示百分比
+          formatter: '{b}: {c}' // 显示数量
         },
         grid: {
           bottom: 100,
@@ -497,7 +498,6 @@ export default {
         ]
       };
 
-
       myChart.resize();
       option && myChart.setOption(option);
       const that = this;
@@ -518,17 +518,9 @@ export default {
         const afterMajorChangeType = {};  // 统计该专业的转专业类型
 
         // 遍历数据，统计该专业的转专业类型
-        for (let [k1, v1] of Object.entries(data.after)) {
-          if (k1 === academy) {
-            for (let [k2, students] of Object.entries(v1)) {
-              if (k2 === major) {
-                students.forEach(student => {
-                  const changeType = student.change_major_type || 'Unknown';
-                  afterMajorChangeType[changeType] = afterMajorChangeType[changeType] || 0;
-                  afterMajorChangeType[changeType]++;
-                });
-              }
-            }
+        if (data.afterMajorChangeType && data.afterMajorChangeType[academy] && data.afterMajorChangeType[academy][major]) {
+          for (let [changeType, count] of Object.entries(data.afterMajorChangeType[academy][major])) {
+            afterMajorChangeType[changeType] = count;
           }
         }
         return afterMajorChangeType;
@@ -639,21 +631,19 @@ export default {
         myChart.setOption(option);
         myChart.on('click', (params) => {
           console.log('Clicked on:', params.name, 'with value:', params.value);
-          //that.$refs.student.type = params.name;
-          let type=null;
-          switch (params.name){
-            case '保持当前专业':type=1;break;
-            case '域内任选专业':type=2;break;
-            case '类内任选专业':type=3;break;
-            case '拔尖/创新班政策内任选专业':type=4;break;
-            case '转专业':type=5;break;
+          let type = null;
+          switch (params.name) {
+            case '保持当前专业': type = 1; break;
+            case '域内任选专业': type = 2; break;
+            case '类内任选专业': type = 3; break;
+            case '拔尖/创新班政策内任选专业': type = 4; break;
+            case '转专业': type = 5; break;
           }
-          that.$refs.student.type=type;
-          // console.log(that.$refs.student.type);
+          that.$refs.student.type = type;
         });
-
       }
-    },
+    }
+
   },
 };
 </script>
