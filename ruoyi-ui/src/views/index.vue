@@ -5,8 +5,8 @@
       <p class="user-info" v-if="this.userName !== 'admin'">
         书院：{{ department }}<br />
         系统内专业：{{ specialty }}<br />
-        招生录取专业：{{ major }}<br />
-        是否为创新班/拔尖班：{{specialClass}}<br />
+<!--        招生录取专业：{{ major }}<br />-->
+<!--        是否为创新班/拔尖班：{{specialClass}}<br />-->
       </p>
       <p class="user-info" v-if="this.userName !== 'admin'&&this.splitFlow==='不可变更专业'">
         建国、材日、机日、机俄：您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。
