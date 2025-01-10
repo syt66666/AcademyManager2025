@@ -222,7 +222,6 @@ export default {
       this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
       this.getLastAnswerForQuestion(questionId);
     },
-
     // 根据分流形式加载不同的问卷
     loadQuestionnaireBySplitFlow() {
       if(this.specialClass===0){
@@ -248,7 +247,10 @@ export default {
         }
       }
       else {
-        this.questionnaire = this.getQuestionnaireE();
+        if(this.specialty==='工程力学（钱令希创新班）'||'化学工程与工艺(国际班)'){
+          this.questionnaire = this.getQuestionnaire();
+        }
+        else this.questionnaire = this.getQuestionnaireE();
       }
 
       // 初始化显示第一个问题
@@ -263,7 +265,7 @@ export default {
           id: 1,
           text: '您的分流形式是 [单选题]',
           options: [
-            {id: 1, text: '不可变更专业', next: null},
+            {id: 1, text: '不可变更专业 / 工程力学（钱令希创新班）/ 化学工程与工艺(国际班)', next: null},
           ]
         },
         {
@@ -1330,8 +1332,8 @@ export default {
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
-      if(this.splitFlow==="不可变更专业"){
-        this.finalAnswerText=this.major;
+      if(this.splitFlow==="不可变更专业"||this.specialty==='化学工程与工艺(国际班)'||this.specialty==='工程力学（钱令希创新班）'){
+        this.finalAnswerText=this.specialty;
         this.finalAnswerText2 = '否';
         this.finalAnswerText3='否';
         this.finalAnswerText4=1;
@@ -1397,9 +1399,7 @@ export default {
       else if(this.specialClass===1&&this.finalAnswerText==="否"){//不转专业
         if(this.getLastAnswerForQuestion(50).selectedOptionText==="否"){//不放弃创新班身份
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num4).selectedOptionText;
-          console.log('创新专业：'+this.finalAnswerText)
           this.finalAnswerText=this.filterText(this.finalAnswerText);
-          console.log('创新专业2：'+this.finalAnswerText)
           this.finalAnswerText2='否';
           this.finalAnswerText3='否';
           this.finalAnswerText4=4;

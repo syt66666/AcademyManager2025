@@ -6,7 +6,10 @@
         书院：{{ department }}<br />
         系统内专业：{{ specialty }}<br />
         招生录取专业：{{ major }}<br />
-        是否为创新班/拔尖班：{{ specialClass}}<br />
+        是否为创新班/拔尖班：{{specialClass}}<br />
+      </p>
+      <p class="user-info" v-if="this.userName !== 'admin'&&this.splitFlow==='不可变更专业'">
+        建国、材日、机日、机俄：您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。
       </p>
       <p class="greeting-message">祝你今天有个愉快的一天！😊</p>
     </div>
@@ -25,7 +28,8 @@ export default {
       department: '',
       major: '',
       specialty: '',
-      specialClass:''
+      specialClass:'',
+      splitFlow:''
     };
   },
   computed: {
@@ -48,6 +52,7 @@ export default {
           console.log(studentInfo);
           this.studentName=studentInfo.studentName;
           this.department=studentInfo.academy;
+          this.splitFlow = studentInfo.divertForm;
           this.major=studentInfo.major;
           this.specialty=studentInfo.systemMajor;
           if(studentInfo.innovationClass===1){
