@@ -1,7 +1,7 @@
 <template>
   <div class="welcome-container">
     <div class="welcome-card">
-      <h1 class="welcome-message">欢迎回来，{{ studentName }}！</h1>
+      <h1 class="welcome-message">您好，{{ studentName }}！</h1>
       <p class="user-info" v-if="this.userName !== 'admin'">
         书院：{{ department }}<br />
         系统内专业：{{ specialty }}<br />
