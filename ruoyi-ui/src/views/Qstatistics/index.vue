@@ -229,7 +229,7 @@ export default {
           const value = option.xAxis.data[xIndex];
           that.$refs.student.academy = value;
           that.$refs.student.major = null;
-          that.selected = value;
+          that.$refs.student.major = null;
         }
       });
 

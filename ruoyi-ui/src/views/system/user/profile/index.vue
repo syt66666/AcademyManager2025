@@ -13,27 +13,15 @@
             <ul class="list-group list-group-striped">
               <li class="list-group-item">
                 <svg-icon icon-class="user" />用户名称
+                <div class="pull-right">{{ user.nickName }}</div>
+              </li>
+              <li v-if="user.userName != 'admin'" class="list-group-item">
+                <svg-icon icon-class="lock" /> 学号
                 <div class="pull-right">{{ user.userName }}</div>
               </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="phone" />手机号码
+              <li v-else class="list-group-item">
+                <svg-icon icon-class="lock" /> 手机号
                 <div class="pull-right">{{ user.phonenumber }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="email" />用户邮箱
-                <div class="pull-right">{{ user.email }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="tree" />所属部门
-                <div class="pull-right" v-if="user.dept">{{ user.dept.deptName }} / {{ postGroup }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="peoples" />所属角色
-                <div class="pull-right">{{ roleGroup }}</div>
-              </li>
-              <li class="list-group-item">
-                <svg-icon icon-class="date" />创建日期
-                <div class="pull-right">{{ user.createTime }}</div>
               </li>
             </ul>
           </div>
@@ -45,9 +33,9 @@
             <span>基本资料</span>
           </div>
           <el-tabs v-model="activeTab">
-            <el-tab-pane label="基本资料" name="userinfo">
-              <userInfo :user="user" />
-            </el-tab-pane>
+<!--            <el-tab-pane label="基本资料" name="userinfo">-->
+<!--              <userInfo :user="user" />-->
+<!--            </el-tab-pane>-->
             <el-tab-pane label="修改密码" name="resetPwd">
               <resetPwd />
             </el-tab-pane>
@@ -72,7 +60,7 @@ export default {
       user: {},
       roleGroup: {},
       postGroup: {},
-      activeTab: "userinfo"
+      activeTab: "resetPwd"
     };
   },
   created() {
