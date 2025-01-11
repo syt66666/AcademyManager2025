@@ -160,6 +160,7 @@ export default {
     setNumBasedOnClass(major,specialty) {
       if(specialty==='工程力学（拔尖班）'){
         this.num4 = 200;
+
       }
       else {
         switch (major) {
@@ -221,6 +222,7 @@ export default {
       this.setNumBasedOnClass(this.major, this.specialty);//得到创新班专业类别对应num4,用于问卷选项加载
       this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
       this.getLastAnswerForQuestion(questionId);
+      this.departmentFilter();
     },
     // 根据分流形式加载不同的问卷
     loadQuestionnaireBySplitFlow() {
@@ -241,13 +243,10 @@ export default {
           case '不可变更专业':
             this.questionnaire = this.getQuestionnaire();
             break;
-          default:
-            this.questionnaire = []; // 默认空的问卷
-            break;
         }
       }
       else {
-        if(this.specialty==='工程力学（钱令希创新班）'||'化学工程与工艺(国际班)'){
+        if(this.specialty===('工程力学（钱令希创新班）'||'化学工程与工艺(国际班)')){
           this.questionnaire = this.getQuestionnaire();
         }
         else this.questionnaire = this.getQuestionnaireE();
@@ -289,15 +288,16 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的书院是 [单选题]',
+          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题]',
           options: [
             {id: 1, text: '大煜书院——物质创造学域', next: 3},
             {id: 2, text: '伯川书院——智能制造学域', next: 4},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
             {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
             {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
+            {id: 5, text: '厚德书院——人文社科学域', next: 7},
+            {id: 3, text: '笃学书院——理科强基学域', next: 5},
+            {id: 7, text: '求实书院——信息技术学域（二）', next: 9},
+
           ]
         },
         {
@@ -335,7 +335,7 @@ export default {
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
-            {id: 2, text: '信息科学与计算科学', next: null}
+            {id: 2, text: '信息与计算科学', next: null}
           ]
         },
         {
@@ -378,7 +378,6 @@ export default {
             {id: 17, text: '视觉传达设计', next: null},
             {id: 18, text: '环境设计', next: null},
             {id: 19, text: '雕塑', next: null},
-            {id: 20, text: '运动训练', next: null}
           ]
         },
         {
@@ -426,7 +425,7 @@ export default {
         },
         {
           id: 20,
-          text: '是否选择转专业 [单选题] ',
+          text: '如果满足要求，您是否决定转专业？ [单选题] ',
           options: [
             {id: 1, text: '是', next: 2},
             {id: 2, text: '否', next: null},
@@ -434,14 +433,14 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的书院是 [单选题] ',
+          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题] ',
           options: [
             {id: 1, text: '大煜书院——物质创造学域', next: 3},
             {id: 2, text: '伯川书院——智能制造学域 ', next: 4},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
             {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
             {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
+            {id: 5, text: '厚德书院——人文社科学域', next: 7},
+            {id: 3, text: '笃学书院——理科强基学域', next: 5},
             {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
           ]
         },
@@ -480,7 +479,7 @@ export default {
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题] ',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
-            {id: 2, text: '信息科学与计算科学', next: null}
+            {id: 2, text: '信息与计算科学', next: null}
           ]
         },
         {
@@ -522,8 +521,8 @@ export default {
             {id: 16, text: '工业设计', next: null},
             {id: 17, text: '视觉传达设计', next: null},
             {id: 18, text: '环境设计', next: null},
-            {id: 19, text: '雕塑', next: null},
-            {id: 20, text: '运动训练', next: null}
+            {id: 19, text: '雕塑', next: null}
+
           ]
         },
         {
@@ -552,7 +551,7 @@ export default {
         },
         {
           id: 10,
-          text: '材料类 意向专业 [单选题] ',
+          text: '请您选择 材料类 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '金属材料工程', next: 20},
             {id: 222, text: '功能材料', next: 20},
@@ -561,7 +560,7 @@ export default {
         },
         {
           id: 11,
-          text: '管理科学与工程类 意向专业 [单选题] ',
+          text: '请您选择 管理科学与工程类 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '大数据管理与应用', next: 20},
             {id: 222, text: '信息管理与信息系统', next: 20}
@@ -569,7 +568,7 @@ export default {
         },
         {
           id: 12,
-          text: '化工与制药类 意向专业 [单选题] ',
+          text: '请您选择 化工与制药类 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '化学工程与工艺', next: 20},
             {id: 222, text: '精细化工', next: 20},
@@ -580,7 +579,7 @@ export default {
         },
         {
           id: 13,
-          text: '环境科学与工程类 意向专业 [单选题] ',
+          text: '请您选择 环境科学与工程类 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '环境科学', next: 20},
             {id: 222, text: '环境工程', next: 20}
@@ -588,7 +587,7 @@ export default {
         },
         {
           id: 14,
-          text: '新闻传播学类 意向专业 [单选题] ',
+          text: '请您选择 新闻传播学类 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '广播电视学', next: 20},
             {id: 222, text: '汉语言文学', next: 20}
@@ -596,7 +595,7 @@ export default {
         },
         {
           id: 15,
-          text: '智能建造 意向专业 [单选题] ',
+          text: ' 请您选择 智能建造 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '智能建造', next: 20},
             {id: 222, text: '水利水电工程', next: 20},
@@ -610,7 +609,7 @@ export default {
         },
         {
           id: 16,
-          text: '智能制造工程 意向专业 [单选题] ',
+          text: '请您选择 智能制造工程 内的意向专业 [单选题] ',
           options: [
             {id: 111, text: '智能制造工程', next: 20},
             {id: 222, text: '能源与动力工程', next: 20},
@@ -662,13 +661,12 @@ export default {
           id: 1,
           text: '您的分流形式是 [单选题]',
           options: [
-            {id: 1, text: '保持现有专业', next: 20},
-            {id: 2, text: '域内任选专业，并转专业', next: this.num3},
+            {id: 1, text: '域内任选专业，并转专业', next: this.num3},
           ]
         },
         {
           id: 20,
-          text: '是否选择转专业 [单选题]',
+          text: '如果满足要求，您是否决定转专业？ [单选题]',
           options: [
             {id: 1, text: '是', next: 2},
             {id: 2, text: '否', next: null},
@@ -676,14 +674,14 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的书院是 [单选题]',
+          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题]',
           options: [
             {id: 1, text: '大煜书院——物质创造学域', next: 14},
             {id: 2, text: '伯川书院——智能制造学域', next: 15},
-            {id: 3, text: '笃学书院——理科强基学域', next: 16},
             {id: 4, text: '令希书院——智能建造学域', next: 17},
-            {id: 5, text: '厚德书院——人文社科学域', next: 18},
             {id: 6, text: '知行书院——信息技术学域（一）', next: 19},
+            {id: 5, text: '厚德书院——人文社科学域', next: 18},
+            {id: 3, text: '笃学书院——理科强基学域', next: 16},
             {id: 7, text: '求实书院——信息技术学域（二）', next: 21}
           ]
         },
@@ -722,7 +720,7 @@ export default {
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: 20},
-            {id: 2, text: '信息科学与计算科学', next: 20}
+            {id: 2, text: '信息与计算科学', next: 20}
           ]
         },
         {
@@ -760,8 +758,7 @@ export default {
             {id: 16, text: '工业设计', next: 20},
             {id: 17, text: '视觉传达设计', next: 20},
             {id: 18, text: '环境设计', next: 20},
-            {id: 19, text: '雕塑', next: 20},
-            {id: 20, text: '运动训练', next: 20}
+            {id: 19, text: '雕塑', next: 20}
           ]
         },
         {
@@ -863,7 +860,7 @@ export default {
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
-            {id: 2, text: '信息科学与计算科学', next: null}
+            {id: 2, text: '信息与计算科学', next: null}
           ]
         },
         {
@@ -905,8 +902,7 @@ export default {
             {id: 16, text: '工业设计', next: null},
             {id: 17, text: '视觉传达设计', next: null},
             {id: 18, text: '环境设计', next: null},
-            {id: 19, text: '雕塑', next: null},
-            {id: 20, text: '运动训练', next: null}
+            {id: 19, text: '雕塑', next: null}
           ]
         },
         {
@@ -963,7 +959,7 @@ export default {
         },
         {
           id: 20,
-          text: '是否选择转专业 [单选题]',
+          text: '如果满足要求，您是否决定转专业？ [单选题]',
           options: [
             {id: 1, text: '是', next: 2},
             {id: 2, text: '否', next: null},
@@ -971,14 +967,14 @@ export default {
         },
         {
           id: 2,
-          text: '如果您满足转专业要求您期望转入的书院是 [单选题]',
+          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题]',
           options: [
             {id: 1, text: '大煜书院——物质创造学域', next: 13},
             {id: 2, text: '伯川书院——智能制造学域', next: 14},
-            {id: 3, text: '笃学书院——理科强基学域', next: 15},
             {id: 4, text: '令希书院——智能建造学域', next: 16},
-            {id: 5, text: '厚德书院——人文社科学域', next: 17},
             {id: 6, text: '知行书院——信息技术学域（一）', next: 18},
+            {id: 5, text: '厚德书院——人文社科学域', next: 17},
+            {id: 3, text: '笃学书院——理科强基学域', next: 15},
             {id: 7, text: '求实书院——信息技术学域（二）', next: 19}
           ]
         },
@@ -1017,7 +1013,7 @@ export default {
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: 20},
-            {id: 2, text: '信息科学与计算科学', next: 20}
+            {id: 2, text: '信息与计算科学', next: 20}
           ]
         },
         {
@@ -1059,8 +1055,7 @@ export default {
             {id: 16, text: '工业设计', next: 20},
             {id: 17, text: '视觉传达设计', next: 20},
             {id: 18, text: '环境设计', next:20},
-            {id: 19, text: '雕塑', next: 20},
-            {id: 20, text: '运动训练', next: 20}
+            {id: 19, text: '雕塑', next: 20}
           ]
         },
         {
@@ -1122,7 +1117,7 @@ export default {
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
-            {id: 2, text: '信息科学与计算科学', next: null}
+            {id: 2, text: '信息与计算科学', next: null}
           ]
         },
         {
@@ -1164,8 +1159,7 @@ export default {
             {id: 16, text: '工业设计', next: null},
             {id: 17, text: '视觉传达设计', next: null},
             {id: 18, text: '环境设计', next: null},
-            {id: 19, text: '雕塑', next: null},
-            {id: 20, text: '运动训练', next: null}
+            {id: 19, text: '雕塑', next: null}
           ]
         },
         {
@@ -1263,7 +1257,7 @@ export default {
           text: '请选择 数学类（数学类及华罗庚数学国家基础学科拔尖计划班） 的内设专业 [单选题]',
           options: [
           {id: 111, text: '数学与应用数学', next: 20},
-          {id: 222, text: '信息科学与计算科学', next: 20},
+          {id: 222, text: '信息与计算科学', next: 20},
       ]
     },
 
@@ -1373,17 +1367,6 @@ export default {
       }
 
       //第四种问卷（测试完成）
-      else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.getLastAnswerForQuestion(1).selectedOptionText==="保持现有专业"&&this.specialClass===0){
-        this.finalAnswerText=this.major;
-        this.finalAnswerText2='否';
-        this.finalAnswerText3='否';
-        this.finalAnswerText4=1;
-      }
-      else if(this.splitFlow==="可域内任选，并转专业"&&this.getLastAnswerForQuestion(1).selectedOptionText==="保持现有专业"&&this.specialClass===0){
-        this.finalAnswerText=this.major;
-        this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4=5;
-      }
       else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.specialClass===0){//不转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
         this.finalAnswerText2='否';
@@ -1474,7 +1457,7 @@ export default {
           case 15:
             return ['智能建造', '水利水电工程', '港口航道与海岸工程', '海洋资源开发技术', '交通工程', '工程管理', '建筑环境与能源应用工程', '土木工程'].some(text => option.text.includes(text));
           case 16:
-            return ['智能制造工程', '能源与动力工程', '机械设计制造及其自动化', '车辆工程（英语强化）', '测控技术与仪器', '金属材料工程', '功能材料', '材料成型及控制工程', '生物医学工程'].some(text => option.text.includes(text));
+            return option.text.includes('伯川书院')
         }
       }
       else if(this.filter===3){
@@ -1509,7 +1492,7 @@ export default {
           case 106:
             return ['电气工程及其自动化', '自动化', '电子信息工程', '计算机科学与技术', '生物医学工程', '自动化', '光电信息科学与工程',this.department].some(text => option.text.includes(text));
           case 107:
-            return ['数学与应用数学', '信息科学与计算科学',this.department].some(text => option.text.includes(text));
+            return ['数学与应用数学', '信息与计算科学',this.department].some(text => option.text.includes(text));
           case 108:
             return ['智能建造', '水利水电工程', '港口航道与海岸工程', '土木工程',this.department].some(text => option.text.includes(text));
           case 109:
@@ -1520,16 +1503,30 @@ export default {
       }
 
     },
+    departmentFilter(){
+      console.log('this.finalAnswerText2:'+this.finalAnswerText2)
+      switch(this.finalAnswerText2){
+        case '大煜书院——物质创造学域': this.finalAnswerText2='大煜书院';break;
+        case '伯川书院——智能制造学域': this.finalAnswerText2='伯川书院';break;
+        case '笃学书院——理科强基学域': this.finalAnswerText2='笃学书院';break;
+        case '令希书院——智能建造学域': this.finalAnswerText2='令希书院';break;
+        case '厚德书院——人文社科学域': this.finalAnswerText2='厚德书院';break;
+        case '知行书院——信息技术学域（一）': this.finalAnswerText2='知行书院';break;
+        case '求实书院——信息技术学域（二）': this.finalAnswerText2='求实书院';break;
+      }
+      console.log('this.finalAnswerText2:'+this.finalAnswerText2)
 
+    },
     submitData() {
+      this.departmentFilter()
       const url = process.env.VUE_APP_BASE_API+'/questionnaire/submit';
       const payload = {
         userName: this.userName,
         questionnaireId: 1,
         changeAdress: this.department ,
         changeMajor: this.finalAnswerText,
-        afterChangeMajor: this.finalAnswerText2,
-        afterChangeAdress: this.finalAnswerText3,
+        afterChangeAdress: this.finalAnswerText2,
+        afterChangeMajor: this.finalAnswerText3,
         changeMajorType: this.finalAnswerText4
       };
       axios.post(url, payload, {
