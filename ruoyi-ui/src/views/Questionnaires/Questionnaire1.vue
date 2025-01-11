@@ -653,7 +653,6 @@ export default {
 
     // D类型的问卷数据
     getQuestionnaireD() {
-      console.log(this.num3)
       this.filter=3;
       if(this.department==='厚德书院') this.filter=4;
       return [
@@ -1475,7 +1474,7 @@ export default {
             return ['建筑学', '城乡规划', '工业设计'].some(text => option.text.includes(text));
         }
       }else if(this.filter===5&& !['111', '222', '333', '444', '555', '666'].includes(option.id.toString())){
-        let filterText=this.filterText(this.major);
+        let filterText=this.filterText(this.specialty);
         switch (this.num4) {
           case 100:
             return ['智能制造工程', '车辆工程（英语强化）', '测控技术与仪器', '机械设计制造及其自动化',this.department].some(text => option.text.includes(text));
