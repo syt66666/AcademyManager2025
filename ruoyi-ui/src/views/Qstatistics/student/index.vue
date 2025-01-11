@@ -3,23 +3,23 @@
     <!-- 搜索栏 -->
     <div v-show="showSearch" class="search-bar">
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true">
-        <el-form-item label="专业分流类型" prop="change_major_type">
-          <el-select
-            v-model="queryParams.change_major_type"
-            placeholder="请选择专业分流类型"
-            clearable
-            @change="handleQuery"
-            filterable
-            class="select-field"
-          >
-            <el-option
-              v-for="(label, value) in divertTypeMap"
-              :key="value"
-              :label="label"
-              :value="value"
-            />
-          </el-select>
-        </el-form-item>
+<!--        <el-form-item label="专业分流类型" prop="change_major_type">-->
+<!--          <el-select-->
+<!--            v-model="queryParams.change_major_type"-->
+<!--            placeholder="请选择专业分流类型"-->
+<!--            clearable-->
+<!--            @change="handleQuery"-->
+<!--            filterable-->
+<!--            class="select-field"-->
+<!--          >-->
+<!--            <el-option-->
+<!--              v-for="(label, value) in divertTypeMap"-->
+<!--              :key="value"-->
+<!--              :label="label"-->
+<!--              :value="value"-->
+<!--            />-->
+<!--          </el-select>-->
+<!--        </el-form-item>-->
         <el-form-item label="学号" prop="studentId">
           <el-input
             v-model="queryParams.studentId"
