@@ -48,7 +48,7 @@ export default {
       userName: store.state.user.name, // 获取用户名
 
       questionnaires: [
-        { id: 1, title: '问卷1', description: '2024级专业选择意向调查', completed: false, start_time: '2024-12-31T00:00:00', end_time: '2025-01-01T00:00:00' },
+        { id: 1, title: '问卷1', description: '2024书院学生专业选择意向摸底调查', completed: false, start_time: '2024-12-31T00:00:00', end_time: '2025-01-01T00:00:00' },
         //{ id: 2, title: '问卷2', description: '之后可添加问卷', completed: false, start_time: '2025-02-01T00:00:00', end_time: '2026-01-01T00:00:00' }
       ]
     };
