@@ -17,7 +17,7 @@ public class SysQuestionnaireController extends BaseController {
 
     @Autowired
     private ISysQuestionnaireService questionnaireService;
-
+//查询问卷的开始时间和结束时间
     @GetMapping("/times")
     public AjaxResult getQuestionnaireTimes(@RequestParam String questionnaireId) {
         Map<String, Object> times = questionnaireService.getQuestionnaireTimes(questionnaireId);

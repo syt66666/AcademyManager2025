@@ -3,7 +3,16 @@
     <!-- 左侧部分 (echarts 图表部分) -->
     <div class="left-container">
       <el-card class="custom-card">
-        <!-- 用于放置Echarts图表的DOM元素，设置合适的宽高 -->
+        <!-- 滑动按钮 -->
+        <div class="switch-container">
+          <el-switch
+            v-model="isAfterMajorChange"
+            active-text="转专业后"
+            inactive-text="分流后"
+            @change="updateChart"
+          />
+        </div>
+        <!-- 用于放置Echarts图表的DOM元素 -->
         <div id="echarts1" class="echart-container" />
         <div id="echarts3" class="echart-container" />
         <div id="changeTypeChart" class="echart-container" />
@@ -12,68 +21,86 @@
     <div class="right-container">
       <div id="echarts-container" class="echart-container"></div>
       <div class="student">
-        <student-index  ref="student"/>
+        <student-index ref="student" />
       </div>
     </div>
   </div>
 </template>
 
+
 <script>
 import * as echarts from 'echarts';
 import StudentIndex from '@/views/Qstatistics/student';
 import {echarts1} from '@/api/system/student';
+import {fetchEchartsData} from "@/api/system/questionnaire";
 export default {
   components: { StudentIndex },
   data() {
     return {
+      isAfterMajorChange: false,//初始状态为分流后
       academyChangeType : { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 },
       selected: null,
       options: ["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
     }
   },
   mounted() {
+    this.isAfterMajorChange = false; // 确保状态初始化
     this.getEcharts1();
-    this.getEcharts3();
+    //this.getEcharts3();
   },
   watch: {
     selected(newVal, oldVal) {
-      // 当 academy 发生变化时，刷新数据
+      console.log('this.selected:'+this.selected)
       this.getEcharts3();
+      this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
+    },
+    isAfterMajorChange(newVal) {
+      // 在状态改变时执行的逻辑，可以用于触发其他操作
+      this.getEcharts1();
+      console.log(`状态已切换到: ${newVal ? '转专业后' : '分流后'}`);
+      this.selected=null
     }
   },
   methods:{
     echarts1(data) {
-      console.log('Received data:', data); // 添加调试信息
-
       var chartDom = document.getElementById('echarts1');
       var myChart = echarts.init(chartDom);
-
+      //分流前学生的数据
       const beforeCnt = data.beforeCnt;  // 转专业前的学生数量
-      const afterCnt = data.afterCnt;   // 转专业后的学生数量
-      const afterMajorChangeType = data.afterMajorChangeType;  // 转专业类型统计
-
-      console.log('beforeCnt:', beforeCnt); // 添加调试信息
-      console.log('afterCnt:', afterCnt); // 添加调试信息
-      console.log('afterMajorChangeType:', afterMajorChangeType); // 添加调试信息
-
+      let afterCnt=null;
+      let afterMajorChangeType=null;
+      if(this.isAfterMajorChange===false){
+        afterCnt = data.afterCnt1;// 分流后的学生数量
+        afterMajorChangeType = data.changeMajorType;
+      }else {
+        afterCnt = data.afterCnt2;
+        afterMajorChangeType = data.afterMajorChangeType;
+      }
       let xData = [];
       let beforeData = [];
       let afterData = [];
 
-      this.academyChangeType = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };
+
       // 准备数据
       for (let [academy, majors] of Object.entries(afterCnt)) {
         xData.push(academy);
-
         // 计算转专业前的总学生数量
         let beforeTotal = 0;
         if (beforeCnt[academy]) {
-          for (let [major, count] of Object.entries(beforeCnt[academy])) {
-            beforeTotal += count;
-          }
+          // 直接获取当前书院的学生数量
+          beforeTotal = beforeCnt[academy];
         }
         beforeData.push(beforeTotal);
+        // let beforeTotal = 0;
+        // if (beforeCnt[academy]) {
+        //   // 获取当前书院的所有专业的学生数量数组
+        //   const majorCounts = Object.values(beforeCnt[academy]);
+        //   // 计算所有专业的学生数量总和
+        //   beforeTotal = majorCounts.reduce((sum, count) => sum + count, 0);
+        // }
+        // beforeData.push(beforeTotal);
 
+        this.academyChangeType[academy] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };
         // 计算转专业后的总学生数量
         let afterTotal = 0;
         for (let [major, count] of Object.entries(majors)) {
@@ -84,7 +111,7 @@ export default {
         if (afterMajorChangeType[academy]) {
           for (let [major, changeTypes] of Object.entries(afterMajorChangeType[academy])) {
             for (let [changeType, count] of Object.entries(changeTypes)) {
-              this.academyChangeType[changeType] = (this.academyChangeType[changeType] || 0) + count;
+              this.academyChangeType[academy][changeType] = (this.academyChangeType[academy][changeType] || 0) + count;
             }
           }
         }
@@ -216,9 +243,9 @@ export default {
       option && myChart.setOption(option);
 
       // 在数据更新完成后，调用饼图渲染
-      this.$nextTick(() => {
-        this.renderChangeTypePieChart(this.academyChangeType, 'echarts-container');
-      });
+      // this.$nextTick(() => {
+      //   this.renderChangeTypePieChart(this.academyChangeType, 'echarts-container');
+      // });
       //注册点击事件（可选）
       myChart.getZr().off('click');
       const that = this;
@@ -232,8 +259,6 @@ export default {
           that.selected = value;
         }
       });
-
-
     },
     // 获取转专业类型名称
     getChangeTypeName(changeType) {
@@ -251,7 +276,7 @@ export default {
     // 渲染转专业类型饼图
     renderChangeTypePieChart(academyChangeTypeData, chartDomId) {
       // 检查数据
-      console.log('Received Academy Change Type Data:', academyChangeTypeData);
+      console.log('发送的数据:', academyChangeTypeData);
       const chartData =  Object.entries(academyChangeTypeData)
         .filter(([changeType, count]) => changeType !== 'Unknown' && count > 0)
         .map(([changeType, count]) => ({
@@ -259,11 +284,10 @@ export default {
           value: count
         }));
 
-      console.log(chartData)
       const option = {
         backgroundColor: '#ffffff',
         title: {
-          text: '全校学生专业分流类型分布',
+          text: `${this.selected}专业分流类型分布`,
           left: 'center',
           textStyle: {
             fontSize: 18,
@@ -355,21 +379,21 @@ export default {
     },
 
     getEcharts1() {
-      echarts1().then(res => {
-        this.echarts1(res.data);
-        console.log(res.data);
-      });
+      // 调用 fetchEchartsData 来获取数据
+        fetchEchartsData(1)
+          .then(response => {
+            this.echarts1(response.data);
+          })
     },
     getEcharts3() {
-      echarts1().then(res => {
-        this.echarts3(res.data, this.selected);
-      });
+      fetchEchartsData(1)
+        .then(response => {
+          this.echarts3(response.data,this.selected);
+        });
     },
 
-
-
     echarts3(data, academy) {
-      console.log('Received data in echarts3:', data); // 添加调试信息
+      //console.log('Received data in echarts3:', data); // 添加调试信息
 
       var chartDom = document.getElementById('echarts3');
       var myChart = echarts.init(chartDom);
@@ -396,10 +420,10 @@ export default {
 
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
-
+      console.log('this.isAfterMajorChange1:'+this.isAfterMajorChange)
       // 遍历数据，根据数据更新 yData
-      if (data.afterCnt && data.afterCnt[academy]) {
-        for (let [k2, v2] of Object.entries(data.afterCnt[academy])) {
+      if (this.isAfterMajorChange===false&&data.afterCnt1 && data.afterCnt1[academy]) {
+        for (let [k2, v2] of Object.entries(data.afterCnt1[academy])) {
           // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
           let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
           if (majorIndex !== -1) {
@@ -407,10 +431,20 @@ export default {
           }
         }
       }
-
+      // 遍历数据，根据数据更新 yData
+      if (this.isAfterMajorChange===true&&data.afterCnt2 && data.afterCnt2[academy]) {
+        for (let [k2, v2] of Object.entries(data.afterCnt2[academy])) {
+          // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
+          let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
+          if (majorIndex !== -1) {
+            yData[majorIndex] += v2; // 增加该专业的学生人数
+          }
+        }
+      }
+      let type=this.isAfterMajorChange;
       const option = {
         title: {
-          text: "专业分流后各专业人数统计",
+          text: `${this.selected}分流后各专业人数统计`,
           left: 'center',
           textStyle: {
             fontSize: 18,
@@ -504,22 +538,30 @@ export default {
       myChart.on('click', function(param) {
         if (param.componentType === 'series') {
           const clickedMajor = param.name;  // 获取点击的专业名称
-          // 获取该专业的转专业类型分布数据
-          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor);
+
+            console.log('this.isAfterMajorChange11:'+type)
+          // 获取该专业的专业类型分布数据
+          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor,type);
           // 显示该专业的转专业类型的比例，可以用饼图展示
-          updateChangeTypeChart(majorChangeType);
+          updateChangeTypeChart(majorChangeType,clickedMajor);
           that.$refs.student.major = clickedMajor;
           that.$refs.student.type = null;
         }
       });
 
       // 获取该专业的转专业类型分布
-      function getChangeMajorTypeForMajor(data, academy, major) {
+      function getChangeMajorTypeForMajor(data, academy, major,type) {
         const afterMajorChangeType = {};  // 统计该专业的转专业类型
+        // // 遍历数据，统计该专业的转专业类型
+        if (type===true&&data.afterMajorChangeType && data.afterMajorChangeType[academy] && data.afterMajorChangeType[academy][major]) {
+          for (let [changeType, count] of Object.entries(data.afterMajorChangeType[academy][major])) {
+            afterMajorChangeType[changeType] = count;
+          }
+        }
 
         // 遍历数据，统计该专业的转专业类型
-        if (data.afterMajorChangeType && data.afterMajorChangeType[academy] && data.afterMajorChangeType[academy][major]) {
-          for (let [changeType, count] of Object.entries(data.afterMajorChangeType[academy][major])) {
+        if (type===false&&data.changeMajorType && data.changeMajorType[academy] && data.changeMajorType[academy][major]) {
+          for (let [changeType, count] of Object.entries(data.changeMajorType[academy][major])) {
             afterMajorChangeType[changeType] = count;
           }
         }
@@ -527,7 +569,7 @@ export default {
       }
 
       // 更新转专业类型分布图
-      function updateChangeTypeChart(majorChangeType) {
+      function updateChangeTypeChart(majorChangeType,clickedMajor) {
         var chartDom = document.getElementById('changeTypeChart');
         var myChart = echarts.init(chartDom);
 
@@ -546,9 +588,10 @@ export default {
           name: typeMapping[type] || type,  // 如果没有找到映射，则保持原来的类型
           value: count
         })).filter(item => item.name !== '未知类型');  // 过滤掉 "未知类型"
+
         const option = {
           title: {
-            text: '专业分流类型分布',
+            text: `${clickedMajor}分流类型分布`,
             left: 'center',  // 标题居中
             textStyle: {
               fontSize: 18,

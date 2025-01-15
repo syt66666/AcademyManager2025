@@ -20,7 +20,6 @@ public class StudentInfoController {
     @Autowired
     private IStudentInfoService studentInfoService;
     private static final Logger log = LoggerFactory.getLogger(StudentInfoController.class);
-
     @GetMapping("/{studentId}")
     public Map<String, Object> getStudentInfoById(@PathVariable String studentId) {
         log.info("Fetching student info for ID: " + studentId);
