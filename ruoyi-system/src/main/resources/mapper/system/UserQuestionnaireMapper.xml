@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.UserQuestionnaireMapper">
+
+    <resultMap type="UserQuestionnaireAnswer" id="UserQuestionnaireAnswerResult">
+        <result property="id" column="id" />
+        <result property="userName" column="user_name" />
+        <result property="academy" column="academy" />
+        <result property="systemMajor" column="systemMajor" />
+        <result property="changeAdress" column="change_adress" />
+        <result property="changeMajor" column="change_major" />
+        <result property="changeMajorType" column="change_major_type" />
+        <result property="afterChangeAdress" column="after_change_adress" />
+        <result property="afterChangeMajor" column="after_change_major" />
+        <result property="afterChangeMajorType" column="after_change_major_type" />
+    </resultMap>
+
+    <select id="getStudentQuestionnaireAnswers" parameterType="UserQuestionnaireAnswer" resultMap="UserQuestionnaireAnswerResult">
+        SELECT u.id, user_name, academy, systemMajor, change_adress, change_major, u.change_major_type, after_change_adress, after_change_major, after_change_major_type
+        FROM user_questionnaire_answers u
+        join student s
+        on s.studentId = u.user_name
+--         WHERE questionnaire_id = 1
+        <where>
+            <if test="id != null">AND id = #{id}</if>
+            <if test="userName != null and userName != ''">AND user_name LIKE CONCAT('%', #{userName}, '%')</if>
+            <if test="academy != null and academy != ''">AND academy = #{academy}</if>
+            <if test="systemMajor != null and systemMajor != ''">AND systemMajor = #{systemMajor}</if>
+            <if test="changeAdress != null and changeAdress != ''">AND change_adress = #{changeAdress}</if>
+            <if test="changeMajor != null and changeMajor != ''">AND change_major = #{changeMajor}</if>
+            <if test="changeMajorType != null and changeMajorType != ''">AND u.change_major_type = #{changeMajorType}</if>
+            <if test="afterChangeAdress != null and afterChangeAdress != ''">AND after_change_adress = #{afterChangeAdress}</if>
+            <if test="afterChangeMajor != null and afterChangeMajor != ''">AND after_change_major = #{afterChangeMajor}</if>
+            <if test="afterChangeMajorType != null and afterChangeMajorType != ''">AND after_change_major_type = #{afterChangeMajorType}</if>
+        </where>
+    </select>
+
+</mapper>

@@ -1,39 +1,23 @@
 <template>
   <div class="student-container">
-    <!-- 搜索栏 -->
-    <div v-show="showSearch" class="search-bar">
-      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true">
-<!--        <el-form-item label="专业分流类型" prop="change_major_type">-->
-<!--          <el-select-->
-<!--            v-model="queryParams.change_major_type"-->
-<!--            placeholder="请选择专业分流类型"-->
+<!--&lt;!&ndash;     搜索栏 &ndash;&gt;-->
+<!--    <div v-show="showSearch" class="search-bar">-->
+<!--      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true">-->
+<!--        <el-form-item label="问卷 ID" prop="questionnaireId">-->
+<!--          <el-input-->
+<!--            v-model="queryParams.questionnaireId"-->
+<!--            placeholder="请输入问卷 ID"-->
 <!--            clearable-->
-<!--            @change="handleQuery"-->
-<!--            filterable-->
-<!--            class="select-field"-->
-<!--          >-->
-<!--            <el-option-->
-<!--              v-for="(label, value) in divertTypeMap"-->
-<!--              :key="value"-->
-<!--              :label="label"-->
-<!--              :value="value"-->
-<!--            />-->
-<!--          </el-select>-->
+<!--            @keyup.enter.native="handleQuery"-->
+<!--          />-->
 <!--        </el-form-item>-->
-        <el-form-item label="学号" prop="studentId">
-          <el-input
-            v-model="queryParams.studentId"
-            placeholder="请输入学号"
-            clearable
-            @keyup.enter.native="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery" class="reset-btn">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+<!--        <el-form-item>-->
+<!--          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>-->
+<!--          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery" class="reset-btn">重置</el-button>-->
+<!--        </el-form-item>-->
+<!--      </el-form>-->
+<!--    </div>-->
+
     <!-- 表格栏 -->
     <el-card class="table-bar">
       <el-table
@@ -43,34 +27,24 @@
         :data="studentList"
         @selection-change="handleSelectionChange"
         border
-        max-height="none">
-        <el-table-column v-if="columns[1].visible" label="姓名" align="center" prop="studentName" show-overflow-tooltip/>
-        <el-table-column v-if="columns[2].visible" label="学号" align="center" prop="studentId" show-overflow-tooltip/>
-        <el-table-column v-if="columns[3].visible" label="转前书院" align="center" prop="academy">
-          <template slot-scope="scope">
-            <el-tag size="mini" type="primary">{{ scope.row.academy }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="columns[5].visible" label="转前专业" align="center" prop="major">
-          <template slot-scope="scope">
-            <el-tag size="mini" type="primary">{{ scope.row.major }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="columns[9].visible" label="转后书院" align="center" prop="afterAcademy">
-          <template slot-scope="scope">
-            <el-tag v-if="scope.row.afterAcademy" size="mini" type="success">{{ scope.row.afterAcademy }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="columns[10].visible" label="转后专业" align="center" prop="afterMajor">
-          <template slot-scope="scope">
-            <el-tag v-if="scope.row.afterMajor" size="mini" type="success">{{ scope.row.afterMajor }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column v-if="columns[11].visible" label="分流类型" align="center" prop="change_major_type">
-          <template slot-scope="scope">
-            <el-tag v-if="scope.row.change_major_type" size="mini" type="primary">{{ divertTypeMap[scope.row.change_major_type] || ' ' }}</el-tag>
-          </template>
-        </el-table-column>
+        max-height="none"
+      >
+<!--        <el-table-column label="ID" align="center" prop="id" />-->
+        <el-table-column label="学号" align="center" prop="userName" />
+        <el-table-column label="转前书院" align="center" prop="academy" />
+        <el-table-column label="转前专业" align="center" prop="systemMajor" />
+        <el-table-column v-if="!time" label="分流后书院" align="center" prop="changeAdress" />
+        <el-table-column v-if="!time" label="分流后专业" align="center" prop="changeMajor" />
+        <el-table-column v-if="!time" label="一阶段分流类型" align="center" :prop="'changeMajorType'" :formatter="formatDivertType"/>
+        <el-table-column v-if="time" label="转专业后书院" align="center" prop="afterChangeAdress" />
+        <el-table-column v-if="time" label="转专业后专业" align="center" prop="afterChangeMajor" />
+        <el-table-column v-if="time"
+                         label="二阶段分流类型"
+                         align="center"
+                         :prop="'afterChangeMajorType'"
+                         :formatter="formatDivertType" />
+
+
       </el-table>
       <!-- 分页 -->
       <pagination
@@ -86,84 +60,128 @@
 </template>
 
 <script>
-import { listStudent, getStudent, delStudent, addStudent, updateStudent } from "@/api/system/student";
+import { getStudentQuestionnaieData } from "@/api/system/questionnaire";
 
 export default {
   name: "Student",
   data() {
     return {
       divertTypeMap: {
-        '1': '保持当前专业',
-        '2': '域内任选专业',
-        '3': '类内任选专业',
-        '4': '创新班政策内任选专业',
-        '5': '转专业'
+        1: "保持当前专业",
+        2: "域内任选专业",
+        3: "类内任选专业",
+        4: "创新班政策内任选专业",
+        5: "转专业",
       },
       academy: null,
       major: null,
-      type: null,
-      loading: true,
-      ids: [],
-      single: true,
-      multiple: true,
-      showSearch: true,
+      type:null,
+      time:false,
+      loading: false,
       total: 0,
       studentList: [],
-      title: "",
-      open: false,
+      showSearch: true,
       queryParams: {
-        pageNum: 1,
-        pageSize: 10,
-        id: null,
-        studentId: null,
-        studentName: null,
-        academy: null,
-        systemMajor: null,
-        major: null,
-        studentClass: null,
-        divertForm: null,
-        innovationClass: null,
-        studentSex: null,
-        afterMajor: null,
-        afterAcademy: null,
-        change_major_type: null
+        pageNum: 1, // 当前页码
+        pageSize: 5, // 每页条数
+        id:null,
+        userName:null,
+        academy:null,
+        systemMajor:null,
+        changeAdress:null,
+        changeMajor:null,
+        changeMajorType:null,
+        afterChangeAdress:null,
+        afterChangeMajor:null,
+        afterChangeMajorType:null,
       },
       form: {},
-      rules: {
-        studentId: [{ required: true, message: "学号不能为空", trigger: "blur" }],
-        studentName: [{ required: true, message: "姓名不能为空", trigger: "blur" }],
-        academy: [{ required: true, message: "书院不能为空", trigger: "blur" }],
-      },
-      columns: [
-        { key: 1, label: '学号', visible: true },
-        { key: 2, label: '姓名', visible: true },
-        { key: 3, label: '性别', visible: true },
-        { key: 4, label: '转前书院', visible: true },
-        { key: 5, label: '系统内专业', visible: false },
-        { key: 5, label: '转前专业', visible: true },
-        { key: 6, label: '行政班', visible: false },
-        { key: 7, label: '分流形式', visible: false },
-        { key: 8, label: '创新班或拔尖班', visible: false },
-        { key: 9, label: '转后书院', visible: true },
-        { key: 10, label: '转后专业', visible: true },
-        { key: 11, label: '专业分流类型', visible: true },
-      ]
     };
   },
   created() {
-    this.getList();
+    this.getList(); // 初始加载数据
   },
+  methods: {
+    // 格式化分流类型
+    formatDivertType(row, column, cellValue) {
+      return this.divertTypeMap[cellValue] || cellValue;
+    },
+    // 获取数据
+    getList() {
+      console.log('我进来啦')
+      console.log('this.queryParams：'+this.queryParams)
+      //this.queryParams.academy='求实书院'
+      this.loading = true;
+      getStudentQuestionnaieData(this.queryParams)
+        .then((response) => {
+          const { rows, total } = response;
+          this.studentList = rows;
+          this.total = total;
+          this.loading = false;
+        })
+        .catch(() => {
+          this.$message.error("获取数据失败，请稍后重试");
+          this.loading = false;
+        });
+    },
+    // 搜索
+    handleQuery() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    // 重置
+    resetQuery() {
+      this.handleQuery();
+      this.queryParams = {
+        id:null,
+        userName:null,
+        academy:null,
+        systemMajor:null,
+        changeAdress:null,
+        changeMajor:null,
+        changeMajorType:null,
+        afterChangeAdress:null,
+        afterChangeMajor:null,
+        afterChangeMajorType:null,
+      };
+      this.getList();
+    },
+  },
+
   watch: {
-    academy(newVal, oldVal) {
-      this.queryParams.afterAcademy = newVal;
+    time(newVal){
+      this.queryParams.changeAdress=null;
+      this.queryParams.afterChangeAdress=null;
+      this.queryParams.changeMajor=null;
+      this.queryParams.afterChangeMajor=null;
+      this.queryParams.changeMajorType=null;
+      this.queryParams.afterChangeMajorType=null;
+    },
+    academy(newVal) {
+      if(this.time===false){
+        this.queryParams.changeAdress=newVal;
+      }
+      else {
+        this.queryParams.afterChangeAdress=newVal;
+      }
       this.getList();
     },
-    major(newVal, oldVal) {
-      this.queryParams.afterMajor = newVal;
+    major(newVal) {
+      if(this.time===false){
+        this.queryParams.changeMajor=newVal;
+      }
+      else {
+        this.queryParams.afterChangeMajor=newVal;
+      }
       this.getList();
     },
-    type(newVal, oldVal) {
-      this.queryParams.change_major_type = newVal;
+    type(newVal) {
+      if(this.time===false){
+        this.queryParams.changeMajorType=newVal;
+      }
+      else {
+        this.queryParams.afterChangeMajorType=newVal;
+      }
       this.getList();
     },
     columns: {
@@ -175,51 +193,6 @@ export default {
       }
     },
   },
-  methods: {
-    getList() {
-      this.loading = true;
-      listStudent(this.queryParams).then(response => {
-        this.studentList = response.rows;
-        this.total = response.total;
-        this.loading = false;
-      });
-    },
-    cancel() {
-      this.open = false;
-      this.reset();
-    },
-    reset() {
-      this.form = {
-        id: null,
-        studentId: null,
-        studentName: null,
-        academy: null,
-        systemMajor: null,
-        major: null,
-        studentClass: null,
-        divertForm: null,
-        innovationClass: null,
-        studentSex: null,
-        afterMajor: null,
-        afterAcademy: null,
-        change_major_type: null
-      };
-      this.resetForm("form");
-    },
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-      this.major=null;
-      this.academy=null;
-      this.type=null;
-    },
-  }
 };
 </script>
 
@@ -227,27 +200,17 @@ export default {
 .student-container {
   width: 100%;
   padding: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 
 .search-bar {
-  width: 100%;
   margin-bottom: 10px;
-  background-color: #ffffff;
-  //border-radius: 8px;
+  background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.select-field {
-  width: 150px;
 }
 
 .reset-btn {
   background-color: #f56c6c;
   color: white;
-  border-color: #f56c6c;
 }
 
 .reset-btn:hover {
@@ -255,12 +218,7 @@ export default {
 }
 
 .table-bar {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  max-height: calc(100vh - 180px);
-  overflow-y: auto;
+  margin-top: 10px;
 }
 
 .pagination {

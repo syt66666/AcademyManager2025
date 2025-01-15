@@ -8,4 +8,11 @@ export function fetchEchartsData(questionnaireId) {
     params: { questionnaireId },
   });
 }
+export function getStudentQuestionnaieData(query) {
+  return request({
+    url: `/system/questionnaire/answers`, // 使用路径变量
+    method: 'get',
+    params: query,
+  });
+}
 

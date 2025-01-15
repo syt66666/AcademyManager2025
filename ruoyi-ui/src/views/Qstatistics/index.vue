@@ -31,7 +31,6 @@
 <script>
 import * as echarts from 'echarts';
 import StudentIndex from '@/views/Qstatistics/student';
-import {echarts1} from '@/api/system/student';
 import {fetchEchartsData} from "@/api/system/questionnaire";
 export default {
   components: { StudentIndex },
@@ -50,18 +49,53 @@ export default {
   },
   watch: {
     selected(newVal, oldVal) {
-      console.log('this.selected:'+this.selected)
-      this.getEcharts3();
-      this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
+      if(this.selected!==null){
+        this.noHideCharts();
+        this.getEcharts3();
+        this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
+      }else {
+        // 如果 selected 为 null，隐藏图表
+        this.hideCharts();
+      }
     },
     isAfterMajorChange(newVal) {
       // 在状态改变时执行的逻辑，可以用于触发其他操作
       this.getEcharts1();
-      console.log(`状态已切换到: ${newVal ? '转专业后' : '分流后'}`);
-      this.selected=null
+      this.selected=null;
+
     }
   },
   methods:{
+    noHideCharts() {
+      // 假设你有一个容器 ID 为 'echarts-container'
+      const chartContainer = document.getElementById('echarts3');
+      if (chartContainer) {
+        chartContainer.style.display = 'block';
+      }
+      const chartContainer2 = document.getElementById('changeTypeChart');
+      if (chartContainer2) {
+        chartContainer2.style.display = 'block';
+      }
+      const chartContainer3 = document.getElementById('echarts-container');
+      if (chartContainer3) {
+        chartContainer3.style.display = 'block';
+      }
+    },
+    hideCharts() {
+      // 假设你有一个容器 ID 为 'echarts-container'
+      const chartContainer = document.getElementById('echarts3');
+      if (chartContainer) {
+        chartContainer.style.display = 'none';
+      }
+      const chartContainer2 = document.getElementById('changeTypeChart');
+      if (chartContainer2) {
+        chartContainer2.style.display = 'none';
+      }
+      const chartContainer3 = document.getElementById('echarts-container');
+      if (chartContainer3) {
+        chartContainer3.style.display = 'none';
+      }
+    },
     echarts1(data) {
       var chartDom = document.getElementById('echarts1');
       var myChart = echarts.init(chartDom);
@@ -72,14 +106,15 @@ export default {
       if(this.isAfterMajorChange===false){
         afterCnt = data.afterCnt1;// 分流后的学生数量
         afterMajorChangeType = data.changeMajorType;
+        this.$refs.student.time=false;
       }else {
         afterCnt = data.afterCnt2;
         afterMajorChangeType = data.afterMajorChangeType;
+        this.$refs.student.time=true;
       }
       let xData = [];
       let beforeData = [];
       let afterData = [];
-
 
       // 准备数据
       for (let [academy, majors] of Object.entries(afterCnt)) {
@@ -91,14 +126,6 @@ export default {
           beforeTotal = beforeCnt[academy];
         }
         beforeData.push(beforeTotal);
-        // let beforeTotal = 0;
-        // if (beforeCnt[academy]) {
-        //   // 获取当前书院的所有专业的学生数量数组
-        //   const majorCounts = Object.values(beforeCnt[academy]);
-        //   // 计算所有专业的学生数量总和
-        //   beforeTotal = majorCounts.reduce((sum, count) => sum + count, 0);
-        // }
-        // beforeData.push(beforeTotal);
 
         this.academyChangeType[academy] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };
         // 计算转专业后的总学生数量
@@ -256,6 +283,7 @@ export default {
           const value = option.xAxis.data[xIndex];
           that.$refs.student.academy = value;
           that.$refs.student.major = null;
+
           that.selected = value;
         }
       });

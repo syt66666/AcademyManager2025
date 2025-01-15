@@ -5,14 +5,17 @@ import java.sql.Timestamp;
 public class UserQuestionnaireAnswer {
     private Integer id;
     private String userName;
-    private Integer questionnaireId;
+   // private Integer questionnaireId;
+    private String academy;
+    private String systemMajor;
+
     private String changeAdress;
     private String changeMajor;
+    private String changeMajorType;
+    
     private String afterChangeAdress;
     private String afterChangeMajor;
     private String afterChangeMajorType;
-    private String academy;
-    private String systemMajor;
 
     public String getAcademy() {
         return academy;
@@ -39,8 +42,7 @@ public class UserQuestionnaireAnswer {
         this.afterChangeMajorType = afterChangeMajorType;
     }
 
-    private String changeMajorType;
-    private Timestamp createdAt;
+
 
     // Getters and Setters
     public Integer getId() {
@@ -59,13 +61,6 @@ public class UserQuestionnaireAnswer {
         this.userName = userName;
     }
 
-    public Integer getQuestionnaireId() {
-        return questionnaireId;
-    }
-
-    public void setQuestionnaireId(Integer questionnaireId) {
-        this.questionnaireId = questionnaireId;
-    }
 
     public String getChangeAdress() {
         return changeAdress;
@@ -107,11 +102,4 @@ public class UserQuestionnaireAnswer {
         this.changeMajorType = changeMajorType;
     }
 
-    public Timestamp getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Timestamp createdAt) {
-        this.createdAt = createdAt;
-    }
 }

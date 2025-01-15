@@ -1,5 +1,7 @@
 package com.ruoyi.system.service;
+import com.ruoyi.system.domain.UserQuestionnaireAnswer;
 
+import java.util.List;
 import java.util.Map;
 
 public interface IUserQuestionnaireService {
@@ -8,5 +10,6 @@ public interface IUserQuestionnaireService {
 
     Map<String, ?> echarts2(int questionnaireId);
 
-    // 你可以添加其他方法来处理 `user_questionnaire_answers` 数据
+    List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
+
 }
