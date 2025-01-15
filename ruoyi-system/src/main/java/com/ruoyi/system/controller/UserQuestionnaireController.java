@@ -45,5 +45,9 @@ public class UserQuestionnaireController extends BaseController {
         List<UserQuestionnaireAnswer> answers = userQuestionnaireService.getStudentQuestionnaireAnswers(answer);
         return getDataTable(answers);
     }
-
+    @GetMapping("/system/questionnaire/exportAllAnswers")
+    public TableDataInfo exportAllAnswers(UserQuestionnaireAnswer answer) {
+        List<UserQuestionnaireAnswer> answers = userQuestionnaireService.getStudentQuestionnaireAnswers(answer);
+        return getDataTable(answers);
+    }
 }

@@ -15,4 +15,11 @@ export function getStudentQuestionnaieData(query) {
     params: query,
   });
 }
+export function getAllStudentQuestionnaieData(query) {
+  return request({
+    url: `/system/questionnaire/exportAllAnswers`, // 使用路径变量
+    method: 'get',
+    params: query,
+  });
+}
 

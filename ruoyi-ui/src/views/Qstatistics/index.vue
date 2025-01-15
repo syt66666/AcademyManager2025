@@ -269,10 +269,6 @@ export default {
 
       option && myChart.setOption(option);
 
-      // 在数据更新完成后，调用饼图渲染
-      // this.$nextTick(() => {
-      //   this.renderChangeTypePieChart(this.academyChangeType, 'echarts-container');
-      // });
       //注册点击事件（可选）
       myChart.getZr().off('click');
       const that = this;
@@ -283,7 +279,7 @@ export default {
           const value = option.xAxis.data[xIndex];
           that.$refs.student.academy = value;
           that.$refs.student.major = null;
-
+          that.$refs.student.type = null;
           that.selected = value;
         }
       });
@@ -404,6 +400,19 @@ export default {
 
       const myChart = echarts.init(chartDom);
       myChart.setOption(option);
+      myChart.on('click', (params) => {
+        console.log('Clicked on:', params.name, 'with value:', params.value);
+        let type = null;
+        switch (params.name) {
+          case '保持当前专业': type = 1; break;
+          case '域内任选专业': type = 2; break;
+          case '类内任选专业': type = 3; break;
+          case '拔尖/创新班政策内任选专业': type = 4; break;
+          case '转专业': type = 5; break;
+        }
+        this.$refs.student.major=null;
+        this.$refs.student.type = type;
+      });
     },
 
     getEcharts1() {
@@ -437,7 +446,7 @@ export default {
       } else if (academy === '厚德书院') {
         allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
       } else if (academy === '大煜书院') {
-        allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程"];
+        allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程","储能科学与工程"];
       } else if (academy === '知行书院') {
         allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统"];
       } else if (academy === '笃学书院') {
@@ -448,7 +457,6 @@ export default {
 
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
-      console.log('this.isAfterMajorChange1:'+this.isAfterMajorChange)
       // 遍历数据，根据数据更新 yData
       if (this.isAfterMajorChange===false&&data.afterCnt1 && data.afterCnt1[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt1[academy])) {

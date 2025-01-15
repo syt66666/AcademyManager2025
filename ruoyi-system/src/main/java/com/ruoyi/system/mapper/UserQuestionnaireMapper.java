@@ -28,19 +28,7 @@ public interface UserQuestionnaireMapper {
     })
     List<UserQuestionnaireAnswer> getQuestionnaireAnswers(@Param("questionnaireId") int questionnaireId);
 
-
-//    @Select("SELECT * FROM user_questionnaire_answers u join student s on s.studentId = u.user_name WHERE questionnaire_id = #{questionnaireId}")
-//    @Results({
-//            @Result(column = "user_Name", property = "userName"),
-//            @Result(column = "academy", property = "academy"),
-//            @Result(column = "systemMajor", property = "systemMajor"),
-//            @Result(column = "change_adress", property = "changeAdress"),
-//            @Result(column = "change_major", property = "changeMajor"),
-//            @Result(column = "change_major_type", property = "changeMajorType"),
-//            @Result(column = "after_change_adress", property = "afterChangeAdress"),
-//            @Result(column = "after_change_major", property = "afterChangeMajor"),
-//            @Result(column = "after_change_major_type", property = "afterChangeMajorType")
-//    })
-//    List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(@Param("questionnaireId") int questionnaireId);
     List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
+    List<UserQuestionnaireAnswer> getAllStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
+
 }

@@ -87,8 +87,14 @@ public class UserQuestionnaireServiceImpl implements IUserQuestionnaireService {
 }
 
     @Override
+    public List<UserQuestionnaireAnswer> getAllStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer) {
+        return userQuestionnaireMapper.getAllStudentQuestionnaireAnswers(answer);
+    }
+
+    @Override
     public List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer) {
         return userQuestionnaireMapper.getStudentQuestionnaireAnswers(answer);
     }
+
 }
 
