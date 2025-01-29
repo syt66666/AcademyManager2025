@@ -22,4 +22,10 @@ export function getAllStudentQuestionnaieData(query) {
     params: query,
   });
 }
-
+export function submitQuestionnaireData(answer) {
+  return request({
+    url: '/system/questionnaire/submitAnswers', // 提交问卷答案的接口路径
+    method: 'post',
+    data: answer,  // 请求体中的数据
+  });
+}

@@ -1,4 +1,5 @@
 package com.ruoyi.system.service;
+import com.ruoyi.system.domain.QuestionnaireAnswer;
 import com.ruoyi.system.domain.UserQuestionnaireAnswer;
 
 import java.util.List;
@@ -11,5 +12,5 @@ public interface IUserQuestionnaireService {
     Map<String, ?> echarts2(int questionnaireId);
     List<UserQuestionnaireAnswer> getAllStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
     List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
-
+    void submitQuestionnaire(QuestionnaireAnswer answer);
 }

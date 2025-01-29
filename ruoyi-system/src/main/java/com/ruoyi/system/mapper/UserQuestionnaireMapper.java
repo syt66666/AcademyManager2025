@@ -31,4 +31,13 @@ public interface UserQuestionnaireMapper {
     List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
     List<UserQuestionnaireAnswer> getAllStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
 
+    void insertQuestionnaireAnswer(@Param("userName") String userName,
+                                   @Param("questionnaireId") int questionnaireId,
+                                   @Param("changeAdress") String changeAdress,
+                                   @Param("changeMajor") String changeMajor,
+                                   @Param("changeMajorType") String changeMajorType,
+                                   @Param("afterChangeAdress") String afterChangeAdress,
+                                   @Param("afterChangeMajor") String afterChangeMajor,
+                                   @Param("afterChangeMajorType") String afterChangeMajorType);
+
 }

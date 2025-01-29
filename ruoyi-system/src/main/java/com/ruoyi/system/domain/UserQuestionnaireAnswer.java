@@ -1,11 +1,10 @@
 package com.ruoyi.system.domain;
 
-import java.sql.Timestamp;
-
 public class UserQuestionnaireAnswer {
     private Integer id;
     private String userName;
-   // private Integer questionnaireId;
+    private Integer questionnaireId;
+
     private String academy;
     private String systemMajor;
 
@@ -16,6 +15,30 @@ public class UserQuestionnaireAnswer {
     private String afterChangeAdress;
     private String afterChangeMajor;
     private String afterChangeMajorType;
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public Integer getQuestionnaireId() {
+        return questionnaireId;
+    }
+
+    public void setQuestionnaireId(Integer questionnaireId) {
+        this.questionnaireId = questionnaireId;
+    }
 
     public String getAcademy() {
         return academy;
@@ -33,35 +56,6 @@ public class UserQuestionnaireAnswer {
         this.systemMajor = systemMajor;
     }
 
-
-    public String getAfterChangeMajorType() {
-        return afterChangeMajorType;
-    }
-
-    public void setAfterChangeMajorType(String afterChangeMajorType) {
-        this.afterChangeMajorType = afterChangeMajorType;
-    }
-
-
-
-    // Getters and Setters
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-
     public String getChangeAdress() {
         return changeAdress;
     }
@@ -76,6 +70,14 @@ public class UserQuestionnaireAnswer {
 
     public void setChangeMajor(String changeMajor) {
         this.changeMajor = changeMajor;
+    }
+
+    public String getChangeMajorType() {
+        return changeMajorType;
+    }
+
+    public void setChangeMajorType(String changeMajorType) {
+        this.changeMajorType = changeMajorType;
     }
 
     public String getAfterChangeAdress() {
@@ -94,12 +96,11 @@ public class UserQuestionnaireAnswer {
         this.afterChangeMajor = afterChangeMajor;
     }
 
-    public String getChangeMajorType() {
-        return changeMajorType;
+    public String getAfterChangeMajorType() {
+        return afterChangeMajorType;
     }
 
-    public void setChangeMajorType(String changeMajorType) {
-        this.changeMajorType = changeMajorType;
+    public void setAfterChangeMajorType(String afterChangeMajorType) {
+        this.afterChangeMajorType = afterChangeMajorType;
     }
-
 }

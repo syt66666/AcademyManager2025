@@ -1,7 +1,6 @@
 package com.ruoyi.system.service.impl;
-import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.utils.StringUtils;
-import com.ruoyi.system.domain.Student;
+import com.ruoyi.system.domain.QuestionnaireAnswer;
 import com.ruoyi.system.domain.UserQuestionnaireAnswer;
 import com.ruoyi.system.mapper.UserQuestionnaireMapper;
 import com.ruoyi.system.service.IUserQuestionnaireService;
@@ -96,5 +95,21 @@ public class UserQuestionnaireServiceImpl implements IUserQuestionnaireService {
         return userQuestionnaireMapper.getStudentQuestionnaireAnswers(answer);
     }
 
+        @Override
+        public void submitQuestionnaire(QuestionnaireAnswer answer) {
+            userQuestionnaireMapper.insertQuestionnaireAnswer(
+                    answer.getUserName(),
+                    answer.getQuestionnaireId(),
+
+                    answer.getChangeAdress(),
+                    answer.getChangeMajor(),
+                    answer.getChangeMajorType(),
+
+                    answer.getAfterChangeAdress(),
+                    answer.getAfterChangeMajor(),
+                    answer.getAfterChangeMajorType()
+
+            );
+        }
 }
 

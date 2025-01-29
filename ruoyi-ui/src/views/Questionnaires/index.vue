@@ -54,29 +54,11 @@ export default {
     };
   },
   methods: {
-    // async checkQuestionnaireStatus() {
-    //   try {
-    //     for (const questionnaire of this.questionnaires) {
-    //       const response = await axios.get('http://localhost:3000/api/check-questionnaire-completed', {
-    //         params: {
-    //           userName:  this.userName,
-    //           questionnaireId: questionnaire.id
-    //         }
-    //       });
-    //       questionnaire.completed = response.data.completed;
-    //       console.log(
-    //         `问卷 ${questionnaire.id} 的完成状态：${response.data.completed ? '已完成' : '未完成'}`
-    //       );
-    //     }
-    //   } catch (error) {
-    //     console.error('检查问卷状态失败:', error);
-    //   }
-    // },
+    // 查询问卷是否被该学生回答过
     async checkQuestionnaireStatus() {
-
       try {
         for (const questionnaire of this.questionnaires) {
-          const response = await axios.get(process.env.VUE_APP_BASE_API+'/api/check-questionnaire-completed', {
+          const response = await axios.get(process.env.VUE_APP_BASE_API+'/system/questionnaire/checkCompleted', {
             params: {
               userName: this.userName,
               questionnaireId: questionnaire.id

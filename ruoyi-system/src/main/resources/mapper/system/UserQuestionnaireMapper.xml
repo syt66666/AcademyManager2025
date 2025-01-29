@@ -56,4 +56,29 @@
             <if test="afterChangeMajorType != null and afterChangeMajorType != ''">AND after_change_major_type = #{afterChangeMajorType}</if>
         </where>
     </select>
+    <insert id="insertQuestionnaireAnswer">
+        INSERT INTO user_questionnaire_answers (
+            user_name,
+            questionnaire_id,
+
+            change_adress,
+            change_major,
+            change_major_type,
+
+            after_change_adress,
+            after_change_major,
+            after_change_major_type
+
+        ) VALUES (
+                     #{userName},
+                     #{questionnaireId},
+                     #{changeAdress},
+                     #{changeMajor},
+                     #{changeMajorType},
+                     #{afterChangeAdress},
+                     #{afterChangeMajor},
+                     #{afterChangeMajorType}
+
+                 )
+    </insert>
 </mapper>

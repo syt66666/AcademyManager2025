@@ -21,12 +21,12 @@
         <el-table-column label="学号" align="center" prop="userName" min-width="150" />
         <el-table-column label="转前书院" align="center" prop="academy" min-width="180" />
         <el-table-column label="转前专业" align="center" prop="systemMajor" min-width="180" />
-        <el-table-column v-if="!time" label="分流后书院" align="center" prop="changeAdress" min-width="180" />
-        <el-table-column v-if="!time" label="分流后专业" align="center" prop="changeMajor" min-width="180" />
-        <el-table-column v-if="!time" label="一阶段分流类型" align="center" :prop="'changeMajorType'" :formatter="formatDivertType" min-width="200"/>
-        <el-table-column v-if="time" label="转专业后书院" align="center" prop="afterChangeAdress" min-width="180" />
-        <el-table-column v-if="time" label="转专业后专业" align="center" prop="afterChangeMajor" min-width="180" />
-        <el-table-column v-if="time" label="二阶段分流类型" align="center" :prop="'afterChangeMajorType'" :formatter="formatDivertType" min-width="200"/>
+        <el-table-column label="分流后书院" align="center" prop="changeAdress" min-width="180" />
+        <el-table-column label="分流后专业" align="center" prop="changeMajor" min-width="180" />
+        <el-table-column label="一阶段分流类型" align="center" :prop="'changeMajorType'" :formatter="formatDivertType" min-width="200"/>
+        <el-table-column label="转专业后书院" align="center" prop="afterChangeAdress" min-width="180" />
+        <el-table-column label="转专业后专业" align="center" prop="afterChangeMajor" min-width="180" />
+        <el-table-column label="二阶段分流类型" align="center" :prop="'afterChangeMajorType'" :formatter="formatDivertType" min-width="200"/>
       </el-table>
 
       <!-- 分页 -->
@@ -133,30 +133,18 @@ export default {
     },
     // 导出 Excel 文件
     exportExcel() {
-      let headers=[];
-      let rows=[];
-      if(this.time===false){
-        headers = ['学号', '转前书院', '转前专业', '分流后书院', '分流后专业', '一阶段分流类型'];
-        rows = this.allStudentList.map(item => [
+        const headers = ['学号', '转前书院', '转前专业', '分流后书院', '分流后专业', '一阶段分流类型','转专业后书院', '转专业后专业', '二阶段分流类型'];
+        const rows = this.allStudentList.map(item => [
           item.userName,
           item.academy,
           item.systemMajor,
           item.changeAdress,
           item.changeMajor,
-          this.formatDivertType(item, null, item.changeMajorType)
-        ]);
-      }else {
-        headers = ['学号', '转前书院', '转前专业', '转专业后书院', '转专业后专业', '二阶段分流类型'];
-        rows = this.allStudentList.map(item => [
-          item.userName,
-          item.academy,
-          item.systemMajor,
+          this.formatDivertType(item, null, item.changeMajorType),
           item.afterChangeAdress,
           item.afterChangeMajor,
           this.formatDivertType(item, null, item.afterChangeMajorType)
         ]);
-      }
-
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, '学生数据');

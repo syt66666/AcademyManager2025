@@ -1,12 +1,16 @@
 package com.ruoyi.system.domain;
 
-public class QuestionnaireSubmitRequest {
+public class QuestionnaireAnswer {
     private String userName;
-    private Long questionnaireId;
+    private Integer questionnaireId;
+
     private String changeAdress;
     private String changeMajor;
-    private String afterChangeMajor;
+    private String changeMajorType;
+
     private String afterChangeAdress;
+    private String afterChangeMajor;
+    private String afterChangeMajorType;
 
     public String getUserName() {
         return userName;
@@ -16,11 +20,11 @@ public class QuestionnaireSubmitRequest {
         this.userName = userName;
     }
 
-    public Long getQuestionnaireId() {
+    public Integer getQuestionnaireId() {
         return questionnaireId;
     }
 
-    public void setQuestionnaireId(Long questionnaireId) {
+    public void setQuestionnaireId(Integer questionnaireId) {
         this.questionnaireId = questionnaireId;
     }
 
@@ -40,12 +44,12 @@ public class QuestionnaireSubmitRequest {
         this.changeMajor = changeMajor;
     }
 
-    public String getAfterChangeMajor() {
-        return afterChangeMajor;
+    public String getChangeMajorType() {
+        return changeMajorType;
     }
 
-    public void setAfterChangeMajor(String afterChangeMajor) {
-        this.afterChangeMajor = afterChangeMajor;
+    public void setChangeMajorType(String changeMajorType) {
+        this.changeMajorType = changeMajorType;
     }
 
     public String getAfterChangeAdress() {
@@ -56,15 +60,19 @@ public class QuestionnaireSubmitRequest {
         this.afterChangeAdress = afterChangeAdress;
     }
 
-    public String getChangeMajorType() {
-        return changeMajorType;
+    public String getAfterChangeMajor() {
+        return afterChangeMajor;
     }
 
-    public void setChangeMajorType(String changeMajorType) {
-        this.changeMajorType = changeMajorType;
+    public void setAfterChangeMajor(String afterChangeMajor) {
+        this.afterChangeMajor = afterChangeMajor;
     }
 
-    private String changeMajorType;
+    public String getAfterChangeMajorType() {
+        return afterChangeMajorType;
+    }
 
-    // Getters and Setters
+    public void setAfterChangeMajorType(String afterChangeMajorType) {
+        this.afterChangeMajorType = afterChangeMajorType;
+    }
 }

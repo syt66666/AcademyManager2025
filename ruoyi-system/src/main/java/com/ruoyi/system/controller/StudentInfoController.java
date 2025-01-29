@@ -16,7 +16,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/student")
 public class StudentInfoController {
-
     @Autowired
     private IStudentInfoService studentInfoService;
     private static final Logger log = LoggerFactory.getLogger(StudentInfoController.class);

@@ -46,6 +46,7 @@
 <script>
 import axios from "axios";
 import store from "@/store";
+import {submitQuestionnaireData} from "@/api/system/questionnaire";
 
 export default {
   name: "Questionnaire",
@@ -1476,55 +1477,31 @@ export default {
     },
     submitData() {
       this.departmentFilter()
-      const url = process.env.VUE_APP_BASE_API+'/questionnaire/submit';
-      const payload = {
+      const answer = {
         userName: this.userName,
         questionnaireId: 1,
-        changeAdress: this.department ,
+        changeAdress: this.department,
         changeMajor: this.finalAnswerText,
+        changeMajorType: this.finalAnswerText4,
         afterChangeAdress: this.finalAnswerText2,
         afterChangeMajor: this.finalAnswerText3,
-        changeMajorType: this.finalAnswerText4
+        afterChangeMajorType: this.finalAnswerText4,
       };
-      axios.post(url, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => {console.log('提交成功:', response.data);
-          setTimeout(() => {
-            // 跳转回问卷页面
-            this.$router.go(-1);
-          }, 2000); // 2秒后跳转
+
+      submitQuestionnaireData(answer)
+        .then(response => {
+          // 处理提交成功的情况
+          console.log('提交成功:', response);
+              setTimeout(() => {
+                // 跳转回问卷页面
+                this.$router.go(-1);
+              }, 2000); // 2秒后跳转
         })
-        .catch(error => console.error('提交失败:', error));
+        .catch(error => {
+          // 处理提交失败的情况
+          console.error('提交失败:', error);
+        });
     },
-    updateStudentData() {
-      const url = process.env.VUE_APP_BASE_API+'/api/updateStudentAnswer';
-      let payload={};
-      if(this.finalAnswerText2!=='否'){
-        payload = {
-          studentId: this.userName,
-          afterAcademy: this.finalAnswerText2,
-          afterMajor: this.finalAnswerText3,
-          changeMajorType: this.finalAnswerText4
-        };
-      }else {
-        payload = {
-          studentId: this.userName,
-          afterAcademy: this.department,
-          afterMajor: this.finalAnswerText,
-          changeMajorType: this.finalAnswerText4
-        };
-      }
-      axios.post(url, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then(response => console.log('提交成功:', response.data))
-        .catch(error => console.error('提交失败:', error));
-    }
   },
   mounted() {
     this.initializeQuestionnaire();
