@@ -59,10 +59,11 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
-      finalAnswerText: ' ', // 不转专业的专业选择
+      finalAnswerText: ' ', // 分流的专业选择
       finalAnswerText2: ' ', // 转专业的书院选择
       finalAnswerText3: ' ',//转专业的专业选择
       finalAnswerText4: 0,//分流类型记录
+      finalAnswerText5: 0,//转专业类型记录
       userName: store.state.user.name, // 获取用户名
       splitFlow: '', // 分流形式
       num: null , // 转换书院信息
@@ -75,12 +76,13 @@ export default {
   },
 
   methods: {
+    //过滤掉专业括号内容
     filterText(text) {
       return text.replace(/（.*?）|\(.*?\)/g, '').trim();
     },
     //设置num1值，书院的对应值
-    setNumBasedOnDepartment(department) {
-      switch (department) {
+    setNumBasedOnAcademy(academy) {
+      switch (academy) {
         case '大煜书院':
           this.num = 3;
           break;
@@ -103,7 +105,7 @@ export default {
           this.num = 9;
           break;
         default:
-          this.num = null;  // 如果department不匹配，设置num为null
+          this.num = null;  // 如果academy不匹配，设置num为null
       }
     },
     //设置num2值，专业类的对应值
@@ -135,8 +137,8 @@ export default {
       }
     },
     //设置num3值，厚德
-    setNumBasedOnSpecialty(specialty) {
-      switch (specialty) {
+    setNumBasedOnSpecialty(systemMajor) {
+      switch (systemMajor) {
         case '工商管理类':
           this.num3 = 10;
           break;
@@ -157,8 +159,8 @@ export default {
       }
     },
     //设置num4值，创新班的逻辑：有的创新班型内部需要任选
-    setNumBasedOnClass(specialty) {
-        switch (specialty) {
+    setNumBasedOnClass(systemMajor) {
+        switch (systemMajor) {
           case '智能制造工程（创新班）':
             this.num4 = 100;
             break;
@@ -199,18 +201,18 @@ export default {
       const response = await axios.get(process.env.VUE_APP_BASE_API+`/api/student/${this.userName}`);
       const studentInfo = response.data.studentInfo;
       this.studentName = studentInfo.studentName;
-      this.department = studentInfo.academy;
+      this.academy = studentInfo.academy;
       this.major = studentInfo.major;
       this.splitFlow = studentInfo.divertForm;
-      this.specialty = studentInfo.systemMajor;
+      this.systemMajor = studentInfo.systemMajor;
       this.specialClass = studentInfo.innovationClass;
-      this.setNumBasedOnDepartment(this.department);//得到书院对应num,用于问卷选项加载
+      this.setNumBasedOnAcademy(this.academy);//得到书院对应num,用于问卷选项加载
       this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
-      this.setNumBasedOnSpecialty(this.specialty);//得到专业类别对应num3,用于问卷选项加载
-      this.setNumBasedOnClass(this.specialty);//得到创新班专业类别对应num4,用于问卷选项加载
+      this.setNumBasedOnSpecialty(this.systemMajor);//得到专业类别对应num3,用于问卷选项加载
+      this.setNumBasedOnClass(this.systemMajor);//得到创新班专业类别对应num4,用于问卷选项加载
       this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
       this.getLastAnswerForQuestion(questionId);
-      this.departmentFilter();
+      this.academyFilter();
     },
     // 根据分流形式加载不同的问卷
     loadQuestionnaireBySplitFlow() {
@@ -239,7 +241,7 @@ export default {
         this.currentDisplay.push(this.questionnaire[0]);
       }
     },
-    //不可变更专业
+    //不可变更专业的学生问卷
     getQuestionnaire() {
       return [
         {
@@ -256,7 +258,7 @@ export default {
         }
       ];
     },
-    // 只可转专业的问卷数据
+    // 只可转专业的学生问卷
     getQuestionnaireA() {
       this.filter=1;
       return [
@@ -393,7 +395,7 @@ export default {
         }
       ]
     },
-    //类内任选，并转专业 类型的问卷数据
+    //类内任选，并转专业的学生问卷
     getQuestionnaireB() {
       this.filter=2;
       return [
@@ -610,7 +612,7 @@ export default {
         }
       ];
     },
-    // C类型的问卷数据
+    // 类内任选，不可转专业的学生问卷
     getQuestionnaireC() {
       this.filter=null;
       return [
@@ -630,10 +632,10 @@ export default {
         }
       ];
     },
-    // D类型的问卷数据
+    // 域内任选的学生问卷
     getQuestionnaireD() {
       this.filter=3;
-      if(this.department==='厚德书院') this.filter=4;
+      if(this.academy==='厚德书院') this.filter=4;
       return [
         {
           id: 1,
@@ -914,7 +916,7 @@ export default {
         }
       ];
     },
-    // E类型的问卷数据（针对于创新班/拔尖班的学生）
+    // 针对于创新班/拔尖班的学生问卷
     getQuestionnaireE() {
       //只过滤部分信息
       this.filter=5;
@@ -1251,9 +1253,9 @@ export default {
         },
         {
           id: 200,
-          text: '请选择 '+this.specialty +' 的内设专业 [单选题]',
+          text: '请选择 '+this.systemMajor +' 的内设专业 [单选题]',
           options: [
-            {id: 111, text: this.specialty, next: null},
+            {id: 111, text: this.systemMajor, next: null},
           ]
         },
 
@@ -1295,87 +1297,94 @@ export default {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
       if(this.splitFlow==="不可变更专业"){
-        this.finalAnswerText=this.specialty;
-        this.finalAnswerText2 = '否';
-        this.finalAnswerText3='否';
+        this.finalAnswerText=this.systemMajor;
+        this.finalAnswerText2=this.academy;
+        this.finalAnswerText3=this.finalAnswerText;
         this.finalAnswerText4=1;
+        this.finalAnswerText5=1;
         this.finalAnswerText=this.filterText(this.finalAnswerText);
       }
       //第一种问卷(测试完成)
       else if (this.finalAnswerText === "否"&&this.splitFlow==="仅可转专业") {
         this.finalAnswerText = this.major;
-        this.finalAnswerText2 = '否';
-        this.finalAnswerText3='否';
+        this.finalAnswerText2=this.academy;
+        this.finalAnswerText3=this.finalAnswerText;
         this.finalAnswerText4=1;
+        this.finalAnswerText5=1;
       }else if(this.splitFlow==="仅可转专业"){
         this.finalAnswerText = this.major;
         this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4=5;
+        this.finalAnswerText4=1;
+        this.finalAnswerText5=5;
       }
 
       //第二种问卷（测试完成）
       else if(this.splitFlow==="可类内任选，并转专业"&&this.finalAnswerText==="否"){
-        console.log('11num2'+this.num2)
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
-        this.finalAnswerText2='否';
-        this.finalAnswerText3='否';
+        this.finalAnswerText2=this.academy;
+        this.finalAnswerText3=this.finalAnswerText;
         this.finalAnswerText4=3;
+        this.finalAnswerText5=3;
       }
       else if(this.splitFlow==="可类内任选，并转专业"){//转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num2).selectedOptionText;
         this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4=5;
+        this.finalAnswerText4=3;
+        this.finalAnswerText5=5;
       }
 
       //第三种问卷（测试完成）
       else if(this.splitFlow==="可类内任选，不能转专业"){
-        this.finalAnswerText2='否';
-        this.finalAnswerText3='否'
+        this.finalAnswerText2=this.academy;
+        this.finalAnswerText3=this.finalAnswerText;
         this.finalAnswerText4=3;
       }
 
       //第四种问卷（测试完成）
       else if(this.splitFlow==="可域内任选，并转专业"&&this.finalAnswerText==="否"&&this.specialClass===0){//不转专业
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-        this.finalAnswerText2='否';
+        this.finalAnswerText2=this.academy;
+        this.finalAnswerText3=this.finalAnswerText;
         this.finalAnswerText4=2;
+        this.finalAnswerText5=2;
       }
       else if(this.splitFlow==="可域内任选，并转专业"&&this.specialClass===0){
         this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
         this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4=5;
+        this.finalAnswerText4=2;
+        this.finalAnswerText5=5;
       }
 
       //第五种问卷
       else if(this.specialClass===1&&this.finalAnswerText==="否"){//域内任选 不转专业
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-          this.finalAnswerText2='否';
-          this.finalAnswerText3='否';
+          this.finalAnswerText2=this.academy;
+          this.finalAnswerText3=this.finalAnswerText;
           this.finalAnswerText4=2;
+          this.finalAnswerText5=2;
       }
       else if(this.specialClass===1){
         if(this.getLastAnswerForQuestion(50).selectedOptionText==="否"){//创新班任选
           this.finalAnswerText=this.getLastAnswerForQuestion(this.num4).selectedOptionText;
-          this.finalAnswerText2='否';
-          this.finalAnswerText3='否';
+          this.finalAnswerText2=this.academy;
+          this.finalAnswerText3=this.finalAnswerText;
           this.finalAnswerText4=4;
+          this.finalAnswerText5=4;
           this.finalAnswerText=this.filterText(this.finalAnswerText);
 
         }else if(this.getLastAnswerForQuestion(50).selectedOptionText==="是"){//域内选择，并且转专业
             this.finalAnswerText=this.getLastAnswerForQuestion(this.num3).selectedOptionText;
             this.finalAnswerText2=this.getLastAnswerForQuestion(2).selectedOptionText;
-            this.finalAnswerText4=5;
+            this.finalAnswerText4=2;
+            this.finalAnswerText5=5;
         }
       }
       this.submitData();
-      this.updateStudentData();
     },
-    // 提交最后一个问题的答案到后台
-    //过滤问卷答案
+    // 过滤问卷答案
     getLastAnswerForQuestion(questionId) {
       // 过滤出所有 questionId=2 的记录
       const filteredAnswers = this.userSelections.filter(selection => selection.questionId === questionId);
-
       // 如果找到记录，返回最后一个；否则返回 null
       return filteredAnswers.length > 0 ? filteredAnswers[filteredAnswers.length - 1] : null;
     },
@@ -1391,15 +1400,15 @@ export default {
     },
 
     getFilteredOptions(options) {
-      // 根据 department 和 major 字段来过滤选项，隐藏含有 department 或 major 的选项
-      if (this.major.includes('类')||this.department==='厚德书院') {
+      // 根据 academy 和 major 字段来过滤选项，隐藏含有 academy 或 major 的选项
+      if (this.major.includes('类')||this.academy==='厚德书院') {
         options=options.filter(option => option.text !== '保持现有专业');
       }
       return options.filter(option => !this.isOptionHidden(option));
     },
 
     isOptionHidden(option) {
-      // 如果选项的文本包含当前的 department 或 major，返回 true（表示隐藏该选项）
+      // 如果选项的文本包含当前的 academy 或 major，返回 true（表示隐藏该选项）
       if (this.filter === 1&&!['555'].includes(option.id.toString())) {
         return option.text === this.major;
       } else if (this.filter === 2 && !['111', '222', '333', '444', '555', '666', '777', '888', '999'].includes(option.id.toString())) {
@@ -1421,7 +1430,7 @@ export default {
         }
       }
       else if(this.filter===3){
-        return option.text.includes(this.department);
+        return option.text.includes(this.academy);
       }
       else if(this.filter===4&& !['111', '222', '333', '444', '555', '666'].includes(option.id.toString())){
         switch (this.num3) {
@@ -1435,34 +1444,33 @@ export default {
             return ['建筑学', '城乡规划', '工业设计'].some(text => option.text.includes(text));
         }
       }else if(this.filter===5&& !['111', '222', '333', '444', '555', '666'].includes(option.id.toString())){
-        let filterText=this.filterText(this.specialty);
+        let filterText=this.filterText(this.systemMajor);
         switch (this.num4) {
           case 100:
-            return ['智能制造工程', '车辆工程（英语强化）', '测控技术与仪器', '机械设计制造及其自动化',this.department].some(text => option.text.includes(text));
+            return ['智能制造工程', '车辆工程（英语强化）', '测控技术与仪器', '机械设计制造及其自动化',this.academy].some(text => option.text.includes(text));
           case 101:
-            return ['储能科学与工程', '过程装备与控制工程', '化学工程与工艺', '精细化工',this.department].some(text => option.text.includes(text));
+            return ['储能科学与工程', '过程装备与控制工程', '化学工程与工艺', '精细化工',this.academy].some(text => option.text.includes(text));
           case 102:
-            return ['环境科学', '环境工程',this.department].some(text => option.text.includes(text));
+            return ['环境科学', '环境工程',this.academy].some(text => option.text.includes(text));
           case 103:
-            return ['化学工程与工艺', '制药工程', '高分子材料与工程', '安全工程',this.department].some(text => option.text.includes(text));
+            return ['化学工程与工艺', '制药工程', '高分子材料与工程', '安全工程',this.academy].some(text => option.text.includes(text));
           case 104:
-            return ['建筑学', '城乡规划',this.department].some(text => option.text.includes(text));
+            return ['建筑学', '城乡规划',this.academy].some(text => option.text.includes(text));
           case 105:
-            return ['大数据管理与应用', '信息管理与信息系统',this.department].some(text => option.text.includes(text));
+            return ['大数据管理与应用', '信息管理与信息系统',this.academy].some(text => option.text.includes(text));
           case 106:
-            return ['电气工程及其自动化', '自动化', '电子信息工程', '计算机科学与技术', '生物医学工程', '光电信息科学与工程',this.department].some(text => option.text.includes(text));
+            return ['电气工程及其自动化', '自动化', '电子信息工程', '计算机科学与技术', '生物医学工程', '光电信息科学与工程',this.academy].some(text => option.text.includes(text));
           case 107:
-            return ['智能建造', '水利水电工程', '港口航道与海岸工程', '土木工程','海洋资源开发技术',this.department].some(text => option.text.includes(text));
+            return ['智能建造', '水利水电工程', '港口航道与海岸工程', '土木工程','海洋资源开发技术',this.academy].some(text => option.text.includes(text));
           case 108:
-            return ['金属材料工程', '功能材料', '材料成型及控制工程',this.department].some(text => option.text.includes(text));
+            return ['金属材料工程', '功能材料', '材料成型及控制工程',this.academy].some(text => option.text.includes(text));
           case 200:
-            return option.text.includes(filterText)||option.text.includes(this.department);
+            return option.text.includes(filterText)||option.text.includes(this.academy);
         }
       }
 
     },
-    departmentFilter(){
-      // console.log('this.finalAnswerText2:'+this.finalAnswerText2)
+    academyFilter(){
       switch(this.finalAnswerText2){
         case '大煜书院——物质创造学域': this.finalAnswerText2='大煜书院';break;
         case '伯川书院——智能制造学域': this.finalAnswerText2='伯川书院';break;
@@ -1472,20 +1480,19 @@ export default {
         case '知行书院——信息技术学域（一）': this.finalAnswerText2='知行书院';break;
         case '求实书院——信息技术学域（二）': this.finalAnswerText2='求实书院';break;
       }
-      // console.log('this.finalAnswerText2:'+this.finalAnswerText2)
-
     },
+    //提交数据到问卷数据库
     submitData() {
-      this.departmentFilter()
+      this.academyFilter()
       const answer = {
         userName: this.userName,
         questionnaireId: 1,
-        changeAdress: this.department,
+        changeAdress: this.academy,
         changeMajor: this.finalAnswerText,
         changeMajorType: this.finalAnswerText4,
         afterChangeAdress: this.finalAnswerText2,
         afterChangeMajor: this.finalAnswerText3,
-        afterChangeMajorType: this.finalAnswerText4,
+        afterChangeMajorType: this.finalAnswerText5,
       };
 
       submitQuestionnaireData(answer)
