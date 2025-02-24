@@ -4,7 +4,7 @@ import com.ruoyi.system.domain.StudentInformation;
 import com.ruoyi.system.domain.StudentUserInformation;
 import com.ruoyi.system.domain.StudentUserRole;
 import com.ruoyi.system.mapper.StudentInformationMapper;
-import com.ruoyi.system.service.StudentInformationService;
+import com.ruoyi.system.service.IStudentInformationService;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,13 +15,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 @Service
-public class StudentInformationServiceImpl implements StudentInformationService {
+public class StudentInformationServiceImpl implements IStudentInformationService {
 
     @Autowired
     private StudentInformationMapper studentInformationMapper;

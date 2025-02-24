@@ -2,7 +2,7 @@ package com.ruoyi.system.controller;
 
 import com.ruoyi.system.domain.BaseResponse;
 import com.ruoyi.system.domain.StudentInformation;
-import com.ruoyi.system.service.StudentInformationService;
+import com.ruoyi.system.service.IStudentInformationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class StudentInformationController {
 
     @Autowired
-    private StudentInformationService studentInformationService;
+    private IStudentInformationService studentInformationService;
 
     /**
      * 批量导入学生数据
