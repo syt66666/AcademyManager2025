@@ -111,5 +111,9 @@ public class UserQuestionnaireServiceImpl implements IUserQuestionnaireService {
 
             );
         }
+    @Override
+    public Map<String, Object> getQuestionnaireTimes(String questionnaireId) {
+        return userQuestionnaireMapper.selectQuestionnaireTimesById(questionnaireId);
+    }
 }
 

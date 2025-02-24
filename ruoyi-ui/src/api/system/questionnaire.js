@@ -22,6 +22,13 @@ export function getAllStudentQuestionnaieData(query) {
     params: query,
   });
 }
+export function getQuestionnaireTimes(questionnaireId) {
+  return request({
+    url: `/system/questionnaire/getQuestionnaireTimes`,
+    method: 'get',
+    params: { questionnaireId },
+  });
+}
 export function submitQuestionnaireData(answer) {
   return request({
     url: '/system/questionnaire/submitAnswers', // 提交问卷答案的接口路径

@@ -81,4 +81,13 @@
 
                  )
     </insert>
+    <select id="selectQuestionnaireTimesById" resultType="map">
+        SELECT
+            start_time AS startTime,
+            end_time AS endTime
+        FROM
+            questionnaire
+        WHERE
+            questionnaire_id = #{questionnaireId}
+    </select>
 </mapper>

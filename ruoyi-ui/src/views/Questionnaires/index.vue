@@ -41,6 +41,7 @@
 <script>
 import axios from 'axios';
 import store from "../../store";
+import {getQuestionnaireTimes} from "@/api/system/questionnaire";
 
 export default {
   data() {
@@ -75,27 +76,39 @@ export default {
     },
     async checkQuestionnaireTime() {
       for (const questionnaire of this.questionnaires) {
-        const response = await axios.get(process.env.VUE_APP_BASE_API+`/system/questionnaire/times?questionnaireId=${questionnaire.id}`);
+        try {
+          // 使用新的接口函数
+          const response = await getQuestionnaireTimes(questionnaire.id);
 
-        if (response.data && response.data.data) {
-          const startTime = new Date(response.data.data.startTime);
-          const endTime = new Date(response.data.data.endTime);
-          // 判断当前时间是否在问卷的时间范围内
-          const now = new Date();
-          questionnaire.isInTimeRange = (now >= startTime && now <= endTime);
-          if (!isNaN(startTime)) {
-            questionnaire.start_time = startTime.toISOString(); // 转换为 ISO 8601 格式
-          } else {
-            questionnaire.start_time = 'Invalid Date';
-          }
+          // 根据接口返回数据结构调整
+          if (response.data) {
+            const startTime = new Date(response.data.startTime);
+            const endTime = new Date(response.data.endTime);
+            const now = new Date();
 
-          if (!isNaN(endTime)) {
-            questionnaire.end_time = endTime.toISOString(); // 转换为 ISO 8601 格式
+            // 时间有效性校验
+            const isValidTime = (date) => !isNaN(date.getTime());
+
+            // 赋值时间字段
+            questionnaire.start_time = isValidTime(startTime) ? startTime.toISOString() : 'Invalid Date';
+            questionnaire.end_time = isValidTime(endTime) ? endTime.toISOString() : 'Invalid Date';
+
+            // 状态判断
+            questionnaire.isInTimeRange = isValidTime(startTime) && isValidTime(endTime)
+              && (now >= startTime)
+              && (now <= endTime);
           } else {
-            questionnaire.end_time = 'Invalid Date';
+            console.error('接口返回数据异常:', response);
           }
-        } else {
-          console.error('返回的数据结构异常');
+        } catch (error) {
+          console.error('获取问卷时间失败:', {
+            questionnaireId: questionnaire.id,
+            error: error.response?.data || error.message
+          });
+          // 设置默认值
+          questionnaire.start_time = 'Error';
+          questionnaire.end_time = 'Error';
+          questionnaire.isInTimeRange = false;
         }
       }
     },

@@ -1,6 +1,5 @@
 package com.ruoyi.system.mapper;
 
-import com.ruoyi.system.domain.Student;
 import com.ruoyi.system.domain.UserQuestionnaireAnswer;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Result;
@@ -8,6 +7,7 @@ import org.apache.ibatis.annotations.Results;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserQuestionnaireMapper {
     @Select("SELECT COUNT(*) FROM user_questionnaire_answers WHERE user_name = #{userName} AND questionnaire_id = #{questionnaireId}")
@@ -40,4 +40,5 @@ public interface UserQuestionnaireMapper {
                                    @Param("afterChangeMajor") String afterChangeMajor,
                                    @Param("afterChangeMajorType") String afterChangeMajorType);
 
+    Map<String, Object> selectQuestionnaireTimesById(String questionnaireId);
 }

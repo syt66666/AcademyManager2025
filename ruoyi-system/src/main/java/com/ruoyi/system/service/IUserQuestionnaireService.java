@@ -10,7 +10,13 @@ public interface IUserQuestionnaireService {
     boolean checkQuestionnaireCompleted(String userName, int questionnaireId);
 
     Map<String, ?> echarts2(int questionnaireId);
+
     List<UserQuestionnaireAnswer> getAllStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
+
     List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
+
     void submitQuestionnaire(QuestionnaireAnswer answer);
+
+    Map<String, Object> getQuestionnaireTimes(String questionnaireId);
+
 }

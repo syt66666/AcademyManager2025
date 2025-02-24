@@ -81,4 +81,13 @@ public class UserQuestionnaireController extends BaseController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(hashMap);
         }
     }
+    @GetMapping("/system/questionnaire/getQuestionnaireTimes")
+    public AjaxResult getQuestionnaireTimes(@RequestParam String questionnaireId) {
+        Map<String, Object> times = userQuestionnaireService.getQuestionnaireTimes(questionnaireId);
+        if (times != null) {
+            return AjaxResult.success(times);
+        } else {
+            return AjaxResult.error("问卷不存在");
+        }
+    }
 }
