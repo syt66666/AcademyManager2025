@@ -86,7 +86,7 @@
             start_time AS startTime,
             end_time AS endTime
         FROM
-            questionnaire
+            stu_questionnaire
         WHERE
             questionnaire_id = #{questionnaireId}
     </select>

@@ -198,7 +198,7 @@ export default {
     },
     // 初始化问卷
     async initializeQuestionnaire() {
-      const response = await axios.get(process.env.VUE_APP_BASE_API+`/api/student/${this.userName}`);
+      const response = await axios.get(process.env.VUE_APP_BASE_API+`/system/student/${this.userName}`);
       const studentInfo = response.data.studentInfo;
       this.studentName = studentInfo.studentName;
       this.academy = studentInfo.academy;
