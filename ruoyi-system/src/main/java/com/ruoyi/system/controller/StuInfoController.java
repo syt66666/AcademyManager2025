@@ -1,6 +1,6 @@
 package com.ruoyi.system.controller;
-import com.ruoyi.system.domain.StudentInfo;
-import com.ruoyi.system.service.IStudentInfoService;
+import com.ruoyi.system.domain.StuInfo;
+import com.ruoyi.system.service.IStuInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,16 +10,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/student")
-public class StudentInfoController {
+@RequestMapping("/system/student")
+public class StuInfoController {
     @Autowired
-    private IStudentInfoService studentInfoService;
+    private IStuInfoService studentInfoService;
     @GetMapping("/{studentId}")
     public Map<String, Object> getStudentInfoById(@PathVariable String studentId) {
-        StudentInfo studentInfo = studentInfoService.getStudentInfoById(studentId);
+        StuInfo stuInfo = studentInfoService.getStudentInfoById(studentId);
         Map<String, Object> response = new HashMap<>();
-        if (studentInfo != null) {
-            response.put("studentInfo", studentInfo);
+        if (stuInfo != null) {
+            response.put("studentInfo", stuInfo);
         } else {
             response.put("message", "学生未找到");
         }

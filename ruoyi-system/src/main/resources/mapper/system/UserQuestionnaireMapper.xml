@@ -20,8 +20,8 @@
     <select id="getStudentQuestionnaireAnswers" parameterType="UserQuestionnaireAnswer" resultMap="UserQuestionnaireAnswerResult">
         SELECT u.id, user_name, academy, systemMajor, change_adress, change_major, u.change_major_type, after_change_adress, after_change_major, after_change_major_type
         FROM user_questionnaire_answers u
-        join student s
-        on s.studentId = u.user_name
+        join stu_info s
+        on s.student_id = u.user_name
 --         WHERE questionnaire_id = 1
         <where>
             <if test="id != null">AND id = #{id}</if>
@@ -40,8 +40,8 @@
     <select id="getAllStudentQuestionnaireAnswers" parameterType="UserQuestionnaireAnswer" resultMap="UserQuestionnaireAnswerResult">
         SELECT u.id, user_name, academy, systemMajor, change_adress, change_major, u.change_major_type, after_change_adress, after_change_major, after_change_major_type
         FROM user_questionnaire_answers u
-        join student s
-        on s.studentId = u.user_name
+        join stu_info s
+        on s.student_id = u.user_name
         --         WHERE questionnaire_id = 1
         <where>
             <if test="id != null">AND id = #{id}</if>
