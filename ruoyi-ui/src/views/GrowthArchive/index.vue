@@ -798,4 +798,18 @@ export default {
   }
 }
 
+.semester-card.current {
+  border-left: 4px solid var(--primary);
+  animation: pulse 2s infinite; /* 核心动画效果 */
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(66,153,225,0.3); }
+  100% { box-shadow: 0 0 0 15px rgba(66,153,225,0); }
+}
+
+.blink {
+  animation: blink 1.5s infinite; /* 文字闪烁效果 */
+}
+
 </style>
