@@ -13,12 +13,11 @@ public interface UserQuestionnaireMapper {
     @Select("SELECT COUNT(*) FROM user_questionnaire_answers WHERE user_name = #{userName} AND questionnaire_id = #{questionnaireId}")
     int countUserQuestionnaireAnswers(@Param("userName") String userName, @Param("questionnaireId") int questionnaireId);
 
-    @Select("SELECT * FROM user_questionnaire_answers u join student s on s.studentId = u.user_name WHERE questionnaire_id = #{questionnaireId}")
+    @Select("SELECT * FROM user_questionnaire_answers u join stu_info s on s.student_id = u.user_name WHERE questionnaire_id = #{questionnaireId}")
     @Results({
             //@Result(column = "studentId", property = "studentId"),
             @Result(column = "academy", property = "academy"),
-            @Result(column = "systemMajor", property = "systemMajor"),
-
+            @Result(column = "system_major", property = "systemMajor"),
             @Result(column = "change_adress", property = "changeAdress"),
             @Result(column = "change_major", property = "changeMajor"),
             @Result(column = "change_major_type", property = "changeMajorType"),
@@ -27,7 +26,6 @@ public interface UserQuestionnaireMapper {
             @Result(column = "after_change_major_type", property = "afterChangeMajorType")
     })
     List<UserQuestionnaireAnswer> getQuestionnaireAnswers(@Param("questionnaireId") int questionnaireId);
-
     List<UserQuestionnaireAnswer> getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
     List<UserQuestionnaireAnswer> getAllStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer);
 
