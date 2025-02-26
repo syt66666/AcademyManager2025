@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.StuLectureReportMapper">
+    <insert id="insertStuLectuerInformation">
+        INSERT INTO stu_lec_report (title, reporter, reportDate, reportContent, link, reportFeeling, picture, status, studentId, studentName)
+        VALUES (
+        <if test="title != null and title != ''">#{title}</if>,
+        <if test="reporter != null and reporter != ''">#{reporter}</if>,
+        <if test="reportDate != null">#{reportDate}</if>,
+        <if test="reportContent != null and reportContent != ''">#{reportContent}</if>,
+        <if test="link != null and link != ''">#{link}</if>,
+        <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling}</if>,
+        <if test="picture != null">#{picture}</if>,
+        <if test="status != null">#{status}</if>,
+        <if test="studentId != null">#{studentId}</if>,
+        <if test="studentName != null and studentName != ''">#{studentName}</if>
+        )
+    </insert>
+</mapper>

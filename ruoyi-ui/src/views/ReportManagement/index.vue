@@ -37,37 +37,37 @@
           <el-form ref="form" :model="formData" label-width="120px" label-position="right">
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px">题目</span>
+                <span class="form-item-label" style="font-size: 16px;">题目</span>
                 <el-input v-model="formData.title" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px">报告人</span>
+                <span class="form-item-label" style="font-size: 16px;">报告人</span>
                 <el-input v-model="formData.reporter" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px">时间</span>
+                <span class="form-item-label" style="font-size: 16px;">时间</span>
                 <el-date-picker v-model="formData.reportDate" type="datetime" style="width: 100%; flex: 1;"></el-date-picker>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px">讲座简介</span>
-                <el-input v-model="formData.reportContent" type="textarea" style="width: 100%; flex: 1;margin-left: 10px"></el-input>
+                <span class="form-item-label" style="font-size: 16px;">讲座简介</span>
+                <el-input v-model="formData.reportContent" type="textarea" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px">连接</span>
+                <span class="form-item-label" style="font-size: 16px;">链接</span>
                 <el-input v-model="formData.link" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px;height: auto">报告心得体会上传</span>
+                <span class="form-item-label" style="font-size: 16px;height: auto">报告心得体会上传</span>
                 <input type="file" @change="onFileChange" accept="*/*" />
               </div>
             </el-form-item>
@@ -129,8 +129,11 @@ export default {
     submitForm() {
       this.$refs.form.validate((valid) => {
         if (valid) {
+          console.log('表单数据:', this.formData.reportDate);
           //将本地时间转为 ISO 格式的 UTC 时间
-          this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
+          if (this.formData.reportDate && !isNaN(Date.parse(this.formData.reportDate))) {
+            this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
+          }
           const formData = new FormData();
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
