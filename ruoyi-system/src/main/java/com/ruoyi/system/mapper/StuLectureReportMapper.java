@@ -10,5 +10,5 @@ public interface StuLectureReportMapper {
      * @param studentLectureReport
      * @return
      */
-    public int insertStuLectuerInformation(StudentLectureReport studentLectureReport);
+    public int insertStuLectureInformation(StudentLectureReport studentLectureReport);
 }

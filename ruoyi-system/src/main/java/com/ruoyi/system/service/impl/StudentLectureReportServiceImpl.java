@@ -18,6 +18,7 @@ public class StudentLectureReportServiceImpl implements StudentLectureReportServ
     private StuLectureReportMapper stuLectureReportMapper;
     @Override
     public void insertStudentLectureReport(StudentLectureReport studentLectureReport) {
+        //获取当前登录用户学号
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String studentId = "";
         if (principal instanceof UserDetails) {
@@ -27,16 +28,17 @@ public class StudentLectureReportServiceImpl implements StudentLectureReportServ
             // 有时principal可能直接是用户名字符串
             studentId = (String) principal;
         }
+        //根据学号查找对应学生信息
         StuInfo stuInfo = stuInfoMapper.selectByStudentId(studentId);
         if(stuInfo==null){
             throw new IllegalArgumentException("找不到学生信息");
         }
         studentLectureReport.setStudentId(studentId);
         studentLectureReport.setStudentName(stuInfo.getStudentName());
-        int result = stuLectureReportMapper.insertStuLectuerInformation(studentLectureReport);
+        //插入学生讲座信息
+        int result = stuLectureReportMapper.insertStuLectureInformation(studentLectureReport);
         if (result <= 0){
             throw new IllegalArgumentException("传入失败");
         }
-        System.out.println(studentId);
     }
 }
