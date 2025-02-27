@@ -1,9 +1,7 @@
 package com.ruoyi.system.mapper;
 
-import com.ruoyi.system.domain.StuCompetitionRecord;
+import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 import org.apache.ibatis.annotations.*;
-
-import java.util.List;
 
 @Mapper
 public interface StuCompetitionRecordMapper {

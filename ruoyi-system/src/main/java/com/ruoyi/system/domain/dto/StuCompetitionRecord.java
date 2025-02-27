@@ -1,5 +1,6 @@
-package com.ruoyi.system.domain;
+package com.ruoyi.system.domain.dto;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 public class StuCompetitionRecord {
@@ -11,9 +12,13 @@ public class StuCompetitionRecord {
     private Integer scholarshipPoints; // 折合分数
     private Date competitionDate; // 竞赛参与日期
     private Date awardDate; // 获奖日期
-    private byte[] proofMaterial; // 证明材料路径
+
+
+    private byte[] proofMaterial; // 证明材料
     private String auditStatus; // 审核状态
-    private Date applyTime; // 提交时间
+
+
+    private LocalDateTime applyTime; // 提交时间
     private String nickName; // 审核人姓名
     private Date auditTime; // 审核时间
     private String auditRemark; // 审核意见
@@ -93,13 +98,6 @@ public class StuCompetitionRecord {
         this.auditStatus = auditStatus;
     }
 
-    public Date getApplyTime() {
-        return applyTime;
-    }
-
-    public void setApplyTime(Date applyTime) {
-        this.applyTime = applyTime;
-    }
 
     public String getNickName() {
         return nickName;
@@ -133,13 +131,6 @@ public class StuCompetitionRecord {
         this.semester = semester;
     }
 
-    public byte[] getProofMaterial() {
-        return proofMaterial;
-    }
-
-    public void setProofMaterial(byte[] proofMaterial) {
-        this.proofMaterial = proofMaterial;
-    }
 
     public String getStudentName() {
         return studentName;
@@ -147,6 +138,22 @@ public class StuCompetitionRecord {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
+    }
+
+
+    public byte[] getProofMaterial() {
+        return proofMaterial;
+    }
+
+    public void setProofMaterial(byte[] proofMaterial) {
+        this.proofMaterial = proofMaterial;
+    }
+    public LocalDateTime getApplyTime() {
+        return applyTime;
+    }
+
+    public void setApplyTime(LocalDateTime applyTime) {
+        this.applyTime = applyTime;
     }
 
 }

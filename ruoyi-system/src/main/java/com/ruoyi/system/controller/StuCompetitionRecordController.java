@@ -2,7 +2,7 @@ package com.ruoyi.system.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.ruoyi.common.core.domain.AjaxResult;
-import com.ruoyi.system.domain.StuCompetitionRecord;
+import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 import com.ruoyi.system.service.StuCompetitionRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/competition")
@@ -25,12 +26,22 @@ public class StuCompetitionRecordController {
     public AjaxResult addCompetitionRecord(@RequestParam("StuCompetitionRecord") String stucompetitionrecord,
                                            @RequestParam("proofMaterial") MultipartFile proofMaterial) {
         StuCompetitionRecord record = JSON.parseObject(stucompetitionrecord, StuCompetitionRecord.class);
+        if (record.getCompetitionName() == null || record.getCompetitionName().isEmpty()) {
+            return AjaxResult.error("竞赛名称不能为空");
+        }
+        if (record.getCompetitionLevel() == null || record.getCompetitionLevel().isEmpty()) {
+            return AjaxResult.error("竞赛级别不能为空");
+        }
+        if (record.getAwardLevel() == null|| record.getAwardLevel().isEmpty()) {
+            return AjaxResult.error("几等奖不能为空");
+        }
+
 
         // 图片大小不能超过10MB
         if (proofMaterial.getSize() > 10 * 1024 * 1024) {  // 10MB = 10 * 1024 * 1024 字节
             return AjaxResult.error("图片大小不能超过10MB");
         }
-
+        record.setApplyTime(LocalDateTime.now());
         // Graphics2D 用于绘制和压缩图像，ByteArrayOutputStream 用于存储压缩后的图片数据
         Graphics2D g2d = null;
         ByteArrayOutputStream byteArrayOutputStream = null;

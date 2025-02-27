@@ -1,6 +1,6 @@
 package com.ruoyi.system.service.impl;
 
-import com.ruoyi.system.domain.StuCompetitionRecord;
+import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 import com.ruoyi.system.domain.StuInfo;
 import com.ruoyi.system.mapper.StuCompetitionRecordMapper;
 import com.ruoyi.system.mapper.StuInfoMapper;
@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class StuCompetitionRecordServiceImpl implements StuCompetitionRecordService {

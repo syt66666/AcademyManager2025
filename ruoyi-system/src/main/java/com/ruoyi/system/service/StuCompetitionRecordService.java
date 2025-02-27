@@ -1,8 +1,6 @@
 package com.ruoyi.system.service;
 
-import com.ruoyi.system.domain.StuCompetitionRecord;
-
-import java.util.List;
+import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 
 public interface StuCompetitionRecordService {
 
