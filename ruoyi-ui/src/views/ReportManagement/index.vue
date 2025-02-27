@@ -108,6 +108,8 @@ export default {
         reportDate: '',
         reportContent: '',
         link: '',
+        //学期
+        semester: '2',
       },
     };
   },
@@ -131,9 +133,9 @@ export default {
         if (valid) {
           console.log('表单数据:', this.formData.reportDate);
           //将本地时间转为 ISO 格式的 UTC 时间
-          if (this.formData.reportDate && !isNaN(Date.parse(this.formData.reportDate))) {
-            this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
-          }
+          // if (this.formData.reportDate && !isNaN(Date.parse(this.formData.reportDate))) {
+          //   this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
+          // }
           const formData = new FormData();
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
