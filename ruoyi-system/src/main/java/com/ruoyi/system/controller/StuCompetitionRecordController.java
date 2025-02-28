@@ -1,12 +1,16 @@
 package com.ruoyi.system.controller;
 
 import com.alibaba.fastjson2.JSON;
+import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 import com.ruoyi.system.service.StuCompetitionRecordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -15,9 +19,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+import static com.ruoyi.common.utils.PageUtils.startPage;
+
 @RestController
 @RequestMapping("/competition")
-public class StuCompetitionRecordController {
+public class StuCompetitionRecordController extends BaseController {
     @Autowired
     private StuCompetitionRecordService service;
 
@@ -93,6 +99,14 @@ public class StuCompetitionRecordController {
         // 将竞争记录保存到数据库或执行其他操作
         service.insertStuCompetitionRecord(record);
         return AjaxResult.success();
+    }
+
+    // 获取科创竞赛记录列表
+    @GetMapping("/records")
+    public TableDataInfo getCompetitionRecords(StuCompetitionRecord record) {
+        startPage();  // 启动分页
+        List<StuCompetitionRecord> records = service.getAllCompetitionRecords(record); // 查询记录
+        return getDataTable(records);  // 返回分页数据
     }
 
     /*// 删除竞赛记录
