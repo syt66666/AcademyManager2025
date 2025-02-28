@@ -33,5 +33,29 @@
                 #{auditRemark},
                 #{semester})
     </insert>
+    <select id="getAllCompetitionRecords" resultType="com.ruoyi.system.domain.dto.StuCompetitionRecord"
+            parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
+        SELECT
+        competition_id AS id,
+        competition_name,
+        competition_date,
+        student_id,
+        student_name,
+        award_date
+        FROM
+        stu_competition_record
+        <where>
+            <if test="competitionName != null and competitionName != ''">
+                AND competition_name LIKE CONCAT('%', #{competitionName}, '%')
+            </if>
+            <if test="studentId != null and studentId != ''">
+                AND student_id = #{studentId}
+            </if>
+            <if test="awardDate != null and awardDate != ''">
+                AND award_date = #{awardDate}
+            </if>
+        </where>
+    </select>
+
 
 </mapper>

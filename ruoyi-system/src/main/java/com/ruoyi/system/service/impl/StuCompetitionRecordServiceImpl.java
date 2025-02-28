@@ -10,6 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class StuCompetitionRecordServiceImpl implements StuCompetitionRecordService {
     @Autowired
@@ -68,5 +70,12 @@ public class StuCompetitionRecordServiceImpl implements StuCompetitionRecordServ
     public List<StuCompetitionRecord> getAllStuCompetitionRecords() {
         return mapper.selectAllStuCompetitionRecords();
     }*/
+    }
+
+
+    // 获取所有竞赛记录
+    @Override
+    public List<StuCompetitionRecord> getAllCompetitionRecords(StuCompetitionRecord record) {
+        return mapper.getAllCompetitionRecords(record);
     }
 }
