@@ -48,6 +48,14 @@
         </el-select>
       </el-col>
 
+      <el-col :span="6">
+        <el-button
+          type="primary"
+          @click="handleConfirm"
+          :disabled="!selectedCode || !selectedName"
+        >确认选择</el-button>
+      </el-col>
+
       <el-col :span="4">
         <el-button type="primary" @click="showAddDialog">添加课程</el-button>
       </el-col>
@@ -98,7 +106,9 @@ export default {
         courseName: '',
         credit: 2,
         courseCategory: '',
-        teacherName:''
+        teacherName:'',
+        chooseCourseCode: '',
+        chooseCourseName: ''
       },
       rules: {
         courseCode: [
@@ -154,6 +164,12 @@ export default {
     // 名称搜索
     searchByName(query) {
       this.loadCourseData({ courseName: query })
+    },
+
+    handleConfirm() {
+      this.chooseCourseCode = this.selectedCode
+      this.chooseCourseName = this.selectedName
+      this.$message.success(`已选择课程：${this.selectedCode} - ${this.selectedName}`)
     },
 
     // 显示添加对话框
