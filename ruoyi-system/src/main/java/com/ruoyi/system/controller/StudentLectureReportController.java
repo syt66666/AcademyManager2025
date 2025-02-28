@@ -13,6 +13,7 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.time.LocalDateTime;
 
 
 /**
@@ -58,6 +59,7 @@ public class StudentLectureReportController {
         if (reportFeeling.getSize() > 500 * 1024) {
             return AjaxResult.error("报告文件大小不能超过500KB");
         }
+        report.setReportAdmitTime(LocalDateTime.now());
         // 声明 g2d 和 byteArrayOutputStream，在 try 块外部，确保 finally 块能访问它们
         Graphics2D g2d = null;
         ByteArrayOutputStream byteArrayOutputStream = null;
@@ -100,7 +102,6 @@ public class StudentLectureReportController {
             }
         }
         studentLectureReportService.insertStudentLectureReport(report);
-        System.out.println(13212312);
         return AjaxResult.success();
     }
 }

@@ -9,6 +9,14 @@ import java.time.LocalDateTime;
  */
 public class StudentLectureReport {
     /**
+     * 学生学号
+     */
+    private String studentId;
+    /**
+     * 学生姓名
+     */
+    private String studentName;
+    /**
      * 主键id
      */
     private int id;
@@ -24,6 +32,10 @@ public class StudentLectureReport {
      * 报告时间
      */
     private LocalDateTime reportDate;
+    /**
+     * 报告提交时间
+     */
+    private LocalDateTime reportAdmitTime;
     /**
      * 内容简介
      */
@@ -45,13 +57,21 @@ public class StudentLectureReport {
      */
     private int status = 0;
     /**
-     * 学生学号
+     *审核时间
      */
-    private String studentId;
+    private LocalDateTime auditTime;
     /**
-     * 学生姓名
+     * 审核意见
      */
-    private String studentName;
+    private String auditRemark;
+    /**
+     * 审核人姓名
+     */
+    private String nickName;
+    /**
+     * 上传学期
+     */
+    private int semester;
 
     public String getTitle() {
         return title;
@@ -139,5 +159,45 @@ public class StudentLectureReport {
 
     public void setStudentId(String studentId) {
         this.studentId = studentId;
+    }
+
+    public LocalDateTime getReportAdmitTime() {
+        return reportAdmitTime;
+    }
+
+    public void setReportAdmitTime(LocalDateTime reportAdmitTime) {
+        this.reportAdmitTime = reportAdmitTime;
+    }
+
+    public LocalDateTime getAuditTime() {
+        return auditTime;
+    }
+
+    public void setAuditTime(LocalDateTime auditTime) {
+        this.auditTime = auditTime;
+    }
+
+    public String getAuditRemark() {
+        return auditRemark;
+    }
+
+    public void setAuditRemark(String auditRemark) {
+        this.auditRemark = auditRemark;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public int getSemester() {
+        return semester;
+    }
+
+    public void setSemester(int semester) {
+        this.semester = semester;
     }
 }

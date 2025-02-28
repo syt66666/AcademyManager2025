@@ -23,25 +23,40 @@
       >
       (您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。)
       </p>
-      <p class="greeting-message">大工书院祝您心想事成！😊</p>
+      <p class="greeting-message" >大工书院祝您心想事成！😊</p>
+      <button @click="submitForm">?????????</button>
     </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
+import { addCompetitionRecord } from "@/api/student/competition";
 import store from "@/store";
+import {upLoad} from "@/api/student/letcure";
 
 export default {
   name: "WelcomePage",
   data() {
     return {
+      list:{
+
+      },
       studentName: '',
       department: '',
       major: '',
       specialty: '',
       specialClass:'',
-      splitFlow:''
+      splitFlow:'',
+      formData: {
+        competition_name: '',
+        competition_level: '',
+        award_level: '',
+        scholarship_points: '',
+        proof_material: '',
+        //学期
+        semester: '2',
+      },
     };
   },
   computed: {
@@ -54,6 +69,30 @@ export default {
     this.initializeUserData();
   },
   methods: {
+    submitForm(){
+      this.$refs.form.validate((valid) => {
+        if (valid) {
+          console.log('表单数据:', this.formData.reportDate);
+          const formData = new FormData();
+          const json = JSON.stringify(this.formData);
+          formData.append('studentLectureReport', json);
+          formData.append('proofMaterial', this.proofMterial);
+          // 在这里编写提交表单的逻辑，例如将表单数据发送到后端
+          console.log('表单数据:', this.formData);
+          console.log('传递后端数据:', formData);
+          // 可以使用 axios 或 fetch 发送请求
+          // 例如：
+          addCompetitionRecord(formData).then(response => {
+            console.log("+++++++++", response);
+          })
+            .catch(error => {
+              console.error(error);
+            });
+        } else {
+          this.$message.error('请填写完整表单信息');
+        }
+      })
+    },
     async initializeUserData() {
       if (this.userName === 'admin') {
         this.studentName = '管理员'

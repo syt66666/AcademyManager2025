@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.StuCompetitionRecordMapper">
+
+    <insert id="insertStuCompetitionRecord" parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
+        INSERT INTO stu_competition_record
+        (student_id,
+         competition_name,
+         competition_level,
+         award_level,
+         scholarship_points,
+         competition_date,
+         award_date,
+         proof_material,
+         audit_status,
+         apply_time,
+         nick_name,
+         audit_time,
+         audit_remark,
+         semester)
+        VALUES (#{studentId},
+                #{competitionName},
+                #{competitionLevel},
+                #{awardLevel},
+                #{scholarshipPoints},
+                #{competitionDate},
+                #{awardDate},
+                #{proofMaterial},
+                #{auditStatus},
+                #{applyTime},
+                #{nickName},
+                #{auditTime},
+                #{auditRemark},
+                #{semester})
+    </insert>
+
+</mapper>
