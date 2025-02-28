@@ -17,19 +17,19 @@ public class StuScoreController extends BaseController {
     @Autowired
     private IStuScoreService stuScoreService;
 
-    @PostMapping
+    @PostMapping("/add")
     public TableDataInfo add(@RequestBody StuScore stuScore) {
         stuScoreService.addScore(stuScore);
         return getDataTable(stuScoreService.listScores(new StuScore()));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public TableDataInfo remove(@PathVariable Long id) {
         stuScoreService.deleteScore(id);
         return getDataTable(stuScoreService.listScores(new StuScore()));
     }
 
-    @PutMapping
+    @PutMapping("/update")
     public TableDataInfo edit(@RequestBody StuScore stuScore) {
         stuScoreService.updateScore(stuScore);
         return getDataTable(stuScoreService.listScores(new StuScore()));
@@ -42,7 +42,7 @@ public class StuScoreController extends BaseController {
         return getDataTable(list);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/get/{id}")
     public TableDataInfo detail(@PathVariable Long id) {
         return getDataTable(Collections.singletonList(stuScoreService.getById(id)));
     }

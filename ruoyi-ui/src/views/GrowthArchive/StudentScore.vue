@@ -111,12 +111,18 @@
         </el-form-item>
 
         <el-form-item label="学期" prop="semester">
-          <el-date-picker
+          <el-select
             v-model="temp.semester"
-            type="month"
-            value-format="yyyy-MM"
-            placeholder="选择学期"
-          ></el-date-picker>
+            placeholder="请选择学期"
+            clearable
+          >
+            <el-option
+              v-for="(item, index) in [{value: '大一'},{value: '大二'},{value: '大三'},{value: '大四'}]"
+              :key="index"
+              :label="item.value"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
 
         <el-form-item label="成绩值" prop="scoreValue">
@@ -155,10 +161,15 @@ export default {
   components: { Pagination },
   data() {
     return {
+      gradeOptions: [
+        { value: '大一' },
+        { value: '大二' },
+        { value: '大三' },
+        { value: '大四' }
+      ],
       // 搜索相关
       searchForm: {
         studentId: '',
-        semester: ''
       },
       semesterOptions: ['2023-春', '2023-秋', '2024-春'],
 
