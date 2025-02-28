@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/stu/course/info")
+@RequestMapping("/stu/courseInfo")
 public class StuCourseInfoController extends BaseController {
 
     @Autowired

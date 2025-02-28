@@ -1,322 +1,182 @@
 <template>
   <div class="app-container">
-    <!-- 搜索栏 -->
-    <el-form :inline="true" class="demo-form-inline">
-      <el-form-item label="学号">
-        <el-input v-model="searchForm.studentId" placeholder="输入学号"></el-input>
-      </el-form-item>
-      <el-form-item label="学期">
-        <el-select v-model="searchForm.semester" clearable placeholder="选择学期">
+    <!-- 课程选择区域 -->
+    <el-row :gutter="20" class="mb-4">
+      <el-col :span="8">
+        <el-select
+          v-model="selectedCode"
+          filterable
+          clearable
+          placeholder="输入/选择课程代码"
+          @change="handleCodeChange"
+          @input="searchByCode"
+        >
           <el-option
-            v-for="item in semesterOptions"
-            :key="item"
-            :label="item"
-            :value="item"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="课程代码">
-        <el-input v-model="searchForm.courseCode" placeholder="输入课程名称"></el-input>
-      </el-form-item>
-      <el-form-item label="课程名称">
-        <el-input v-model="searchForm.courseName" placeholder="输入课程名称"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="handleSearch">查询</el-button>
-        <el-button @click="resetSearch">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <!-- 操作按钮组 -->
-    <div class="mb-4">
-      <el-button type="primary" @click="handleCreate">新增成绩</el-button>
-    </div>
-
-    <!-- 数据表格 -->
-    <el-table
-      :data="tableData"
-      border
-      v-loading="loading"
-      style="width: 100%"
-    >
-      <el-table-column prop="scoreId" label="ID" width="150"></el-table-column>
-      <el-table-column prop="studentId" label="学号" width="150"></el-table-column>
-      <el-table-column prop="courseCode" label="课程代码" width="150"></el-table-column>
-      <el-table-column prop="courseName" label="课程名称"></el-table-column>
-      <el-table-column prop="semester" label="学期" width="200"></el-table-column>
-      <el-table-column prop="scoreValue" label="成绩" width="120"></el-table-column>
-      <el-table-column prop="scoreType" label="类型" width="120">
-        <template slot-scope="{row}">
-          <el-tag :type="scoreTypeMap[row.scoreType]">{{ row.scoreType }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
-        <template slot-scope="{row}">
-          <el-button size="mini" @click="handleEdit(row)">编辑</el-button>
-          <el-button size="mini" type="danger" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页组件 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.limit"
-      @pagination="getList"
-    />
-
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      :title="dialogStatus==='create'?'新增成绩':'编辑成绩'"
-      :visible.sync="dialogFormVisible"
-      width="600px"
-    >
-      <el-form
-        ref="dataForm"
-        :model="temp"
-        :rules="rules"
-        label-width="100px"
-      >
-        <el-form-item label="学号" prop="studentId">
-          <el-input v-model="temp.studentId"></el-input>
-        </el-form-item>
-
-        <el-form-item label="课程代码" prop="courseCode">
-          <el-input v-model="temp.courseCode"></el-input>
-        </el-form-item>
-
-        <el-form-item label="课程名称" prop="courseName">
-          <el-input v-model="temp.courseName"></el-input>
-        </el-form-item>
-
-        <el-form-item label="课程类型" prop="courseCategory">
-          <el-select v-model="temp.courseCategory" class="w-full">
-            <el-option
-              v-for="item in courseTypeOptions"
-              :key="item"
-              :label="item"
-              :value="item"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="学分" prop="credit">
-          <el-input-number
-            v-model="temp.credit"
-            :min="1"
-            :max="10"
-          ></el-input-number>
-        </el-form-item>
-
-        <el-form-item label="学期" prop="semester">
-          <el-select
-            v-model="temp.semester"
-            placeholder="请选择学期"
-            clearable
+            v-for="item in courseOptions"
+            :key="item.courseCode"
+            :label="item.courseCode"
+            :value="item.courseCode"
           >
-            <el-option
-              v-for="(item, index) in [{value: '大一'},{value: '大二'},{value: '大三'},{value: '大四'}]"
-              :key="index"
-              :label="item.value"
-              :value="item.value"
-            />
+            <span>{{ item.courseCode }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px">
+              {{ item.courseName }}
+            </span>
+          </el-option>
+        </el-select>
+      </el-col>
+
+      <el-col :span="8">
+        <el-select
+          v-model="selectedName"
+          filterable
+          clearable
+          placeholder="输入/选择课程名称"
+          @change="handleNameChange"
+          @input="searchByName"
+        >
+          <el-option
+            v-for="item in courseOptions"
+            :key="item.courseCode"
+            :label="item.courseName"
+            :value="item.courseCode"
+          >
+            <span>{{ item.courseName }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px">
+              {{ item.courseCode }}
+            </span>
+          </el-option>
+        </el-select>
+      </el-col>
+
+      <el-col :span="4">
+        <el-button type="primary" @click="showAddDialog">添加课程</el-button>
+      </el-col>
+    </el-row>
+
+    <!-- 添加课程对话框 -->
+    <el-dialog title="新增课程" :visible.sync="dialogVisible" width="30%">
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="课程代码" prop="courseCode">
+          <el-input v-model="form.courseCode" />
+        </el-form-item>
+        <el-form-item label="课程名称" prop="courseName">
+          <el-input v-model="form.courseName" />
+        </el-form-item>
+        <el-form-item label="授课教师" prop="teacherName">
+          <el-input v-model="form.teacherName" />
+        </el-form-item>
+        <el-form-item label="学分" prop="credit">
+          <el-input-number v-model="form.credit" :min="1" :max="10" />
+        </el-form-item>
+        <el-form-item label="课程类别" prop="courseCategory">
+          <el-select v-model="form.courseCategory">
+            <el-option label="必修" value="必修" />
+            <el-option label="选修" value="选修" />
           </el-select>
-        </el-form-item>
-
-        <el-form-item label="成绩值" prop="scoreValue">
-          <el-input v-model="temp.scoreValue"></el-input>
-        </el-form-item>
-
-        <el-form-item label="考试类型" prop="scoreType">
-          <el-radio-group v-model="temp.scoreType">
-            <el-radio
-              v-for="item in scoreTypeOptions"
-              :key="item"
-              :label="item"
-            ></el-radio>
-          </el-radio-group>
         </el-form-item>
       </el-form>
-
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取消</el-button>
-        <el-button
-          type="primary"
-          @click="dialogStatus==='create'?createData():updateData()"
-        >确认</el-button>
-      </div>
+      <span slot="footer">
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitForm">确 定</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { fetchList, createScore, updateScore, deleteScore } from '@/api/student/score'
-import Pagination from '@/components/Pagination'
-
+import { fetchCourseList, createCourse } from '@/api/student/course'
 
 export default {
-  name: 'ScoreManagement',
-  components: { Pagination },
   data() {
     return {
-      gradeOptions: [
-        { value: '大一' },
-        { value: '大二' },
-        { value: '大三' },
-        { value: '大四' }
-      ],
-      // 搜索相关
-      searchForm: {
-        studentId: '',
-      },
-      semesterOptions: ['2023-春', '2023-秋', '2024-春'],
-
-      // 表格相关
-      tableData: [],
-      loading: false,
-      total: 0,
-      listQuery: {
-        page: 1,
-        limit: 20
-      },
-
-      // 弹窗相关
-      dialogFormVisible: false,
-      dialogStatus: '',
-      temp: {
-        scoreId: undefined,
-        studentId: '',
+      selectedCode: '',
+      selectedName: '',
+      courseOptions: [],
+      dialogVisible: false,
+      form: {
         courseCode: '',
         courseName: '',
-        courseCategory: '必修',
         credit: 2,
-        academy: '',
-        semester: '',
-        scoreValue: '',
-        gpa: null,
-        scoreType: '正考'
+        courseCategory: '',
+        teacherName:''
       },
       rules: {
-        studentId: [
-          { required: true, message: '学号不能为空', trigger: 'blur' }
+        courseCode: [
+          { required: true, message: '请输入课程代码', trigger: 'blur' }
         ],
         courseName: [
-          { required: true, message: '课程名称不能为空', trigger: 'blur' }
+          { required: true, message: '请输入课程名称', trigger: 'blur' }
         ],
-        courseCode: [
-          { required: true, message: '课程代码不能为空', trigger: 'blur' }
+        teacherName: [
+          { required: true, message: '请输入授课教师', trigger: 'blur' }
         ],
-        scoreValue: [
-          { required: true, message: '成绩不能为空', trigger: 'blur' }
-        ],
-        semester: [
-          { required: true, message: '请选择学期', trigger: 'change' }
+        credit: [
+          { required: true, message: '请选择学分', trigger: 'change' }
         ]
-      },
-
-      // 类型映射
-      courseTypeOptions: ['必修', '选修'],
-      scoreTypeOptions: ['正考', '补考', '重修', '免修'],
-      scoreTypeMap: {
-        '正考': 'success',
-        '补考': 'warning',
-        '重修': 'danger',
-        '免修': 'info'
       }
     }
   },
-  created() {
-    this.getList()
+  mounted() {
+    this.loadCourseData()
   },
   methods: {
-    // 获取成绩列表
-    getList() {
-      this.loading = true
-      const params = {
-        ...this.searchForm,
-        page: this.listQuery.page,
-        size: this.listQuery.limit
+    // 加载课程数据
+    async loadCourseData() {
+      try {
+        const res = await fetchCourseList()
+        this.courseOptions = res.rows || []
+      } catch (error) {
+        console.error('加载课程数据失败:', error)
       }
-      fetchList(params).then(response => {
-        this.tableData = response.rows
-        this.total = response.total
-        this.loading = false
-      })
     },
 
-    // 搜索处理
-    handleSearch() {
-      this.listQuery.page = 1
-      this.getList()
-    },
-
-    // 重置搜索
-    resetSearch() {
-      this.searchForm = {
-        studentId: '',
-        semester: ''
+    // 代码选择变化
+    handleCodeChange(code) {
+      const course = this.courseOptions.find(item => item.courseCode === code)
+      if (course) {
+        this.selectedName = course.courseName
       }
-      this.handleSearch()
     },
 
-    // 打开新建弹窗
-    handleCreate() {
-      this.dialogStatus = 'create'
-      this.dialogFormVisible = true
+    // 名称选择变化
+    handleNameChange(code) {
+      const course = this.courseOptions.find(item => item.courseCode === code)
+      if (course) {
+        this.selectedCode = course.courseCode
+      }
+    },
+
+    // 代码搜索
+    searchByCode(query) {
+      this.loadCourseData({ courseCode: query })
+    },
+
+    // 名称搜索
+    searchByName(query) {
+      this.loadCourseData({ courseName: query })
+    },
+
+    // 显示添加对话框
+    showAddDialog() {
+      this.dialogVisible = true
       this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
+        this.$refs.form.resetFields()
       })
     },
 
-    // 提交新建
-    createData() {
-      this.$refs['dataForm'].validate(valid => {
+    // 提交表单
+    submitForm() {
+      this.$refs.form.validate(async valid => {
         if (valid) {
-          createScore(this.temp).then(() => {
-            this.dialogFormVisible = false
-            this.$message.success('创建成功')
-            this.getList()
-          })
+          try {
+            await createCourse(this.form)
+            this.$message.success('课程添加成功')
+            this.dialogVisible = false
+            this.loadCourseData() // 刷新课程列表
+          } catch (error) {
+            console.error('添加课程失败:', error)
+          }
         }
-      })
-    },
-
-    // 打开编辑弹窗
-    handleEdit(row) {
-      this.temp = Object.assign({}, row)
-      this.dialogStatus = 'update'
-      this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
-    },
-
-    // 提交更新
-    updateData() {
-      this.$refs['dataForm'].validate(valid => {
-        if (valid) {
-          updateScore(this.temp).then(() => {
-            this.dialogFormVisible = false
-            this.$message.success('更新成功')
-            this.getList()
-          })
-        }
-      })
-    },
-
-    // 删除记录
-    handleDelete(row) {
-      this.$confirm('确认删除该成绩记录?', '警告', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        deleteScore(row.scoreId).then(() => {
-          this.$message.success('删除成功')
-          this.getList()
-        })
       })
     }
   }
@@ -326,5 +186,8 @@ export default {
 <style scoped>
 .app-container {
   padding: 20px;
+}
+.mb-4 {
+  margin-bottom: 1.5rem;
 }
 </style>
