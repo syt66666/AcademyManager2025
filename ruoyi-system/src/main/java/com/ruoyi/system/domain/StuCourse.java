@@ -5,12 +5,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
-/**
- * 课程信息对象 stu_course
- *
- * @author ruoyi
- * @date 2025-03-01
- */
+
 public class StuCourse extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -19,36 +14,32 @@ public class StuCourse extends BaseEntity
     private Long courseId;
 
     /** 课程唯一编号（如CS101） */
-    @Excel(name = "课程唯一编号", readConverterExp = "如=CS101")
+    @Excel(name = "课程代码")
     private String courseCode;
 
     /** 课程全称 */
-    @Excel(name = "课程全称")
+    @Excel(name = "课程名称")
     private String courseName;
-
-    /** 学分值 */
-    @Excel(name = "学分值")
-    private Long credit;
-
-    /** 课程类型 */
-    @Excel(name = "课程类型")
-    private String courseCategory;
-
-    /** 授课教师 */
-    @Excel(name = "授课教师")
-    private String teacherName;
 
     /** 开课院系 */
     @Excel(name = "开课院系")
     private String academy;
 
+    /** 授课教师 */
+    @Excel(name = "授课教师")
+    private String teacherName;
+
+    /** 学分值 */
+    @Excel(name = "学分值")
+    private Long credit;
+
     /** 总课时数 */
-    @Excel(name = "总课时数")
+    @Excel(name = "学时")
     private Integer courseHours;
 
-    /** 是否有效课程 */
-    @Excel(name = "是否有效课程")
-    private Integer isActive;
+    /** 课程类型 */
+    @Excel(name = "课程类型")
+    private String courseCategory;
 
     public void setCourseId(Long courseId)
     {
@@ -122,15 +113,7 @@ public class StuCourse extends BaseEntity
     {
         return courseHours;
     }
-    public void setIsActive(Integer isActive)
-    {
-        this.isActive = isActive;
-    }
 
-    public Integer getIsActive()
-    {
-        return isActive;
-    }
 
     @Override
     public String toString() {
@@ -143,7 +126,6 @@ public class StuCourse extends BaseEntity
                 .append("teacherName", getTeacherName())
                 .append("academy", getAcademy())
                 .append("courseHours", getCourseHours())
-                .append("isActive", getIsActive())
                 .toString();
     }
 }

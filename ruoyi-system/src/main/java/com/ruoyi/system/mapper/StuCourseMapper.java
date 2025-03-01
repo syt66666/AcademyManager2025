@@ -3,12 +3,6 @@ package com.ruoyi.system.mapper;
 import java.util.List;
 import com.ruoyi.system.domain.StuCourse;
 
-/**
- * 课程信息Mapper接口
- *
- * @author ruoyi
- * @date 2025-03-01
- */
 public interface StuCourseMapper
 {
     /**
@@ -58,4 +52,6 @@ public interface StuCourseMapper
      * @return 结果
      */
     public int deleteStuCourseByCourseIds(Long[] courseIds);
+    StuCourse selectStuCourseByCourseCode(String courseCode);
+
 }

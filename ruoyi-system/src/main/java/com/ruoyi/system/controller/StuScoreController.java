@@ -1,49 +1,104 @@
 package com.ruoyi.system.controller;
 
+import java.util.List;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
-import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.domain.StuScore;
 import com.ruoyi.system.service.IStuScoreService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import com.ruoyi.common.utils.poi.ExcelUtil;
+import com.ruoyi.common.core.page.TableDataInfo;
 
-import java.util.Collections;
-import java.util.List;
-
+/**
+ * 【请填写功能名称】Controller
+ *
+ * @author ruoyi
+ * @date 2025-03-01
+ */
 @RestController
-@RequestMapping("/stu/score")
-public class StuScoreController extends BaseController {
-
+@RequestMapping("/system/score")
+public class StuScoreController extends BaseController
+{
     @Autowired
     private IStuScoreService stuScoreService;
 
-    @PostMapping("/add")
-    public TableDataInfo add(@RequestBody StuScore stuScore) {
-        stuScoreService.addScore(stuScore);
-        return getDataTable(stuScoreService.listScores(new StuScore()));
-    }
-
-    @DeleteMapping("/delete/{id}")
-    public TableDataInfo remove(@PathVariable Long id) {
-        stuScoreService.deleteScore(id);
-        return getDataTable(stuScoreService.listScores(new StuScore()));
-    }
-
-    @PutMapping("/update")
-    public TableDataInfo edit(@RequestBody StuScore stuScore) {
-        stuScoreService.updateScore(stuScore);
-        return getDataTable(stuScoreService.listScores(new StuScore()));
-    }
-
+    /**
+     * 查询【请填写功能名称】列表
+     */
+    @PreAuthorize("@ss.hasPermi('system:score:list')")
     @GetMapping("/list")
-    public TableDataInfo list(StuScore condition) {
+    public TableDataInfo list(StuScore stuScore)
+    {
         startPage();
-        List<StuScore> list = stuScoreService.listScores(condition);
+        List<StuScore> list = stuScoreService.selectStuScoreList(stuScore);
         return getDataTable(list);
     }
 
-    @GetMapping("/get/{id}")
-    public TableDataInfo detail(@PathVariable Long id) {
-        return getDataTable(Collections.singletonList(stuScoreService.getById(id)));
+    /**
+     * 导出【请填写功能名称】列表
+     */
+    @PreAuthorize("@ss.hasPermi('system:score:export')")
+    @Log(title = "【请填写功能名称】", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, StuScore stuScore)
+    {
+        List<StuScore> list = stuScoreService.selectStuScoreList(stuScore);
+        ExcelUtil<StuScore> util = new ExcelUtil<StuScore>(StuScore.class);
+        util.exportExcel(response, list, "【请填写功能名称】数据");
+    }
+
+    /**
+     * 获取【请填写功能名称】详细信息
+     */
+    @PreAuthorize("@ss.hasPermi('system:score:query')")
+    @GetMapping(value = "/{scoreId}")
+    public AjaxResult getInfo(@PathVariable("scoreId") Long scoreId)
+    {
+        return success(stuScoreService.selectStuScoreByScoreId(scoreId));
+    }
+
+    /**
+     * 新增【请填写功能名称】
+     */
+    @PreAuthorize("@ss.hasPermi('system:score:add')")
+    @Log(title = "【请填写功能名称】", businessType = BusinessType.INSERT)
+    @PostMapping
+    public AjaxResult add(@RequestBody StuScore stuScore)
+    {
+        return toAjax(stuScoreService.insertStuScore(stuScore));
+    }
+
+    /**
+     * 修改【请填写功能名称】
+     */
+    @PreAuthorize("@ss.hasPermi('system:score:edit')")
+    @Log(title = "【请填写功能名称】", businessType = BusinessType.UPDATE)
+    @PutMapping
+    public AjaxResult edit(@RequestBody StuScore stuScore)
+    {
+        return toAjax(stuScoreService.updateStuScore(stuScore));
+    }
+
+    /**
+     * 删除【请填写功能名称】
+     */
+    @PreAuthorize("@ss.hasPermi('system:score:remove')")
+    @Log(title = "【请填写功能名称】", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{scoreIds}")
+    public AjaxResult remove(@PathVariable Long[] scoreIds)
+    {
+        return toAjax(stuScoreService.deleteStuScoreByScoreIds(scoreIds));
     }
 }
