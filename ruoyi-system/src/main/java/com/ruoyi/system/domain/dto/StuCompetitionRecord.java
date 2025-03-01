@@ -15,7 +15,7 @@ public class StuCompetitionRecord {
 
 
     private byte[] proofMaterial; // 证明材料
-    private String auditStatus; // 审核状态
+    private String auditStatus = "未审核"; // 审核状态
 
 
     private LocalDateTime applyTime; // 提交时间

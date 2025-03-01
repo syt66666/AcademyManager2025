@@ -37,11 +37,15 @@
             parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
         SELECT
         competition_id AS id,
-        competition_name,
-        competition_date,
-        student_id,
-        student_name,
-        award_date
+        competition_name,    -- 竞赛名称
+        student_id,         -- 学号
+        award_date,  -- 获奖日期
+        competition_level,  -- 竞赛级别
+        award_level,        -- 奖项级别
+        proof_material,     -- 证明材料
+        audit_status,       -- 审核状态
+        audit_time,         -- 审核时间
+        audit_remark        -- 审核备注
         FROM
         stu_competition_record
         <where>

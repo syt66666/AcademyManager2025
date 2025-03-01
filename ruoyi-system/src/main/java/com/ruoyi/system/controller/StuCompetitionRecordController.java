@@ -103,10 +103,10 @@ public class StuCompetitionRecordController extends BaseController {
 
     // 获取科创竞赛记录列表
     @GetMapping("/records")
-    public TableDataInfo getCompetitionRecords(StuCompetitionRecord record) {
+    public AjaxResult getCompetitionRecords(StuCompetitionRecord record) {
         startPage();  // 启动分页
         List<StuCompetitionRecord> records = service.getAllCompetitionRecords(record); // 查询记录
-        return getDataTable(records);  // 返回分页数据
+        return AjaxResult.success(records);  // 返回分页数据
     }
 
     /*// 删除竞赛记录

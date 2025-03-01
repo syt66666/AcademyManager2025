@@ -1,6 +1,6 @@
 <template>
   <el-row type="flex" justify="center" style="margin-top: 4vh;">
-    <!-- 搜索表单 -->
+<!--    &lt;!&ndash; 搜索表单 &ndash;&gt;
     <el-form inline style="margin-top: 2vh; width: 70%;">
       <el-form-item label="竞赛名称">
         <el-input v-model="queryParams.competitionName" placeholder="请输入竞赛名称"
@@ -10,7 +10,7 @@
         <el-button type="primary" @click="search" icon="el-icon-search"
                    style="background-color: #42b983; border-color: #42b983;">查询</el-button>
       </el-form-item>
-    </el-form>
+    </el-form>-->
 
     <!-- 竞赛列表卡片 -->
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
@@ -22,15 +22,14 @@
 
       <el-table :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
         <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column prop="competitionId" label="竞赛ID" min-width="120"></el-table-column>
         <el-table-column prop="studentId" label="学号" min-width="120"></el-table-column>
         <el-table-column prop="competitionName" label="竞赛名称" min-width="180"></el-table-column>
         <el-table-column prop="competitionLevel" label="竞赛级别" min-width="150"></el-table-column>
         <el-table-column prop="awardLevel" label="竞赛奖项" min-width="150"></el-table-column>
-        <el-table-column prop="scholarshipPoints" label="折合分数" min-width="120"></el-table-column>
-        <el-table-column prop="competitionDate" label="竞赛日期" min-width="150"></el-table-column>
-        <el-table-column prop="awardDate" label="获奖日期" min-width="150"></el-table-column>
+<!--        <el-table-column prop="proofMaterial" label="证明材料" min-width="150"></el-table-column>-->
         <el-table-column prop="auditStatus" label="审核状态" min-width="150"></el-table-column>
+        <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
+        <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
         <el-table-column label="详情" width="120">
           <template slot-scope="scope">
             <el-button type="text" @click="showDetails(scope.row)" style="color: #42b983;">详情</el-button>
@@ -149,7 +148,9 @@ export default {
           pageNum: currentPage,
           pageSize: pageSize
         });
-        this.competitionRecords = data.rows || []; // 假设后端返回的数据格式包含 rows
+        console.log(data);
+        console.log(data.data);
+        this.competitionRecords = data.data || []; // 假设后端返回的数据格式包含 rows
         this.totalRecords = data.total || 0;       // 假设返回总记录数 total
       } catch (error) {
         console.error("Error fetching competition records:", error);
