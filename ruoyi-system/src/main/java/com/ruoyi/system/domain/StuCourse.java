@@ -14,7 +14,7 @@ public class StuCourse extends BaseEntity
     private Long courseId;
 
     /** 课程唯一编号（如CS101） */
-    @Excel(name = "课程代码")
+
     private String courseCode;
 
     /** 课程全称 */

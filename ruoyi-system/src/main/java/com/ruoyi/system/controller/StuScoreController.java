@@ -35,7 +35,7 @@ public class StuScoreController extends BaseController
     private IStuScoreService stuScoreService;
 
     /**
-     * 查询【请填写功能名称】列表
+     * 查询成绩列表
      */
     @PreAuthorize("@ss.hasPermi('system:score:list')")
     @GetMapping("/list")
@@ -47,10 +47,10 @@ public class StuScoreController extends BaseController
     }
 
     /**
-     * 导出【请填写功能名称】列表
+     * 导出成绩列表
      */
     @PreAuthorize("@ss.hasPermi('system:score:export')")
-    @Log(title = "【请填写功能名称】", businessType = BusinessType.EXPORT)
+    @Log(title = "导出成绩列表", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, StuScore stuScore)
     {
@@ -60,7 +60,7 @@ public class StuScoreController extends BaseController
     }
 
     /**
-     * 获取【请填写功能名称】详细信息
+     * 获取成绩详细信息
      */
     @PreAuthorize("@ss.hasPermi('system:score:query')")
     @GetMapping(value = "/{scoreId}")
@@ -70,10 +70,10 @@ public class StuScoreController extends BaseController
     }
 
     /**
-     * 新增【请填写功能名称】
+     * 新增成绩信息
      */
     @PreAuthorize("@ss.hasPermi('system:score:add')")
-    @Log(title = "【请填写功能名称】", businessType = BusinessType.INSERT)
+    @Log(title = "新增成绩信息", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody StuScore stuScore)
     {
@@ -81,10 +81,10 @@ public class StuScoreController extends BaseController
     }
 
     /**
-     * 修改【请填写功能名称】
+     * 修改成绩信息
      */
     @PreAuthorize("@ss.hasPermi('system:score:edit')")
-    @Log(title = "【请填写功能名称】", businessType = BusinessType.UPDATE)
+    @Log(title = "修改成绩信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody StuScore stuScore)
     {
@@ -92,10 +92,10 @@ public class StuScoreController extends BaseController
     }
 
     /**
-     * 删除【请填写功能名称】
+     * 删除成绩信息
      */
     @PreAuthorize("@ss.hasPermi('system:score:remove')")
-    @Log(title = "【请填写功能名称】", businessType = BusinessType.DELETE)
+    @Log(title = "删除成绩信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{scoreIds}")
     public AjaxResult remove(@PathVariable Long[] scoreIds)
     {

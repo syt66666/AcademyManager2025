@@ -20,9 +20,17 @@ public class StuScore extends BaseEntity
     @Excel(name = "学号")
     private String studentId;
 
-    /** 课程编码 */
-    @Excel(name = "课程编码")
+    /** 姓名 */
+    @Excel(name = "姓名")
+    private String studentName;
+
+    /** 课程代码 */
+    @Excel(name = "课程代码")
     private String courseCode;
+
+    /** 课程名称 */
+    @Excel(name = "课程名称")
+    private String courseName;
 
     /** 修读学年 */
     @Excel(name = "修读学年")
@@ -32,16 +40,24 @@ public class StuScore extends BaseEntity
     @Excel(name = "修读学期")
     private String semester;
 
-    /** 成绩值 */
-    @Excel(name = "成绩值")
-    private String scoreValue;
+    /** 学分值 */
+    @Excel(name = "学分")
+    private Long credit;
 
-    /** 课程绩点（等第制可为NULL） */
-    @Excel(name = "课程绩点", readConverterExp = "等=第制可为NULL")
+    /** 课程类型 */
+    @Excel(name = "课程类型")
+    private String courseCategory;
+
+    /** 课程绩点 */
+    @Excel(name = "课程绩点")
     private BigDecimal gpa;
 
-    /** 成绩类型：正考，补考，重修，免修 */
-    @Excel(name = "成绩类型：正考，补考，重修，免修")
+    /** 成绩 */
+    @Excel(name = "成绩")
+    private String scoreValue;
+
+    /** 成绩类型 */
+    @Excel(name = "成绩类型")
     private String scoreType;
 
     /** 录入人姓名 */
@@ -50,8 +66,40 @@ public class StuScore extends BaseEntity
 
     /** 数据插入时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "数据插入时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "成绩上传时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date uploadTime;
+
+    public String getCourseName() {
+        return courseName;
+    }
+
+    public void setCourseName(String courseName) {
+        this.courseName = courseName;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public Long getCredit() {
+        return credit;
+    }
+
+    public void setCredit(Long credit) {
+        this.credit = credit;
+    }
+
+    public String getCourseCategory() {
+        return courseCategory;
+    }
+
+    public void setCourseCategory(String courseCategory) {
+        this.courseCategory = courseCategory;
+    }
 
     public void setScoreId(Long scoreId)
     {
@@ -114,7 +162,18 @@ public class StuScore extends BaseEntity
 
     public BigDecimal getGpa()
     {
-        return gpa;
+        if ("通过".equals(String.valueOf(this.scoreValue))||"不通过".equals(String.valueOf(this.scoreValue))) {
+            return BigDecimal.valueOf("通过".equals(String.valueOf(this.scoreValue)) ? 1.0 : 0.0);
+        }
+
+        try {
+            int score = Integer.parseInt(String.valueOf(this.scoreValue));
+            if (score < 60) return BigDecimal.valueOf(0.0);
+            if (score == 100) return BigDecimal.valueOf(5.0);
+            return BigDecimal.valueOf(Math.min(4.9, 1.0 + (score - 60) * 0.1));
+        } catch (NumberFormatException e) {
+            return BigDecimal.valueOf(0.0);
+        }
     }
     public void setScoreType(String scoreType)
     {

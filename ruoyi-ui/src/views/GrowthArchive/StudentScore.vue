@@ -9,61 +9,67 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="课程编码" prop="courseCode">
+      <el-form-item label="姓名" prop="studentName">
         <el-input
-          v-model="queryParams.courseCode"
-          placeholder="请输入课程编码"
+          v-model="queryParams.studentName"
+          placeholder="请输入学生姓名"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="课程名称" prop="courseName">
+        <el-input
+          v-model="queryParams.courseName"
+          placeholder="请输入课程名称"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
+
       <el-form-item label="修读学年" prop="academicYear">
-        <el-input
+        <el-date-picker
           v-model="queryParams.academicYear"
-          placeholder="请输入修读学年"
+          type="year"
+          value-format="yyyy"
+          format="yyyy"
+          placeholder="选择修读学年"
+          :editable="false"
           clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="修读学期" prop="semester">
-        <el-input
-          v-model="queryParams.semester"
-          placeholder="请输入修读学期"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="成绩值" prop="scoreValue">
-        <el-input
-          v-model="queryParams.scoreValue"
-          placeholder="请输入成绩值"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="课程绩点" prop="gpa">
-        <el-input
-          v-model="queryParams.gpa"
-          placeholder="请输入课程绩点"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="录入人姓名" prop="nickName">
-        <el-input
-          v-model="queryParams.nickName"
-          placeholder="请输入录入人姓名"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="数据插入时间" prop="uploadTime">
-        <el-date-picker clearable
-                        v-model="queryParams.uploadTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择数据插入时间">
+          @keyup.enter.native="handleQuery">
         </el-date-picker>
+      </el-form-item>
+
+
+      <el-form-item label="修读学期" prop="semester">
+        <el-select
+          v-model="queryParams.semester"
+          placeholder="请选择修读学期"
+          clearable
+          filterable
+          @keyup.enter.native="handleQuery">
+          <el-option
+            v-for="item in [{label: '第一学期', value: '第一学期'}, {label: '第二学期', value: '第二学期'}, {label: '第三学期', value: '第三学期'}]"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value">
+          </el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="成绩类型" prop="scoreType">
+        <el-select
+          v-model="queryParams.scoreType"
+          placeholder="请选择成绩类型"
+          clearable
+          filterable
+          @keyup.enter.native="handleQuery">
+          <el-option
+            v-for="item in [{label: '正考', value: '正考'}, {label: '补考', value: '补考'}, {label: '重修', value: '重修'}, {label: '免修', value: '免修'}]"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value">
+          </el-option>
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -119,16 +125,20 @@
 
     <el-table v-loading="loading" :data="scoreList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键ID" align="center" prop="scoreId" />
+      <!--      <el-table-column label="主键ID" align="center" prop="scoreId" />-->
       <el-table-column label="学号" align="center" prop="studentId" />
-      <el-table-column label="课程编码" align="center" prop="courseCode" />
+      <el-table-column label="姓名" align="center" prop="studentName" />
+      <el-table-column label="课程代码" align="center" prop="courseCode" />
+      <el-table-column label="课程名称" align="center" prop="courseName" />
       <el-table-column label="修读学年" align="center" prop="academicYear" />
       <el-table-column label="修读学期" align="center" prop="semester" />
-      <el-table-column label="成绩值" align="center" prop="scoreValue" />
+      <el-table-column label="学分" align="center" prop="credit" />
+      <el-table-column label="课程类型" align="center" prop="courseCategory" />
       <el-table-column label="课程绩点" align="center" prop="gpa" />
-      <el-table-column label="成绩类型：正考，补考，重修，免修" align="center" prop="scoreType" />
+      <el-table-column label="成绩" align="center" prop="scoreValue" />
+      <el-table-column label="成绩类型" align="center" prop="scoreType" />
       <el-table-column label="录入人姓名" align="center" prop="nickName" />
-      <el-table-column label="数据插入时间" align="center" prop="uploadTime" width="180">
+      <el-table-column label="成绩添加时间" align="center" prop="uploadTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.uploadTime, '{y}-{m}-{d}') }}</span>
         </template>
@@ -161,38 +171,54 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改【请填写功能名称】对话框 -->
+    <!-- 添加或修改成绩对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="学号" prop="studentId">
           <el-input v-model="form.studentId" placeholder="请输入学号" />
         </el-form-item>
-        <el-form-item label="课程编码" prop="courseCode">
-          <el-input v-model="form.courseCode" placeholder="请输入课程编码" />
+        <el-form-item label="课程代码" prop="courseCode">
+          <el-input v-model="form.courseCode" placeholder="请输入课程代码" />
         </el-form-item>
         <el-form-item label="修读学年" prop="academicYear">
-          <el-input v-model="form.academicYear" placeholder="请输入修读学年" />
+          <el-date-picker
+            v-model="form.academicYear"
+            type="year"
+            value-format="yyyy"
+            placeholder="选择学年"
+            :editable="false"
+            :clearable="false">
+          </el-date-picker>
         </el-form-item>
+
         <el-form-item label="修读学期" prop="semester">
-          <el-input v-model="form.semester" placeholder="请输入修读学期" />
+          <el-select v-model="form.semester" placeholder="请选择修读学期">
+            <el-option
+              v-for="item in [{label: '第一学期', value: '第一学期'}, {label: '第二学期', value: '第二学期'}, {label: '第三学期', value: '第三学期'}]"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
         </el-form-item>
+
         <el-form-item label="成绩值" prop="scoreValue">
           <el-input v-model="form.scoreValue" placeholder="请输入成绩值" />
         </el-form-item>
-        <el-form-item label="课程绩点" prop="gpa">
-          <el-input v-model="form.gpa" placeholder="请输入课程绩点" />
+        <el-form-item label="成绩类型" prop="scoreType">
+          <el-select
+            v-model="form.scoreType"
+            placeholder="请选择成绩类型"
+            clearable>
+            <el-option
+              v-for="item in [{label: '正考', value: '正考'}, {label: '补考', value: '补考'}, {label: '重修', value: '重修'}, {label: '免修', value: '免修'}]"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
         </el-form-item>
-        <el-form-item label="录入人姓名" prop="nickName">
-          <el-input v-model="form.nickName" placeholder="请输入录入人姓名" />
-        </el-form-item>
-        <el-form-item label="数据插入时间" prop="uploadTime">
-          <el-date-picker clearable
-                          v-model="form.uploadTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择数据插入时间">
-          </el-date-picker>
-        </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -204,6 +230,7 @@
 
 <script>
 import { listScore, getScore, delScore, addScore, updateScore } from "@/api/system/score";
+import store from "@/store";
 
 export default {
   name: "Score",
@@ -221,7 +248,7 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 【请填写功能名称】表格数据
+      // 表格数据
       scoreList: [],
       // 弹出层标题
       title: "",
@@ -239,27 +266,27 @@ export default {
         gpa: null,
         scoreType: null,
         nickName: null,
-        uploadTime: null
+        uploadTime: null,
       },
       // 表单参数
       form: {},
       // 表单校验
       rules: {
         studentId: [
-          { required: true, message: "学号不能为空", trigger: "blur" }
+          {required: true, message: "学号不能为空", trigger: "blur"}
         ],
         courseCode: [
-          { required: true, message: "课程编码不能为空", trigger: "blur" }
+          {required: true, message: "课程编码不能为空", trigger: "blur"}
         ],
         academicYear: [
-          { required: true, message: "修读学年不能为空", trigger: "blur" }
+          {required: true, message: "修读学年不能为空", trigger: "blur"}
         ],
         semester: [
-          { required: true, message: "修读学期不能为空", trigger: "blur" }
+          {required: true, message: "修读学期不能为空", trigger: "blur"}
         ],
         scoreValue: [
-          { required: true, message: "成绩值不能为空", trigger: "blur" }
-        ],
+          {required: true, message: "成绩值不能为空", trigger: "blur"}
+        ]
       }
     };
   },
@@ -267,7 +294,7 @@ export default {
     this.getList();
   },
   methods: {
-    /** 查询【请填写功能名称】列表 */
+    /** 查询成绩列表 */
     getList() {
       this.loading = true;
       listScore(this.queryParams).then(response => {
@@ -306,18 +333,19 @@ export default {
     resetQuery() {
       this.resetForm("queryForm");
       this.handleQuery();
+
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.scoreId)
-      this.single = selection.length!==1
+      this.single = selection.length !== 1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加【请填写功能名称】";
+      this.title = "添加成绩";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
@@ -326,11 +354,12 @@ export default {
       getScore(scoreId).then(response => {
         this.form = response.data;
         this.open = true;
-        this.title = "修改【请填写功能名称】";
+        this.title = "修改成绩";
       });
     },
     /** 提交按钮 */
     submitForm() {
+      this.form.nickName = store.state.user.name;
       this.$refs["form"].validate(valid => {
         if (valid) {
           if (this.form.scoreId != null) {
@@ -352,12 +381,13 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const scoreIds = row.scoreId || this.ids;
-      this.$modal.confirm('是否确认删除【请填写功能名称】编号为"' + scoreIds + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认删除成绩？').then(function () {
         return delScore(scoreIds);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
+      }).catch(() => {
+      });
     },
     /** 导出按钮操作 */
     handleExport() {

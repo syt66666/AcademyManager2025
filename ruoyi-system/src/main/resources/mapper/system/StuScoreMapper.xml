@@ -15,21 +15,46 @@
         <result property="scoreType"    column="score_type"    />
         <result property="nickName"    column="nick_name"    />
         <result property="uploadTime"    column="upload_time"    />
+        <result property="courseName"    column="course_name"    />
+        <result property="studentName"    column="student_name"    />
+        <result property="credit"     column="credit" />
+        <result property="courseCategory" column="course_category" />
     </resultMap>
 
     <sql id="selectStuScoreVo">
-        select score_id, student_id, course_code, academic_year, semester, score_value, gpa, score_type, nick_name, upload_time from stu_score
+        select
+            s.score_id,
+            s.student_id,
+            s.course_code,
+            s.academic_year,
+            s.semester,
+            s.score_value,
+            s.gpa,
+            s.score_type,
+            s.nick_name,
+            s.upload_time,
+            c.course_name,
+            c.credit,
+            c.course_category,
+            i.student_name
+        from stu_score s
+                 left join stu_course c on s.course_code = c.course_code
+                 left join stu_info i on s.student_id = i.student_id
     </sql>
 
     <select id="selectStuScoreList" parameterType="StuScore" resultMap="StuScoreResult">
         <include refid="selectStuScoreVo"/>
         <where>
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
-            <if test="courseCode != null  and courseCode != ''"> and course_code = #{courseCode}</if>
+            <if test="studentId != null  and studentId != ''"> and i.student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''"> and i.student_name = #{studentName}</if>
+            <if test="courseCode != null  and courseCode != ''"> and c.course_code = #{courseCode}</if>
+            <if test="courseName != null  and courseName != ''"> and c.course_name = #{courseName}</if>
+            <if test="credit != null  and credit != ''"> and c.credit = #{credit}</if>
+            <if test="courseCategory != null  and courseCategory != ''"> and c.course_category = #{courseCategory}</if>
             <if test="academicYear != null  and academicYear != ''"> and academic_year = #{academicYear}</if>
             <if test="semester != null  and semester != ''"> and semester = #{semester}</if>
             <if test="scoreValue != null  and scoreValue != ''"> and score_value = #{scoreValue}</if>
-            <if test="gpa != null "> and gpa = #{gpa}</if>
+            <if test="gpa != null  and gpa != ''"> and gpa = #{gpa}</if>
             <if test="scoreType != null  and scoreType != ''"> and score_type = #{scoreType}</if>
             <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
             <if test="uploadTime != null "> and upload_time = #{uploadTime}</if>
@@ -45,11 +70,11 @@
         insert into stu_score
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id,</if>
-            <if test="courseCode != null and courseCode != ''">course_code,</if>
+            <if test="courseCode != null  and courseCode != ''">course_code,</if>
             <if test="academicYear != null and academicYear != ''">academic_year,</if>
             <if test="semester != null and semester != ''">semester,</if>
             <if test="scoreValue != null and scoreValue != ''">score_value,</if>
-            <if test="gpa != null">gpa,</if>
+            <if test="gpa != null and gpa != ''">gpa,</if>
             <if test="scoreType != null">score_type,</if>
             <if test="nickName != null">nick_name,</if>
             <if test="uploadTime != null">upload_time,</if>
@@ -60,10 +85,10 @@
             <if test="academicYear != null and academicYear != ''">#{academicYear},</if>
             <if test="semester != null and semester != ''">#{semester},</if>
             <if test="scoreValue != null and scoreValue != ''">#{scoreValue},</if>
-            <if test="gpa != null">#{gpa},</if>
-            <if test="scoreType != null">#{scoreType},</if>
-            <if test="nickName != null">#{nickName},</if>
-            <if test="uploadTime != null">#{uploadTime},</if>
+            <if test="gpa != null and gpa != ''">#{gpa},</if>
+            <if test="scoreType != null and scoreType != ''">#{scoreType},</if>
+            <if test="nickName != null and nickName != ''">#{nickName},</if>
+            <if test="uploadTime != null and uploadTime != ''">#{uploadTime},</if>
         </trim>
     </insert>
 
@@ -75,10 +100,11 @@
             <if test="academicYear != null and academicYear != ''">academic_year = #{academicYear},</if>
             <if test="semester != null and semester != ''">semester = #{semester},</if>
             <if test="scoreValue != null and scoreValue != ''">score_value = #{scoreValue},</if>
-            <if test="gpa != null">gpa = #{gpa},</if>
-            <if test="scoreType != null">score_type = #{scoreType},</if>
-            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="gpa != null and gpa != ''">gpa = #{gpa},</if>
+            <if test="scoreType != null and scoreType != ''">score_type = #{scoreType},</if>
+            <if test="nickName != null and nickName != ''">nick_name = #{nickName},</if>
             <if test="uploadTime != null">upload_time = #{uploadTime},</if>
+
         </trim>
         where score_id = #{scoreId}
     </update>
