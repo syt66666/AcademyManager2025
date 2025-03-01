@@ -58,4 +58,6 @@ public interface IStuCourseService
      * @return 结果
      */
     public int deleteStuCourseByCourseId(Long courseId);
+
+    String importCourse(List<StuCourse> userList, Boolean isUpdateSupport, String operName);
 }

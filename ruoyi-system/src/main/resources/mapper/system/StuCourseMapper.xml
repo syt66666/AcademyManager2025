@@ -13,11 +13,10 @@
         <result property="teacherName"    column="teacher_name"    />
         <result property="academy"    column="academy"    />
         <result property="courseHours"    column="course_hours"    />
-        <result property="isActive"    column="is_active"    />
     </resultMap>
 
     <sql id="selectStuCourseVo">
-        select course_id, course_code, course_name, credit, course_category, teacher_name, academy, course_hours, is_active from stu_course
+        select course_id, course_code, course_name, credit, course_category, teacher_name, academy, course_hours from stu_course
     </sql>
 
     <select id="selectStuCourseList" parameterType="StuCourse" resultMap="StuCourseResult">
@@ -30,7 +29,6 @@
             <if test="teacherName != null  and teacherName != ''"> and teacher_name like concat('%', #{teacherName}, '%')</if>
             <if test="academy != null  and academy != ''"> and academy = #{academy}</if>
             <if test="courseHours != null "> and course_hours = #{courseHours}</if>
-            <if test="isActive != null "> and is_active = #{isActive}</if>
         </where>
     </select>
 
@@ -49,7 +47,6 @@
             <if test="teacherName != null and teacherName != ''">teacher_name,</if>
             <if test="academy != null">academy,</if>
             <if test="courseHours != null">course_hours,</if>
-            <if test="isActive != null">is_active,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="courseCode != null and courseCode != ''">#{courseCode},</if>
@@ -59,7 +56,6 @@
             <if test="teacherName != null and teacherName != ''">#{teacherName},</if>
             <if test="academy != null">#{academy},</if>
             <if test="courseHours != null">#{courseHours},</if>
-            <if test="isActive != null">#{isActive},</if>
         </trim>
     </insert>
 
@@ -73,7 +69,6 @@
             <if test="teacherName != null and teacherName != ''">teacher_name = #{teacherName},</if>
             <if test="academy != null">academy = #{academy},</if>
             <if test="courseHours != null">course_hours = #{courseHours},</if>
-            <if test="isActive != null">is_active = #{isActive},</if>
         </trim>
         where course_id = #{courseId}
     </update>
@@ -88,4 +83,10 @@
             #{courseId}
         </foreach>
     </delete>
+
+    <select id="selectStuCourseByCourseCode" parameterType="String" resultMap="StuCourseResult">
+        <include refid="selectStuCourseVo"/>
+        where course_code = #{courseCode}
+    </select>
+
 </mapper>
