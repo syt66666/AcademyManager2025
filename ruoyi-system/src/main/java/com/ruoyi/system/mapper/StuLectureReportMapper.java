@@ -1,7 +1,10 @@
 package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.StudentLectureReport;
+import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 import org.apache.ibatis.annotations.Mapper;
+
+import java.util.List;
 
 @Mapper
 public interface StuLectureReportMapper {
@@ -11,4 +14,7 @@ public interface StuLectureReportMapper {
      * @return
      */
     public int insertStuLectureInformation(StudentLectureReport studentLectureReport);
+
+    // 查询所有竞赛记录
+    public List<StudentLectureReport> getAllLectureReportRecords(String id);
 }

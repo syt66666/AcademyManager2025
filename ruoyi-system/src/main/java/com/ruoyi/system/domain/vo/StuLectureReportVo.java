@@ -1,13 +1,8 @@
-package com.ruoyi.system.domain;
-
-
+package com.ruoyi.system.domain.vo;
 
 import java.time.LocalDateTime;
 
-/**
- * 学生讲座报告实体类
- */
-public class StudentLectureReport {
+public class StuLectureReportVo {
     /**
      * 学生学号
      */
@@ -16,10 +11,6 @@ public class StudentLectureReport {
      * 学生姓名
      */
     private String studentName;
-    /**
-     * 主键id
-     */
-    private int reportId;
     /**
      * 题目
      */
@@ -68,10 +59,6 @@ public class StudentLectureReport {
      * 审核人姓名
      */
     private String nickName;
-    /**
-     * 上传学期
-     */
-    private int semester;
 
     public String getStudentId() {
         return studentId;
@@ -87,14 +74,6 @@ public class StudentLectureReport {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
-    }
-
-    public int getReportId() {
-        return reportId;
-    }
-
-    public void setReportId(int reportId) {
-        this.reportId = reportId;
     }
 
     public String getReportTitle() {
@@ -191,13 +170,5 @@ public class StudentLectureReport {
 
     public void setNickName(String nickName) {
         this.nickName = nickName;
-    }
-
-    public int getSemester() {
-        return semester;
-    }
-
-    public void setSemester(int semester) {
-        this.semester = semester;
     }
 }
