@@ -4,6 +4,7 @@ package com.ruoyi.system.controller;
 import com.alibaba.fastjson2.JSON;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.system.domain.StudentLectureReport;
+import com.ruoyi.system.domain.vo.StuLectureReportVo;
 import com.ruoyi.system.service.StudentLectureReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static com.ruoyi.common.utils.PageUtils.startPage;
 
 
 /**
@@ -27,6 +31,17 @@ public class StudentLectureReportController {
     private StudentLectureReportService studentLectureReportService;
 
     /**
+     * 获取学生报告信息
+     * @return
+     */
+    @GetMapping("/records")
+    public AjaxResult getCompetitionRecords() {
+        startPage();  // 启动分页
+        List<StuLectureReportVo> records = studentLectureReportService.getAllCompetitionRecords(); // 查询记录
+        return AjaxResult.success(records);  // 返回分页数据
+    }
+
+    /**
      * 导入学生报告信息
      *
      * @param
@@ -36,7 +51,7 @@ public class StudentLectureReportController {
     public AjaxResult uploadExcel(@RequestParam("studentLectureReport") String studentLectureReport,
                                   @RequestParam("reportFeeling") MultipartFile reportFeeling, @RequestParam("picture") MultipartFile picture) {
         StudentLectureReport report = JSON.parseObject(studentLectureReport, StudentLectureReport.class);
-        if (report.getTitle() == null || report.getTitle().isEmpty()) {
+        if (report.getReportTitle() == null || report.getReportTitle().isEmpty()) {
             return AjaxResult.error("题目不能为空");
         }
         if (report.getReporter() == null || report.getReporter().isEmpty()) {
@@ -48,7 +63,7 @@ public class StudentLectureReportController {
         if (report.getReportContent() == null || report.getReportContent().isEmpty()) {
             return AjaxResult.error("内容简介不能为空");
         }
-        if (report.getLink() == null || report.getLink().isEmpty()) {
+        if (report.getReportLink() == null || report.getReportLink().isEmpty()) {
             return AjaxResult.error("链接不能为空");
         }
         // 判断图片大小是否超过10MB
@@ -85,7 +100,7 @@ public class StudentLectureReportController {
             ImageIO.write(compressedImage, "jpg", byteArrayOutputStream);
 
             // 保存压缩后的图片 byte[]
-            report.setPicture(byteArrayOutputStream.toByteArray());
+            report.setReportPicture(byteArrayOutputStream.toByteArray());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         } finally {

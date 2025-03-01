@@ -4,18 +4,21 @@
     <insert id="insertStuLectureInformation">
         INSERT INTO stu_lec_report (report_title, reporter, report_date, report_content, report_link, report_feeling, report_picture, audit_status, student_id, student_name, report_admit_time, semester)
         VALUES (
-        <if test="title != null and title != ''">#{title}</if>,
+        <if test="reportTitle != null and reportTitle != ''">#{reportTitle}</if>,
         <if test="reporter != null and reporter != ''">#{reporter}</if>,
         <if test="reportDate != null">#{reportDate}</if>,
         <if test="reportContent != null and reportContent != ''">#{reportContent}</if>,
-        <if test="link != null and link != ''">#{link}</if>,
+        <if test="reportLink != null and reportLink != ''">#{reportLink}</if>,
         <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling}</if>,
-        <if test="picture != null">#{picture}</if>,
-        <if test="status != null">#{status}</if>,
+        <if test="reportPicture != null">#{reportPicture}</if>,
+        <if test="auditStatus != null">#{auditStatus}</if>,
         <if test="studentId != null">#{studentId}</if>,
         <if test="studentName != null and studentName != ''">#{studentName}</if>,
         <if test="reportAdmitTime != null">#{reportAdmitTime}</if>,
         <if test="semester != null and semester != ''">#{semester}</if>
         )
     </insert>
+    <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StudentLectureReport">
+        SELECT * FROM stu_lec_report where student_id = #{id}
+    </select>
 </mapper>
