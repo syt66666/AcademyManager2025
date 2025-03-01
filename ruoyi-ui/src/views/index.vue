@@ -24,7 +24,7 @@
       (您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。)
       </p>
       <p class="greeting-message" >大工书院祝您心想事成！😊</p>
-      <button @click="submitForm">?????????</button>
+<!--      <button @click="submitForm">?????????</button>-->
     </div>
   </div>
 </template>

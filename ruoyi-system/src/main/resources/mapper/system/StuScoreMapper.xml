@@ -1,26 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuScoreMapper">
 
     <resultMap id="BaseResultMap" type="StuScore">
         <id column="score_id" property="scoreId" />
         <result column="student_id" property="studentId"/>
         <result column="course_code" property="courseCode"/>
-        <result column="course_name" property="courseName"/>
-        <result column="course_category" property="courseCategory"/>
-        <result column="credit" property="credit"/>
-        <result column="academy" property="academy"/>
+        <result column="academic_year" property="academicYear"/>
         <result column="semester" property="semester"/>
         <result column="score_value" property="scoreValue"/>
         <result column="gpa" property="gpa"/>
         <result column="score_type" property="scoreType"/>
+        <result column="nick_name" property="nickName"/>
         <result column="upload_time" property="uploadTime"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        score_id, student_id, course_code, course_name, course_category,
-        credit, academy, semester, score_value, gpa, score_type, upload_time
+                score_id, student_id, course_code, academic_year, semester,
+                score_value, gpa, score_type, nick_name
     </sql>
 
     <select id="selectById" resultMap="BaseResultMap">
@@ -28,32 +25,50 @@
         FROM stu_score WHERE score_id = #{scoreId}
     </select>
 
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="scoreId">
         INSERT INTO stu_score (
-            student_id, course_code, course_name, course_category,
-            credit, academy, semester, score_value, gpa, score_type
+            student_id, course_code, academic_year, semester,
+            score_value, score_type, nick_name, gpa
         ) VALUES (
-                     #{studentId}, #{courseCode}, #{courseName}, #{courseCategory},
-                     #{credit}, #{academy}, #{semester}, #{scoreValue}, #{gpa}, #{scoreType}
-                 )
+                     #{studentId}, #{courseCode}, #{academicYear}, #{semester},
+                     #{scoreValue}, #{scoreType}, #{nickName},
+        <![CDATA[
+                     CASE
+                         WHEN #{scoreType,jdbcType=VARCHAR} = 'PASS_FAIL' THEN NULL
+                         WHEN CAST(#{scoreValue} AS DECIMAL) < 60 THEN 0.0
+                         ELSE LEAST( (CAST(#{scoreValue} AS DECIMAL) - 60) * 0.1 + 1.0, 5.0 )
+                         END
+        ]]>
+    )
     </insert>
+
 
     <update id="update">
         UPDATE stu_score
         <set>
             <if test="studentId != null">student_id = #{studentId},</if>
             <if test="courseCode != null">course_code = #{courseCode},</if>
-            <if test="courseName != null">course_name = #{courseName},</if>
-            <if test="courseCategory != null">course_category = #{courseCategory},</if>
-            <if test="credit != null">credit = #{credit},</if>
-            <if test="academy != null">academy = #{academy},</if>
+            <if test="academicYear != null">academic_year = #{academicYear},</if>
             <if test="semester != null">semester = #{semester},</if>
             <if test="scoreValue != null">score_value = #{scoreValue},</if>
-            <if test="gpa != null">gpa = #{gpa},</if>
-            <if test="scoreType != null">score_type = #{scoreType}</if>
+            <if test="scoreType != null">score_type = #{scoreType},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+
+            <!-- GPA动态计算 -->
+            <if test="scoreValue != null or scoreType != null">
+                <![CDATA[
+            gpa = CASE
+                WHEN #{scoreType,jdbcType=VARCHAR} = 'PASS_FAIL' THEN NULL
+                WHEN CAST(#{scoreValue} AS DECIMAL) < 60 THEN 0.0
+                ELSE LEAST( (CAST(#{scoreValue} AS DECIMAL) - 60) * 0.1 + 1.0, 5.0 )
+            END,
+            ]]>
+            </if>
         </set>
         WHERE score_id = #{scoreId}
     </update>
+
 
     <delete id="deleteById">
         DELETE FROM stu_score WHERE score_id = #{scoreId}
@@ -65,6 +80,7 @@
         <where>
             <if test="studentId != null">AND student_id = #{studentId}</if>
             <if test="courseCode != null">AND course_code = #{courseCode}</if>
+            <if test="academicYear != null">AND academic_year = #{academicYear}</if>
             <if test="semester != null">AND semester = #{semester}</if>
         </where>
         ORDER BY upload_time DESC

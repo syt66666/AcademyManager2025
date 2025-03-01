@@ -10,7 +10,7 @@ export function fetchList(params) {
 
 export function createScore(data) {
   return request({
-    url: '/stu/score',
+    url: '/stu/score/add',
     method: 'post',
     data
   })
@@ -18,7 +18,7 @@ export function createScore(data) {
 
 export function updateScore(data) {
   return request({
-    url: '/stu/score',
+    url: '/stu/score/update',
     method: 'put',
     data
   })
@@ -26,7 +26,7 @@ export function updateScore(data) {
 
 export function deleteScore(scoreId) {
   return request({
-    url: `/stu/score/${scoreId}`,
+    url: `/stu/score/delete/${scoreId}`,
     method: 'delete'
   })
 }

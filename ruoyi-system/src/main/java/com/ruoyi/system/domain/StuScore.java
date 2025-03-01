@@ -1,27 +1,15 @@
 package com.ruoyi.system.domain;
 
-import java.time.LocalDateTime;
-
 public class StuScore {
     private Long scoreId;
     private String studentId;
     private String courseCode;
-    private String courseName;
-    private String courseCategory;
-    private Integer credit;
-    private String academy;
+    private String academicYear;
     private String semester;
     private String scoreValue;
     private Double gpa;
     private String scoreType;
-
-    public LocalDateTime getUploadTime() {
-        return uploadTime;
-    }
-
-    public void setUploadTime(LocalDateTime uploadTime) {
-        this.uploadTime = uploadTime;
-    }
+    private String nickName;
 
     public Long getScoreId() {
         return scoreId;
@@ -47,36 +35,12 @@ public class StuScore {
         this.courseCode = courseCode;
     }
 
-    public String getCourseName() {
-        return courseName;
+    public String getAcademicYear() {
+        return academicYear;
     }
 
-    public void setCourseName(String courseName) {
-        this.courseName = courseName;
-    }
-
-    public String getCourseCategory() {
-        return courseCategory;
-    }
-
-    public void setCourseCategory(String courseCategory) {
-        this.courseCategory = courseCategory;
-    }
-
-    public Integer getCredit() {
-        return credit;
-    }
-
-    public void setCredit(Integer credit) {
-        this.credit = credit;
-    }
-
-    public String getAcademy() {
-        return academy;
-    }
-
-    public void setAcademy(String academy) {
-        this.academy = academy;
+    public void setAcademicYear(String academicYear) {
+        this.academicYear = academicYear;
     }
 
     public String getSemester() {
@@ -87,20 +51,20 @@ public class StuScore {
         this.semester = semester;
     }
 
-    public Double getGpa() {
-        return gpa;
-    }
-
-    public void setGpa(Double gpa) {
-        this.gpa = gpa;
-    }
-
     public String getScoreValue() {
         return scoreValue;
     }
 
     public void setScoreValue(String scoreValue) {
         this.scoreValue = scoreValue;
+    }
+
+    public Double getGpa() {
+        return gpa;
+    }
+
+    public void setGpa(Double gpa) {
+        this.gpa = gpa;
     }
 
     public String getScoreType() {
@@ -111,6 +75,11 @@ public class StuScore {
         this.scoreType = scoreType;
     }
 
-    private LocalDateTime uploadTime;
+    public String getNickName() {
+        return nickName;
+    }
 
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
 }
