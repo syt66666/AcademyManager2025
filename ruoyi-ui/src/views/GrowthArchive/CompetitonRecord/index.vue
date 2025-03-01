@@ -1,16 +1,16 @@
 <template>
   <el-row type="flex" justify="center" style="margin-top: 4vh;">
-<!--    &lt;!&ndash; 搜索表单 &ndash;&gt;
-    <el-form inline style="margin-top: 2vh; width: 70%;">
-      <el-form-item label="竞赛名称">
-        <el-input v-model="queryParams.competitionName" placeholder="请输入竞赛名称"
-                  style="border-radius: 4px;"></el-input>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" @click="search" icon="el-icon-search"
-                   style="background-color: #42b983; border-color: #42b983;">查询</el-button>
-      </el-form-item>
-    </el-form>-->
+    <!--    &lt;!&ndash; 搜索表单 &ndash;&gt;
+        <el-form inline style="margin-top: 2vh; width: 70%;">
+          <el-form-item label="竞赛名称">
+            <el-input v-model="queryParams.competitionName" placeholder="请输入竞赛名称"
+                      style="border-radius: 4px;"></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="search" icon="el-icon-search"
+                       style="background-color: #42b983; border-color: #42b983;">查询</el-button>
+          </el-form-item>
+        </el-form>-->
 
     <!-- 竞赛列表卡片 -->
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
@@ -26,18 +26,32 @@
         <el-table-column prop="competitionName" label="竞赛名称" min-width="180"></el-table-column>
         <el-table-column prop="competitionLevel" label="竞赛级别" min-width="150"></el-table-column>
         <el-table-column prop="awardLevel" label="竞赛奖项" min-width="150"></el-table-column>
-<!--        <el-table-column prop="proofMaterial" label="证明材料" min-width="150"></el-table-column>-->
-        <el-table-column prop="auditStatus" label="审核状态" min-width="150"></el-table-column>
+        <el-table-column prop="auditStatus" label="审核状态" min-width="150">
+          <template v-slot:default="scope"> <!-- 使用默认插槽语法 -->
+            <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">{{ scope.row.auditStatus }}</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">{{ scope.row.auditStatus }}</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '未通过'" type="danger">{{ scope.row.auditStatus }}</el-tag>
+            <el-tag v-else>未知状态</el-tag> <!-- 防止出现意外的状态 -->
+          </template>
+        </el-table-column>
         <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
         <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
-        <el-table-column label="详情" width="120">
-          <template slot-scope="scope">
-            <el-button type="text" @click="showDetails(scope.row)" style="color: #42b983;">详情</el-button>
+        <el-table-column prop="proofMaterialBase64" label="图片" min-width="150">
+          <template v-slot:default="scope">
+            <img
+              :src="scope.row.proofMaterialBase64"
+              alt="图片"
+              style="width: 50px; height: 50px; cursor: pointer;"
+              v-if="scope.row.proofMaterialBase64"
+              @click="handleImageClick(scope.row.proofMaterialBase64)"
+            />
+            <span v-else>无图片</span>
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- 分页器 -->
+      <el-dialog :visible.sync="dialogVisible" title="查看图片" width="50%">
+        <img :src="currentImage" alt="放大图片" style="width: 100%; height: auto;" />
+      </el-dialog>
       <el-pagination
         layout="total, sizes, prev, pager, next, jumper"
         :current-page.sync="currentPage"
@@ -49,6 +63,7 @@
         style="text-align: center; margin-top: 10px;"
       />
     </el-card>
+
 
     <!-- 竞赛填写弹出对话框 -->
     <el-dialog :visible.sync="showDialog" title="竞赛填写" width="50%" @close="closeDialog">
@@ -83,7 +98,9 @@
           <input type="file" @change="onImageChange" accept="image/*" style="width: 100%;"/>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm" style="float: right; background-color: #42b983; border-color: #42b983;">提交</el-button>
+          <el-button type="primary" @click="submitForm"
+                     style="float: right; background-color: #42b983; border-color: #42b983;">提交
+          </el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -96,6 +113,8 @@ import {addCompetitionRecord, fetchCompetitionRecords} from "@/api/student/compe
 export default {
   data() {
     return {
+      dialogVisible: false, // 控制弹窗显示
+      currentImage: '', // 当前点击的图片 URL
       competitionRecords: [],// 存储后端返回的竞赛记录数据
       queryParams: {},         // 用于存储查询条件
       currentPage: 1,          // 当前页
@@ -133,6 +152,32 @@ export default {
     this.fetchCompetitionRecords();  // 在页面加载时获取数据
   },
   methods: {
+    handleImageClick(imageUrl) {
+      this.currentImage = imageUrl; // 设置当前图片
+      this.dialogVisible = true; // 打开弹窗
+    },
+    async fetchCompetitionRecords(queryParams = {}, currentPage = 1, pageSize = 10) {
+      this.isLoading = true; // 设置为加载状态
+      try {
+        const response = await fetchCompetitionRecords({
+          ...queryParams,
+          pageNum: currentPage,
+          pageSize: pageSize
+        });
+        console.log("Fetched Data:", response); // 调试信息，检查返回的数据结构
+
+        if (response && response.data) {
+          this.competitionRecords = response.data.rows; // 确保解析的是 rows 字段
+          this.totalRecords = response.data.total || 0; // 确保解析的是 total 字段
+        } else {
+          console.error('Unexpected data structure:', response);
+        }
+      } catch (error) {
+        console.error("Error fetching competition records:", error);
+      } finally {
+        this.isLoading = false; // 无论成功还是失败，结束加载状态
+      }
+    },
     openDialog() {
       this.showDialog = true;
     },
@@ -140,24 +185,13 @@ export default {
     closeDialog() {
       this.showDialog = false;
     },
-    async fetchCompetitionRecords(queryParams = {}, currentPage = 1, pageSize = 10) {
-      this.isLoading = true; // 设置为加载状态
-      try {
-        const data = await fetchCompetitionRecords({
-          ...queryParams,
-          pageNum: currentPage,
-          pageSize: pageSize
-        });
-        console.log(data);
-        console.log(data.data);
-        this.competitionRecords = data.data || []; // 假设后端返回的数据格式包含 rows
-        this.totalRecords = data.total || 0;       // 假设返回总记录数 total
-      } catch (error) {
-        console.error("Error fetching competition records:", error);
-      } finally {
-        this.isLoading = false; // 无论成功还是失败，结束加载状态
-      }
+    handleCurrentChange(page) { // 修正了拼写错误
+      this.currentPage = page;
+      this.fetchCompetitionRecords(this.queryParams, this.currentPage, this.pageSize);
     },
+
+
+
 
     addNewCard() {
       this.showSecondCard = true;
@@ -280,6 +314,7 @@ input, button {
   font-size: 14px;
   border-radius: 4px;
 }
+
 .el-input__inner {
   border-radius: 4px;
 }

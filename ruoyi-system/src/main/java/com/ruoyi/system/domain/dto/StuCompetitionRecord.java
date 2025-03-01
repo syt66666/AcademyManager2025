@@ -1,6 +1,7 @@
 package com.ruoyi.system.domain.dto;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Date;
 
 public class StuCompetitionRecord {
@@ -10,9 +11,17 @@ public class StuCompetitionRecord {
     private String competitionLevel; // 竞赛级别
     private String awardLevel; // 竞赛奖项
     private Integer scholarshipPoints; // 折合分数
-    private Date competitionDate; // 竞赛参与日期
     private Date awardDate; // 获奖日期
 
+    public String getProofMaterialBase64() {
+        return proofMaterialBase64;
+    }
+
+    public void setProofMaterialBase64(String proofMaterialBase64) {
+        this.proofMaterialBase64 = proofMaterialBase64;
+    }
+
+    private String proofMaterialBase64; // Base64 格式的图片数据
 
     private byte[] proofMaterial; // 证明材料
     private String auditStatus = "未审核"; // 审核状态
@@ -71,14 +80,6 @@ public class StuCompetitionRecord {
 
     public void setScholarshipPoints(Integer scholarshipPoints) {
         this.scholarshipPoints = scholarshipPoints;
-    }
-
-    public Date getCompetitionDate() {
-        return competitionDate;
-    }
-
-    public void setCompetitionDate(Date competitionDate) {
-        this.competitionDate = competitionDate;
     }
 
     public Date getAwardDate() {
@@ -156,4 +157,26 @@ public class StuCompetitionRecord {
         this.applyTime = applyTime;
     }
 
+
+    @Override
+    public String toString() {
+        return "StuCompetitionRecord{" +
+                "competitionId=" + competitionId +
+                ", studentId='" + studentId + '\'' +
+                ", competitionName='" + competitionName + '\'' +
+                ", competitionLevel='" + competitionLevel + '\'' +
+                ", awardLevel='" + awardLevel + '\'' +
+                ", scholarshipPoints=" + scholarshipPoints +
+                ", awardDate=" + awardDate +
+                ", proofMaterialBase64='" + proofMaterialBase64 + '\'' +
+                ", proofMaterial=" + Arrays.toString(proofMaterial) +
+                ", auditStatus='" + auditStatus + '\'' +
+                ", applyTime=" + applyTime +
+                ", nickName='" + nickName + '\'' +
+                ", auditTime=" + auditTime +
+                ", auditRemark='" + auditRemark + '\'' +
+                ", semester='" + semester + '\'' +
+                ", studentName='" + studentName + '\'' +
+                '}';
+    }
 }
