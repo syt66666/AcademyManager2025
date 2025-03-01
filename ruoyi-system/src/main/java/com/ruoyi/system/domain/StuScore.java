@@ -21,7 +21,6 @@ public class StuScore extends BaseEntity
     private String studentId;
 
     /** 姓名 */
-    @Excel(name = "姓名")
     private String studentName;
 
     /** 课程代码 */
@@ -29,7 +28,6 @@ public class StuScore extends BaseEntity
     private String courseCode;
 
     /** 课程名称 */
-    @Excel(name = "课程名称")
     private String courseName;
 
     /** 修读学年 */
@@ -49,7 +47,6 @@ public class StuScore extends BaseEntity
     private String courseCategory;
 
     /** 课程绩点 */
-    @Excel(name = "课程绩点")
     private BigDecimal gpa;
 
     /** 成绩 */
@@ -61,12 +58,10 @@ public class StuScore extends BaseEntity
     private String scoreType;
 
     /** 录入人姓名 */
-    @Excel(name = "录入人姓名")
     private String nickName;
 
     /** 数据插入时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "成绩上传时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date uploadTime;
 
     public String getCourseName() {

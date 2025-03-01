@@ -103,7 +103,7 @@ public class StuCourseController extends BaseController
 
 
 
-    @Log(title = "用户管理", businessType = BusinessType.IMPORT)
+    @Log(title = "课程管理", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
     {
@@ -115,12 +115,10 @@ public class StuCourseController extends BaseController
         return AjaxResult.success(message);
     }
 
-        @GetMapping("/importTemplate")
+    @GetMapping("/importTemplate")
     public void importTemplate(HttpServletResponse response) {
         ExcelUtil<StuCourse> util = new ExcelUtil<>(StuCourse.class);
         util.importTemplateExcel(response, "课程数据");
     }
-
-
 
 }

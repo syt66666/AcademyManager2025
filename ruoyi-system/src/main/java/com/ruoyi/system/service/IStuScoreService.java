@@ -58,4 +58,6 @@ public interface IStuScoreService
      * @return 结果
      */
     public int deleteStuScoreByScoreId(Long scoreId);
+
+    String importScore(List<StuScore> userList, boolean updateSupport, String operName);
 }

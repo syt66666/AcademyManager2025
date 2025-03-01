@@ -131,36 +131,6 @@
         >导入</el-button>
       </el-col>
 
-      <!--      <el-col :span="1.5">-->
-<!--      &lt;!&ndash; 模板下载按钮 &ndash;&gt;-->
-<!--      <el-tooltip content="下载导入模板" placement="top">-->
-<!--        <el-button-->
-<!--          type="info"-->
-<!--          plain-->
-<!--          icon="el-icon-download"-->
-<!--          size="mini"-->
-<!--          @click="handleDownloadTemplate"-->
-<!--          v-hasPermi="['system:course:import']">-->
-<!--          模板-->
-<!--        </el-button>-->
-<!--      </el-tooltip>-->
-<!--    </el-col>-->
-
-<!--      <el-col :span="1.5">-->
-        <!-- 数据导入按钮 -->
-<!--        <el-tooltip content="执行数据导入" placement="top">-->
-<!--          <el-button-->
-<!--            type="success"-->
-<!--            plain-->
-<!--            icon="el-icon-upload2"-->
-<!--            size="mini"-->
-<!--            @click="handleImport"-->
-<!--            v-hasPermi="['system:course:import']">-->
-<!--            导入-->
-<!--          </el-button>-->
-<!--        </el-tooltip>-->
-<!--      </el-col>-->
-
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
