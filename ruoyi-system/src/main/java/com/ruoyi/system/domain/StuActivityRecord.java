@@ -1,179 +1,219 @@
 package com.ruoyi.system.domain;
 
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
 
-public class StuActivityRecord {
-    // 活动ID
+
+public class StuActivityRecord extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    /** 主键ID */
     private Integer activityId;
-    // 学生ID
+
+    /** 学号 */
+    @Excel(name = "学号")
     private String studentId;
-    // 活动名称
+
+    /** 活动名称 */
+    @Excel(name = "活动名称")
     private String activityName;
-    // 活动等级
+
+    /** 活动级别 */
+    @Excel(name = "活动级别")
     private String activityLevel;
-    // 奖励等级
+
+    /** 活动奖项 */
+    @Excel(name = "活动奖项")
     private String awardLevel;
-    // 奖学金积分
-    private Integer scholarshipPoints;
-    // 奖励日期
+
+    /** 折合奖学金分数 */
+    @Excel(name = "折合奖学金分数")
+    private Long scholarshipPoints;
+
+    /** 获奖日期 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "获奖日期", width = 30, dateFormat = "yyyy-MM-dd")
     private Date awardDate;
-    // 证明材料
+
+    /** 证明材料路径 */
+    @Excel(name = "证明材料路径")
     private String proofMaterial;
-    // 学期
+
+    /** 修读学期 */
+    @Excel(name = "修读学期")
     private Integer semester;
-    // 申请时间
+
+    /** 提交时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "提交时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date applyTime;
-    // 昵称
+
+    /** 审核人姓名 */
+    @Excel(name = "审核人姓名")
     private String nickName;
-    // 审核状态
+
+    /** 审核状态 */
+    @Excel(name = "审核状态")
     private String auditStatus;
-    // 审核时间
+
+    /** 审核时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date auditTime;
-    // 审核备注
+
+    /** 审核意见 */
+    @Excel(name = "审核意见")
     private String auditRemark;
 
-
-    // 获取审核备注
-    public String getAuditRemark() {
-        return auditRemark;
-    }
-
-    // 设置审核备注
-    public void setAuditRemark(String auditRemark) {
-        this.auditRemark = auditRemark;
-    }
-
-    // 获取审核时间
-    public Date getAuditTime() {
-        return auditTime;
-    }
-
-    // 设置审核时间
-    public void setAuditTime(Date auditTime) {
-        this.auditTime = auditTime;
-    }
-
-    // 获取审核状态
-    public String getAuditStatus() {
-        return auditStatus;
-    }
-
-    // 设置审核状态
-    public void setAuditStatus(String auditStatus) {
-        this.auditStatus = auditStatus;
-    }
-
-    // 获取昵称
-    public String getNickName() {
-        return nickName;
-    }
-
-    // 设置昵称
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    // 获取申请时间
-    public Date getApplyTime() {
-        return applyTime;
-    }
-
-    // 设置申请时间
-    public void setApplyTime(Date applyTime) {
-        this.applyTime = applyTime;
-    }
-
-    // 获取学期
-    public Integer getSemester() {
-        return semester;
-    }
-
-    // 设置学期
-    public void setSemester(Integer semester) {
-        this.semester = semester;
-    }
-
-    // 获取证明材料
-    public String getProofMaterial() {
-        return proofMaterial;
-    }
-
-    // 设置证明材料
-    public void setProofMaterial(String proofMaterial) {
-        this.proofMaterial = proofMaterial;
-    }
-
-    // 获取奖励日期
-    public Date getAwardDate() {
-        return awardDate;
-    }
-
-    // 设置奖励日期
-    public void setAwardDate(Date awardDate) {
-        this.awardDate = awardDate;
-    }
-
-    // 获取奖学金积分
-    public Integer getScholarshipPoints() {
-        return scholarshipPoints;
-    }
-
-    // 设置奖学金积分
-    public void setScholarshipPoints(Integer scholarshipPoints) {
-        this.scholarshipPoints = scholarshipPoints;
-    }
-
-    // 获取奖励等级
-    public String getAwardLevel() {
-        return awardLevel;
-    }
-
-    // 设置奖励等级
-    public void setAwardLevel(String awardLevel) {
-        this.awardLevel = awardLevel;
-    }
-
-    // 获取活动等级
-    public String getActivityLevel() {
-        return activityLevel;
-    }
-
-    // 设置活动等级
-    public void setActivityLevel(String activityLevel) {
-        this.activityLevel = activityLevel;
-    }
-
-    // 获取活动名称
-    public String getActivityName() {
-        return activityName;
-    }
-
-    // 设置活动名称
-    public void setActivityName(String activityName) {
-        this.activityName = activityName;
-    }
-
-    // 获取学生ID
-    public String getStudentId() {
-        return studentId;
-    }
-
-    // 设置学生ID
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    // 获取活动ID
-    public Integer getActivityId() {
-        return activityId;
-    }
-
-    // 设置活动ID
-    public void setActivityId(Integer activityId) {
+    public void setActivityId(Integer activityId)
+    {
         this.activityId = activityId;
     }
 
+    public Integer getActivityId()
+    {
+        return activityId;
+    }
+    public void setStudentId(String studentId)
+    {
+        this.studentId = studentId;
+    }
 
+    public String getStudentId()
+    {
+        return studentId;
+    }
+    public void setActivityName(String activityName)
+    {
+        this.activityName = activityName;
+    }
 
+    public String getActivityName()
+    {
+        return activityName;
+    }
+    public void setActivityLevel(String activityLevel)
+    {
+        this.activityLevel = activityLevel;
+    }
+
+    public String getActivityLevel()
+    {
+        return activityLevel;
+    }
+    public void setAwardLevel(String awardLevel)
+    {
+        this.awardLevel = awardLevel;
+    }
+
+    public String getAwardLevel()
+    {
+        return awardLevel;
+    }
+    public void setScholarshipPoints(Long scholarshipPoints)
+    {
+        this.scholarshipPoints = scholarshipPoints;
+    }
+
+    public Long getScholarshipPoints()
+    {
+        return scholarshipPoints;
+    }
+    public void setAwardDate(Date awardDate)
+    {
+        this.awardDate = awardDate;
+    }
+
+    public Date getAwardDate()
+    {
+        return awardDate;
+    }
+    public void setProofMaterial(String proofMaterial)
+    {
+        this.proofMaterial = proofMaterial;
+    }
+
+    public String getProofMaterial()
+    {
+        return proofMaterial;
+    }
+    public void setSemester(Integer semester)
+    {
+        this.semester = semester;
+    }
+
+    public Integer getSemester()
+    {
+        return semester;
+    }
+    public void setApplyTime(Date applyTime)
+    {
+        this.applyTime = applyTime;
+    }
+
+    public Date getApplyTime()
+    {
+        return applyTime;
+    }
+    public void setNickName(String nickName)
+    {
+        this.nickName = nickName;
+    }
+
+    public String getNickName()
+    {
+        return nickName;
+    }
+    public void setAuditStatus(String auditStatus)
+    {
+        this.auditStatus = auditStatus;
+    }
+
+    public String getAuditStatus()
+    {
+        return auditStatus;
+    }
+    public void setAuditTime(Date auditTime)
+    {
+        this.auditTime = auditTime;
+    }
+
+    public Date getAuditTime()
+    {
+        return auditTime;
+    }
+    public void setAuditRemark(String auditRemark)
+    {
+        this.auditRemark = auditRemark;
+    }
+
+    public String getAuditRemark()
+    {
+        return auditRemark;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+                .append("activityId", getActivityId())
+                .append("studentId", getStudentId())
+                .append("activityName", getActivityName())
+                .append("activityLevel", getActivityLevel())
+                .append("awardLevel", getAwardLevel())
+                .append("scholarshipPoints", getScholarshipPoints())
+                .append("awardDate", getAwardDate())
+                .append("proofMaterial", getProofMaterial())
+                .append("semester", getSemester())
+                .append("applyTime", getApplyTime())
+                .append("nickName", getNickName())
+                .append("auditStatus", getAuditStatus())
+                .append("auditTime", getAuditTime())
+                .append("auditRemark", getAuditRemark())
+                .toString();
+    }
 }
-

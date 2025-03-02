@@ -4,27 +4,113 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuActivityRecordMapper">
 
-    <insert id="insert" parameterType="StuActivityRecord">
-        INSERT INTO stu_activity_record (student_id, activity_name, activity_level, award_level, scholarship_points, award_date, proof_material, semester)
-        VALUES (#{studentId}, #{activityName}, #{activityLevel}, #{awardLevel}, #{scholarshipPoints}, #{awardDate}, #{proofMaterial}, #{semester})
+    <resultMap type="StuActivityRecord" id="StuActivityRecordResult">
+        <result property="activityId"    column="activity_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="activityName"    column="activity_name"    />
+        <result property="activityLevel"    column="activity_level"    />
+        <result property="awardLevel"    column="award_level"    />
+        <result property="scholarshipPoints"    column="scholarship_points"    />
+        <result property="awardDate"    column="award_date"    />
+        <result property="proofMaterial"    column="proof_material"    />
+        <result property="semester"    column="semester"    />
+        <result property="applyTime"    column="apply_time"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="auditStatus"    column="audit_status"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="auditRemark"    column="audit_remark"    />
+    </resultMap>
+
+    <sql id="selectStuActivityRecordVo">
+        select activity_id, student_id, activity_name, activity_level, award_level, scholarship_points, award_date, proof_material, semester, apply_time, nick_name, audit_status, audit_time, audit_remark from stu_activity_record
+    </sql>
+
+    <select id="selectStuActivityRecordList" parameterType="StuActivityRecord" resultMap="StuActivityRecordResult">
+        <include refid="selectStuActivityRecordVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="activityName != null  and activityName != ''"> and activity_name like concat('%', #{activityName}, '%')</if>
+            <if test="activityLevel != null  and activityLevel != ''"> and activity_level = #{activityLevel}</if>
+            <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
+            <if test="scholarshipPoints != null "> and scholarship_points = #{scholarshipPoints}</if>
+            <if test="awardDate != null "> and award_date = #{awardDate}</if>
+            <if test="proofMaterial != null  and proofMaterial != ''"> and proof_material = #{proofMaterial}</if>
+            <if test="semester != null "> and semester = #{semester}</if>
+            <if test="applyTime != null "> and apply_time = #{applyTime}</if>
+            <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
+            <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
+            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+        </where>
+    </select>
+
+    <select id="selectStuActivityRecordByActivityId" parameterType="Integer" resultMap="StuActivityRecordResult">
+        <include refid="selectStuActivityRecordVo"/>
+        where activity_id = #{activityId}
+    </select>
+
+    <insert id="insertStuActivityRecord" parameterType="StuActivityRecord" useGeneratedKeys="true" keyProperty="activityId">
+        insert into stu_activity_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="activityName != null and activityName != ''">activity_name,</if>
+            <if test="activityLevel != null and activityLevel != ''">activity_level,</if>
+            <if test="awardLevel != null and awardLevel != ''">award_level,</if>
+            <if test="scholarshipPoints != null">scholarship_points,</if>
+            <if test="awardDate != null">award_date,</if>
+            <if test="proofMaterial != null and proofMaterial != ''">proof_material,</if>
+            <if test="semester != null">semester,</if>
+            <if test="applyTime != null">apply_time,</if>
+            <if test="nickName != null">nick_name,</if>
+            <if test="auditStatus != null">audit_status,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="auditRemark != null">audit_remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="activityName != null and activityName != ''">#{activityName},</if>
+            <if test="activityLevel != null and activityLevel != ''">#{activityLevel},</if>
+            <if test="awardLevel != null and awardLevel != ''">#{awardLevel},</if>
+            <if test="scholarshipPoints != null">#{scholarshipPoints},</if>
+            <if test="awardDate != null">#{awardDate},</if>
+            <if test="proofMaterial != null and proofMaterial != ''">#{proofMaterial},</if>
+            <if test="semester != null">#{semester},</if>
+            <if test="applyTime != null">#{applyTime},</if>
+            <if test="nickName != null">#{nickName},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="auditRemark != null">#{auditRemark},</if>
+        </trim>
     </insert>
 
-    <delete id="deleteByActivityId" parameterType="int">
-        DELETE FROM stu_activity_record WHERE activity_id = #{activityId}
-    </delete>
-
-    <update id="update" parameterType="StuActivityRecord">
-        UPDATE stu_activity_record
-        SET student_id = #{studentId}, activity_name = #{activityName}, activity_level = #{activityLevel}, award_level = #{awardLevel}, scholarship_points = #{scholarshipPoints}, award_date = #{awardDate}, proof_material = #{proofMaterial}, semester = #{semester}, apply_time = #{applyTime}, nick_name = #{nickName}, audit_status = #{auditStatus}, audit_time = #{auditTime}, audit_remark = #{auditRemark}
-        WHERE activity_id = #{activityId}
+    <update id="updateStuActivityRecord" parameterType="StuActivityRecord">
+        update stu_activity_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="activityName != null and activityName != ''">activity_name = #{activityName},</if>
+            <if test="activityLevel != null and activityLevel != ''">activity_level = #{activityLevel},</if>
+            <if test="awardLevel != null and awardLevel != ''">award_level = #{awardLevel},</if>
+            <if test="scholarshipPoints != null">scholarship_points = #{scholarshipPoints},</if>
+            <if test="awardDate != null">award_date = #{awardDate},</if>
+            <if test="proofMaterial != null and proofMaterial != ''">proof_material = #{proofMaterial},</if>
+            <if test="semester != null">semester = #{semester},</if>
+            <if test="applyTime != null">apply_time = #{applyTime},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
+        </trim>
+        where activity_id = #{activityId}
     </update>
 
-    <select id="selectByActivityId" parameterType="int" resultType="StuActivityRecord">
-        SELECT * FROM stu_activity_record WHERE activity_id = #{activityId}
-    </select>
+    <delete id="deleteStuActivityRecordByActivityId" parameterType="Integer">
+        delete from stu_activity_record where activity_id = #{activityId}
+    </delete>
 
-    <select id="selectAll" resultType="StuActivityRecord">
-        SELECT * FROM stu_activity_record
-    </select>
-
+    <delete id="deleteStuActivityRecordByActivityIds" parameterType="String">
+        delete from stu_activity_record where activity_id in
+        <foreach item="activityId" collection="array" open="(" separator="," close=")">
+            #{activityId}
+        </foreach>
+    </delete>
 </mapper>
