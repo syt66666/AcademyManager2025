@@ -50,7 +50,6 @@ public class StuCompetitionRecordServiceImpl implements StuCompetitionRecordServ
             throw new IllegalArgumentException("插入竞赛记录失败");
         }
 
-
    /* // 删除竞赛记录
     public int deleteStuCompetitionRecord(Integer competitionId) {
         return mapper.deleteStuCompetitionRecord(competitionId);
@@ -76,6 +75,21 @@ public class StuCompetitionRecordServiceImpl implements StuCompetitionRecordServ
     // 获取所有竞赛记录
     @Override
     public List<StuCompetitionRecord> getAllCompetitionRecords(StuCompetitionRecord record) {
+        // 获取当前登录用户的信息
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String studentId = "";
+
+        // 获取学生ID，判断principal的类型
+        if (principal instanceof UserDetails) {
+            studentId = ((UserDetails) principal).getUsername();
+        } else if (principal instanceof String) {
+            studentId = (String) principal;
+        }
+
+        // 设置当前登录用户的 studentId 到查询条件中
+        record.setStudentId(studentId);
+
+        // 调用 Mapper 查询竞赛记录
         return mapper.getAllCompetitionRecords(record);
     }
 }
