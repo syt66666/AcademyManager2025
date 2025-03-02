@@ -38,6 +38,7 @@
         competition_name,    -- 竞赛名称
         student_id,         -- 学号
         award_date,  -- 获奖日期
+        semester, -- 学期
         competition_level,  -- 竞赛级别
         award_level,        -- 奖项级别
         proof_material,     -- 证明材料

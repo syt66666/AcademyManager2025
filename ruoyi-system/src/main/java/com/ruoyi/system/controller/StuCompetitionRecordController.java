@@ -32,8 +32,10 @@ public class StuCompetitionRecordController extends BaseController {
     @PostMapping("/add")
     public AjaxResult addCompetitionRecord(@RequestParam("StuCompetitionRecord") String stucompetitionrecord,
                                            @RequestParam("proofMaterial") MultipartFile proofMaterial) {
+        // 解析 JSON 数据
         StuCompetitionRecord record = JSON.parseObject(stucompetitionrecord, StuCompetitionRecord.class);
 
+        // 校验必填字段
         if (record.getCompetitionName() == null || record.getCompetitionName().isEmpty()) {
             return AjaxResult.error("竞赛名称不能为空");
         }
@@ -44,65 +46,52 @@ public class StuCompetitionRecordController extends BaseController {
             return AjaxResult.error("几等奖不能为空");
         }
 
-        // 图片大小不能超过10MB
+        // 校验图片大小
         if (proofMaterial.getSize() > 10 * 1024 * 1024) {  // 10MB = 10 * 1024 * 1024 字节
             return AjaxResult.error("图片大小不能超过10MB");
         }
         record.setApplyTime(LocalDateTime.now());
 
+        // 处理图片
         try {
+            // 读取原始图片
             BufferedImage originalImage = ImageIO.read(proofMaterial.getInputStream());
-
-            // 如果图片宽度或高度超过 2560px 或 1440px，则进行缩放
-            double scaleRatio = 1.0;
-            if (originalImage.getWidth() > 2560 || originalImage.getHeight() > 1440) {
-                scaleRatio = Math.min(2560.0 / originalImage.getWidth(), 1440.0 / originalImage.getHeight());
+            if (originalImage == null) {
+                return AjaxResult.error("图片格式不支持或文件已损坏");
             }
+
+            // 计算缩放比例
+            double scaleRatio = Math.min(
+                    Math.min(2560.0 / originalImage.getWidth(), 1.0), // 限制最大宽度为 2560px
+                    Math.min(1440.0 / originalImage.getHeight(), 1.0) // 限制最大高度为 1440px
+            );
 
             int width = (int) (originalImage.getWidth() * scaleRatio);
             int height = (int) (originalImage.getHeight() * scaleRatio);
 
-            // 如果图片尺寸未超过限制，直接使用原始图片
-            if (scaleRatio == 1.0) {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                ImageIO.write(originalImage, "jpg", byteArrayOutputStream);
-                record.setProofMaterial(byteArrayOutputStream.toByteArray());
-            } else {
-                // 缩放图片
-                Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                BufferedImage compressedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                Graphics2D g2d = compressedImage.createGraphics();
-                g2d.drawImage(scaledImage, 0, 0, null);
-                g2d.dispose();
+            // 缩放图片
+            Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+            BufferedImage compressedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = compressedImage.createGraphics();
+            g2d.drawImage(scaledImage, 0, 0, null);
+            g2d.dispose();
 
-                // 压缩图片并设置高质量
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                ImageWriter jpgWriter = ImageIO.getImageWritersByFormatName("jpg").next();
-                ImageOutputStream ios = ImageIO.createImageOutputStream(byteArrayOutputStream);
-                jpgWriter.setOutput(ios);
-                ImageWriteParam param = jpgWriter.getDefaultWriteParam();
-                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                param.setCompressionQuality(0.95f); // 提高压缩质量
-                jpgWriter.write(null, new IIOImage(compressedImage, null, null), param);
-                ios.close();
-                jpgWriter.dispose();
-
-                record.setProofMaterial(byteArrayOutputStream.toByteArray());
+            // 压缩图片并转换为字节数组
+            try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+                ImageIO.write(compressedImage, "jpg", byteArrayOutputStream);
+                record.setProofMaterial(byteArrayOutputStream.toByteArray()); // 设置图片数据
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             return AjaxResult.error("图片处理失败: " + e.getMessage());
-        } finally {
-            // 确保删除临时文件
-            if (proofMaterial != null) {
-                try {
-                    proofMaterial.getInputStream().close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
-        service.insertStuCompetitionRecord(record);
+        // 插入记录到数据库
+        try {
+            service.insertStuCompetitionRecord(record);
+        } catch (Exception e) {
+            return AjaxResult.error("保存记录失败: " + e.getMessage());
+        }
+
         return AjaxResult.success();
     }
     @GetMapping("/records")
