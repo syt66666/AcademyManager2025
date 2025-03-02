@@ -10,7 +10,6 @@ public interface StuCompetitionRecordService {
     public void insertStuCompetitionRecord(StuCompetitionRecord record);
 
     // 获取所有竞赛记录
-    // 获取所有竞赛记录
     List<StuCompetitionRecord> getAllCompetitionRecords(StuCompetitionRecord record);
 /*
     int deleteStuCompetitionRecord(Integer competitionId);

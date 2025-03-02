@@ -35,29 +35,49 @@
             parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
         SELECT
         competition_id AS id,
-        competition_name,    -- 竞赛名称
-        student_id,         -- 学号
-        award_date,  -- 获奖日期
-        semester, -- 学期
-        competition_level,  -- 竞赛级别
-        award_level,        -- 奖项级别
-        proof_material,     -- 证明材料
-        audit_status,       -- 审核状态
-        audit_time,         -- 审核时间
-        audit_remark        -- 审核备注
+        competition_name,
+        student_id,
+        award_date,
+        semester,
+        competition_level,
+        award_level,
+        proof_material,
+        audit_status,
+        audit_time,
+        audit_remark
         FROM
         stu_competition_record
         <where>
-            <if test="competitionName != null and competitionName != ''">
-                AND competition_name LIKE CONCAT('%', #{competitionName}, '%')
-            </if>
+            <!-- 按学号查询 -->
             <if test="studentId != null and studentId != ''">
                 AND student_id = #{studentId}
             </if>
-            <if test="awardDate != null and awardDate != ''">
+            <!-- 按竞赛名称模糊查询 -->
+            <if test="competitionName != null and competitionName != ''">
+                AND competition_name LIKE CONCAT('%', #{competitionName}, '%')
+            </if>
+            <!-- 按获奖日期查询 -->
+            <if test="awardDate != null">
                 AND award_date = #{awardDate}
             </if>
+            <!-- 按学期查询 -->
+            <if test="semester != null and semester != ''">
+                AND semester = #{semester}
+            </if>
+            <!-- 按竞赛级别查询 -->
+            <if test="competitionLevel != null and competitionLevel != ''">
+                AND competition_level = #{competitionLevel}
+            </if>
+            <!-- 按奖项级别查询 -->
+            <if test="awardLevel != null and awardLevel != ''">
+                AND award_level = #{awardLevel}
+            </if>
+            <!-- 按审核状态查询 -->
+            <if test="auditStatus != null and auditStatus != ''">
+                AND audit_status = #{auditStatus}
+            </if>
         </where>
+        ORDER BY award_date DESC
     </select>
 
 
