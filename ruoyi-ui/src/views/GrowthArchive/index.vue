@@ -250,7 +250,7 @@ export default {
         this.$router.push({ path: '/GrowthArchive/StudentScoreShow', query: { semester: this.currentSemester.name } });
       }
       if (key === 'competition') {
-        this.$router.push({path:'/GrowthArchive/CompetitonRecord/index', query: { semester: this.currentSemester.name } });
+        this.$router.push({path:'/GrowthArchive/CompetitonRecord', query: { semester: this.currentSemester.name } });
       }
       if (key === 'activity') {
         this.$router.push('/GrowthArchive/ActivityRecord')
