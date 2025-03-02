@@ -23,21 +23,21 @@
               class="custom-input"
             />
           </el-form-item>
-          <!--          <el-form-item label="课程类型">-->
-          <!--            <el-select-->
-          <!--              v-model="queryParams.courseCategory"-->
-          <!--              placeholder="所有类型"-->
-          <!--              clearable-->
-          <!--              class="custom-select"-->
-          <!--            >-->
-          <!--              <el-option-->
-          <!--                v-for="item in courseCategorys"-->
-          <!--                :key="item.value"-->
-          <!--                :label="item.label"-->
-          <!--                :value="item.value"-->
-          <!--              />-->
-          <!--            </el-select>-->
-          <!--          </el-form-item>-->
+                    <el-form-item label="课程类型">
+                      <el-select
+                        v-model="queryParams.courseCategory"
+                        placeholder="所有类型"
+                        clearable
+                        class="custom-select"
+                      >
+                        <el-option
+                          v-for="item in courseCategorys"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value"
+                        />
+                      </el-select>
+                    </el-form-item>
           <el-form-item>
             <el-button
               type="primary"
@@ -196,8 +196,8 @@ export default {
       },
       // 课程类型选项
       courseCategorys: [
-        { value: "exam", label: "必修" },
-        { value: "usual", label: "选修" },
+        { value: "必修", label: "必修" },
+        { value: "选修", label: "选修" },
       ],
     };
   },
