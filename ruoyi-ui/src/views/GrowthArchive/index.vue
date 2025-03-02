@@ -243,11 +243,14 @@ export default {
     },
 
     handleModuleClick(key) {
+      // if (key === 'score') {
+      //   this.$router.push('/GrowthArchive/StudentScoreShow')
+      // }
       if (key === 'score') {
-        this.$router.push('')
+        this.$router.push({ path: '/GrowthArchive/StudentScoreShow', query: { semester: this.currentSemester.name } });
       }
       if (key === 'competition') {
-        this.$router.push('/GrowthArchive/CompetitonRecord/index')
+        this.$router.push({path:'/GrowthArchive/CompetitonRecord/index', query: { semester: this.currentSemester.name } });
       }
       if (key === 'activity') {
         this.$router.push('/GrowthArchive/ActivityRecord')

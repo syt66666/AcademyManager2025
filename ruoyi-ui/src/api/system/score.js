@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询【请填写功能名称】列表
+// 查询成绩列表
 export function listScore(query) {
   return request({
     url: '/system/score/list',
@@ -9,7 +9,7 @@ export function listScore(query) {
   })
 }
 
-// 查询【请填写功能名称】详细
+// 查询成绩详细
 export function getScore(scoreId) {
   return request({
     url: '/system/score/' + scoreId,
@@ -17,7 +17,7 @@ export function getScore(scoreId) {
   })
 }
 
-// 新增【请填写功能名称】
+// 新增成绩信息
 export function addScore(data) {
   return request({
     url: '/system/score',

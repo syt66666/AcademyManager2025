@@ -1,0 +1,500 @@
+<template>
+  <div class="container">
+    <div class="main-container">
+      <!-- 顶部标题栏 -->
+      <div class="nav">
+        <div class="nav-content">
+          <h2>
+            <span class="score-icon">📚</span>
+            学业成绩详情
+            <span class="current-semester">{{ activeSemester }} 成绩单</span>
+          </h2>
+        </div>
+      </div>
+
+      <!-- 筛选条件卡片 -->
+      <div class="filter-card">
+        <el-form :inline="true" :model="queryParams" class="demo-form-inline">
+          <el-form-item label="课程搜索">
+            <el-input
+              v-model="queryParams.courseName"
+              placeholder="输入课程名称"
+              clearable
+              class="custom-input"
+            />
+          </el-form-item>
+<!--          <el-form-item label="课程类型">-->
+<!--            <el-select-->
+<!--              v-model="queryParams.courseCategory"-->
+<!--              placeholder="所有类型"-->
+<!--              clearable-->
+<!--              class="custom-select"-->
+<!--            >-->
+<!--              <el-option-->
+<!--                v-for="item in courseCategorys"-->
+<!--                :key="item.value"-->
+<!--                :label="item.label"-->
+<!--                :value="item.value"-->
+<!--              />-->
+<!--            </el-select>-->
+<!--          </el-form-item>-->
+          <el-form-item>
+            <el-button
+              type="primary"
+              class="query-button"
+              @click="handleQuery"
+              icon="el-icon-search"
+            >筛选</el-button
+            >
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- 数据概览 -->
+      <div class="stats-overview">
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ currentGPA }}</div>
+            <div class="stat-label">当前GPA</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ averageScore }}</div>
+            <div class="stat-label">平均成绩</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">🏅</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ maxScore }}</div>
+            <div class="stat-label">最高成绩</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-content">
+            <div class="stat-value">{{ totalCredits }}</div>
+            <div class="stat-label">已获学分</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 成绩表格 -->
+      <div class="score-table-card">
+        <el-table
+          :data="scoreList"
+          style="width: 100%"
+          class="custom-table"
+          :header-cell-style="headerStyle"
+          v-loading="loading"
+        >
+          <el-table-column prop="courseName" label="课程名称" width="220">
+            <template slot-scope="{ row }">
+              <div class="course-info">
+                <span class="course-icon">📖</span>
+                <div class="course-details">
+                  <div class="course-title">{{ row.courseName }}</div>
+                  <div class="course-code">{{ row.courseCode }}</div>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="credit" label="学分" width="100" sortable>
+            <template slot-scope="{ row }">
+              <span class="credit-badge">{{ row.credit }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="scoreValue" label="成绩" sortable>
+            <template slot-scope="{ row }">
+              <div class="score-progress">
+                <div
+                  class="progress-bar"
+                  :style="{
+                    width: `${row.scoreValue}%`,
+                    background: scoreColor(row.scoreValue),
+                  }"
+                >
+                  <span class="score-text">{{ row.scoreValue }}</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="courseCategory" label="课程类型" width="140">
+            <template slot-scope="{ row }">
+              <el-tag :type="categoryTagType(row.courseCategory)">
+                {{ row.courseCategory }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="gpa" label="绩点" width="120" sortable>
+            <template slot-scope="{ row }">
+              <span class="gpa-badge">{{ row.gpa }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <pagination
+          v-show="total>0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { listScore } from "@/api/system/score";
+import store from "@/store";
+
+export default {
+  mounted() {
+    // 直接获取参数
+    const semesterName = this.$route.query.semester
+    // 可以存储到组件data中
+    this.activeSemester = semesterName
+  },
+  data() {
+    return {
+      activeSemester: "",
+      // 加载状态
+      loading: true,
+      // 总条数
+      total: 0,
+      // 当前GPA
+      currentGPA: 0,
+      // 平均成绩
+      averageScore: 0,
+      // 最高成绩
+      maxScore: 0,
+      // 总学分
+      totalCredits: 0,
+      // 成绩表格数据
+      scoreList: [],
+      // 查询参数
+      queryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        studentId: store.state.user.name,
+        courseName: "",
+        courseCategory:""
+      },
+      // 课程类型选项
+      courseCategorys: [
+        { value: "exam", label: "必修" },
+        { value: "usual", label: "选修" },
+      ],
+    };
+  },
+  created() {
+    this.getList();
+  },
+  methods: {
+    /** 查询成绩列表 */
+    getList() {
+      this.loading = true;
+      listScore(this.queryParams).then(response => {
+        this.scoreList = response.rows;
+        this.total = response.total;
+        this.calcSummaryData();
+        this.loading = false;
+      });
+    },
+    /** 计算统计指标 */
+    calcSummaryData() {
+      if (this.scoreList.length > 0) {
+        // 计算GPA
+        this.currentGPA = this.scoreList.reduce((acc, cur) => acc + cur.gpa, 0) / this.scoreList.length;
+        // 计算平均成绩
+        this.averageScore = this.scoreList.reduce((acc, cur) => acc + cur.scoreValue, 0) / this.scoreList.length;
+        // 计算最高成绩
+        this.maxScore = Math.max(...this.scoreList.map(item => item.scoreValue));
+        // 计算总学分
+        this.totalCredits = this.scoreList.reduce((acc, cur) => acc + cur.credit, 0);
+      }
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /** 根据成绩值获取颜色 */
+    scoreColor(score) {
+      if (score >= 90) return "#48BB78";
+      if (score >= 80) return "#4299E1";
+      if (score >= 60) return "#ECC94B";
+      return "#F56565";
+    },
+    /** 课程类型标签样式 */
+    categoryTagType(category) {
+      const types = {
+        专业课: "success",
+        公共课: "",
+        实践课: "warning",
+        选修课: "info",
+      };
+      return types[category] || "";
+    },
+    /** 表头样式 */
+    headerStyle() {
+      return {
+        backgroundColor: "#EBF4FF",
+        color: "#2B6CB0",
+        fontWeight: "600",
+      };
+    }
+  }
+};
+</script>
+
+<style scoped>
+/* 继承主界面的设计变量 */
+:root {
+  --primary: #2b6cb0;
+  --secondary: #4299e1;
+  --success: #48bb78;
+  --warning: #ecc94b;
+  --info: #718096;
+  --surface: #f7fafc;
+}
+
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: linear-gradient(160deg, #EBF4FF 0%, #EBF8FF 100%);
+  min-height: 100vh;
+}
+
+.main-container {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav {
+  background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
+  border-radius: 1rem;
+  margin: -2rem -2rem 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg,
+  rgba(255,255,255,0.1) 25%,
+  transparent 50%,
+  rgba(255,255,255,0.1) 75%
+  );
+  opacity: 0.3;
+}
+
+.nav-content {
+  padding: 1.5rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.nav h2 {
+  color: white;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+}
+
+.current-semester {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin-left: 1rem;
+}
+
+.filter-card {
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-icon {
+  font-size: 2.5rem;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+.stat-label {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.score-table-card {
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.custom-table {
+  border-radius: 0.8rem;
+  overflow: hidden;
+}
+
+.course-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.course-icon {
+  font-size: 1.5rem;
+}
+
+.credit-badge {
+  background: var(--secondary);
+  color: #000000;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.gpa-badge {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #000000;
+  padding: 4px 12px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.score-progress {
+  background: #ebf8ff;
+  height: 28px;
+  border-radius: 14px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  transition: width 0.6s ease;
+  display: flex;
+  align-items: center;
+  padding-right: 12px;
+  justify-content: flex-end;
+  position: relative;
+}
+
+.progress-bar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: rgba(255,255,255,0.3);
+}
+
+.score-text {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .main-container {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+
+  .nav {
+    margin: -1rem -1rem 1.5rem;
+    border-radius: 1rem 1rem 0 0;
+  }
+
+  .stats-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .nav h2 {
+    font-size: 1.4rem;
+  }
+}
+</style>
