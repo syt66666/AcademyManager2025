@@ -78,15 +78,24 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
+<!--      <el-col :span="1.5">-->
+<!--        <el-button-->
+<!--          type="primary"-->
+<!--          plain-->
+<!--          icon="el-icon-plus"-->
+<!--          size="mini"-->
+<!--          @click="handleAdd"-->
+<!--          v-hasPermi="['system:score:add']"-->
+<!--        >新增</el-button>-->
+<!--      </el-col>-->
       <el-col :span="1.5">
         <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
+          type="info"
+          icon="el-icon-upload2"
           size="mini"
-          @click="handleAdd"
-          v-hasPermi="['system:score:add']"
-        >新增</el-button>
+          @click="handleImport"
+          v-hasPermi="['system:score:import']"
+        >导入</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -120,38 +129,34 @@
           v-hasPermi="['system:score:export']"
         >导出</el-button>
       </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="info"
-          icon="el-icon-upload2"
-          size="mini"
-          @click="handleImport"
-          v-hasPermi="['system:score:import']"
-        >导入</el-button>
-      </el-col>
+
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="scoreList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <!--      <el-table-column label="主键ID" align="center" prop="scoreId" />-->
-      <el-table-column label="学号" align="center" prop="studentId" />
+      <el-table-column label="序号" width="80" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
+      <el-table-column label="学号" align="center" prop="studentId" width="150"/>
       <el-table-column label="姓名" align="center" prop="studentName" />
-      <el-table-column label="课程代码" align="center" prop="courseCode" />
+      <el-table-column label="课程代码" align="center" prop="courseCode" width="180"/>
       <el-table-column label="课程名称" align="center" prop="courseName" />
       <el-table-column label="修读学年" align="center" prop="academicYear" />
       <el-table-column label="修读学期" align="center" prop="semester" />
-      <el-table-column label="学分" align="center" prop="credit" />
-      <el-table-column label="课程类型" align="center" prop="courseCategory" />
-      <el-table-column label="课程绩点" align="center" prop="gpa" />
+<!--      <el-table-column label="学分" align="center" prop="credit" />-->
+<!--      <el-table-column label="课程类型" align="center" prop="courseCategory" />-->
+<!--      <el-table-column label="课程绩点" align="center" prop="gpa" />-->
       <el-table-column label="成绩" align="center" prop="scoreValue" />
       <el-table-column label="成绩类型" align="center" prop="scoreType" />
-      <el-table-column label="录入人姓名" align="center" prop="nickName" />
-      <el-table-column label="成绩添加时间" align="center" prop="uploadTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.uploadTime, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
+<!--      <el-table-column label="录入人姓名" align="center" prop="nickName" />-->
+<!--      <el-table-column label="成绩上传时间" align="center" prop="uploadTime" width="180">-->
+<!--        <template slot-scope="scope">-->
+<!--          <span>{{ parseTime(scope.row.uploadTime, '{y}-{m}-{d}') }}</span>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button

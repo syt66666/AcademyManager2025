@@ -39,11 +39,9 @@ public class StuScore extends BaseEntity
     private String semester;
 
     /** 学分值 */
-    @Excel(name = "学分")
     private Long credit;
 
     /** 课程类型 */
-    @Excel(name = "课程类型")
     private String courseCategory;
 
     /** 课程绩点 */
