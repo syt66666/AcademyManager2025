@@ -63,6 +63,7 @@
             v-for="(module, key) in modules"
             :key="key"
             class="module-item"
+            @click="handleModuleClick(key)"
           >
             <div class="module-icon">
               {{ module.icon }}
@@ -239,7 +240,26 @@ export default {
         future: 'linear-gradient(90deg, #cbd5e0 0%, #a0aec0 100%)'
       }
       return statusColors[semester.status]
+    },
+
+    handleModuleClick(key) {
+      if (key === 'score') {
+        this.$router.push('')
+      }
+      if (key === 'competition') {
+        this.$router.push('/GrowthArchive/CompetitonRecord/index')
+      }
+      if (key === 'activity') {
+        this.$router.push('/GrowthArchive/ActivityRecord')
+      }
+      if (key === 'report') {
+        this.$router.push('/ReportManagement/index')
+      }
+      if (key === 'meeting') {
+        this.$router.push('')
+      }
     }
+
   }
 }
 </script>
