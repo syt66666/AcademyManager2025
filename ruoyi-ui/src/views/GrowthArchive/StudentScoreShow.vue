@@ -23,21 +23,21 @@
               class="custom-input"
             />
           </el-form-item>
-<!--          <el-form-item label="课程类型">-->
-<!--            <el-select-->
-<!--              v-model="queryParams.courseCategory"-->
-<!--              placeholder="所有类型"-->
-<!--              clearable-->
-<!--              class="custom-select"-->
-<!--            >-->
-<!--              <el-option-->
-<!--                v-for="item in courseCategorys"-->
-<!--                :key="item.value"-->
-<!--                :label="item.label"-->
-<!--                :value="item.value"-->
-<!--              />-->
-<!--            </el-select>-->
-<!--          </el-form-item>-->
+          <!--          <el-form-item label="课程类型">-->
+          <!--            <el-select-->
+          <!--              v-model="queryParams.courseCategory"-->
+          <!--              placeholder="所有类型"-->
+          <!--              clearable-->
+          <!--              class="custom-select"-->
+          <!--            >-->
+          <!--              <el-option-->
+          <!--                v-for="item in courseCategorys"-->
+          <!--                :key="item.value"-->
+          <!--                :label="item.label"-->
+          <!--                :value="item.value"-->
+          <!--              />-->
+          <!--            </el-select>-->
+          <!--          </el-form-item>-->
           <el-form-item>
             <el-button
               type="primary"
@@ -110,21 +110,28 @@
               <span class="credit-badge">{{ row.credit }}</span>
             </template>
           </el-table-column>
+          <!-- 修改成绩列 -->
           <el-table-column prop="scoreValue" label="成绩" sortable>
             <template slot-scope="{ row }">
               <div class="score-progress">
                 <div
                   class="progress-bar"
                   :style="{
-                    width: `${row.scoreValue}%`,
-                    background: scoreColor(row.scoreValue),
-                  }"
+          width: `${parseScore(row.scoreValue).value}%`,
+          background: scoreColor(row.scoreValue),
+        }"
                 >
-                  <span class="score-text">{{ row.scoreValue }}</span>
+        <span class="score-text">
+          {{ row.scoreValue }}
+          <span v-if="!parseScore(row.scoreValue).isValid" class="score-tag">
+            {{ parseScore(row.scoreValue).value === 100 ? '✔' : '✖' }}
+          </span>
+        </span>
                 </div>
               </div>
             </template>
           </el-table-column>
+
           <el-table-column prop="courseCategory" label="课程类型" width="140">
             <template slot-scope="{ row }">
               <el-tag :type="categoryTagType(row.courseCategory)">
@@ -198,6 +205,16 @@ export default {
     this.getList();
   },
   methods: {
+    // 在methods中添加
+    parseScore(score) {
+      if (score === "通过") return { value: 100, isValid: false }; // 通过不计入统计
+      if (score === "不通过") return { value: 0, isValid: false };  // 不通过不计入统计
+      const numeric = Number(score);
+      return {
+        value: isNaN(numeric) ? 0 : numeric,
+        isValid: !isNaN(numeric) // 标记有效成绩
+      };
+    },
     /** 查询成绩列表 */
     getList() {
       this.loading = true;
@@ -210,17 +227,54 @@ export default {
     },
     /** 计算统计指标 */
     calcSummaryData() {
-      if (this.scoreList.length > 0) {
-        // 计算GPA
-        this.currentGPA = this.scoreList.reduce((acc, cur) => acc + cur.gpa, 0) / this.scoreList.length;
-        // 计算平均成绩
-        this.averageScore = this.scoreList.reduce((acc, cur) => acc + cur.scoreValue, 0) / this.scoreList.length;
-        // 计算最高成绩
-        this.maxScore = Math.max(...this.scoreList.map(item => item.scoreValue));
-        // 计算总学分
-        this.totalCredits = this.scoreList.reduce((acc, cur) => acc + cur.credit, 0);
+      if (this.scoreList.length === 0) {
+        this.currentGPA = 0;
+        this.averageScore = 0;
+        this.maxScore = 0;
+        this.totalCredits = 0;
+        return;
       }
+
+      let validScores = [];
+      let totalValidGPA = 0;
+      let totalValidCredits = 0;
+      let allCredits = 0;
+
+      this.scoreList.forEach(item => {
+        // 解析成绩
+        const scoreInfo = this.parseScore(item.scoreValue);
+        const credit = item.credit || 0;
+
+        // 累计总学分（所有课程）
+        allCredits += credit;
+
+        // 仅处理有效成绩
+        if (scoreInfo.isValid) {
+          validScores.push(scoreInfo.value);
+          totalValidGPA += (item.gpa || 0) * credit;
+          totalValidCredits += credit;
+        }
+      });
+
+      // 平均成绩计算（仅有效成绩）
+      this.averageScore = validScores.length > 0
+        ? (validScores.reduce((a, b) => a + b, 0) / validScores.length).toFixed(1)
+        : 0;
+
+      // GPA计算（有效成绩加权）
+      this.currentGPA = totalValidCredits > 0
+        ? (totalValidGPA / totalValidCredits).toFixed(2)
+        : 0;
+
+      // 最高成绩（仅有效成绩）
+      this.maxScore = validScores.length > 0
+        ? Math.max(...validScores)
+        : 0;
+
+      // 总学分（所有课程）
+      this.totalCredits = allCredits;
     },
+
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
@@ -277,7 +331,7 @@ export default {
 .main-container {
   background: #ffffff;
   border-radius: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   position: relative;
   overflow: hidden;
@@ -299,9 +353,9 @@ export default {
   width: 100%;
   height: 100%;
   background: linear-gradient(45deg,
-  rgba(255,255,255,0.1) 25%,
+  rgba(255, 255, 255, 0.1) 25%,
   transparent 50%,
-  rgba(255,255,255,0.1) 75%
+  rgba(255, 255, 255, 0.1) 75%
   );
   opacity: 0.3;
 }
@@ -448,7 +502,7 @@ export default {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .score-text {
@@ -456,7 +510,7 @@ export default {
   font-size: 0.9rem;
   font-weight: 500;
   letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* 响应式调整 */
