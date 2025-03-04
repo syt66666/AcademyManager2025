@@ -17,30 +17,30 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="折合奖学金分数" prop="scholarshipPoints">
-        <el-input
-          v-model="queryParams.scholarshipPoints"
-          placeholder="请输入折合奖学金分数"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="获奖日期" prop="awardDate">
-        <el-date-picker clearable
-                        v-model="queryParams.awardDate"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择获奖日期">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="证明材料路径" prop="proofMaterial">
-        <el-input
-          v-model="queryParams.proofMaterial"
-          placeholder="请输入证明材料路径"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+<!--      <el-form-item label="折合奖学金分数" prop="scholarshipPoints">-->
+<!--        <el-input-->
+<!--          v-model="queryParams.scholarshipPoints"-->
+<!--          placeholder="请输入折合奖学金分数"-->
+<!--          clearable-->
+<!--          @keyup.enter.native="handleQuery"-->
+<!--        />-->
+<!--      </el-form-item>-->
+<!--      <el-form-item label="获奖日期" prop="awardDate">-->
+<!--        <el-date-picker clearable-->
+<!--                        v-model="queryParams.awardDate"-->
+<!--                        type="date"-->
+<!--                        value-format="yyyy-MM-dd"-->
+<!--                        placeholder="请选择获奖日期">-->
+<!--        </el-date-picker>-->
+<!--      </el-form-item>-->
+<!--      <el-form-item label="证明材料路径" prop="proofMaterial">-->
+<!--        <el-input-->
+<!--          v-model="queryParams.proofMaterial"-->
+<!--          placeholder="请输入证明材料路径"-->
+<!--          clearable-->
+<!--          @keyup.enter.native="handleQuery"-->
+<!--        />-->
+<!--      </el-form-item>-->
       <el-form-item label="修读学期" prop="semester">
         <el-input
           v-model="queryParams.semester"
@@ -138,7 +138,18 @@
           <span>{{ parseTime(scope.row.awardDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="证明材料路径" align="center" prop="proofMaterial" />
+      <el-table-column label="证明材料" align="center" prop="proofMaterial">
+        <template slot-scope="scope">
+          <el-button
+            v-if="scope.row.proofMaterial"
+            type="primary"
+            size="mini"
+            @click="handleDownload(scope.row.proofMaterial)">
+            <i class="el-icon-download"></i> 下载
+          </el-button>
+          <span v-else>无材料</span>
+        </template>
+      </el-table-column>
       <el-table-column label="修读学期" align="center" prop="semester" />
       <el-table-column label="提交时间" align="center" prop="applyTime" width="180">
         <template slot-scope="scope">
@@ -146,7 +157,13 @@
         </template>
       </el-table-column>
       <el-table-column label="审核人姓名" align="center" prop="nickName" />
-      <el-table-column label="审核状态" align="center" prop="auditStatus" />
+      <el-table-column label="审核状态" align="center" prop="auditStatus">
+        <template slot-scope="scope">
+          <el-tag :type="getStatusTagType(scope.row.auditStatus)">
+            {{ scope.row.auditStatus || '未审核' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="审核时间" align="center" prop="auditTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
@@ -155,6 +172,22 @@
       <el-table-column label="审核意见" align="center" prop="auditRemark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-check"
+            @click="handleAudit(scope.row, '通过')"
+            v-hasPermi="['system:activity:audit']"
+            v-if="scope.row.auditStatus !== '已通过'"
+          >通过</el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-close"
+            @click="handleAudit(scope.row, '拒绝')"
+            v-hasPermi="['system:activity:audit']"
+            v-if="scope.row.auditStatus !== '未通过'"
+          >拒绝</el-button>
           <el-button
             size="mini"
             type="text"
@@ -201,8 +234,8 @@
                           placeholder="请选择获奖日期">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="证明材料路径" prop="proofMaterial">
-          <el-input v-model="form.proofMaterial" placeholder="请输入证明材料路径" />
+        <el-form-item label="证明材料" prop="proofMaterial">
+          <el-input v-model="form.proofMaterial" placeholder="请输入证明材料" />
         </el-form-item>
         <el-form-item label="修读学期" prop="semester">
           <el-input v-model="form.semester" placeholder="请输入修读学期" />
@@ -417,7 +450,76 @@ export default {
       this.download('system/activity/export', {
         ...this.queryParams
       }, `activity_${new Date().getTime()}.xlsx`)
-    }
+    },
+
+    // 文件下载处理
+    handleDownload(filePath) {
+      if (!filePath) {
+        this.$message.warning('无可下载文件');
+        return;
+      }
+
+      // 处理文件路径
+      const fullPath = filePath.startsWith('http')
+        ? filePath
+        : `${process.env.VUE_APP_BASE_API}${filePath}`;
+
+      // 创建隐藏下载链接
+      const link = document.createElement('a');
+      link.href = fullPath + `?t=${Date.now()}`; // 防止缓存
+      link.download = this.getFileName(filePath);
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+
+    // 获取文件名
+    getFileName(path) {
+      return path.split('/').pop() || 'proof-material';
+    },
+
+    // 审核状态标签样式
+    getStatusTagType(status) {
+      const statusMap = {
+        '已通过': 'success',
+        '未通过': 'danger',
+        '未审核': 'warning'
+      };
+      return statusMap[status] || 'info';
+    },
+
+    // 审核操作
+    handleAudit(row, action) {
+      const isApprove = action === '通过';
+      const promptConfig = {
+        title: `审核${action}`,
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: isApprove ? null : /.+/,
+        inputErrorMessage: '必须填写拒绝原因'
+      };
+
+      this.$prompt(
+        isApprove ? '确认通过审核吗？' : '请输入拒绝原因：',
+        promptConfig
+      ).then(({ value }) => {
+        const params = {
+          activityId: row.activityId,
+          auditStatus: isApprove ? '已通过' : '未通过',
+          auditRemark: value || (isApprove ? '审核通过' : '')
+        };
+
+        return auditActivity(params).then(() => {
+          this.$modal.msgSuccess(`已${action}审核`);
+          this.getList(); // 刷新列表
+        });
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
+    },
+
   }
 };
 </script>

@@ -11,12 +11,13 @@
       <!-- 数据表格 -->
       <el-table :data="activityRecords" style="width: 100%" border stripe highlight-current-row>
         <!-- 表格列定义保持不变 -->
-        <el-table-column type="index" label="序号" width="80"></el-table-column>
+        <el-table-column type="index" label="序号" width="50"></el-table-column>
 <!--        <el-table-column prop="studentId" label="学号" min-width="120"></el-table-column>-->
-        <el-table-column prop="activityName" label="活动名称" min-width="180"></el-table-column>
-        <el-table-column prop="activityLevel" label="活动级别" min-width="150"></el-table-column>
-        <el-table-column prop="awardLevel" label="活动奖项" min-width="150"></el-table-column>
-        <el-table-column prop="proofMaterial" label="证明材料" min-width="150">
+        <el-table-column prop="activityName" label="活动名称" min-width="150"></el-table-column>
+        <el-table-column prop="activityLevel" label="活动级别" min-width="80"></el-table-column>
+        <el-table-column prop="awardLevel" label="活动奖项" min-width="80"></el-table-column>
+        <el-table-column prop="awardDate" label="获奖日期" min-width="100"></el-table-column>
+        <el-table-column prop="proofMaterial" label="证明材料" min-width="120">
           <template v-slot:default="scope">
             <img
               :src="getImageUrl(scope.row.proofMaterial)"
@@ -28,7 +29,7 @@
             <span v-else>无图片</span>
           </template>
         </el-table-column>
-        <el-table-column prop="auditStatus" label="审核状态" min-width="150">
+        <el-table-column prop="auditStatus" label="审核状态" min-width="80">
           <template v-slot:default="scope">
             <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">{{ scope.row.auditStatus }}</el-tag>
             <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">{{ scope.row.auditStatus }}</el-tag>
@@ -95,14 +96,24 @@
             <el-option label="参与奖" value="优秀奖"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="折合分数" prop="scholarshipPoints">
-          <el-input-number
-            v-model="formData.scholarshipPoints"
-            :min="0"
-            :max="100"
-            style="width: 100%;"
-          ></el-input-number>
+        <el-form-item label="获奖日期" prop="awardDate">
+          <el-date-picker
+            clearable
+            v-model="formData.awardDate"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择获奖日期"
+            style="width: 100%;">
+          </el-date-picker>
         </el-form-item>
+<!--        <el-form-item label="折合分数" prop="scholarshipPoints">-->
+<!--          <el-input-number-->
+<!--            v-model="formData.scholarshipPoints"-->
+<!--            :min="0"-->
+<!--            :max="100"-->
+<!--            style="width: 100%;"-->
+<!--          ></el-input-number>-->
+<!--        </el-form-item>-->
         <el-form-item label="图片上传" prop="proofMaterial">
           <imageUpload
             v-model="formData.proofMaterial"
@@ -130,40 +141,6 @@ export default {
   mounted() {
     // 获取学期参数
     this.activeSemester = this.$route.query.semester;
-    console.log("转换前:", this.activeSemester);
-
-    switch (this.activeSemester) {
-      case '大一上':
-        this.activeSemester = 1;
-        break;
-      case '大一下':
-        this.activeSemester = 2;
-        break;
-      case '大二上':
-        this.activeSemester = 3;
-        break;
-      case '大二下':
-        this.activeSemester = 4;
-        break;
-      case '大三上':
-        this.activeSemester = 5;
-        break;
-      case '大三下':
-        this.activeSemester = 6;
-        break;
-      case '大四上':
-        this.activeSemester = 7;
-        break;
-      case '大四下':
-        this.activeSemester = 8;
-        break;
-      default:
-        this.activeSemester = 0; // 默认值或错误处理
-        break;
-    }
-
-    console.log("转换后:", this.activeSemester);
-
     //得到列表数据
     this.fetchActivityRecords();
   },
@@ -187,9 +164,10 @@ export default {
         activityName: '',
         activityLevel: '',
         awardLevel: '',
-        scholarshipPoints: 0,
+        // scholarshipPoints: 0,
         proofMaterial: '',
-        semester: ''
+        semester: '',
+        awardDate: '',
       },
       rules: {
         activityName: [
@@ -201,9 +179,9 @@ export default {
         awardLevel: [
           { required: true, message: '请选择奖项', trigger: 'change' }
         ],
-        scholarshipPoints: [
-          { type: 'number', required: true, message: '请输入有效分数', trigger: 'blur' }
-        ]
+        // scholarshipPoints: [
+        //   { type: 'number', required: true, message: '请输入有效分数', trigger: 'blur' }
+        // ]
       }
     };
   },
@@ -315,7 +293,7 @@ export default {
             // 构造提交参数
             const params = {
               ...this.formData,
-              scholarshipPoints: Number(this.formData.scholarshipPoints),
+              // scholarshipPoints: Number(this.formData.scholarshipPoints),
               studentId: this.$store.state.user.name,
               semester:this.activeSemester,
             };

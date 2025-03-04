@@ -41,12 +41,12 @@ public class StuActivityRecord extends BaseEntity
     private Date awardDate;
 
     /** 证明材料路径 */
-    @Excel(name = "证明材料路径")
+    @Excel(name = "证明材料")
     private String proofMaterial;
 
     /** 修读学期 */
     @Excel(name = "修读学期")
-    private Integer semester;
+    private String semester;
 
     /** 提交时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -142,12 +142,12 @@ public class StuActivityRecord extends BaseEntity
     {
         return proofMaterial;
     }
-    public void setSemester(Integer semester)
+    public void setSemester(String semester)
     {
         this.semester = semester;
     }
 
-    public Integer getSemester()
+    public String getSemester()
     {
         return semester;
     }
