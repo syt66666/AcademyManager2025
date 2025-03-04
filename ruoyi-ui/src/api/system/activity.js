@@ -29,7 +29,7 @@ export function addActivity(data) {
 // 修改学生文体活动记录
 export function updateActivity(data) {
   return request({
-    url: '/system/activity',
+    url: '/common/upload',
     method: 'put',
     data: data
   })

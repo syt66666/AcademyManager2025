@@ -1,19 +1,33 @@
 <template>
   <el-row type="flex" justify="center" style="margin-top: 4vh;">
-    <!-- 活动列表卡片 -->
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
+      <!-- 头部区域保持不变 -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px;">
         <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">文体活动</h1>
         <el-button type="primary" icon="el-icon-plus" circle size="medium" @click="openDialog"
                    style="background-color: #42b983; border-color: #42b983;"></el-button>
       </div>
 
+      <!-- 数据表格 -->
       <el-table :data="activityRecords" style="width: 100%" border stripe highlight-current-row>
+        <!-- 表格列定义保持不变 -->
         <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column prop="studentId" label="学号" min-width="120"></el-table-column>
+<!--        <el-table-column prop="studentId" label="学号" min-width="120"></el-table-column>-->
         <el-table-column prop="activityName" label="活动名称" min-width="180"></el-table-column>
         <el-table-column prop="activityLevel" label="活动级别" min-width="150"></el-table-column>
         <el-table-column prop="awardLevel" label="活动奖项" min-width="150"></el-table-column>
+        <el-table-column prop="proofMaterial" label="证明材料" min-width="150">
+          <template v-slot:default="scope">
+            <img
+              :src="getImageUrl(scope.row.proofMaterial)"
+              alt="活动证明"
+              style="width: 50px; height: 50px; cursor: pointer;"
+              v-if="scope.row.proofMaterial"
+              @click="handleImageClick(scope.row.proofMaterial)"
+            />
+            <span v-else>无图片</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="auditStatus" label="审核状态" min-width="150">
           <template v-slot:default="scope">
             <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">{{ scope.row.auditStatus }}</el-tag>
@@ -24,27 +38,29 @@
         </el-table-column>
         <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
         <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
-        <el-table-column prop="proofMaterial" label="图片" min-width="150">
-          <template v-slot:default="scope">
-            <img
-              :src="scope.row.proofMaterial"
-              alt="图片"
-              style="width: 50px; height: 50px; cursor: pointer;"
-              v-if="scope.row.proofMaterial"
-              @click="handleImageClick(scope.row.proofMaterial)"
-            />
-            <span v-else>无图片</span>
-          </template>
-        </el-table-column>
+
       </el-table>
 
+      <!-- 图片预览对话框 -->
       <el-dialog :visible.sync="dialogVisible" title="查看图片" width="50%">
-        <img :src="currentImage" alt="放大图片" style="width: 100%; height: auto;" />
+        <div style="position: relative;">
+          <img :src="getImageUrl(currentImage)" alt="活动证明大图" style="width: 100%; height: auto;" />
+          <div style="position: absolute; bottom: 20px; right: 20px;">
+            <el-button
+              type="primary"
+              icon="el-icon-download"
+              @click="handleDownload"
+              style="background-color: #42b983; border-color: #42b983;">
+              下载图片
+            </el-button>
+          </div>
+        </div>
       </el-dialog>
 
+      <!-- 分页组件 -->
       <el-pagination
         layout="total, sizes, prev, pager, next, jumper"
-        :current-page.sync="currentPage"
+        :current-page="currentPage"
         :page-size="pageSize"
         :total="totalRecords"
         :page-sizes="[10, 20, 30, 50]"
@@ -54,9 +70,10 @@
       />
     </el-card>
 
-    <!-- 活动填写对话框 -->
+    <!-- 新增活动对话框 -->
     <el-dialog :visible.sync="showDialog" title="活动填写" width="50%" @close="closeDialog">
       <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
+        <!-- 表单字段保持不变 -->
         <el-form-item label="活动名称" prop="activityName">
           <el-input v-model="formData.activityName" placeholder="请输入活动名称" style="width: 100%;"></el-input>
         </el-form-item>
@@ -66,14 +83,16 @@
             <el-option label="校级" value="校级"></el-option>
             <el-option label="省级" value="省级"></el-option>
             <el-option label="国家级" value="国家级"></el-option>
+            <el-option label="国际级" value="国际级"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="奖项" prop="awardLevel">
           <el-select v-model="formData.awardLevel" placeholder="请选择奖项" style="width: 100%;">
+            <el-option label="特等奖" value="特等奖"></el-option>
             <el-option label="一等奖" value="一等奖"></el-option>
             <el-option label="二等奖" value="二等奖"></el-option>
             <el-option label="三等奖" value="三等奖"></el-option>
-            <el-option label="参与奖" value="参与奖"></el-option>
+            <el-option label="参与奖" value="优秀奖"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="折合分数" prop="scholarshipPoints">
@@ -84,8 +103,14 @@
             style="width: 100%;"
           ></el-input-number>
         </el-form-item>
-        <el-form-item label="图片上传">
-          <input type="file" @change="onImageChange" accept="image/*" style="width: 100%;"/>
+        <el-form-item label="图片上传" prop="proofMaterial">
+          <imageUpload
+            v-model="formData.proofMaterial"
+            :limit="1"
+            :fileSize="5"
+            :fileType="['png','jpg','jpeg']"
+            :isShowTip="true"
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="submitForm"
@@ -99,10 +124,56 @@
 
 <script>
 import { listActivity, addActivity } from "@/api/system/activity";
+import ImageUpload from '@/components/ImageUpload';
 
 export default {
+  mounted() {
+    // 获取学期参数
+    this.activeSemester = this.$route.query.semester;
+    console.log("转换前:", this.activeSemester);
+
+    switch (this.activeSemester) {
+      case '大一上':
+        this.activeSemester = 1;
+        break;
+      case '大一下':
+        this.activeSemester = 2;
+        break;
+      case '大二上':
+        this.activeSemester = 3;
+        break;
+      case '大二下':
+        this.activeSemester = 4;
+        break;
+      case '大三上':
+        this.activeSemester = 5;
+        break;
+      case '大三下':
+        this.activeSemester = 6;
+        break;
+      case '大四上':
+        this.activeSemester = 7;
+        break;
+      case '大四下':
+        this.activeSemester = 8;
+        break;
+      default:
+        this.activeSemester = 0; // 默认值或错误处理
+        break;
+    }
+
+    console.log("转换后:", this.activeSemester);
+
+    //得到列表数据
+    this.fetchActivityRecords();
+  },
+  components: {
+    ImageUpload
+  },
   data() {
     return {
+      baseUrl: process.env.VUE_APP_BASE_API,
+      activeSemester:"",
       dialogVisible: false,
       currentImage: '',
       activityRecords: [],
@@ -112,14 +183,13 @@ export default {
       totalRecords: 0,
       showDialog: false,
       isLoading: false,
-      picture: null,
       formData: {
         activityName: '',
         activityLevel: '',
         awardLevel: '',
         scholarshipPoints: 0,
         proofMaterial: '',
-        semester: '2'
+        semester: ''
       },
       rules: {
         activityName: [
@@ -137,28 +207,73 @@ export default {
       }
     };
   },
-  mounted() {
-    this.fetchActivityRecords();
-  },
+
   methods: {
+    // 获取完整图片路径
+    getImageUrl(path) {
+      if (!path) return '';
+      // 处理两种路径情况：
+      // 1. 完整路径直接返回
+      // 2. 相对路径拼接基础URL
+      return path.startsWith('http')
+        ? `${path}?t=${Date.now()}`  // 添加时间戳防止缓存
+        : `${this.baseUrl}${path}?t=${Date.now()}`;
+    },
+
     handleImageClick(imageUrl) {
       this.currentImage = imageUrl;
       this.dialogVisible = true;
     },
 
+    // 下载图片
+    handleDownload() {
+      if (!this.currentImage) {
+        this.$message.warning('没有可下载的图片');
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.href = this.getImageUrl(this.currentImage);
+      link.download = this.generateFileName();
+      link.style.display = 'none';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
+
+    // 生成带时间戳的文件名
+    generateFileName() {
+      const date = new Date().toISOString().slice(0, 10);
+      const ext = this.getFileExtension();
+      return `activity_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+    },
+
+    // 获取文件扩展名
+    getFileExtension() {
+      try {
+        return this.currentImage.split('.').pop().split(/[#?]/)[0] || 'jpg';
+      } catch {
+        return 'jpg';
+      }
+    },
+
+    // 数据获取方法
     async fetchActivityRecords() {
       this.isLoading = true;
       try {
         const params = {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
+          studentId: this.$store.state.user.name,
+          semester:this.activeSemester,
           ...this.queryParams
         };
 
         const response = await listActivity(params);
         if (response.code === 200) {
-          this.activityRecords = response.rows;
-          this.totalRecords = response.total;
+          this.activityRecords = response.rows || [];
+          this.totalRecords = response.total || 0;
         }
       } catch (error) {
         console.error("获取活动记录失败:", error);
@@ -167,6 +282,7 @@ export default {
       }
     },
 
+    // 分页处理
     handleSizeChange(size) {
       this.pageSize = size;
       this.fetchActivityRecords();
@@ -177,6 +293,7 @@ export default {
       this.fetchActivityRecords();
     },
 
+    // 对话框控制
     openDialog() {
       this.showDialog = true;
     },
@@ -185,35 +302,33 @@ export default {
       this.showDialog = false;
     },
 
-    onImageChange(e) {
-      this.picture = e.target.files[0];
-    },
-
+    // 表单提交
     async submitForm() {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
-          const formData = new FormData();
-          formData.append('activityName', this.formData.activityName);
-          formData.append('activityLevel', this.formData.activityLevel);
-          formData.append('awardLevel', this.formData.awardLevel);
-          formData.append('scholarshipPoints', this.formData.scholarshipPoints);
-          formData.append('semester', this.formData.semester);
-
-          if (this.picture) {
-            formData.append('proofMaterial', this.picture);
-          }
-
           try {
-            const response = await addActivity(formData);
+            // 用户信息验证
+            if (!this.$store.state.user?.name) {
+              this.$message.error('用户信息获取失败');
+              return;
+            }
+            // 构造提交参数
+            const params = {
+              ...this.formData,
+              scholarshipPoints: Number(this.formData.scholarshipPoints),
+              studentId: this.$store.state.user.name,
+              semester:this.activeSemester,
+            };
+            const response = await addActivity(params);
             if (response.code === 200) {
               this.$message.success('提交成功');
               this.fetchActivityRecords();
               this.closeDialog();
-              this.formData = this.$options.data().formData; // 重置表单
+              Object.assign(this.formData, this.$options.data().formData);
             }
           } catch (error) {
             console.error('提交失败:', error);
-            this.$message.error('提交失败');
+            this.$message.error('提交失败: ' + (error.message || '服务器错误'));
           }
         }
       });
@@ -223,6 +338,7 @@ export default {
 </script>
 
 <style scoped>
+
 h1 {
   color: #333;
 }
@@ -231,17 +347,4 @@ input, button {
   margin: 10px;
 }
 
-
-/* 背景和卡片的阴影效果 */
-#reportCard,
-#newCard {
-  transition: all 0.3s ease;
-}
-
-#reportCard:hover,
-#newCard:hover {
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-}
-
-
-</style>>
+</style>
