@@ -20,12 +20,7 @@ import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.service.IStuActivityRecordService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
-/**
- * 学生文体活动记录Controller
- *
- * @author ruoyi
- * @date 2025-03-02
- */
+
 @RestController
 @RequestMapping("/system/activity")
 public class StuActivityRecordController extends BaseController
@@ -36,7 +31,7 @@ public class StuActivityRecordController extends BaseController
     /**
      * 查询学生文体活动记录列表
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:list')")
+//    @PreAuthorize("@ss.hasPermi('system:activity:list')")
     @GetMapping("/list")
     public TableDataInfo list(StuActivityRecord stuActivityRecord)
     {
@@ -71,7 +66,7 @@ public class StuActivityRecordController extends BaseController
     /**
      * 新增学生文体活动记录
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:add')")
+//    @PreAuthorize("@ss.hasPermi('system:activity:add')")
     @Log(title = "学生文体活动记录", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody StuActivityRecord stuActivityRecord)
@@ -82,7 +77,7 @@ public class StuActivityRecordController extends BaseController
     /**
      * 修改学生文体活动记录
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:edit')")
+//    @PreAuthorize("@ss.hasPermi('system:activity:edit')")
     @Log(title = "学生文体活动记录", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody StuActivityRecord stuActivityRecord)
@@ -93,7 +88,7 @@ public class StuActivityRecordController extends BaseController
     /**
      * 删除学生文体活动记录
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:remove')")
+//    @PreAuthorize("@ss.hasPermi('system:activity:remove')")
     @Log(title = "学生文体活动记录", businessType = BusinessType.DELETE)
     @DeleteMapping("/{activityIds}")
     public AjaxResult remove(@PathVariable Integer[] activityIds)

@@ -253,7 +253,7 @@ export default {
         this.$router.push({path:'/GrowthArchive/CompetitonRecord', query: { semester: this.currentSemester.name } });
       }
       if (key === 'activity') {
-        this.$router.push('/GrowthArchive/ActivityRecord')
+        this.$router.push({path:'/GrowthArchive/ActivityRecord', query: { semester: this.currentSemester.name } })
       }
       if (key === 'report') {
         this.$router.push('/ReportManagement/index')
@@ -713,12 +713,6 @@ export default {
   padding: 1.5rem;
 }
 
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
 .close-btn {
   background: rgba(255,255,255,0.9);
   border: 1px solid rgba(0,0,0,0.1);
@@ -819,11 +813,6 @@ export default {
     margin: -1rem -1rem 1.5rem;
     border-radius: 1rem 1rem 0 0;
   }
-}
-
-.semester-card.current {
-  border-left: 4px solid var(--primary);
-  animation: pulse 2s infinite; /* 核心动画效果 */
 }
 
 @keyframes pulse {
