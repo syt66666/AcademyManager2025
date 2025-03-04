@@ -39,7 +39,6 @@
         </el-table-column>
         <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
         <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
-
       </el-table>
 
       <!-- 图片预览对话框 -->

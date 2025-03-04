@@ -58,4 +58,6 @@ public interface IStuActivityRecordService
      * @return 结果
      */
     public int deleteStuActivityRecordByActivityId(Integer activityId);
+
+    int updateActivityAuditInfo(StuActivityRecord activity);
 }

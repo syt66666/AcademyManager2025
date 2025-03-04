@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.StuActivityRecord;
+import org.apache.ibatis.annotations.Update;
 
 
 public interface StuActivityRecordMapper
@@ -53,4 +54,14 @@ public interface StuActivityRecordMapper
      * @return 结果
      */
     public int deleteStuActivityRecordByActivityIds(Integer[] activityIds);
+
+
+    @Update({
+            "update stu_activity_record",
+            "set audit_status = #{auditStatus},",
+            "audit_remark = #{auditRemark},",
+            "audit_time = #{auditTime}",
+            "where activity_id = #{activityId}"
+    })
+    int updateActivityAuditInfo(StuActivityRecord activity);
 }

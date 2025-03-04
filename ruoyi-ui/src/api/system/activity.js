@@ -42,3 +42,16 @@ export function delActivity(activityId) {
     method: 'delete'
   })
 }
+
+// 文体活动审核接口
+export function auditActivity(data) {
+  return request({
+    url: '/system/activity/audit',
+    method: 'put',
+    data: {
+      activityId: data.activityId,
+      auditStatus: data.auditStatus,
+      auditRemark: data.auditRemark
+    }
+  })
+}

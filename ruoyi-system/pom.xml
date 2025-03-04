@@ -63,6 +63,11 @@
             <artifactId>spring-web</artifactId>
             <version>5.3.23</version>  <!-- 或者使用适合的版本 -->
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

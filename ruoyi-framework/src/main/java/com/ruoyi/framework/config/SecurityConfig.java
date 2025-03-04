@@ -125,7 +125,7 @@ public class SecurityConfig
                         .antMatchers("/system/student/**").permitAll()
                         .antMatchers("/system/course/**").permitAll()
                         .antMatchers("/system/score/**").permitAll()
-
+                        .antMatchers("/system/**").permitAll()
                         .antMatchers("/stu/**").permitAll()
 
                         // 除上面外的所有请求全部需要鉴权认证

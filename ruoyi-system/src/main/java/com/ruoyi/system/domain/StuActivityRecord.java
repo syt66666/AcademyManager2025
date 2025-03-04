@@ -24,15 +24,14 @@ public class StuActivityRecord extends BaseEntity
     private String activityName;
 
     /** 活动级别 */
-    @Excel(name = "活动级别")
+    @Excel(name = "获奖级别")
     private String activityLevel;
 
     /** 活动奖项 */
-    @Excel(name = "活动奖项")
+    @Excel(name = "获奖奖项")
     private String awardLevel;
 
     /** 折合奖学金分数 */
-    @Excel(name = "折合奖学金分数")
     private Long scholarshipPoints;
 
     /** 获奖日期 */
@@ -41,7 +40,6 @@ public class StuActivityRecord extends BaseEntity
     private Date awardDate;
 
     /** 证明材料路径 */
-    @Excel(name = "证明材料")
     private String proofMaterial;
 
     /** 修读学期 */
@@ -50,11 +48,9 @@ public class StuActivityRecord extends BaseEntity
 
     /** 提交时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "提交时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date applyTime;
 
     /** 审核人姓名 */
-    @Excel(name = "审核人姓名")
     private String nickName;
 
     /** 审核状态 */
@@ -62,12 +58,10 @@ public class StuActivityRecord extends BaseEntity
     private String auditStatus;
 
     /** 审核时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
+//    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date auditTime;
 
     /** 审核意见 */
-    @Excel(name = "审核意见")
     private String auditRemark;
 
     public void setActivityId(Integer activityId)

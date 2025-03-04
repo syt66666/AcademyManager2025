@@ -17,62 +17,39 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-<!--      <el-form-item label="折合奖学金分数" prop="scholarshipPoints">-->
-<!--        <el-input-->
-<!--          v-model="queryParams.scholarshipPoints"-->
-<!--          placeholder="请输入折合奖学金分数"-->
-<!--          clearable-->
-<!--          @keyup.enter.native="handleQuery"-->
-<!--        />-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="获奖日期" prop="awardDate">-->
-<!--        <el-date-picker clearable-->
-<!--                        v-model="queryParams.awardDate"-->
-<!--                        type="date"-->
-<!--                        value-format="yyyy-MM-dd"-->
-<!--                        placeholder="请选择获奖日期">-->
-<!--        </el-date-picker>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="证明材料路径" prop="proofMaterial">-->
-<!--        <el-input-->
-<!--          v-model="queryParams.proofMaterial"-->
-<!--          placeholder="请输入证明材料路径"-->
-<!--          clearable-->
-<!--          @keyup.enter.native="handleQuery"-->
-<!--        />-->
-<!--      </el-form-item>-->
-      <el-form-item label="修读学期" prop="semester">
-        <el-input
-          v-model="queryParams.semester"
-          placeholder="请输入修读学期"
+      <el-form-item label="获奖级别" prop="activityLevel">
+        <el-select
+          v-model="queryParams.activityLevel"
+          placeholder="请选择活动级别"
           clearable
           @keyup.enter.native="handleQuery"
-        />
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in activityLevelOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="提交时间" prop="applyTime">
-        <el-date-picker clearable
-                        v-model="queryParams.applyTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择提交时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="审核人姓名" prop="nickName">
-        <el-input
-          v-model="queryParams.nickName"
-          placeholder="请输入审核人姓名"
+      <el-form-item label="审核状态" prop="auditStatus">
+        <el-select
+          v-model="queryParams.auditStatus"
+          placeholder="请选择审核状态"
           clearable
           @keyup.enter.native="handleQuery"
-        />
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in auditStatusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="审核时间" prop="auditTime">
-        <el-date-picker clearable
-                        v-model="queryParams.auditTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择审核时间">
-        </el-date-picker>
-      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -80,38 +57,6 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['system:activity:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:activity:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['system:activity:remove']"
-        >删除</el-button>
-      </el-col>
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -125,15 +70,14 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="activityList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="sortedActivityList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键ID" align="center" prop="activityId" />
+      <el-table-column type="index" label="序号" width="50"></el-table-column>
       <el-table-column label="学号" align="center" prop="studentId" />
       <el-table-column label="活动名称" align="center" prop="activityName" />
-      <el-table-column label="活动级别" align="center" prop="activityLevel" />
-      <el-table-column label="活动奖项" align="center" prop="awardLevel" />
-      <el-table-column label="折合奖学金分数" align="center" prop="scholarshipPoints" />
-      <el-table-column label="获奖日期" align="center" prop="awardDate" width="180">
+      <el-table-column label="获奖级别" align="center" prop="activityLevel" />
+      <el-table-column label="获奖奖项" align="center" prop="awardLevel" />
+      <el-table-column label="获奖日期" align="center" prop="awardDate" width="150">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.awardDate, '{y}-{m}-{d}') }}</span>
         </template>
@@ -150,21 +94,20 @@
           <span v-else>无材料</span>
         </template>
       </el-table-column>
-      <el-table-column label="修读学期" align="center" prop="semester" />
-      <el-table-column label="提交时间" align="center" prop="applyTime" width="180">
+      <el-table-column label="提交时间" align="center" prop="applyTime" width="150">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.applyTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="审核人姓名" align="center" prop="nickName" />
-      <el-table-column label="审核状态" align="center" prop="auditStatus">
+
+        <el-table-column label="审核状态" align="center" prop="auditStatus">
         <template slot-scope="scope">
           <el-tag :type="getStatusTagType(scope.row.auditStatus)">
             {{ scope.row.auditStatus || '未审核' }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="审核时间" align="center" prop="auditTime" width="180">
+      <el-table-column label="审核时间" align="center" prop="auditTime" width="150">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
         </template>
@@ -188,20 +131,6 @@
             v-hasPermi="['system:activity:audit']"
             v-if="scope.row.auditStatus !== '未通过'"
           >拒绝</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:activity:edit']"
-          >修改</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['system:activity:remove']"
-          >删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -213,71 +142,47 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
-
-    <!-- 添加或修改学生文体活动记录对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="学号" prop="studentId">
-          <el-input v-model="form.studentId" placeholder="请输入学号" />
-        </el-form-item>
-        <el-form-item label="活动名称" prop="activityName">
-          <el-input v-model="form.activityName" placeholder="请输入活动名称" />
-        </el-form-item>
-        <el-form-item label="折合奖学金分数" prop="scholarshipPoints">
-          <el-input v-model="form.scholarshipPoints" placeholder="请输入折合奖学金分数" />
-        </el-form-item>
-        <el-form-item label="获奖日期" prop="awardDate">
-          <el-date-picker clearable
-                          v-model="form.awardDate"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择获奖日期">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="证明材料" prop="proofMaterial">
-          <el-input v-model="form.proofMaterial" placeholder="请输入证明材料" />
-        </el-form-item>
-        <el-form-item label="修读学期" prop="semester">
-          <el-input v-model="form.semester" placeholder="请输入修读学期" />
-        </el-form-item>
-        <el-form-item label="提交时间" prop="applyTime">
-          <el-date-picker clearable
-                          v-model="form.applyTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择提交时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="审核人姓名" prop="nickName">
-          <el-input v-model="form.nickName" placeholder="请输入审核人姓名" />
-        </el-form-item>
-        <el-form-item label="审核时间" prop="auditTime">
-          <el-date-picker clearable
-                          v-model="form.auditTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择审核时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="审核意见" prop="auditRemark">
-          <el-input v-model="form.auditRemark" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listActivity, getActivity, delActivity, addActivity, updateActivity } from "@/api/system/activity";
+import { listActivity, getActivity, delActivity, addActivity, updateActivity, auditActivity  } from "@/api/system/activity";
 
 export default {
   name: "Activity",
-  data() {
+  computed: {
+    sortedActivityList() {
+      // 定义状态排序权重
+      const statusOrder = {
+        '未审核': 0,
+        '未通过': 1,
+        '已通过': 2
+      }
+
+      // 创建数组副本避免修改原始数据
+      return [...this.activityList].sort((a, b) => {
+        // 获取状态优先级
+        const orderA = statusOrder[a.auditStatus] ?? 3
+        const orderB = statusOrder[b.auditStatus] ?? 3
+        // 升序排列
+        return orderA - orderB
+      })
+    }
+  },
+      data() {
     return {
+      auditStatusOptions: [
+        { value: '未审核', label: '未审核' },
+        { value: '已通过', label: '已通过' },
+        { value: '未通过', label: '未通过' }
+      ],
+      activityLevelOptions: [
+        { value: '院级', label: '院级' },
+        { value: '校级', label: '校级' },
+        { value: '省级', label: '省级' },
+        { value: '国家级', label: '国家级' },
+        { value: '国际级', label: '国际级' }
+      ],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -491,35 +396,43 @@ export default {
     },
 
     // 审核操作
-    handleAudit(row, action) {
-      const isApprove = action === '通过';
-      const promptConfig = {
-        title: `审核${action}`,
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputPattern: isApprove ? null : /.+/,
-        inputErrorMessage: '必须填写拒绝原因'
+    // 修改后的审核处理方法
+    handleAudit(row, status) {
+      const isApproved = status === '通过';
+      const statusMapping = {
+        '通过': '已通过',
+        '拒绝': '未通过'
       };
 
       this.$prompt(
-        isApprove ? '确认通过审核吗？' : '请输入拒绝原因：',
-        promptConfig
+        isApproved ? '确认通过审核吗？' : '请输入拒绝原因',
+        '审核确认',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: isApproved ? null : /.+/,
+          inputErrorMessage: '拒绝原因不能为空'
+        }
       ).then(({ value }) => {
-        const params = {
+        // 构建符合API要求的参数
+        const auditData = {
           activityId: row.activityId,
-          auditStatus: isApprove ? '已通过' : '未通过',
-          auditRemark: value || (isApprove ? '审核通过' : '')
+          auditStatus: statusMapping[status],
+          auditRemark: isApproved ? '系统审核通过' : value
         };
 
-        return auditActivity(params).then(() => {
-          this.$modal.msgSuccess(`已${action}审核`);
+        // 调用专用审核接口
+        auditActivity(auditData).then(response => {
+          this.$modal.msgSuccess(`已${status}审核`);
           this.getList(); // 刷新列表
+        }).catch(error => {
+          console.error('审核操作失败:', error);
+          this.$modal.msgError(`${status}审核失败: ${error.message || ''}`);
         });
       }).catch(() => {
         this.$message.info('已取消操作');
       });
-    },
-
+    }
   }
 };
 </script>

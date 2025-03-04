@@ -1,9 +1,16 @@
 package com.ruoyi.system.controller;
 
+import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.common.core.domain.R;
+import com.ruoyi.common.core.domain.model.LoginUser;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.system.domain.dto.ActivityAuditDTO;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -95,4 +102,22 @@ public class StuActivityRecordController extends BaseController
     {
         return toAjax(stuActivityRecordService.deleteStuActivityRecordByActivityIds(activityIds));
     }
+
+    /**
+     * 更新审核信息
+     */
+    @PreAuthorize("@ss.hasPermi('system:activity:audit')")
+    @Log(title = "文体活动审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/audit")
+    public AjaxResult auditActivity(@Validated @RequestBody ActivityAuditDTO auditDTO) {
+        // 构建更新参数
+        StuActivityRecord activity = new StuActivityRecord();
+        activity.setActivityId(auditDTO.getActivityId());
+        activity.setAuditStatus(auditDTO.getAuditStatus());
+        activity.setAuditRemark(auditDTO.getAuditRemark());
+        activity.setAuditTime(new Date());
+        // 执行更新操作
+        return toAjax(stuActivityRecordService.updateActivityAuditInfo(activity));
+    }
+
 }
