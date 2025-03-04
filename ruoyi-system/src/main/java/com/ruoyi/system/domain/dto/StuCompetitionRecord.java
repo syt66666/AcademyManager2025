@@ -1,8 +1,12 @@
 package com.ruoyi.system.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 public class StuCompetitionRecord {
     private Integer competitionId; // 主键ID
@@ -12,27 +16,15 @@ public class StuCompetitionRecord {
     private String awardLevel; // 竞赛奖项
     private Integer scholarshipPoints; // 折合分数
     private Date awardDate; // 获奖日期
-
-    public String getProofMaterialBase64() {
-        return proofMaterialBase64;
-    }
-
-    public void setProofMaterialBase64(String proofMaterialBase64) {
-        this.proofMaterialBase64 = proofMaterialBase64;
-    }
-
-    private String proofMaterialBase64; // Base64 格式的图片数据
-
-    private byte[] proofMaterial; // 证明材料
+    private String proofMaterial; // 证明材料
     private String auditStatus = "未审核"; // 审核状态
-
-
     private LocalDateTime applyTime; // 提交时间
     private String nickName; // 审核人姓名
     private Date auditTime; // 审核时间
     private String auditRemark; // 审核意见
     private String semester; // 修读学期
     private String studentName;//学生姓名
+
 
     public Integer getCompetitionId() {
         return competitionId;
@@ -41,6 +33,15 @@ public class StuCompetitionRecord {
     public void setCompetitionId(Integer competitionId) {
         this.competitionId = competitionId;
     }
+
+    public String getProofMaterial() {
+        return proofMaterial;
+    }
+
+    public void setProofMaterial(String proofMaterial) {
+        this.proofMaterial = proofMaterial;
+    }
+
 
     public String getStudentId() {
         return studentId;
@@ -142,13 +143,6 @@ public class StuCompetitionRecord {
     }
 
 
-    public byte[] getProofMaterial() {
-        return proofMaterial;
-    }
-
-    public void setProofMaterial(byte[] proofMaterial) {
-        this.proofMaterial = proofMaterial;
-    }
     public LocalDateTime getApplyTime() {
         return applyTime;
     }
@@ -156,7 +150,6 @@ public class StuCompetitionRecord {
     public void setApplyTime(LocalDateTime applyTime) {
         this.applyTime = applyTime;
     }
-
 
     @Override
     public String toString() {
@@ -168,8 +161,7 @@ public class StuCompetitionRecord {
                 ", awardLevel='" + awardLevel + '\'' +
                 ", scholarshipPoints=" + scholarshipPoints +
                 ", awardDate=" + awardDate +
-                ", proofMaterialBase64='" + proofMaterialBase64 + '\'' +
-                ", proofMaterial=" + Arrays.toString(proofMaterial) +
+                ", proofMaterial='" + proofMaterial + '\'' +
                 ", auditStatus='" + auditStatus + '\'' +
                 ", applyTime=" + applyTime +
                 ", nickName='" + nickName + '\'' +

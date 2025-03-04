@@ -10,26 +10,26 @@
          award_level,
          scholarship_points,
          award_date,
-         proof_material,
          audit_status,
          apply_time,
          nick_name,
          audit_time,
          audit_remark,
-         semester)
+         semester,
+         proof_material)
         VALUES (#{studentId},
                 #{competitionName},
                 #{competitionLevel},
                 #{awardLevel},
                 #{scholarshipPoints},
                 #{awardDate},
-                #{proofMaterial},
                 #{auditStatus},
                 #{applyTime},
                 #{nickName},
                 #{auditTime},
                 #{auditRemark},
-                #{semester})
+                #{semester},
+                #{proofMaterial,jdbcType=VARCHAR})
     </insert>
     <select id="getAllCompetitionRecords" resultType="com.ruoyi.system.domain.dto.StuCompetitionRecord"
             parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
@@ -41,7 +41,7 @@
         semester,
         competition_level,
         award_level,
-        proof_material,
+        proof_material, <!-- 图片路径 -->
         audit_status,
         audit_time,
         audit_remark

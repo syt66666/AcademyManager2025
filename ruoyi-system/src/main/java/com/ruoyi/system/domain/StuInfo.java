@@ -1,15 +1,25 @@
 package com.ruoyi.system.domain;
 
 public class StuInfo {
+    // 学号
     private Integer id;
+    // 学生学号
     private String studentId;
+    // 学生姓名
     private String studentName;
+    // 学院
     private String academy;
+    // 系统专业
     private String systemMajor;
+    // 专业
     private String major;
+    // 学生班级
     private String studentClass;
+    // 转专业形式
     private String divertForm;
+    // 创新班
     private Integer innovationClass;  // 改为包装类型
+    // 学生性别
     private String studentSex;
 
     public Integer getId() {
