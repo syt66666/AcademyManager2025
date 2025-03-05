@@ -11,11 +11,10 @@
       <!-- 数据表格 -->
       <el-table :data="activityRecords" style="width: 100%" border stripe highlight-current-row>
         <!-- 表格列定义保持不变 -->
-        <el-table-column type="index" label="序号" width="50"></el-table-column>
-<!--        <el-table-column prop="studentId" label="学号" min-width="120"></el-table-column>-->
-        <el-table-column prop="activityName" label="活动名称" min-width="150"></el-table-column>
-        <el-table-column prop="activityLevel" label="活动级别" min-width="80"></el-table-column>
-        <el-table-column prop="awardLevel" label="活动奖项" min-width="80"></el-table-column>
+        <el-table-column type="index" label="序号"></el-table-column>
+        <el-table-column prop="activityName" label="活动名称" min-width="100"></el-table-column>
+        <el-table-column prop="activityLevel" label="活动级别" ></el-table-column>
+        <el-table-column prop="awardLevel" label="活动奖项" ></el-table-column>
         <el-table-column prop="awardDate" label="获奖日期" min-width="100"></el-table-column>
         <el-table-column prop="proofMaterial" label="证明材料" min-width="120">
           <template v-slot:default="scope">
@@ -31,14 +30,37 @@
         </el-table-column>
         <el-table-column prop="auditStatus" label="审核状态" min-width="80">
           <template v-slot:default="scope">
-            <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">{{ scope.row.auditStatus }}</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">{{ scope.row.auditStatus }}</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '未通过'" type="danger">{{ scope.row.auditStatus }}</el-tag>
-            <el-tag v-else>未知状态</el-tag>
+            <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">未审核</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">已通过</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '未通过'" type="danger">未通过</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '未提交'" type="info">未提交</el-tag>
+            <el-tag v-else type="info">未知状态</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
+        <el-table-column label="操作">
+          <template v-slot="scope">
+            <el-button
+              v-if="scope.row.auditStatus === '未通过'"
+              type="text"
+              size="mini"
+              @click="handleEditDraft(scope.row)"
+            >重新提交</el-button>
+            <el-button
+              v-if="scope.row.auditStatus === '未提交'"
+              type="text"
+              size="mini"
+              @click="handleEditDraft(scope.row)"
+            >编辑草稿</el-button>
+            <el-tag
+              v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
+              type="info"
+              size="mini"
+            >不可修改</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="auditTime" label="审核时间" min-width="100"></el-table-column>
         <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
+
       </el-table>
 
       <!-- 图片预览对话框 -->
@@ -105,14 +127,7 @@
             style="width: 100%;">
           </el-date-picker>
         </el-form-item>
-<!--        <el-form-item label="折合分数" prop="scholarshipPoints">-->
-<!--          <el-input-number-->
-<!--            v-model="formData.scholarshipPoints"-->
-<!--            :min="0"-->
-<!--            :max="100"-->
-<!--            style="width: 100%;"-->
-<!--          ></el-input-number>-->
-<!--        </el-form-item>-->
+
         <el-form-item label="图片上传" prop="proofMaterial">
           <imageUpload
             v-model="formData.proofMaterial"
@@ -122,18 +137,32 @@
             :isShowTip="true"
           />
         </el-form-item>
+        <!-- 在表单底部添加双按钮 -->
         <el-form-item>
-          <el-button type="primary" @click="submitForm"
-                     style="float: right; background-color: #42b983; border-color: #42b983;">提交
-          </el-button>
+          <el-button
+            type="info"
+            @click="handleSave"
+            style="margin-right: 10px;"
+          >保存草稿</el-button>
+          <el-button
+            type="primary"
+            @click="handleSubmit"
+            style="background-color: #42b983; border-color: #42b983;"
+          >正式提交</el-button>
         </el-form-item>
+
+        <!--        <el-form-item>-->
+<!--          <el-button type="primary" @click="submitForm"-->
+<!--                     style="float: right; background-color: #42b983; border-color: #42b983;">提交-->
+<!--          </el-button>-->
+<!--        </el-form-item>-->
       </el-form>
     </el-dialog>
   </el-row>
 </template>
 
 <script>
-import { listActivity, addActivity } from "@/api/system/activity";
+import { listActivity, addActivity , updateActivity, delActivity } from "@/api/system/activity";
 import ImageUpload from '@/components/ImageUpload';
 
 export default {
@@ -148,6 +177,9 @@ export default {
   },
   data() {
     return {
+      auditStatus: '',
+      isEdit: false,
+      currentActivityId: null,
       baseUrl: process.env.VUE_APP_BASE_API,
       activeSemester:"",
       dialogVisible: false,
@@ -167,6 +199,10 @@ export default {
         proofMaterial: '',
         semester: '',
         awardDate: '',
+        auditStatus: '未提交',
+        auditTime: '',
+        auditRemark: '',
+
       },
       rules: {
         activityName: [
@@ -251,6 +287,7 @@ export default {
         if (response.code === 200) {
           this.activityRecords = response.rows || [];
           this.totalRecords = response.total || 0;
+
         }
       } catch (error) {
         console.error("获取活动记录失败:", error);
@@ -269,47 +306,128 @@ export default {
       this.currentPage = page;
       this.fetchActivityRecords();
     },
-
+    initFormData() {
+      return {
+        activityName: '',
+        activityLevel: '',
+        awardLevel: '',
+        proofMaterial: '',
+        semester: this.activeSemester,
+        awardDate: '',
+        auditTime: '',
+        auditRemark: '',
+        auditStatus: '未提交'
+      };
+    },
     // 对话框控制
     openDialog() {
+      this.isEdit = false;
+      this.currentActivityId = null;
+      this.formData = this.initFormData(); // 使用初始化方法
+      this.showDialog = true;
+      // 初始化表单数据
+      // this.formData = { ...this.$options.data().formData };
+
+      // 加载草稿数据
+      // const draft = localStorage.getItem(this.getDraftKey());
+      // if (draft) {
+      //   try {
+      //     const draftData = JSON.parse(draft);
+      //     this.formData = {
+      //       ...draftData,
+      //       proofMaterial: draftData.proofMaterial ? { url: draftData.proofMaterial } : '',
+      //       auditStatus: '未提交',
+      //     };
+      //   } catch (e) {
+      //     console.error('草稿加载失败:', e);
+      //   }
+      // }
+      // this.showDialog = true;
+    },
+    // 对话框关闭
+    closeDialog() {
+      if (!this.isEdit) {
+        // 自动保存草稿
+        const draftData = {
+          ...this.formData,
+          proofMaterial: typeof this.formData.proofMaterial === 'object'
+            ? this.formData.proofMaterial.url
+            : this.formData.proofMaterial
+        };
+        localStorage.setItem(this.getDraftKey(), JSON.stringify(draftData));
+      }
+      this.showDialog = false;
+      this.isEdit = false;
+      this.currentActivityId = null;
+      this.$refs.form.resetFields();
+    },
+
+    // 处理编辑未通过记录
+    handleEdit(row) {
+      this.formData = {
+        ...row,
+        auditTime:"",
+        auditRemark:"",
+        awardDate: row.awardDate ? new Date(row.awardDate) : null
+      };
+      this.isEdit = true;
+      this.currentActivityId = row.id;
       this.showDialog = true;
     },
 
-    closeDialog() {
-      this.showDialog = false;
+    // 处理草稿修改
+    handleEditDraft(row) {
+      this.handleEdit(row);
+      localStorage.removeItem(this.getDraftKey());
+    },
+    // 保存草稿
+    async handleSave() {
+      await this.submitData('未提交');
     },
 
-    // 表单提交
-    async submitForm() {
-      this.$refs.form.validate(async (valid) => {
-        if (valid) {
-          try {
-            // 用户信息验证
-            if (!this.$store.state.user?.name) {
-              this.$message.error('用户信息获取失败');
-              return;
-            }
-            // 构造提交参数
-            const params = {
-              ...this.formData,
-              // scholarshipPoints: Number(this.formData.scholarshipPoints),
-              studentId: this.$store.state.user.name,
-              semester:this.activeSemester,
-            };
-            const response = await addActivity(params);
-            if (response.code === 200) {
-              this.$message.success('提交成功');
-              this.fetchActivityRecords();
-              this.closeDialog();
-              Object.assign(this.formData, this.$options.data().formData);
-            }
-          } catch (error) {
-            console.error('提交失败:', error);
-            this.$message.error('提交失败: ' + (error.message || '服务器错误'));
-          }
+    // 正式提交
+    async handleSubmit() {
+      await this.submitData('未审核');
+    },
+
+    // 统一提交方法
+    async submitData(status) {
+      try {
+
+        const params = {
+          ...this.formData,
+          auditTime:"",
+          auditRemark:"",
+
+          auditStatus: status,
+          studentId: this.$store.state.user.name,
+          semester: this.activeSemester,
+        };
+
+        // 文件路径处理
+        if (typeof params.proofMaterial === 'object') {
+          params.proofMaterial = params.proofMaterial.url;
         }
-      });
-    }
+
+        // API调用逻辑
+        const response = this.isEdit
+          ? await updateActivity({ ...params, id: this.currentActivityId })
+          : await addActivity(params);
+        if (response.code === 200) {
+          this.$message.success(status === '未提交' ? '保存成功' : '提交成功');
+          this.fetchActivityRecords();
+          this.closeDialog();
+        }
+      } catch (error) {
+        console.error('操作失败:', error);
+        this.$message.error(`操作失败: ${error.message || '服务器错误'}`);
+      }
+    },
+    // 获取本地存储的key
+    getDraftKey() {
+      return `activity_draft_${this.$store.state.user.name}_${this.activeSemester}`;
+    },
+
   }
 };
 </script>
