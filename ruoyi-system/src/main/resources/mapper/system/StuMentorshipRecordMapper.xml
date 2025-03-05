@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.StuMentorshipRecordMapper">
+
+    <resultMap type="StuMentorshipRecord" id="StuMentorshipRecordResult">
+        <result property="recordId"    column="record_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="tutorId"    column="tutor_id"    />
+        <result property="guidanceTopic"    column="guidance_topic"    />
+        <result property="guidanceLocation"    column="guidance_location"    />
+        <result property="guidanceTime"    column="guidance_time"    />
+        <result property="summaryFilePath"    column="summary_file_path"    />
+        <result property="photoPaths"    column="photo_paths"    />
+        <result property="semester"    column="semester"    />
+        <result property="submitTime"    column="submit_time"    />
+        <result property="studentComment"    column="student_comment"    />
+        <result property="auditStatus"    column="audit_status"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="auditRemark"    column="audit_remark"    />
+    </resultMap>
+
+    <sql id="selectStuMentorshipRecordVo">
+        select record_id, student_id, tutor_id, guidance_topic, guidance_location, guidance_time, summary_file_path, photo_paths, semester, submit_time, student_comment, audit_status, audit_time, audit_remark from stu_mentorship_record
+    </sql>
+
+    <select id="selectStuMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult">
+        <include refid="selectStuMentorshipRecordVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="tutorId != null  and tutorId != ''"> and tutor_id = #{tutorId}</if>
+            <if test="guidanceTopic != null  and guidanceTopic != ''"> and guidance_topic = #{guidanceTopic}</if>
+            <if test="guidanceLocation != null  and guidanceLocation != ''"> and guidance_location = #{guidanceLocation}</if>
+            <if test="guidanceTime != null "> and guidance_time = #{guidanceTime}</if>
+            <if test="summaryFilePath != null  and summaryFilePath != ''"> and summary_file_path = #{summaryFilePath}</if>
+            <if test="photoPaths != null  and photoPaths != ''"> and photo_paths = #{photoPaths}</if>
+            <if test="semester != null  and semester != ''"> and semester = #{semester}</if>
+            <if test="submitTime != null "> and submit_time = #{submitTime}</if>
+            <if test="studentComment != null  and studentComment != ''"> and student_comment = #{studentComment}</if>
+            <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
+            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+        </where>
+    </select>
+
+    <select id="selectStuMentorshipRecordByRecordId" parameterType="Integer" resultMap="StuMentorshipRecordResult">
+        <include refid="selectStuMentorshipRecordVo"/>
+        where record_id = #{recordId}
+    </select>
+
+    <insert id="insertStuMentorshipRecord" parameterType="StuMentorshipRecord" useGeneratedKeys="true" keyProperty="recordId">
+        insert into stu_mentorship_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="tutorId != null and tutorId != ''">tutor_id,</if>
+            <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic,</if>
+            <if test="guidanceLocation != null">guidance_location,</if>
+            <if test="guidanceTime != null">guidance_time,</if>
+            <if test="summaryFilePath != null">summary_file_path,</if>
+            <if test="photoPaths != null">photo_paths,</if>
+            <if test="semester != null and semester != ''">semester,</if>
+            <if test="submitTime != null">submit_time,</if>
+            <if test="studentComment != null">student_comment,</if>
+            <if test="auditStatus != null">audit_status,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="auditRemark != null">audit_remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="tutorId != null and tutorId != ''">#{tutorId},</if>
+            <if test="guidanceTopic != null and guidanceTopic != ''">#{guidanceTopic},</if>
+            <if test="guidanceLocation != null">#{guidanceLocation},</if>
+            <if test="guidanceTime != null">#{guidanceTime},</if>
+            <if test="summaryFilePath != null">#{summaryFilePath},</if>
+            <if test="photoPaths != null">#{photoPaths},</if>
+            <if test="semester != null and semester != ''">#{semester},</if>
+            <if test="submitTime != null">#{submitTime},</if>
+            <if test="studentComment != null">#{studentComment},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="auditRemark != null">#{auditRemark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateStuMentorshipRecord" parameterType="StuMentorshipRecord">
+        update stu_mentorship_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="tutorId != null and tutorId != ''">tutor_id = #{tutorId},</if>
+            <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic = #{guidanceTopic},</if>
+            <if test="guidanceLocation != null">guidance_location = #{guidanceLocation},</if>
+            <if test="guidanceTime != null">guidance_time = #{guidanceTime},</if>
+            <if test="summaryFilePath != null">summary_file_path = #{summaryFilePath},</if>
+            <if test="photoPaths != null">photo_paths = #{photoPaths},</if>
+            <if test="semester != null and semester != ''">semester = #{semester},</if>
+            <if test="submitTime != null">submit_time = #{submitTime},</if>
+            <if test="studentComment != null">student_comment = #{studentComment},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
+        </trim>
+        where record_id = #{recordId}
+    </update>
+
+    <delete id="deleteStuMentorshipRecordByRecordId" parameterType="Integer">
+        delete from stu_mentorship_record where record_id = #{recordId}
+    </delete>
+
+    <delete id="deleteStuMentorshipRecordByRecordIds" parameterType="String">
+        delete from stu_mentorship_record where record_id in
+        <foreach item="recordId" collection="array" open="(" separator="," close=")">
+            #{recordId}
+        </foreach>
+    </delete>
+</mapper>
