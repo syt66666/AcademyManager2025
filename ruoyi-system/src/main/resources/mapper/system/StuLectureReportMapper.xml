@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuLectureReportMapper">
     <insert id="insertStuLectureInformation">
-        INSERT INTO stu_lec_report (report_title, reporter, report_date, report_content, report_link, report_feeling, report_picture, audit_status, student_id, student_name, report_admit_time, semester)
+        INSERT INTO stu_lec_report (report_title, reporter, report_date, report_content, report_link, report_feeling, lecture_poster, audit_status, student_id, student_name, report_admit_time, semester)
         VALUES (
         <if test="reportTitle != null and reportTitle != ''">#{reportTitle}</if>,
         <if test="reporter != null and reporter != ''">#{reporter}</if>,
@@ -10,7 +10,7 @@
         <if test="reportContent != null and reportContent != ''">#{reportContent}</if>,
         <if test="reportLink != null and reportLink != ''">#{reportLink}</if>,
         <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling}</if>,
-        <if test="reportPicture != null">#{reportPicture}</if>,
+        <if test="lecturePoster != null">#{lecturePoster}</if>,
         <if test="auditStatus != null">#{auditStatus}</if>,
         <if test="studentId != null">#{studentId}</if>,
         <if test="studentName != null and studentName != ''">#{studentName}</if>,

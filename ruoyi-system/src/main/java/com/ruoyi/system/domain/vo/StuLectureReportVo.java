@@ -40,9 +40,9 @@ public class StuLectureReportVo {
      */
     private byte[] reportFeeling;
     /**
-     * 图片
+     * 报告海报
      */
-    private byte[] reportPicture;
+    private byte[] lecturePoster;
     /**
      * 审核状态
      */
@@ -132,12 +132,12 @@ public class StuLectureReportVo {
         this.reportFeeling = reportFeeling;
     }
 
-    public byte[] getReportPicture() {
-        return reportPicture;
+    public byte[] getLecturePoster() {
+        return lecturePoster;
     }
 
-    public void setReportPicture(byte[] reportPicture) {
-        this.reportPicture = reportPicture;
+    public void setLecturePoster(byte[] lecturePoster) {
+        this.lecturePoster = lecturePoster;
     }
 
     public int getAuditStatus() {

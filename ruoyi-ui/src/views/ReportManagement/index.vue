@@ -1,35 +1,48 @@
 <template>
-  <el-row type="flex" justify="center">
+  <el-row type="flex" justify="center" >
 
     <!-- 讲座报告卡片 -->
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
+      <!-- 顶部标题栏 -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px;">
-        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">讲座报告</h1>
+        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">
+          <span>📚</span>
+          讲座报告
+<!--          <span class="current-semester">{{ activeSemester }} 竞赛记录</span>-->
+        </h1>
         <el-button type="primary" icon="el-icon-plus" circle size="medium" @click="addNewCard"
                    style="background-color: #42b983; border-color: #42b983;"></el-button>
       </div>
 
       <el-table :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
         <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column type="studentId" label="学生学号" width="80"></el-table-column>
-        <el-table-column prop="studentName" label="学生姓名" min-width="120"></el-table-column>
         <el-table-column prop="reportTitle" label="题目" min-width="180"></el-table-column>
         <el-table-column prop="reporter" label="报告人" min-width="150"></el-table-column>
         <el-table-column prop="reportDate" label="报告时间" min-width="150"></el-table-column>
         <!--        <el-table-column prop="proofMaterial" label="证明材料" min-width="150"></el-table-column>-->
-        <el-table-column prop="reportAdmitTime" label="报告提交时间" min-width="150"></el-table-column>
         <el-table-column prop="reportContent" label="内容简介" min-width="150"></el-table-column>
         <el-table-column prop="reportLink" label="链接" min-width="150"></el-table-column>
-        <el-table-column prop="auditStatus" label="审核状态" min-width="150"></el-table-column>
-        <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
-        <el-table-column prop="auditRemark" label="审核意见" min-width="150"></el-table-column>
-        <el-table-column prop="nickName" label="审核人姓名" min-width="150"></el-table-column>
         <el-table-column label="报告文件照片下载" width="120">
           <template slot-scope="scope">
             <el-button type="text" @click="showDetails(scope.row)" style="color: #42b983;">下载报告</el-button>
-            <el-button type="text" @click="showDetails(scope.row)" style="color: #42b983;">下载图片</el-button>
+            <el-button type="text" @click="showDetails(scope.row)" style="color: #42b983;">下载演讲海报</el-button>
           </template>
         </el-table-column>
+        <el-table-column prop="reportAdmitTime" label="报告提交时间" min-width="150"></el-table-column>
+        <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
+        <el-table-column prop="auditStatus" label="审核状态" min-width="150">
+          <template slot-scope="scope">
+            <span>
+              <el-tag v-if="formatAuditStatus(scope.row.auditStatus) === '未审核'" type="warning">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '已通过'" type="success">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未通过'" type="danger">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else>未知状态</el-tag>
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="auditRemark" label="审核意见" min-width="150"></el-table-column>
+        <el-table-column prop="nickName" label="审核人姓名" min-width="150"></el-table-column>
+
       </el-table>
 
       <!-- 分页器 -->
@@ -38,7 +51,7 @@
         :current-page.sync="currentPage"
         :page-size="pageSize"
         :total="totalRecords"
-        :page-sizes="[10, 20, 30, 50]"
+        :page-sizes="[2, 4, 6, 8]"
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
         style="text-align: center; margin-top: 10px;"
@@ -90,7 +103,7 @@
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;width:70px">图片上传</span>
+                <span class="form-item-label" style="font-size: 16px;">报告海报上传</span>
                 <input type="file" @change="onImageChange" accept="image/*" />
               </div>
             </el-form-item>
@@ -114,12 +127,16 @@ export default {
   data() {
     return {
       competitionRecords: [],// 存储后端返回的讲座报告记录数据
+      queryParams: {}, // 查询条件
+      currentPage: 1, // 当前页
+      pageSize: 2, // 每页显示的条数
+      totalRecords: 0, // 总记录数
       showSecondCard: false,
       newCardInfo: '',
       selectedFile: null,
       uploadMessage: null,
       reportFeeling: null,
-      picture: null,
+      lecturePoster: null,
       formData: {
         reportTitle: '',
         reporter: '',
@@ -129,12 +146,40 @@ export default {
         //学期
         semester: '2',
       },
+      activeSemester: '', // 当前学期
     };
   },
   mounted() {
+    // 获取学期数据
+    this.activeSemester = this.$route.query.semester || '未知学期';
     this.fetchLectureReportRecords();  // 在页面加载时获取数据
   },
   methods: {
+    // 分页大小变化
+    handleSizeChange(size) {
+      this.pageSize = size;
+      this.fetchLectureReportRecords(this.queryParams, this.currentPage, this.pageSize);
+    },
+
+    // 当前页变化
+    handleCurrentChange(page) {
+      this.currentPage = page;
+      this.fetchLectureReportRecords(this.queryParams, this.currentPage, this.pageSize);
+    },
+
+    // 格式化审核状态
+    formatAuditStatus(status) {
+      switch (status) {
+        case 0:
+          return "未审核";
+        case 1:
+          return "已通过";
+        case 2:
+          return "未通过";
+        default:
+          return "未审核";
+      }
+    },
     addNewCard() {
       this.showSecondCard = true;
     },
@@ -147,9 +192,9 @@ export default {
     },
     onImageChange(e) {
       // 当用户选择图片时，更新images数组
-      this.picture = Array.from(e.target.files);
+      this.lecturePoster = Array.from(e.target.files);
     },
-    async fetchLectureReportRecords(queryParams = {}, currentPage = 1, pageSize = 10) {
+    async fetchLectureReportRecords(queryParams = {}, currentPage = 1, pageSize = 2) {
       this.isLoading = true; // 设置为加载状态
       try {
         const data = await fetchLectureReportRecords({
@@ -159,8 +204,8 @@ export default {
         });
         console.log(data);
         console.log(data.data);
-        this.competitionRecords = data.data || []; // 假设后端返回的数据格式包含 rows
-        this.totalRecords = data.total || 0;       // 假设返回总记录数 total
+        this.competitionRecords = data.data.rows || []; // 假设后端返回的数据格式包含 rows
+        this.totalRecords = data.data.total || 0;       // 假设返回总记录数 total
       } catch (error) {
         console.error("Error fetching competition records:", error);
       } finally {
@@ -179,7 +224,7 @@ export default {
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
           formData.append('reportFeeling', this.reportFeeling);
-          formData.append('picture', this.picture[0]);
+          formData.append('lecturePoster', this.lecturePoster[0]);
           // 在这里编写提交表单的逻辑，例如将表单数据发送到后端
           console.log('表单数据:', this.formData);
           console.log('传递后端数据:', formData);

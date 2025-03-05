@@ -3,6 +3,7 @@ package com.ruoyi.system.controller;
 
 import com.alibaba.fastjson2.JSON;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
 import com.ruoyi.system.service.StudentLectureReportService;
@@ -25,7 +26,7 @@ import static com.ruoyi.common.utils.PageUtils.startPage;
  */
 @RestController
 @RequestMapping("/Lecture")
-public class StudentLectureReportController {
+public class StudentLectureReportController extends BaseController{
 
     @Autowired
     private StudentLectureReportService studentLectureReportService;
@@ -35,10 +36,10 @@ public class StudentLectureReportController {
      * @return
      */
     @GetMapping("/records")
-    public AjaxResult getCompetitionRecords() {
+    public AjaxResult getCompetitionRecords(@RequestParam(value = "semester", required = false) String semester) {
         startPage();  // 启动分页
         List<StuLectureReportVo> records = studentLectureReportService.getAllCompetitionRecords(); // 查询记录
-        return AjaxResult.success(records);  // 返回分页数据
+        return AjaxResult.success(getDataTable(records));  // 返回分页数据
     }
 
     /**
@@ -49,7 +50,7 @@ public class StudentLectureReportController {
      */
     @PostMapping("/insert")
     public AjaxResult uploadExcel(@RequestParam("studentLectureReport") String studentLectureReport,
-                                  @RequestParam("reportFeeling") MultipartFile reportFeeling, @RequestParam("picture") MultipartFile picture) {
+                                  @RequestParam("reportFeeling") MultipartFile reportFeeling, @RequestParam("lecturePoster") MultipartFile lecturePoster) {
         StudentLectureReport report = JSON.parseObject(studentLectureReport, StudentLectureReport.class);
         if (report.getReportTitle() == null || report.getReportTitle().isEmpty()) {
             return AjaxResult.error("题目不能为空");
@@ -67,8 +68,8 @@ public class StudentLectureReportController {
             return AjaxResult.error("链接不能为空");
         }
         // 判断图片大小是否超过10MB
-        if (picture.getSize() > 10 * 1024 * 1024) {  // 10MB = 10 * 1024 * 1024 字节
-            return AjaxResult.error("图片大小不能超过10MB");
+        if (lecturePoster.getSize() > 10 * 1024 * 1024) {  // 10MB = 10 * 1024 * 1024 字节
+            return AjaxResult.error("演讲海报大小不能超过10MB");
         }
         // 判断图片大小是否超过500KB
         if (reportFeeling.getSize() > 500 * 1024) {
@@ -83,7 +84,7 @@ public class StudentLectureReportController {
             report.setReportFeeling(reportFeeling.getBytes());
             //下面为压缩图片
             // 将上传的图片转为 BufferedImage
-            BufferedImage originalImage = ImageIO.read(picture.getInputStream());
+            BufferedImage originalImage = ImageIO.read(lecturePoster.getInputStream());
             int width = (int) (originalImage.getWidth() * 0.2);
             int height = (int) (originalImage.getHeight() * 0.2);
 
@@ -100,7 +101,7 @@ public class StudentLectureReportController {
             ImageIO.write(compressedImage, "jpg", byteArrayOutputStream);
 
             // 保存压缩后的图片 byte[]
-            report.setReportPicture(byteArrayOutputStream.toByteArray());
+            report.setLecturePoster(byteArrayOutputStream.toByteArray());
         } catch (Exception e) {
             return AjaxResult.error(e.getMessage());
         } finally {
