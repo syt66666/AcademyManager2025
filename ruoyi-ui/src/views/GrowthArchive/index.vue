@@ -1,50 +1,57 @@
 <template>
   <div class="container">
     <div class="main-container">
-    <!-- 顶部导航栏增强 -->
-    <div class="nav">
-      <div class="nav-content">
-        <h2>
-          <span class="campus-icon">🏫</span>
-          书院学生成长档案
-        </h2>
-        <div class="academic-year">2023-2027 学籍周期</div>
-      </div>
-    </div>
-
-    <!-- 学期卡片容器 -->
-    <div class="semester-grid">
-      <div
-        v-for="(semester, index) in semesters"
-        :key="index"
-        class="semester-card"
-        :class="[semester.status, { 'active': activeIndex === index }]"
-        @click="togglePanel(index)"
-      >
-        <div class="glow-effect"></div>
-        <div class="semester-header">
-          <span class="semester-name">{{ semester.name }}</span>
-          <span class="time">{{ semester.time }}</span>
+      <!-- 顶部导航栏增强 -->
+      <div class="nav">
+        <div class="nav-content">
+          <h2>
+            <span class="campus-icon">🏫</span>
+            书院学生成长档案
+          </h2>
+          <div class="academic-year">{{ academicPeriod }} 学籍周期</div>
         </div>
-        <div class="progress-wrapper">
-          <div class="progress">
-            <div
-              class="progress-bar"
-              :style="{ width: semester.progress + '%',
-                        background: progressColor(semester)}"
+      </div>
 
-            >
-              <span class="progress-text">{{ semester.progress }}%</span>
+      <!-- 学期卡片容器 -->
+      <div class="semester-grid-wrapper">
+        <div class="semester-grid">
+          <div
+            v-for="(semester, index) in semesters"
+            :key="index"
+            class="semester-card"
+            :class="[semester.status, {
+            'active': activeIndex === index,
+            'disabled': semester.status === 'future'
+            }]"
+            @click="handleCardClick(index)"
+          >
+
+            <div class="glow-effect"></div>
+            <div class="semester-header">
+              <span class="semester-name">{{ semester.name }}</span>
+              <span class="time">{{ semester.time }}</span>
+            </div>
+            <div class="progress-wrapper">
+              <div class="progress">
+                <div
+                  class="progress-bar"
+                  :style="{ width: semester.progress + '%',
+                            background: progressColor(semester)}"
+                >
+                  <span class="progress-text">{{ semester.progress }}%</span>
+                </div>
+              </div>
+            </div>
+            <div class="status-indicator">
+              <span v-if="semester.status === 'completed'">✅ 已完成</span>
+              <span v-if="semester.status === 'current'" class="blink">🎯 进行中</span>
+              <span v-if="semester.status === 'future'">⏳ 未开启</span>
             </div>
           </div>
         </div>
-        <div class="status-indicator">
-          <span v-if="semester.status === 'completed'">✅ 已完成</span>
-          <span v-if="semester.status === 'current'" class="blink">🎯 进行中</span>
-        </div>
       </div>
     </div>
-    </div>
+
     <!-- 展开的模块面板 -->
     <transition name="panel">
       <div
@@ -54,7 +61,7 @@
       >
         <div class="panel-header">
           <h3>{{ currentSemester.name }}成长记录</h3>
-          <span class="gpa">GPA: {{ currentSemester.gpa }}</span>
+          <span class="gpa">GPA: {{ currentSemester.gpa || '--' }}</span>
           <button class="close-btn" @click.stop="closePanel">×</button>
         </div>
 
@@ -85,121 +92,7 @@ export default {
     return {
       activeIndex: null,
       panelTop: 0,
-
-      semesters: [
-        {
-          name: '大一上',
-          time: '2023.09-2024.01',
-          progress: 100,
-          status: 'completed',
-          gpa: 3.2,
-          stats: {
-            score: '4门优秀',
-            competition: '新生编程赛参与',
-            activity: '5次文体活动',
-            report: '2场学术报告',
-            meeting: '3次导师会议'
-          }
-        },
-        {
-          name: '大一下',
-          time: '2024.03-2024.07',
-          progress: 100,
-          status: 'completed',
-          gpa: 3.5,
-          stats: {
-            score: '2门A+课程',
-            competition: '数学建模校赛二等奖',
-            activity: '运动会田径冠军',
-            report: '4场专业讲座',
-            meeting: '5次课题讨论'
-          }
-        },
-        {
-          name: '大二上',
-          time: '2024.09-2025.01',
-          progress: 100,
-          status: 'completed',
-          gpa: 3.7,
-          stats: {
-            score: '专业排名前10%',
-            competition: '挑战杯省赛金奖',
-            activity: '校园歌手大赛',
-            report: '6场行业前沿报告',
-            meeting: '8次实验室组会'
-          }
-        },
-        {
-          name: '大二下',
-          time: '2025.03-2025.07',
-          progress: 85,
-          status: 'current',
-          gpa: 3.8,
-          stats: {
-            score: '3篇课程论文优秀',
-            competition: '互联网+创业大赛入围',
-            activity: '篮球联赛MVP',
-            report: '5场跨学科论坛',
-            meeting: '10次项目推进会'
-          }
-        },
-        {
-          name: '大三上',
-          time: '2025.09-2026.01',
-          progress: 0,
-          status: 'future',
-          gpa: null,
-          stats: {
-            score: '--',
-            competition: '（未开始）',
-            activity: '（未开始）',
-            report: '（未开始）',
-            meeting: '（未开始）'
-          }
-        },
-        {
-          name: '大三下',
-          time: '2026.03-2026.07',
-          progress: 0,
-          status: 'future',
-          gpa: null,
-          stats: {
-            score: '--',
-            competition: '（未开始）',
-            activity: '（未开始）',
-            report: '（未开始）',
-            meeting: '（未开始）'
-          }
-        },
-        {
-          name: '大四上',
-          time: '2026.09-2027.01',
-          progress: 0,
-          status: 'future',
-          gpa: null,
-          stats: {
-            score: '--',
-            competition: '（未开始）',
-            activity: '（未开始）',
-            report: '（未开始）',
-            meeting: '（未开始）'
-          }
-        },
-        {
-          name: '大四下',
-          time: '2027.03-2027.07',
-          progress: 0,
-          status: 'future',
-          gpa: null,
-          stats: {
-            score: '--',
-            competition: '（未开始）',
-            activity: '（未开始）',
-            report: '（未开始）',
-            meeting: '（未开始）'
-          }
-        }
-      ],
+      semesters: [], // 改为动态生成
       modules: {
         score: { label: '学业成绩', icon: '📊' },
         competition: { label: '科创竞赛', icon: '🏆' },
@@ -216,22 +109,147 @@ export default {
     panelPosition() {
       return { top: this.panelTop + 'px' }
     },
-    // gpaToPercent() {
-    //   return Math.floor((this.currentSemester.gpa / 4.0) * 100)
-    // },
+    admissionYear() {
+      return this.$store.state.user.name.substring(0, 4)
+    },
+    academicPeriod() {
+      const start = parseInt(this.admissionYear)
+      return `${start}-${start + 4}`
+    }
+  },
+  created() {
+    this.semesters = Array.from({ length: 8 }, (_, index) => {
+      const status = this.determineStatus(index)
+      return {
+        name: `大${['一','二','三','四'][Math.floor(index/2)]}${index%2 ? '下' : '上'}`,
+        time: this.generateSemesterTime(index),
+        progress: this.calculateProgress(index),
+        status: status,
+        gpa: this.getDefaultGPA(status),
+        stats: this.generateDefaultStats(status)
+      }
+    })
   },
   methods: {
-    togglePanel(index) {
-      if (this.activeIndex === index) {
-        this.activeIndex = null
-      } else {
-        this.activeIndex = index
-        // 简单计算面板位置（实际需根据元素位置计算）
-        this.panelTop = 200 + Math.floor(index / 4) * 150
+    // 修改点击处理方法
+    handleCardClick(index) {
+      if (this.semesters[index].status === 'future') {
+        this.$message.warning('该学期尚未开启，请等待');
+        return;
+      }
+      this.togglePanel(index);
+    },
+    generateSemesterTime(index) {
+      const baseYear = parseInt(this.admissionYear);
+      const academicYearOffset = Math.floor(index / 2);
+      const isFirstSemester = index % 2 === 0;
+
+      // 上学期（9月-次年1月）
+      if (isFirstSemester) {
+        const startYear = baseYear + academicYearOffset;
+        return `${startYear}.09-${startYear + 1}.01`;
+      }
+      // 下学期（3月-7月）
+      else {
+        const startYear = baseYear + academicYearOffset + 1;
+        return `${startYear}.03-${startYear}.07`;
       }
     },
+    determineStatus(index) {
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
+
+      // 解析学期开始年份
+      const [startStr] = this.generateSemesterTime(index).split('-');
+      const startYear = parseInt(startStr.split('.')[0]);
+
+      // 状态判断逻辑
+      if (startYear < currentYear) return 'completed';
+      if (startYear > currentYear) return 'future';
+
+      // 同年度学期判断
+      const isFirstSemester = index % 2 === 0;
+      if (isFirstSemester) {
+        // 上学期（9月-次年1月）
+        const isCurrent = currentMonth >= 9 || (currentMonth <= 1 && currentYear === startYear + 1);
+        return isCurrent ? 'current' : 'future';
+      } else {
+        // 下学期（3月-7月）
+        const isCurrent = currentMonth >= 3 && currentMonth <= 7;
+        return isCurrent ? 'current' : 'future';
+      }
+    },
+    calculateProgress(index) {
+      const status = this.determineStatus(index);
+      if (status !== 'current') return status === 'completed' ? 100 : 0;
+
+      // 获取学期时间段
+      const [startStr, endStr] = this.generateSemesterTime(index).split('-');
+      const [startYear, startMonth] = startStr.split('.').map(Number);
+      const [endYear, endMonth] = endStr.split('.').map(Number);
+
+      // 获取当前日期
+      const current = new Date();
+      const currentYear = current.getFullYear();
+      const currentMonth = current.getMonth() + 1; // 1-12
+
+      // 计算学期总月数（固定4个月）
+      const totalMonths = 4;
+
+      // 计算已过月份（基于学期开始时间）
+      let elapsedMonths = 0;
+
+      // 处理上学期（9月-次年1月）
+      if (startMonth === 9) {
+        elapsedMonths = currentMonth >= 9 ? currentMonth - 9 + 1 : 0;
+        if (currentYear > startYear && currentMonth <= 1) {
+          elapsedMonths = 5 - (1 - currentMonth); // 处理跨年1月
+        }
+      }
+      // 处理下学期（3月-7月）
+      else if (startMonth === 3) {
+        elapsedMonths = Math.max(currentMonth - 3 + 1, 0);
+      }
+
+      // 计算进度百分比（每月25%）
+      let progress = Math.min(elapsedMonths, totalMonths) * 25;
+
+      // 处理学期结束后的进度
+      if (currentMonth > endMonth && currentYear >= endYear) {
+        progress = 100;
+      }
+
+      return Math.min(progress, 100);
+    },
+
+    getDefaultGPA(status) {
+      return status === 'future' ? null : Number((Math.random() * 0.8 + 3.0).toFixed(1))
+    },
+    generateDefaultStats(status) {
+      const defaults = {
+        score: '--',
+        competition: '（未开始）',
+        activity: '（未开始）',
+        report: '（未开始）',
+        meeting: '（未开始）'
+      }
+      if (status === 'future') return defaults
+
+      return {
+        score: `${Math.floor(Math.random()*5)}门优秀`,
+        competition: ['参与','入围','获奖'][Math.floor(Math.random()*3)],
+        activity: `${Math.floor(Math.random()*8)}次活动`,
+        report: `${Math.floor(Math.random()*6)}场报告`,
+        meeting: `${Math.floor(Math.random()*10)}次会议`
+      }
+    },
+    togglePanel(index) {
+      this.activeIndex = this.activeIndex === index ? null : index
+      this.panelTop = window.innerHeight * 0.3
+    },
     closePanel() {
-      this.activeIndex = null;
+      this.activeIndex = null
     },
     progressColor(semester) {
       const statusColors = {
@@ -241,58 +259,116 @@ export default {
       }
       return statusColors[semester.status]
     },
-
     handleModuleClick(key) {
-      // if (key === 'score') {
-      //   this.$router.push('/GrowthArchive/StudentScoreShow')
-      // }
-      if (key === 'score') {
-        this.$router.push({ path: '/GrowthArchive/StudentScoreShow', query: { semester: this.currentSemester.name } });
+      const routes = {
+        score: '/GrowthArchive/StudentScoreShow',
+        competition: '/GrowthArchive/CompetitonRecord',
+        activity: '/GrowthArchive/ActivityRecord',
+        report: '/ReportManagement/index'
       }
-      if (key === 'competition') {
-        this.$router.push({path:'/GrowthArchive/CompetitonRecord', query: { semester: this.currentSemester.name } });
-      }
-      if (key === 'activity') {
-        this.$router.push({path:'/GrowthArchive/ActivityRecord', query: { semester: this.currentSemester.name } })
-      }
-      if (key === 'report') {
-        this.$router.push('/ReportManagement/index')
-      }
-      if (key === 'meeting') {
-        this.$router.push('')
+      if (routes[key]) {
+        this.$router.push({
+          path: routes[key],
+          query: { semester: this.currentSemester.name }
+        })
       }
     }
-
   }
 }
 </script>
 
+
 <style scoped>
-/* 新增设计系统变量 */
+/* 添加禁用样式 */
+.semester-card.disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  filter: grayscale(0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 禁用状态的辉光效果 */
+.semester-card.disabled .glow-effect {
+  display: none;
+}
+
+/* 添加遮罩层 */
+.semester-card.disabled::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255,255,255,0.6);
+  z-index: 1;
+}
+
+/* 调整进度条颜色 */
+.semester-card.disabled .progress-bar {
+  background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 100%) !important;
+}
+
+/* 禁用状态下的文字颜色 */
+.semester-card.disabled .semester-name,
+.semester-card.disabled .time {
+  color: #94a3b8;
+}
+
+
+.semester-card.current {
+  border-left: 4px solid var(--primary);
+  animation: pulse 2s infinite; /* 核心动画效果 */
+}
+
+/* 动画 */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(66,153,225,0.3); }
+  100% { box-shadow: 0 0 0 15px rgba(66,153,225,0); }
+}
+
+@keyframes blink {
+  50% { opacity: 0.5; }
+}
+/* 设计系统变量 */
 :root {
   --primary: #2B6CB0;
   --secondary: #4299E1;
   --success: #48BB78;
-  --warning: #ECC94B;
   --info: #718096;
   --surface: #F7FAFC;
   --bg-gradient: linear-gradient(160deg, #EBF4FF 0%, #EBF8FF 100%);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* 容器优化 */
+/* 基础容器 */
 .container {
   max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
   background: var(--bg-gradient);
   min-height: 100vh;
-  padding: 2rem;
+  display: grid;
+  place-items: center;
 }
 
-/* 导航栏高级效果 */
+.main-container {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 1440px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 导航栏 */
 .nav {
   background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
-  border-radius: 1rem;
-  margin-bottom: 2.5rem;
+  border-radius: 1.5rem 1.5rem 0 0;
+  margin: -2rem -2rem 2rem;
   box-shadow: var(--shadow-lg);
   position: relative;
   overflow: hidden;
@@ -314,18 +390,20 @@ export default {
 }
 
 .nav-content {
-  padding: 1.5rem 30rem;
-  position: relative;
-  z-index: 1;
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .nav h2 {
   color: white;
-  font-size: 2rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   margin: 0;
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  white-space: nowrap;
 }
 
 .campus-icon {
@@ -333,19 +411,27 @@ export default {
   filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
 }
 
-
 .academic-year {
   color: rgba(255,255,255,0.9);
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+  white-space: nowrap;
 }
 
-/* 学期卡片高级效果 */
+/* 学期卡片网格 */
+.semester-grid-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 2rem;
+}
+
 .semester-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  row-gap: 3rem;
-  padding-bottom: 15rem;
+  grid-template-columns: repeat(4, minmax(280px, 1fr));
+  grid-template-rows: repeat(2, minmax(180px, auto));
+  gap: 2rem;
+  min-width: 1200px;
+  padding: 0 2rem;
+  margin-top: 1.5rem;
 }
 
 .semester-card {
@@ -357,6 +443,10 @@ export default {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
   box-shadow 0.3s ease;
   cursor: pointer;
+  width: 100%;
+  height: 100%;
+  min-height: 180px;
+  box-sizing: border-box;
 }
 
 .glow-effect {
@@ -376,11 +466,6 @@ export default {
   opacity: 1;
 }
 
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(66,153,225,0.3); }
-  100% { box-shadow: 0 0 0 15px rgba(66,153,225,0); }
-}
-
 .semester-header {
   display: flex;
   justify-content: space-between;
@@ -398,11 +483,12 @@ export default {
   font-size: 0.9rem;
 }
 
-/* 进度条高级样式 */
+/* 进度条 */
 .progress-wrapper {
   background: rgba(237, 242, 247, 0.6);
   border-radius: 0.5rem;
   padding: 0.3rem;
+  margin-top: auto;
 }
 
 .progress {
@@ -415,12 +501,30 @@ export default {
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg,
-  var(--primary) 0%,
-  var(--secondary) 100%);
   border-radius: 0.4rem;
   position: relative;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+  background 0.4s ease;
+}
+
+.progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: linear-gradient(
+    -45deg,
+    rgba(255,255,255,0.15) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255,255,255,0.15) 50%,
+    rgba(255,255,255,0.15) 75%,
+    transparent 75%
+  );
+  background-size: 1.5rem 1.5rem;
+  border-radius: 0.4rem;
 }
 
 .progress-text {
@@ -443,103 +547,23 @@ export default {
   gap: 0.5rem;
 }
 
-.blink {
-  animation: blink 1.5s infinite;
-}
-
-@keyframes blink {
-  50% { opacity: 0.5; }
-}
-
-/* 模块面板高级样式 */
+/* 模块面板 */
 .module-panel {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.4);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -30%);
+  width: 80%;
+  max-width: 1000px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.3);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
   border-radius: 1.5rem;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-
-
-.gpa {
-  font-size: 2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* 模块项高级样式 */
-.module-item {
-  background: rgba(247, 250, 252, 0.8);
-  border: 1px solid rgba(226, 232, 240, 0.6);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.module-item:hover {
-  background: white;
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-}
-
-/* 模块图标颜色 */
-.module-item.score .module-icon { color: #48BB78; }
-.module-item.competition .module-icon { color: #F6AD55; }
-.module-item.activity .module-icon { color: #4299E1; }
-.module-item.report .module-icon { color: #9F7AEA; }
-.module-item.meeting .module-icon { color: #F56565; }
-
-/* 响应式优化增强 */
-@media (max-width: 1024px) {
-  .semester-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .module-panel {
-    width: 95%;
-  }
-}
-
-@media (max-width: 768px) {
-  .nav h2 {
-    font-size: 1.5rem;
-  }
-
-  .semester-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .module-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-
-/* 新增玻璃材质效果 */
-.module-panel {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  max-width: 1000px;
-  background: rgba(255,255,255,0.98);
-  border-radius: 16px;
   padding: 2rem;
-  z-index: 1000;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
-  border: 1px solid rgba(255,255,255,0.3);
 }
+
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -549,19 +573,15 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-.panel-header h3 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: #1a237e;
-}
-
 .gpa {
-  font-size: 1.2rem;
-  background: linear-gradient(45deg, #67C23A, #85ce61);
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-/* 模块项升级 */
+
+/* 模块项 */
 .module-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -569,40 +589,25 @@ export default {
 }
 
 .module-item {
+  background: rgba(255,255,255,0.9);
+  border-radius: 1.5rem;
   padding: 1.5rem;
-  border-radius: 12px;
-  background: rgba(250,250,250,0.8);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.6);
 }
 
 .module-item:hover {
-  background: white;
-  transform: translateY(-3px);
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-}
-
-.module-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: var(--primary);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.module-item:hover::before {
-  transform: scaleX(1);
+  transform: translateY(-5px);
+  box-shadow: 0 16px 24px -6px rgba(66, 153, 225, 0.15);
 }
 
 .module-icon {
   font-size: 2.5rem;
   margin-bottom: 1rem;
   filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+  position: relative;
+  z-index: 1;
 }
 
 .module-info h4 {
@@ -616,101 +621,6 @@ export default {
   color: #718096;
   font-size: 0.9rem;
   line-height: 1.4;
-}
-
-/* 标题区域升级 */
-.panel-header {
-  padding: 2rem;
-  background: linear-gradient(
-    135deg,
-    rgba(66, 153, 225, 0.08) 0%,
-    rgba(255,255,255,0.02) 100%
-  );
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
-
-.gpa {
-  font-size: 2.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-
-.progress-ring circle {
-  fill: none;
-  stroke-width: 4;
-  stroke: #4299E1;
-  stroke-linecap: round;
-  transform: rotate(-90deg);
-  transform-origin: center;
-  transition: stroke-dasharray 0.8s ease;
-}
-
-/* 模块项深度美化 */
-.module-item {
-  background: rgba(255,255,255,0.9);
-  border-radius: 1.5rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: visible;
-  position: relative;
-}
-
-.module-item:hover {
-  transform: translateY(-5px);
-  box-shadow:
-    0 16px 24px -6px rgba(66, 153, 225, 0.15),
-    inset 0 0 24px rgba(255,255,255,0.4);
-}
-
-
-.module-icon {
-  position: relative;
-  font-size: 2.5rem;
-  z-index: 1;
-}
-
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
-}
-/* 修改容器样式 */
-.container {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 2rem;
-  display: grid;
-  place-items: center;
-}
-
-
-/* 网格布局优化 */
-.semester-grid {
-  width: 100%;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  justify-items: center;
-}
-
-/* 卡片宽度限制 */
-.semester-card {
-  width: 100%;
-  max-width: 350px;
-}
-
-/* 模块面板居中增强 */
-.module-panel {
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
 }
 
 .close-btn {
@@ -733,72 +643,29 @@ export default {
   color: white;
   transform: rotate(90deg);
   border-color: transparent;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.progress-bar {
-  transition:
-    width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-    background 0.4s ease;
+
+
+.blink {
+  animation: blink 1.5s infinite;
 }
 
-/* 添加状态指示条纹 */
-.progress-bar::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: linear-gradient(
-    -45deg,
-    rgba(255,255,255,0.15) 25%,
-    transparent 25%,
-    transparent 50%,
-    rgba(255,255,255,0.15) 50%,
-    rgba(255,255,255,0.15) 75%,
-    transparent 75%
-  );
-  background-size: 1.5rem 1.5rem;
-  border-radius: 0.4rem;
+/* 响应式 */
+@media (max-width: 1440px) {
+  .semester-grid {
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+  }
 }
 
-/* 响应式优化 */
 @media (max-width: 1024px) {
   .semester-grid {
     grid-template-columns: repeat(2, 1fr);
+    min-width: auto;
   }
 }
 
-@media (max-width: 640px) {
-  .semester-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .nav h2 {
-    font-size: 1.4rem;
-  }
-}
-
-
-.main-container {
-  background: #ffffff;
-  border-radius: 1.5rem;
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-  padding: 2rem;
-  margin: 0 auto;
-  max-width: 1440px;
-  position: relative;
-  overflow: hidden;
-}
-
-/* 调整导航栏边距 */
-.nav {
-  margin: -2rem -2rem 2rem; /* 扩展导航栏到容器边缘 */
-  border-radius: 1.5rem 1.5rem 0 0;
-}
-
-/* 响应式调整 */
 @media (max-width: 768px) {
   .container {
     padding: 1rem;
@@ -811,17 +678,17 @@ export default {
 
   .nav {
     margin: -1rem -1rem 1.5rem;
-    border-radius: 1rem 1rem 0 0;
+    border-radius: 1rem;
+  }
+
+  .nav h2 {
+    font-size: 1.4rem;
+  }
+
+  .semester-grid {
+    grid-template-columns: 1fr;
+    padding: 0 1rem;
   }
 }
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(66,153,225,0.3); }
-  100% { box-shadow: 0 0 0 15px rgba(66,153,225,0); }
-}
-
-.blink {
-  animation: blink 1.5s infinite; /* 文字闪烁效果 */
-}
-
 </style>
+
