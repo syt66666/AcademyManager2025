@@ -14,25 +14,61 @@
       </div>
 
       <!-- 竞赛表格 -->
-      <el-table :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
+      <el-table
+        :data="competitionRecords"
+        style="width: 100%"
+        border
+        stripe
+        highlight-current-row
+        v-loading="loading"
+        element-loading-text="拼命加载中..."
+        element-loading-spinner="el-icon-loading"
+      >
         <el-table-column type="index" label="序号" width="80"></el-table-column>
         <el-table-column prop="competitionName" label="竞赛名称" min-width="180"></el-table-column>
         <el-table-column prop="competitionLevel" label="竞赛级别" min-width="150"></el-table-column>
         <el-table-column prop="awardLevel" label="竞赛奖项" min-width="150"></el-table-column>
         <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
         <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
-        <el-table-column label="证明材料" width="120">
+        <!--        <el-table-column label="证明材料" width="120">
+                  <template v-slot:default="scope">
+                    <el-button
+                      type="primary"
+                      icon="el-icon-download"
+                      size="mini"
+                      @click="downloadFiles(scope.row.proofMaterial)"
+                      :disabled="!scope.row.proofMaterial"
+                    >下载</el-button>
+                  </template>
+                </el-table-column>-->
+        <!-- 修改证明材料列的模板 -->
+        <el-table-column label="证明材料" width="200"> <!-- 加宽列宽 -->
           <template v-slot:default="scope">
-            <el-button
-              type="primary"
-              icon="el-icon-download"
-              size="mini"
-              @click="downloadFiles(scope.row.proofMaterial)"
-              :disabled="!scope.row.proofMaterial"
-            >下载
-            </el-button>
+            <div class="proof-material-cell">
+              <!-- 添加可点击的预览链接 -->
+              <el-link
+                type="primary"
+                :underline="false"
+                @click="handlePreview(scope.row.proofMaterial)"
+                style="margin-right: 10px;"
+              >
+                <i class="el-icon-view"></i> 预览
+              </el-link>
+
+              <!-- 原有下载按钮 -->
+              <el-button
+                type="primary"
+                icon="el-icon-download"
+                size="mini"
+                @click="downloadFiles(scope.row.proofMaterial)"
+                :disabled="!scope.row.proofMaterial"
+              >下载
+              </el-button>
+            </div>
           </template>
         </el-table-column>
+
+
         <el-table-column prop="auditStatus" label="审核状态" min-width="150">
           <template v-slot:default="scope">
             <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">{{ scope.row.auditStatus }}</el-tag>
@@ -56,6 +92,35 @@
         style="text-align: center; margin-top: 10px;"
       />
     </el-card>
+    <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <el-button
+          icon="el-icon-arrow-left"
+          :disabled="currentPreviewIndex === 0"
+          @click="currentPreviewIndex--"
+        ></el-button>
+        <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+        <el-button
+          icon="el-icon-arrow-right"
+          :disabled="currentPreviewIndex === previewImages.length - 1"
+          @click="currentPreviewIndex++"
+        ></el-button>
+      </div>
+      <img
+        :src="previewImages[currentPreviewIndex]"
+        style="max-width: 100%; display: block; margin: 0 auto;"
+        alt="证明材料预览"
+      />
+      <div slot="footer">
+        <el-button
+          type="primary"
+          @click="handleDownloadCurrent"
+          style="background-color: #42b983; border-color: #42b983;"
+        >
+          <i class="el-icon-download"></i> 下载当前图片
+        </el-button>
+      </div>
+    </el-dialog>
 
     <!-- 竞赛填写弹出对话框 -->
     <el-dialog :visible.sync="showDialog" title="竞赛填写" width="50%" @close="closeDialog">
@@ -123,7 +188,12 @@ export default {
     return {
       uploadUrl: "http://localhost:8080/competition/add", // 上传接口
       fileList: [], // 已上传的文件列表
-      dialogVisible: false, // 控制弹窗显示
+      previewVisible: false,
+      previewImages: [],
+      currentPreviewIndex: 0,
+      loading: false,
+      previewImage: '',
+      currentDownloadFile: '',
       currentImage: '', // 当前点击的图片 URL
       competitionRecords: [], // 竞赛记录数据
       queryParams: {}, // 查询条件
@@ -154,35 +224,102 @@ export default {
     this.fetchCompetitionRecords(); // 加载数据
   },
   methods: {
-    downloadFiles(filePaths) {
+    async downloadFiles(filePaths) {
       try {
-        // 类型安全校验
+        // 解析文件路径
         const paths = typeof filePaths === 'string'
           ? JSON.parse(filePaths)
           : filePaths;
+
         if (!Array.isArray(paths)) {
-          throw new Error("Invalid file paths format");
+          throw new Error("无效的文件路径格式");
         }
 
-        // 批量下载处理（浏览器兼容方案）
-        paths.forEach(fileName => {
-          const link = document.createElement('a');
-          link.href = `/competition/download?filePath=${encodeURIComponent(fileName)}`;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        });
-
+        // 处理多个文件下载
+        if (paths.length > 1) {
+          this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(this.downloadSingleFile);
+          });
+        } else if (paths.length === 1) {
+          this.previewImage = this.getFullUrl(paths[0]);
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
       } catch (error) {
-        this.$message.error(`文件下载失败: ${error.message}`);
-        console.error("下载异常追踪:", {
-          error,
-          rawData: filePaths,
-          stack: error.stack
-        });
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
       }
     },
+
+    // 下载单个文件
+    // 修改 downloadSingleFile 方法
+    async downloadSingleFile(filePath) {
+      try {
+        const response = await axios.get(
+          `${process.env.VUE_APP_BASE_API}/competition/download?filePath=${filePath}`,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token")
+            }
+          }
+        );
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.generateFileName(filePath));
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(url);
+        link.remove();
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    }
+    ,
+
+    // 生成带时间戳的文件名
+    generateFileName(filePath) {
+      const originalName = filePath.split('/').pop() || '证明材料';
+      const timestamp = new Date().getTime();
+      const ext = originalName.split('.').pop() || 'jpg';
+      return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
+    },
+
+    // 获取完整URL（带缓存清除）
+    // 获取完整URL（带缓存清除）
+    getFullUrl(filePath) {
+      return `${process.env.VUE_APP_BASE_API}/competition_uploads/${filePath}?t=${Date.now()}`;
+    },
+
+
+    // 处理当前预览图片下载
+    handleDownloadCurrent() {
+      this.downloadSingleFile(this.currentDownloadFile);
+      this.previewVisible = false;
+    },
+    handlePreview(filePath) {
+      try {
+        const paths = typeof filePath === 'string'
+          ? JSON.parse(filePath)
+          : filePath;
+
+        if (paths.length > 0) {
+          this.previewImages = paths.map(path => this.getFullUrl(path));
+          this.currentPreviewIndex = 0;
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error('预览失败：文件路径格式不正确');
+      }
+    },
+
 // 获取文件名
     getFileName(filePath) {
       return filePath.split('/').pop() || '证明材料';
@@ -245,6 +382,8 @@ export default {
     }
     ,
 
+
+
     // 重置表单
     resetForm() {
       this.formData = {
@@ -269,6 +408,11 @@ export default {
       this.currentPage = page;
       this.fetchCompetitionRecords(this.queryParams, this.currentPage, this.pageSize);
     },
+    handleImageClick(imageUrl) {
+      this.previewImage = this.getFullUrl(imageUrl);
+      this.previewVisible = true; // 使用正确的变量名
+    }
+    ,
 
     // 加载竞赛记录
     async fetchCompetitionRecords(queryParams = {}, currentPage = 1, pageSize = 10) {
@@ -343,16 +487,18 @@ input, button {
   color: #409EFF;
 }
 
-/* 上传组件样式优化 */
-/*:deep(.el-upload-list--picture-card .el-upload-list__item) {
-  width: 100px;
-  height: 100px;
-  margin: 0 8px 8px 0;
+.el-button--mini {
+  padding: 5px 10px;
+  font-size: 12px;
 }
 
-:deep(.el-upload--picture-card) {
-  width: 100px;
-  height: 100px;
-  line-height: 110px;
-}*/
+.el-button--primary {
+  background-color: #42b983;
+  border-color: #42b983;
+}
+
+.el-button--primary:hover {
+  background-color: #3aa876;
+  border-color: #3aa876;
+}
 </style>
