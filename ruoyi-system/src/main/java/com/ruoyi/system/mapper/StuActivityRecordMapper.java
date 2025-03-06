@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.StuActivityRecord;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 
@@ -64,4 +65,12 @@ public interface StuActivityRecordMapper
             "where activity_id = #{activityId}"
     })
     int updateActivityAuditInfo(StuActivityRecord activity);
+
+    public List<StuActivityRecord> selectAuditActivityRecordList(StuActivityRecord stuActivityRecord);
+
+    public boolean existsByUniqueFields(@Param("studentId") String studentId,
+                                 @Param("activityName") String activityName,
+                                 @Param("activityLevel") String activityLevel,
+                                 @Param("awardLevel") String awardLevel,
+                                 @Param("semester") String semester);
 }
