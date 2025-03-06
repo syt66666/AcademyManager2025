@@ -25,12 +25,7 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * 【请填写功能名称】Controller
- *
- * @author ruoyi
- * @date 2025-03-01
- */
+
 @RestController
 @RequestMapping("/system/score")
 public class StuScoreController extends BaseController

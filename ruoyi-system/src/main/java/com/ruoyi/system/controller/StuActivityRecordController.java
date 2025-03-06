@@ -120,4 +120,16 @@ public class StuActivityRecordController extends BaseController
         return toAjax(stuActivityRecordService.updateActivityAuditInfo(activity));
     }
 
+    @GetMapping("/auditList")
+    public TableDataInfo auditList(StuActivityRecord stuActivityRecord)
+    {
+        startPage();
+        List<StuActivityRecord> list = stuActivityRecordService.selectAuditActivityRecordList(stuActivityRecord);
+        return getDataTable(list);
+    }
+
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody StuActivityRecord activity) {
+        return stuActivityRecordService.checkUnique(activity);
+    }
 }

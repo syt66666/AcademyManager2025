@@ -146,7 +146,7 @@
 </template>
 
 <script>
-import { listActivity, getActivity, delActivity, addActivity, updateActivity, auditActivity  } from "@/api/system/activity";
+import { listAuditActivity, getActivity, delActivity, addActivity, updateActivity, auditActivity  } from "@/api/system/activity";
 
 export default {
   name: "Activity",
@@ -257,7 +257,7 @@ export default {
     /** 查询学生文体活动记录列表 */
     getList() {
       this.loading = true;
-      listActivity(this.queryParams).then(response => {
+      listAuditActivity(this.queryParams).then(response => {
         this.activityList = response.rows;
         this.total = response.total;
         this.loading = false;
