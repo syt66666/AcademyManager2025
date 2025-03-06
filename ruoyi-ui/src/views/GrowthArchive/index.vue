@@ -256,7 +256,7 @@ export default {
         this.$router.push({path:'/GrowthArchive/ActivityRecord', query: { semester: this.currentSemester.name } })
       }
       if (key === 'report') {
-        this.$router.push('/ReportManagement/index')
+        this.$router.push({path:'/ReportManagement/index', query: { semester: this.currentSemester.name } })
       }
       if (key === 'meeting') {
         this.$router.push('')
