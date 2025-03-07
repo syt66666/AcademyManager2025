@@ -74,10 +74,15 @@ public class StuCompetitionRecordController extends BaseController {
             System.out.println("创建上传目录：" + uploadPath);
         }
 
-        // 生成安全文件名（处理中文）
-        String fileName = UUID.randomUUID() + "_"
-                + URLEncoder.encode(file.getOriginalFilename(), "UTF-8")
-                .replace("+", "%20");
+        // 生成安全文件名（UUID + 时间戳）
+        String originalFileName = file.getOriginalFilename();
+        String extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+
+        // 新文件名格式：UUID_时间戳.扩展名（示例：c9a3d7e0126345f8_1689234567890.jpg）
+        String fileName = UUID.randomUUID().toString().replace("-", "")
+                + "_"
+                + System.currentTimeMillis()
+                + extension;
 
         // 保存文件到指定位置
         Path targetPath = uploadPath.resolve(fileName);
@@ -85,8 +90,9 @@ public class StuCompetitionRecordController extends BaseController {
             Files.copy(is, targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        return fileName; // 只返回文件名
+        return fileName; // 返回带时间戳的文件名
     }
+
 
 
     private boolean validateToken(String token) {

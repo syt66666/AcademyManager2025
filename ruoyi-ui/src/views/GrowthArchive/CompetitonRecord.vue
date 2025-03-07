@@ -94,6 +94,11 @@
     </el-card>
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
       <div style="text-align: center; margin-bottom: 20px;">
+        <img
+          :src="previewImages[currentPreviewIndex]"
+          style="max-width: 100%; display: block; margin: 0 auto;"
+          alt="证明材料预览"
+        />
         <el-button
           icon="el-icon-arrow-left"
           :disabled="currentPreviewIndex === 0"
@@ -106,15 +111,11 @@
           @click="currentPreviewIndex++"
         ></el-button>
       </div>
-      <img
-        :src="previewImages[currentPreviewIndex]"
-        style="max-width: 100%; display: block; margin: 0 auto;"
-        alt="证明材料预览"
-      />
+
       <div slot="footer">
         <el-button
           type="primary"
-          @click="handleDownloadCurrent"
+          @click="downloadSingleFile(previewImages[currentPreviewIndex])"
           style="background-color: #42b983; border-color: #42b983;"
         >
           <i class="el-icon-download"></i> 下载当前图片
@@ -208,7 +209,6 @@ export default {
         awardLevel: '', // 奖项
         scholarshipPoints: '', // 折合分数
         proofMaterial: '', // 图片地址
-        semester: '2', // 学期
       },
       rules: {
         competitionName: [{required: true, message: '竞赛名称不能为空', trigger: 'blur'}],
@@ -230,11 +230,9 @@ export default {
         const paths = typeof filePaths === 'string'
           ? JSON.parse(filePaths)
           : filePaths;
-
         if (!Array.isArray(paths)) {
           throw new Error("无效的文件路径格式");
         }
-
         // 处理多个文件下载
         if (paths.length > 1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
@@ -242,7 +240,10 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           }).then(() => {
-            paths.forEach(this.downloadSingleFile);
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
           });
         } else if (paths.length === 1) {
           this.previewImage = this.getFullUrl(paths[0]);
@@ -254,13 +255,11 @@ export default {
         console.error("下载错误详情:", error);
       }
     },
-
     // 下载单个文件
-    // 修改 downloadSingleFile 方法
     async downloadSingleFile(filePath) {
       try {
         const response = await axios.get(
-          `${process.env.VUE_APP_BASE_API}/competition/download?filePath=${filePath}`,
+          filePath,
           {
             responseType: 'blob',
             headers: {
@@ -268,7 +267,6 @@ export default {
             }
           }
         );
-
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
@@ -280,9 +278,7 @@ export default {
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
       }
-    }
-    ,
-
+    },
     // 生成带时间戳的文件名
     generateFileName(filePath) {
       const originalName = filePath.split('/').pop() || '证明材料';
@@ -292,16 +288,8 @@ export default {
     },
 
     // 获取完整URL（带缓存清除）
-    // 获取完整URL（带缓存清除）
     getFullUrl(filePath) {
-      return `${process.env.VUE_APP_BASE_API}/competition_uploads/${filePath}?t=${Date.now()}`;
-    },
-
-
-    // 处理当前预览图片下载
-    handleDownloadCurrent() {
-      this.downloadSingleFile(this.currentDownloadFile);
-      this.previewVisible = false;
+      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
     },
     handlePreview(filePath) {
       try {
@@ -319,7 +307,6 @@ export default {
         this.$message.error('预览失败：文件路径格式不正确');
       }
     },
-
 // 获取文件名
     getFileName(filePath) {
       return filePath.split('/').pop() || '证明材料';
@@ -392,7 +379,6 @@ export default {
         awardLevel: "",
         scholarshipPoints: "",
         proofMaterial: "",
-        semester: "2",
       };
       this.fileList = []; // 清空已上传的文件列表
     },
