@@ -1,7 +1,7 @@
 <template>
   <el-row type="flex" justify="center" style="margin-top: 4vh;">
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
-      <!-- 头部区域保持不变 -->
+      <!-- 头部区域 -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px;">
         <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">文体活动</h1>
         <el-button type="primary" icon="el-icon-plus" circle size="medium" @click="openDialog"
@@ -10,7 +10,6 @@
 
       <!-- 数据表格 -->
       <el-table :data="activityRecords" style="width: 100%" border stripe highlight-current-row>
-        <!-- 表格列定义保持不变 -->
         <el-table-column type="index" label="序号"></el-table-column>
         <el-table-column prop="activityName" label="活动名称" min-width="100"></el-table-column>
         <el-table-column prop="activityLevel" label="活动级别" ></el-table-column>

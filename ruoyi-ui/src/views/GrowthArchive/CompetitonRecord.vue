@@ -1,51 +1,24 @@
 <template>
   <el-row type="flex" justify="center" style="margin-top: 4vh;">
-    <!-- 竞赛列表卡片 -->
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
-      <!-- 顶部标题栏 -->
+      <!-- 头部区域 -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px;">
-        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">
-          <span>📚</span>
-          科创竞赛
-          <span class="current-semester">{{ activeSemester }} 竞赛记录</span>
-        </h1>
+        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">科创竞赛</h1>
         <el-button type="primary" icon="el-icon-plus" circle size="medium" @click="openDialog"
                    style="background-color: #42b983; border-color: #42b983;"></el-button>
       </div>
 
       <!-- 竞赛表格 -->
       <el-table
-        :data="competitionRecords"
-        style="width: 100%"
-        border
-        stripe
-        highlight-current-row
-        v-loading="loading"
-        element-loading-text="拼命加载中..."
-        element-loading-spinner="el-icon-loading"
-      >
-        <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column prop="competitionName" label="竞赛名称" min-width="180"></el-table-column>
-        <el-table-column prop="competitionLevel" label="竞赛级别" min-width="150"></el-table-column>
-        <el-table-column prop="awardLevel" label="竞赛奖项" min-width="150"></el-table-column>
-        <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
-        <el-table-column prop="auditRemark" label="审核备注" min-width="150"></el-table-column>
-        <!--        <el-table-column label="证明材料" width="120">
-                  <template v-slot:default="scope">
-                    <el-button
-                      type="primary"
-                      icon="el-icon-download"
-                      size="mini"
-                      @click="downloadFiles(scope.row.proofMaterial)"
-                      :disabled="!scope.row.proofMaterial"
-                    >下载</el-button>
-                  </template>
-                </el-table-column>-->
-        <!-- 修改证明材料列的模板 -->
-        <el-table-column label="证明材料" width="200"> <!-- 加宽列宽 -->
+        :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
+        <el-table-column type="index" label="序号"></el-table-column>
+        <el-table-column prop="competitionName" label="竞赛名称" min-width="100"></el-table-column>
+        <el-table-column prop="competitionLevel" label="竞赛级别"></el-table-column>
+        <el-table-column prop="awardLevel" label="竞赛奖项"></el-table-column>
+        <el-table-column prop="awardDate" label="获奖日期" min-width="100"></el-table-column>
+        <el-table-column label="证明材料" width="120">
           <template v-slot:default="scope">
             <div class="proof-material-cell">
-              <!-- 添加可点击的预览链接 -->
               <el-link
                 type="primary"
                 :underline="false"
@@ -54,8 +27,6 @@
               >
                 <i class="el-icon-view"></i> 预览
               </el-link>
-
-              <!-- 原有下载按钮 -->
               <el-button
                 type="primary"
                 icon="el-icon-download"
@@ -67,23 +38,53 @@
             </div>
           </template>
         </el-table-column>
-
-
         <el-table-column prop="auditStatus" label="审核状态" min-width="150">
           <template v-slot:default="scope">
-            <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">{{ scope.row.auditStatus }}</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">{{ scope.row.auditStatus }}</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '未通过'" type="danger">{{ scope.row.auditStatus }}</el-tag>
+            <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">未审核</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">已通过</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '未通过'" type="danger">未通过</el-tag>
+            <el-tag v-else-if="scope.row.auditStatus === '未提交'" type="info">未提交</el-tag>
             <el-tag v-else>未知状态</el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="操作">
+          <template v-slot="scope">
+            <el-button
+              v-if="scope.row.auditStatus === '未通过'"
+              type="text"
+              size="mini"
+              @click="handleEditDraft(scope.row)"
+            >重新提交</el-button>
 
+            <template v-if="scope.row.auditStatus === '未提交'">
+              <el-button
+                type="text"
+                size="mini"
+                @click="handleEditDraft(scope.row)"
+              >编辑草稿</el-button>
+              <el-button
+                type="text"
+                size="mini"
+                style="color: #F56C6C;"
+                @click="handleDelete(scope.row)"
+              >删除</el-button>
+            </template>
+
+            <el-tag
+              v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
+              type="info"
+              size="mini"
+            >不可修改</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="auditTime" label="审核时间" min-width="100"></el-table-column>
+        <el-table-column prop="auditRemark" label="审核备注" min-width="120"></el-table-column>
       </el-table>
 
       <!-- 分页组件 -->
       <el-pagination
         layout="total, sizes, prev, pager, next, jumper"
-        :current-page.sync="currentPage"
+        :current-page="currentPage"
         :page-size="pageSize"
         :total="totalRecords"
         :page-sizes="[10, 20, 30, 50]"
@@ -92,6 +93,8 @@
         style="text-align: center; margin-top: 10px;"
       />
     </el-card>
+
+    <!-- 图片预览对话框 -->
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
       <div style="text-align: center; margin-bottom: 20px;">
         <img
@@ -123,17 +126,15 @@
       </div>
     </el-dialog>
 
-    <!-- 竞赛填写弹出对话框 -->
+    <!-- 竞赛填写对话框 -->
     <el-dialog :visible.sync="showDialog" title="竞赛填写" width="50%" @close="closeDialog">
       <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
-        <!-- 竞赛名称 -->
         <el-form-item label="竞赛名称" prop="competitionName">
-          <el-input v-model="formData.competitionName" placeholder="请输入竞赛名称" style="width: 100%;"></el-input>
+          <el-input v-model="formData.competitionName" placeholder="请输入竞赛名称"></el-input>
         </el-form-item>
 
-        <!-- 竞赛级别 -->
         <el-form-item label="竞赛级别" prop="competitionLevel">
-          <el-select v-model="formData.competitionLevel" placeholder="请选择竞赛级别" style="width: 100%;">
+          <el-select v-model="formData.competitionLevel" placeholder="请选择竞赛级别">
             <el-option label="院级" value="院级"></el-option>
             <el-option label="校级" value="校级"></el-option>
             <el-option label="省级" value="省级"></el-option>
@@ -142,9 +143,8 @@
           </el-select>
         </el-form-item>
 
-        <!-- 奖项等级 -->
         <el-form-item label="奖项等级" prop="awardLevel">
-          <el-select v-model="formData.awardLevel" placeholder="请选择奖项" style="width: 100%;">
+          <el-select v-model="formData.awardLevel" placeholder="请选择奖项">
             <el-option label="特等奖" value="特等奖"></el-option>
             <el-option label="一等奖" value="一等奖"></el-option>
             <el-option label="二等奖" value="二等奖"></el-option>
@@ -154,8 +154,16 @@
           </el-select>
         </el-form-item>
 
-        <!-- 图片上传 -->
-        <el-form-item label="图片上传" prop="proofMaterial">
+        <el-form-item label="获奖日期" prop="awardDate">
+          <el-date-picker
+            v-model="formData.awardDate"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="选择获奖日期">
+          </el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="证明材料" prop="proofMaterial">
           <el-upload
             multiple
             :limit="5"
@@ -164,16 +172,13 @@
             :on-change="handleFileChange"
           >
             <i class="el-icon-plus"></i>
-            <template #tip>
-              <div class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
-            </template>
+            <div slot="tip" class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
           </el-upload>
-
         </el-form-item>
 
-        <!-- 提交按钮 -->
         <el-form-item>
-          <el-button type="primary" @click="submitForm" style="float: right;">提交</el-button>
+          <el-button type="info" @click="handleSave">保存草稿</el-button>
+          <el-button type="primary" @click="handleSubmit">正式提交</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -182,7 +187,7 @@
 
 <script>
 import axios from "axios";
-import { addRecord, listRecord } from "@/api/student/competition";
+import { addRecord, listRecord, delRecord , updateRecord, checkRecordUnique } from "@/api/student/competition";
 import store from "@/store"; // 根据实际路径调整
 
 export default {
@@ -204,17 +209,28 @@ export default {
       totalRecords: 0, // 总记录数
       showDialog: false, // 控制对话框显示
       activeSemester: '', // 当前学期
+      competitionName: '',
+      competitionLevel: '',
+      awardLevel: '',
+      awardDate: '',
+      proofMaterial: [],
+      auditStatus: '未提交',
+      auditTime: null,
+      auditRemark: '',
+      semester: '',
       formData: {
         competitionName: '', // 竞赛名称
         competitionLevel: '', // 竞赛级别
         awardLevel: '', // 奖项
+        awardDate:'',//竞赛获奖时间
         scholarshipPoints: '', // 折合分数
         proofMaterial: '', // 图片地址
       },
       rules: {
-        competitionName: [{required: true, message: '竞赛名称不能为空', trigger: 'blur'}],
-        competitionLevel: [{required: true, message: '请选择竞赛级别', trigger: 'change'}],
-        awardLevel: [{required: true, message: '请选择奖项', trigger: 'change'}],
+          competitionName: [{ required: true, message: '竞赛名称不能为空', trigger: 'blur' }],
+          competitionLevel: [{ required: true, message: '请选择竞赛级别', trigger: 'change' }],
+          awardLevel: [{ required: true, message: '请选择奖项', trigger: 'change' }],
+          awardDate: [{ required: true, message: '请选择获奖日期', trigger: 'change' }]
       },
     };
   },
@@ -224,6 +240,88 @@ export default {
     this.fetchCompetitionRecords(); // 加载数据
   },
   methods: {
+
+    // 处理草稿修改
+    handleEditDraft(row) {
+      this.handleEdit(row);
+      localStorage.removeItem(this.getDraftKey());
+    },
+
+    // 处理编辑未通过记录
+    handleEdit(row) {
+      this.formData = {
+        ...row,
+        auditTime:null,
+        auditRemark:"",
+        awardDate: row.awardDate ? new Date(row.awardDate) : null
+      };
+      this.isEdit = true;
+      this.currentActivityId = row.id;
+      this.showDialog = true;
+    },
+
+    // 新增方法
+    async handleDelete(row) {
+      try {
+        await this.$confirm('确定删除该记录吗？', '删除确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
+
+        const response = await delRecord(row.id);
+        if (response.code === 200) {
+          this.$message.success('删除成功');
+          await this.fetchCompetitionRecords();
+          localStorage.removeItem(this.getDraftKey());
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          this.$message.error(`删除失败: ${error.message}`);
+        }
+      }
+    },
+
+    async handleSave() {
+      this.submitData('未提交');
+    },
+
+    async handleSubmit() {
+      this.submitData('未审核');
+    },
+
+
+    getDraftKey() {
+      return `competition_draft_${this.$store.state.user.name}_${this.activeSemester}`;
+    },
+
+    // 修改后的打开对话框方法
+    openDialog() {
+      this.isEdit = false;
+      this.currentRecordId = null;
+      this.formData = this.initFormData();
+      this.showDialog = true;
+
+      // 加载草稿
+      const draft = localStorage.getItem(this.getDraftKey());
+      if (draft) {
+        this.formData = JSON.parse(draft);
+      }
+    },
+
+    initFormData() {
+      return {
+        competitionName: '',
+        competitionLevel: '',
+        awardLevel: '',
+        awardDate: '',
+        proofMaterial: [],
+        auditStatus: '未提交',
+        auditTime: null,
+        auditRemark: '',
+        semester: this.activeSemester
+      };
+    },
     async downloadFiles(filePaths) {
       try {
         // 解析文件路径
@@ -314,17 +412,14 @@ export default {
     handleFileChange(file, fileList) {
       this.fileList = fileList.slice(-5); // 保持最多5个文件
     },
-// 打开对话框
-    openDialog() {
-      this.showDialog = true;
-    },
+
 
     // 关闭对话框
     closeDialog() {
       this.showDialog = false;
       this.fileList = []; // 清空已上传的文件列表
     },
-    submitForm() {
+    submitData(state) {
       this.$refs.form.validate((valid) => {
         if (valid) {
           const formData = new FormData();
@@ -335,7 +430,10 @@ export default {
               competitionName: this.formData.competitionName,
               competitionLevel: this.formData.competitionLevel,
               awardLevel: this.formData.awardLevel,
-              semester: this.activeSemester
+              semester: this.activeSemester,
+              studentId:store.state.user.name,
+              auditStatus:this.formData.auditStatus,
+              awardDate: this.formData.awardDate,
             })],
             {type: "application/json"}
           );
@@ -400,24 +498,21 @@ export default {
         const response = await listRecord({
           pageNum: this.currentPage,
           pageSize: this.pageSize,
-          semester: this.activeSemester
+          semester: this.activeSemester,
+          studentId:store.state.user.name
         });
 
-        console.log('完整响应:', response); // 调试日志
-
         if (response && response.code === 200) {
-          // 修正数据访问路径
           this.competitionRecords = response.rows || [];
           this.totalRecords = response.total || 0;
 
           // 添加数据转换
           this.competitionRecords = this.competitionRecords.map(item => ({
             ...item,
-            auditStatus: this.mapStatus(item.auditStatus),
+            auditStatus: item.auditStatus,
             proofMaterial: this.parseMaterial(item.proofMaterial)
           }));
 
-          console.log('处理后的数据:', this.competitionRecords); // 调试日志
         } else {
           this.$message.error(response.msg || '数据加载失败');
         }
@@ -425,16 +520,6 @@ export default {
         console.error("数据加载失败:", error);
         this.$message.error('数据加载异常');
       }
-    },
-
-// 新增状态映射方法
-    mapStatus(status) {
-      const statusMap = {
-        '0': '未审核',
-        '1': '已通过',
-        '2': '未通过'
-      };
-      return statusMap[status] || '未知状态';
     },
 
 // 新增材料解析方法
