@@ -39,18 +39,29 @@
         </el-table-column>
         <el-table-column label="操作">
           <template v-slot="scope">
+            <!-- 原有按钮保持不变 -->
             <el-button
               v-if="scope.row.auditStatus === '未通过'"
               type="text"
               size="mini"
               @click="handleEditDraft(scope.row)"
             >重新提交</el-button>
-            <el-button
-              v-if="scope.row.auditStatus === '未提交'"
-              type="text"
-              size="mini"
-              @click="handleEditDraft(scope.row)"
-            >编辑草稿</el-button>
+
+            <!-- 未提交状态新增删除按钮 -->
+            <template v-if="scope.row.auditStatus === '未提交'">
+              <el-button
+                type="text"
+                size="mini"
+                @click="handleEditDraft(scope.row)"
+              >编辑草稿</el-button>
+              <el-button
+                type="text"
+                size="mini"
+                style="color: #F56C6C;"
+                @click="handleDelete(scope.row)"
+              >删除</el-button>
+            </template>
+
             <el-tag
               v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
               type="info"
@@ -151,18 +162,13 @@
           >正式提交</el-button>
         </el-form-item>
 
-        <!--        <el-form-item>-->
-<!--          <el-button type="primary" @click="submitForm"-->
-<!--                     style="float: right; background-color: #42b983; border-color: #42b983;">提交-->
-<!--          </el-button>-->
-<!--        </el-form-item>-->
       </el-form>
     </el-dialog>
   </el-row>
 </template>
 
 <script>
-import { listActivity, addActivity , updateActivity, delActivity } from "@/api/system/activity";
+import {listActivity, addActivity, updateActivity, delActivity, checkActivityUnique} from "@/api/system/activity";
 import ImageUpload from '@/components/ImageUpload';
 
 export default {
@@ -195,12 +201,11 @@ export default {
         activityName: '',
         activityLevel: '',
         awardLevel: '',
-        // scholarshipPoints: 0,
         proofMaterial: '',
         semester: '',
         awardDate: '',
         auditStatus: '未提交',
-        auditTime: '',
+        auditTime: null,
         auditRemark: '',
 
       },
@@ -214,14 +219,37 @@ export default {
         awardLevel: [
           { required: true, message: '请选择奖项', trigger: 'change' }
         ],
-        // scholarshipPoints: [
-        //   { type: 'number', required: true, message: '请输入有效分数', trigger: 'blur' }
-        // ]
       }
     };
   },
 
   methods: {
+
+    // 删除处理方法
+    async handleDelete(row) {
+      try {
+        await this.$confirm('确定要删除该草稿记录吗？', '删除确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
+
+        const response = await delActivity(row.activityId); // 根据实际ID字段调整
+        if (response.code === 200) {
+          this.$message.success('删除成功');
+          // 删除后重新加载数据
+          await this.fetchActivityRecords();
+          // 清理本地草稿
+          if (!row.id) { // 假设id存在表示已保存到服务端
+            localStorage.removeItem(this.getDraftKey());
+          }
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          this.$message.error(`删除失败: ${error.message || '服务器错误'}`);
+        }
+      }
+    },
     // 获取完整图片路径
     getImageUrl(path) {
       if (!path) return '';
@@ -314,7 +342,7 @@ export default {
         proofMaterial: '',
         semester: this.activeSemester,
         awardDate: '',
-        auditTime: '',
+        auditTime: null,
         auditRemark: '',
         auditStatus: '未提交'
       };
@@ -325,24 +353,6 @@ export default {
       this.currentActivityId = null;
       this.formData = this.initFormData(); // 使用初始化方法
       this.showDialog = true;
-      // 初始化表单数据
-      // this.formData = { ...this.$options.data().formData };
-
-      // 加载草稿数据
-      // const draft = localStorage.getItem(this.getDraftKey());
-      // if (draft) {
-      //   try {
-      //     const draftData = JSON.parse(draft);
-      //     this.formData = {
-      //       ...draftData,
-      //       proofMaterial: draftData.proofMaterial ? { url: draftData.proofMaterial } : '',
-      //       auditStatus: '未提交',
-      //     };
-      //   } catch (e) {
-      //     console.error('草稿加载失败:', e);
-      //   }
-      // }
-      // this.showDialog = true;
     },
     // 对话框关闭
     closeDialog() {
@@ -366,7 +376,7 @@ export default {
     handleEdit(row) {
       this.formData = {
         ...row,
-        auditTime:"",
+        auditTime:null,
         auditRemark:"",
         awardDate: row.awardDate ? new Date(row.awardDate) : null
       };
@@ -393,10 +403,28 @@ export default {
     // 统一提交方法
     async submitData(status) {
       try {
+        // 唯一性校验参数
+        const checkParams = {
+          studentId: this.$store.state.user.name,
+          activityName: this.formData.activityName,
+          activityLevel: this.formData.activityLevel,
+          awardLevel: this.formData.awardLevel,
+          semester: this.activeSemester
+        };
+        // 编辑时排除自身
+        if (this.isEdit) {
+          checkParams.excludeId = this.currentActivityId;
+        }
+
+        // 执行唯一性校验
+        const checkRes = await checkActivityUnique(checkParams);
+        if (checkRes.code !== 200) {
+          return this.$message.error('已存在相同活动记录，不可重复添加');
+        }
 
         const params = {
           ...this.formData,
-          auditTime:"",
+          auditTime:null,
           auditRemark:"",
 
           auditStatus: status,
@@ -433,6 +461,9 @@ export default {
 </script>
 
 <style scoped>
+.el-button--text:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+}
 
 h1 {
   color: #333;

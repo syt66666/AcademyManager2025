@@ -1,8 +1,10 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
+import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -111,5 +113,22 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
 
         // 构建更新参数（仅更新审核相关字段）
         return stuActivityRecordMapper.updateActivityAuditInfo(activity);
+    }
+
+    @Override
+    public List<StuActivityRecord> selectAuditActivityRecordList(StuActivityRecord stuActivityRecord) {
+        return stuActivityRecordMapper.selectAuditActivityRecordList(stuActivityRecord);
+    }
+
+    @Override
+    public AjaxResult checkUnique(StuActivityRecord activity) {
+        boolean exists = stuActivityRecordMapper.existsByUniqueFields(
+                activity.getStudentId(),
+                activity.getActivityName(),
+                activity.getActivityLevel(),
+                activity.getAwardLevel(),
+                activity.getSemester()
+        );
+        return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
     }
 }

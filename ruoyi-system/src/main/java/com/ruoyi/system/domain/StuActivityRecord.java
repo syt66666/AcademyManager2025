@@ -1,5 +1,6 @@
 package com.ruoyi.system.domain;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -59,6 +60,7 @@ public class StuActivityRecord extends BaseEntity
 
     /** 审核时间 */
 //    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private Date auditTime;
 
     /** 审核意见 */
@@ -172,19 +174,13 @@ public class StuActivityRecord extends BaseEntity
     {
         return auditStatus;
     }
-    public void setAuditTime(Date auditTime)
-    {
-        this.auditTime = auditTime;
-    }
+    public void setAuditTime(Date auditTime) { this.auditTime = auditTime; }
 
     public Date getAuditTime()
     {
         return auditTime;
     }
-    public void setAuditRemark(String auditRemark)
-    {
-        this.auditRemark = auditRemark;
-    }
+    public void setAuditRemark(String auditRemark) { this.auditRemark = auditRemark; }
 
     public String getAuditRemark()
     {

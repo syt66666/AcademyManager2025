@@ -21,26 +21,52 @@
         <result property="auditRemark"    column="audit_remark"    />
     </resultMap>
 
+    <resultMap type="StuMentorshipRecord" id="StuMentorshipRecordResult2">
+        <result property="recordId"    column="record_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="tutorId"    column="tutor_id"    />
+        <result property="tutorName"    column="tutor_name"    />
+        <result property="guidanceTopic"    column="guidance_topic"    />
+        <result property="guidanceLocation"    column="guidance_location"    />
+        <result property="guidanceTime"    column="guidance_time"    />
+        <result property="summaryFilePath"    column="summary_file_path"    />
+        <result property="photoPaths"    column="photo_paths"    />
+        <result property="semester"    column="semester"    />
+        <result property="submitTime"    column="submit_time"    />
+        <result property="studentComment"    column="student_comment"    />
+        <result property="auditStatus"    column="audit_status"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="auditRemark"    column="audit_remark"    />
+    </resultMap>
+
     <sql id="selectStuMentorshipRecordVo">
         select record_id, student_id, tutor_id, guidance_topic, guidance_location, guidance_time, summary_file_path, photo_paths, semester, submit_time, student_comment, audit_status, audit_time, audit_remark from stu_mentorship_record
     </sql>
 
-    <select id="selectStuMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult">
-        <include refid="selectStuMentorshipRecordVo"/>
+    <select id="selectStuMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
+        SELECT
+        smr.*,
+        t.tutor_name
+        FROM
+        stu_mentorship_record smr
+        LEFT JOIN
+        stu_mentor_info smi ON smr.student_id = smi.stu_id
+        LEFT JOIN
+        tutors t ON smi.mentor_id = t.tutor_id
         <where>
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
-            <if test="tutorId != null  and tutorId != ''"> and tutor_id = #{tutorId}</if>
-            <if test="guidanceTopic != null  and guidanceTopic != ''"> and guidance_topic = #{guidanceTopic}</if>
-            <if test="guidanceLocation != null  and guidanceLocation != ''"> and guidance_location = #{guidanceLocation}</if>
-            <if test="guidanceTime != null "> and guidance_time = #{guidanceTime}</if>
-            <if test="summaryFilePath != null  and summaryFilePath != ''"> and summary_file_path = #{summaryFilePath}</if>
-            <if test="photoPaths != null  and photoPaths != ''"> and photo_paths = #{photoPaths}</if>
-            <if test="semester != null  and semester != ''"> and semester = #{semester}</if>
-            <if test="submitTime != null "> and submit_time = #{submitTime}</if>
-            <if test="studentComment != null  and studentComment != ''"> and student_comment = #{studentComment}</if>
-            <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
-            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
-            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="studentId != null and studentId != ''">AND smr.student_id = #{studentId}</if>
+            <if test="tutorId != null and tutorId != ''">AND t.tutor_id = #{tutorId}</if>
+            <if test="guidanceTopic != null and guidanceTopic != ''">AND smr.guidance_topic = #{guidanceTopic}</if>
+            <if test="guidanceLocation != null and guidanceLocation != ''">AND smr.guidance_location = #{guidanceLocation}</if>
+            <if test="guidanceTime != null ">AND smr.guidance_time = #{guidanceTime}</if>
+            <if test="summaryFilePath != null and summaryFilePath != ''">AND smr.summary_file_path = #{summaryFilePath}</if>
+            <if test="photoPaths != null and photoPaths != ''">AND smr.photo_paths = #{photoPaths}</if>
+            <if test="semester != null and semester != ''">AND smr.semester = #{semester}</if>
+            <if test="submitTime != null ">AND smr.submit_time = #{submitTime}</if>
+            <if test="studentComment != null and studentComment != ''">AND smr.student_comment = #{studentComment}</if>
+            <if test="auditStatus != null and auditStatus != ''">AND smr.audit_status = #{auditStatus}</if>
+            <if test="auditTime != null ">AND smr.audit_time = #{auditTime}</if>
+            <if test="auditRemark != null and auditRemark != ''">AND smr.audit_remark = #{auditRemark}</if>
         </where>
     </select>
 

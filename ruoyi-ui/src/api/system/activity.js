@@ -43,7 +43,7 @@ export function delActivity(activityId) {
   })
 }
 
-// 文体活动审核接口
+// 管理员端文体活动审核
 export function auditActivity(data) {
   return request({
     url: '/system/activity/audit',
@@ -55,3 +55,22 @@ export function auditActivity(data) {
     }
   })
 }
+
+// 管理员端查询学生文体活动记录列表
+export function listAuditActivity(query) {
+  return request({
+    url: '/system/activity/auditList',
+    method: 'get',
+    params: query
+  })
+}
+
+//唯一性校验
+export function checkActivityUnique(params) {
+  return request({
+    url: '/system/activity/checkUnique',
+    method: 'post',
+    data: params
+  })
+}
+
