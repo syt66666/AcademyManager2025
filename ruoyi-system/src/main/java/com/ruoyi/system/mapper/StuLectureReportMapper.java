@@ -1,7 +1,6 @@
 package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.StudentLectureReport;
-import com.ruoyi.system.domain.dto.StuCompetitionRecord;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

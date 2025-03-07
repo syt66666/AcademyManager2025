@@ -181,7 +181,8 @@
 
 <script>
 import axios from "axios";
-import {addCompetitionRecord, fetchCompetitionRecords} from "@/api/student/competition";
+import { addRecord, listRecord } from "@/api/student/competition";
+import store from "@/store"; // 根据实际路径调整
 
 export default {
   data() {
@@ -214,7 +215,6 @@ export default {
         competitionName: [{required: true, message: '竞赛名称不能为空', trigger: 'blur'}],
         competitionLevel: [{required: true, message: '请选择竞赛级别', trigger: 'change'}],
         awardLevel: [{required: true, message: '请选择奖项', trigger: 'change'}],
-        scholarshipPoints: [{required: true, message: '折合分数不能为空', trigger: 'blur'}],
       },
     };
   },
@@ -292,7 +292,6 @@ export default {
     },
 
     // 获取完整URL（带缓存清除）
-    // 获取完整URL（带缓存清除）
     getFullUrl(filePath) {
       return `${process.env.VUE_APP_BASE_API}/competition_uploads/${filePath}?t=${Date.now()}`;
     },
@@ -337,7 +336,6 @@ export default {
       this.showDialog = false;
       this.fileList = []; // 清空已上传的文件列表
     },
-
     submitForm() {
       this.$refs.form.validate((valid) => {
         if (valid) {
@@ -349,7 +347,6 @@ export default {
               competitionName: this.formData.competitionName,
               competitionLevel: this.formData.competitionLevel,
               awardLevel: this.formData.awardLevel,
-              scholarshipPoints: this.formData.scholarshipPoints,
               semester: this.activeSemester
             })],
             {type: "application/json"}
@@ -368,7 +365,7 @@ export default {
             }
           };
 
-          addCompetitionRecord(formData, config)
+          addRecord(formData, config)
             .then(() => {
               this.$message.success("提交成功！");
               this.fetchCompetitionRecords();
@@ -379,10 +376,7 @@ export default {
             });
         }
       });
-    }
-    ,
-
-
+    },
 
     // 重置表单
     resetForm() {
@@ -400,38 +394,73 @@ export default {
     // 分页大小变化
     handleSizeChange(size) {
       this.pageSize = size;
-      this.fetchCompetitionRecords(this.queryParams, this.currentPage, this.pageSize);
+      this.fetchCompetitionRecords();
     },
 
     // 当前页变化
     handleCurrentChange(page) {
       this.currentPage = page;
-      this.fetchCompetitionRecords(this.queryParams, this.currentPage, this.pageSize);
+      this.fetchCompetitionRecords();
     },
     handleImageClick(imageUrl) {
       this.previewImage = this.getFullUrl(imageUrl);
       this.previewVisible = true; // 使用正确的变量名
-    }
-    ,
+    },
 
     // 加载竞赛记录
-    async fetchCompetitionRecords(queryParams = {}, currentPage = 1, pageSize = 10) {
+    async fetchCompetitionRecords() {
       try {
-        const response = await fetchCompetitionRecords({
-          ...queryParams,
-          semester: this.activeSemester, // 传递学期参数
-          pageNum: currentPage,
-          pageSize: pageSize,
+        const response = await listRecord({
+          pageNum: this.currentPage,
+          pageSize: this.pageSize,
+          semester: this.activeSemester
         });
 
-        if (response && response.data) {
-          this.competitionRecords = response.data.rows;
-          this.totalRecords = response.data.total || 0;
+        console.log('完整响应:', response); // 调试日志
+
+        if (response && response.code === 200) {
+          // 修正数据访问路径
+          this.competitionRecords = response.rows || [];
+          this.totalRecords = response.total || 0;
+
+          // 添加数据转换
+          this.competitionRecords = this.competitionRecords.map(item => ({
+            ...item,
+            auditStatus: this.mapStatus(item.auditStatus),
+            proofMaterial: this.parseMaterial(item.proofMaterial)
+          }));
+
+          console.log('处理后的数据:', this.competitionRecords); // 调试日志
+        } else {
+          this.$message.error(response.msg || '数据加载失败');
         }
       } catch (error) {
-        console.error("Error fetching competition records:", error);
+        console.error("数据加载失败:", error);
+        this.$message.error('数据加载异常');
       }
     },
+
+// 新增状态映射方法
+    mapStatus(status) {
+      const statusMap = {
+        '0': '未审核',
+        '1': '已通过',
+        '2': '未通过'
+      };
+      return statusMap[status] || '未知状态';
+    },
+
+// 新增材料解析方法
+    parseMaterial(material) {
+      try {
+        return material ? JSON.parse(material) : [];
+      } catch (e) {
+        console.error('材料解析失败:', material);
+        return [];
+      }
+    }
+
+
   },
 };
 </script>

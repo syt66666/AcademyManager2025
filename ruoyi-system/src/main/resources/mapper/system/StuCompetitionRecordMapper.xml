@@ -1,8 +1,94 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuCompetitionRecordMapper">
 
-    <insert id="insertStuCompetitionRecord" parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
+    <resultMap type="StuCompetitionRecord" id="StuCompetitionRecordResult">
+        <result property="competitionId"    column="competition_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="competitionName"    column="competition_name"    />
+        <result property="competitionLevel"    column="competition_level"    />
+        <result property="awardLevel"    column="award_level"    />
+        <result property="scholarshipPoints"    column="scholarship_points"    />
+        <result property="awardDate"    column="award_date"    />
+        <result property="proofMaterial"    column="proof_material"    />
+        <result property="auditStatus"    column="audit_status"    />
+        <result property="applyTime"    column="apply_time"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="auditRemark"    column="audit_remark"    />
+        <result property="semester"    column="semester"    />
+        <result property="studentName"    column="student_name"    />
+    </resultMap>
+
+    <sql id="selectStuCompetitionRecordVo">
+        select competition_id, student_id, competition_name, competition_level, award_level, scholarship_points, award_date, proof_material, audit_status, apply_time, nick_name, audit_time, audit_remark, semester, student_name from stu_competition_record
+    </sql>
+
+    <select id="selectStuCompetitionRecordList" parameterType="StuCompetitionRecord" resultMap="StuCompetitionRecordResult">
+        <include refid="selectStuCompetitionRecordVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="competitionName != null  and competitionName != ''"> and competition_name like concat('%', #{competitionName}, '%')</if>
+            <if test="competitionLevel != null  and competitionLevel != ''"> and competition_level = #{competitionLevel}</if>
+            <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
+            <if test="scholarshipPoints != null "> and scholarship_points = #{scholarshipPoints}</if>
+            <if test="awardDate != null "> and award_date = #{awardDate}</if>
+            <if test="proofMaterial != null  and proofMaterial != ''"> and proof_material = #{proofMaterial}</if>
+            <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
+            <if test="applyTime != null "> and apply_time = #{applyTime}</if>
+            <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
+            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="semester != null  and semester != ''"> and semester = #{semester}</if>
+            <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
+        </where>
+    </select>
+
+    <select id="selectStuCompetitionRecordByCompetitionId" parameterType="Integer" resultMap="StuCompetitionRecordResult">
+        <include refid="selectStuCompetitionRecordVo"/>
+        where competition_id = #{competitionId}
+    </select>
+
+<!--    <insert id="insertStuCompetitionRecord" parameterType="StuCompetitionRecord" useGeneratedKeys="true" keyProperty="competitionId">-->
+<!--        insert into stu_competition_record-->
+<!--        <trim prefix="(" suffix=")" suffixOverrides=",">-->
+<!--            <if test="studentId != null">student_id,</if>-->
+<!--            <if test="competitionName != null">competition_name,</if>-->
+<!--            <if test="competitionLevel != null">competition_level,</if>-->
+<!--            <if test="awardLevel != null">award_level,</if>-->
+<!--            <if test="scholarshipPoints != null">scholarship_points,</if>-->
+<!--            <if test="awardDate != null">award_date,</if>-->
+<!--            <if test="proofMaterial != null">proof_material,</if>-->
+<!--            <if test="auditStatus != null">audit_status,</if>-->
+<!--            <if test="applyTime != null">apply_time,</if>-->
+<!--            <if test="nickName != null">nick_name,</if>-->
+<!--            <if test="auditTime != null">audit_time,</if>-->
+<!--            <if test="auditRemark != null">audit_remark,</if>-->
+<!--            <if test="semester != null">semester,</if>-->
+<!--            <if test="studentName != null">student_name,</if>-->
+<!--        </trim>-->
+<!--        <trim prefix="values (" suffix=")" suffixOverrides=",">-->
+<!--            <if test="studentId != null">#{studentId},</if>-->
+<!--            <if test="competitionName != null">#{competitionName},</if>-->
+<!--            <if test="competitionLevel != null">#{competitionLevel},</if>-->
+<!--            <if test="awardLevel != null">#{awardLevel},</if>-->
+<!--            <if test="scholarshipPoints != null">#{scholarshipPoints},</if>-->
+<!--            <if test="awardDate != null">#{awardDate},</if>-->
+<!--            <if test="proofMaterial != null">#{proofMaterial},</if>-->
+<!--            <if test="auditStatus != null">#{auditStatus},</if>-->
+<!--            <if test="applyTime != null">#{applyTime},</if>-->
+<!--            <if test="nickName != null">#{nickName},</if>-->
+<!--            <if test="auditTime != null">#{auditTime},</if>-->
+<!--            <if test="auditRemark != null">#{auditRemark},</if>-->
+<!--            <if test="semester != null">#{semester},</if>-->
+<!--            <if test="studentName != null">#{studentName},</if>-->
+<!--        </trim>-->
+<!--    </insert>-->
+
+
+    <insert id="insertStuCompetitionRecord" parameterType="StuCompetitionRecord">
         INSERT INTO stu_competition_record
         (student_id,
          competition_name,
@@ -31,54 +117,36 @@
                 #{semester},
                 #{proofMaterial,jdbcType=VARCHAR})
     </insert>
-    <select id="getAllCompetitionRecords" resultType="com.ruoyi.system.domain.dto.StuCompetitionRecord"
-            parameterType="com.ruoyi.system.domain.dto.StuCompetitionRecord">
-        SELECT
-        competition_id AS id,
-        competition_name,
-        student_id,
-        award_date,
-        semester,
-        competition_level,
-        award_level,
-        proof_material, <!-- 图片路径 -->
-        audit_status,
-        audit_time,
-        audit_remark
-        FROM
-        stu_competition_record
-        <where>
-            <!-- 按学号查询 -->
-            <if test="studentId != null and studentId != ''">
-                AND student_id = #{studentId}
-            </if>
-            <!-- 按竞赛名称模糊查询 -->
-            <if test="competitionName != null and competitionName != ''">
-                AND competition_name LIKE CONCAT('%', #{competitionName}, '%')
-            </if>
-            <!-- 按获奖日期查询 -->
-            <if test="awardDate != null">
-                AND award_date = #{awardDate}
-            </if>
-            <!-- 按学期查询 -->
-            <if test="semester != null and semester != ''">
-                AND semester = #{semester}
-            </if>
-            <!-- 按竞赛级别查询 -->
-            <if test="competitionLevel != null and competitionLevel != ''">
-                AND competition_level = #{competitionLevel}
-            </if>
-            <!-- 按奖项级别查询 -->
-            <if test="awardLevel != null and awardLevel != ''">
-                AND award_level = #{awardLevel}
-            </if>
-            <!-- 按审核状态查询 -->
-            <if test="auditStatus != null and auditStatus != ''">
-                AND audit_status = #{auditStatus}
-            </if>
-        </where>
-        ORDER BY award_date DESC
-    </select>
 
+    <update id="updateStuCompetitionRecord" parameterType="StuCompetitionRecord">
+        update stu_competition_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="competitionName != null">competition_name = #{competitionName},</if>
+            <if test="competitionLevel != null">competition_level = #{competitionLevel},</if>
+            <if test="awardLevel != null">award_level = #{awardLevel},</if>
+            <if test="scholarshipPoints != null">scholarship_points = #{scholarshipPoints},</if>
+            <if test="awardDate != null">award_date = #{awardDate},</if>
+            <if test="proofMaterial != null">proof_material = #{proofMaterial},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="applyTime != null">apply_time = #{applyTime},</if>
+            <if test="nickName != null">nick_name = #{nickName},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
+            <if test="semester != null">semester = #{semester},</if>
+            <if test="studentName != null">student_name = #{studentName},</if>
+        </trim>
+        where competition_id = #{competitionId}
+    </update>
 
+    <delete id="deleteStuCompetitionRecordByCompetitionId" parameterType="Integer">
+        delete from stu_competition_record where competition_id = #{competitionId}
+    </delete>
+
+    <delete id="deleteStuCompetitionRecordByCompetitionIds" parameterType="String">
+        delete from stu_competition_record where competition_id in
+        <foreach item="competitionId" collection="array" open="(" separator="," close=")">
+            #{competitionId}
+        </foreach>
+    </delete>
 </mapper>
