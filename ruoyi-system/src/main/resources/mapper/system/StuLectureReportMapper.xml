@@ -2,23 +2,64 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuLectureReportMapper">
     <insert id="insertStuLectureInformation">
-        INSERT INTO stu_lec_report (report_title, reporter, report_date, report_content, report_link, report_feeling, lecture_poster, audit_status, student_id, student_name, report_admit_time, semester)
-        VALUES (
-        <if test="reportTitle != null and reportTitle != ''">#{reportTitle}</if>,
-        <if test="reporter != null and reporter != ''">#{reporter}</if>,
-        <if test="reportDate != null">#{reportDate}</if>,
-        <if test="reportContent != null and reportContent != ''">#{reportContent}</if>,
-        <if test="reportLink != null and reportLink != ''">#{reportLink}</if>,
-        <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling}</if>,
-        <if test="lecturePoster != null">#{lecturePoster}</if>,
-        <if test="auditStatus != null">#{auditStatus}</if>,
-        <if test="studentId != null">#{studentId}</if>,
-        <if test="studentName != null and studentName != ''">#{studentName}</if>,
-        <if test="reportAdmitTime != null">#{reportAdmitTime}</if>,
-        <if test="semester != null and semester != ''">#{semester}</if>
-        )
+        INSERT INTO stu_lec_report
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="reportTitle != null and reportTitle != ''">report_title,</if>
+            <if test="reporter != null and reporter != ''">reporter,</if>
+            <if test="reportDate != null">report_date,</if>
+            <if test="reportContent != null and reportContent != ''">report_content,</if>
+            <if test="reportLink != null and reportLink != ''">report_link,</if>
+            <if test="reportFeeling != null and reportFeeling != ''">report_feeling,</if>
+            <if test="lecturePoster != null and lecturePoster != ''">lecture_poster,</if>
+            <if test="reportPicture != null and reportPicture != ''">report_picture,</if>
+            <if test="auditStatus != null">audit_status,</if>
+            <if test="studentId != null">student_id,</if>
+            <if test="studentName != null and studentName != ''">student_name,</if>
+            <if test="reportAdmitTime != null">report_admit_time,</if>
+            <if test="semester != null and semester != ''">semester,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="reportTitle != null and reportTitle != ''">#{reportTitle},</if>
+            <if test="reporter != null and reporter != ''">#{reporter},</if>
+            <if test="reportDate != null">#{reportDate},</if>
+            <if test="reportContent != null and reportContent != ''">#{reportContent},</if>
+            <if test="reportLink != null and reportLink != ''">#{reportLink},</if>
+            <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling},</if>
+            <if test="lecturePoster != null and lecturePoster != ''">#{lecturePoster},</if>
+            <if test="reportPicture != null and reportPicture != ''">#{reportPicture},</if>
+            <if test="auditStatus != null">#{auditStatus},</if>
+            <if test="studentId != null">#{studentId},</if>
+            <if test="studentName != null and studentName != ''">#{studentName},</if>
+            <if test="reportAdmitTime != null">#{reportAdmitTime},</if>
+            <if test="semester != null and semester != ''">#{semester},</if>
+        </trim>
     </insert>
+
     <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StudentLectureReport">
         SELECT * FROM stu_lec_report where student_id = #{id}
     </select>
+
+    <update id="updateStuLectureInformation">
+        UPDATE stu_lec_report
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="reportTitle != null and reportTitle != ''"> report_title = #{reportTitle},</if>
+            <if test="reporter != null and reporter != ''">reporter = #{reporter},</if>
+            <if test="reportDate != null">report_date = #{reportDate},</if>
+            <if test="reportContent != null and reportContent != ''">report_content = #{reportContent},</if>
+            <if test="reportLink != null and reportLink != ''">report_link = #{reportLink},</if>
+            <if test="reportFeeling != null and reportFeeling != ''">report_feeling = #{reportFeeling},</if>
+            <if test="lecturePoster != null and lecturePoster != ''">lecture_poster = #{lecturePoster},</if>
+            <if test="reportPicture != null and reportPicture != ''">report_picture = #{reportPicture},</if>
+            <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            <if test="reportAdmitTime != null">report_admit_time = #{reportAdmitTime},</if>
+        </trim>
+        where report_id = #{reportId}
+    </update>
+
+    <delete id="deleteStuLectureReportByReportIds" parameterType="String">
+        delete from stu_lec_report where report_id in
+        <foreach item="reportId" collection="array" open="(" separator="," close=")">
+            #{reportId}
+        </foreach>
+    </delete>
 </mapper>

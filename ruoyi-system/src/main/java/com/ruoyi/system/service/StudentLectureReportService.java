@@ -18,4 +18,16 @@ public interface StudentLectureReportService {
      * @return
      */
     List<StuLectureReportVo> getAllCompetitionRecords();
+
+    /**
+     * 更新学生讲座报告信息
+     * @param studentLectureReport
+     */
+    public void updateStudentLectureReport(StudentLectureReport studentLectureReport);
+
+    /**
+     * 删除学生讲座报告信息
+     * @param
+     */
+    public int deleteStuLectureReportByReportIds(Integer[] reportIds);
 }
