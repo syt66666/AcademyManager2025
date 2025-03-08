@@ -162,10 +162,10 @@ public class StudentLectureReportController extends BaseController{
             if(reportPictures == null || reportPictures.length == 0) {
                 return AjaxResult.error("现场图片不能为空");
             }
-            if(reportPictures.length <= 3){
+            if(reportPictures.length < 3){
                 return AjaxResult.error("现场图片不能少于3张");
             }
-            if(reportPictures.length >= 5){
+            if(reportPictures.length > 5){
                 return AjaxResult.error("现场图片不能多于5张");
             }
         }
