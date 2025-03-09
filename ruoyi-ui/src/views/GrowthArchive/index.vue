@@ -669,7 +669,6 @@ export default {
 .module-panel {
   width: 100%;
   max-width: 900px;
-  transform: translate(-30%, -40%); /* 居中定位 */
   max-height: 80vh; /* 限制高度 */
 }
 

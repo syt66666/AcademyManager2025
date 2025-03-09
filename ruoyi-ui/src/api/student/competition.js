@@ -52,7 +52,10 @@ export function updateRecord(data) {
   return request({
     url: '/system/record',
     method: 'put',
-    data: data
+    data: data,
+    headers: {
+      "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
+    },
   })
 }
 
