@@ -1,6 +1,8 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.StuMentorshipRecordMapper;
@@ -9,6 +11,7 @@ import com.ruoyi.system.service.IStuMentorshipRecordService;
 
 
 @Service
+@Slf4j
 public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordService
 {
     @Autowired
@@ -47,6 +50,14 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
     @Override
     public int insertStuMentorshipRecord(StuMentorshipRecord stuMentorshipRecord)
     {
+        log.info("学生ID：{}",stuMentorshipRecord.getStudentId());
+        String tutorId = stuMentorshipRecordMapper.searchTutorId(stuMentorshipRecord.getStudentId());
+        log.info("导师ID：{}",tutorId);
+        log.info("指导主题：{}",stuMentorshipRecord.getGuidanceTopic());
+        log.info("指导时间：{}",stuMentorshipRecord.getGuidanceTime());
+        log.info("指导地点：{}",stuMentorshipRecord.getGuidanceLocation());
+
+        stuMentorshipRecord.setTutorId(tutorId);
         return stuMentorshipRecordMapper.insertStuMentorshipRecord(stuMentorshipRecord);
     }
 

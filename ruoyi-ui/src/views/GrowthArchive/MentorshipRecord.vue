@@ -170,26 +170,26 @@
             <el-form-item>
               <div style="display: flex; align-items: center;">
                 <span class="form-item-label" style="font-size: 16px;">会议主题</span>
-                <el-input v-model="formData.meetingTopic" style="width: 100%; flex: 1;"></el-input>
+                <el-input v-model="formData.guidanceTopic" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
                 <span class="form-item-label" style="font-size: 16px;">会议地点</span>
-                <el-input v-model="formData.meetingLocation" style="width: 100%; flex: 1;"></el-input>
+                <el-input v-model="formData.guidanceLocation" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
                 <span class="form-item-label" style="font-size: 16px;">会议时间</span>
-                <el-date-picker v-model="formData.meetingTime" type="datetime"
+                <el-date-picker v-model="formData.guidanceTime" type="datetime"
                                 style="width: 100%; flex: 1;"></el-date-picker>
               </div>
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
                 <span class="form-item-label" style="font-size: 16px;">导师评价</span>
-                <el-input v-model="formData.mentorComment" type="textarea" style="width: 100%; flex: 1;"></el-input>
+                <el-input v-model="formData.studentComment" type="textarea" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>
             <el-form-item>
@@ -199,7 +199,7 @@
               </div>
             </el-form-item>
             <!-- 现场图片上传 -->
-            <el-form-item label="现场图片上传" prop="meetingPictures">
+            <el-form-item label="现场图片上传" prop="photoPaths">
               <el-upload
                 multiple
                 :limit="5"
@@ -233,7 +233,7 @@
 
 <script>
 import axios from "axios";
-import {upLoad, listMentorship, updateMeeting, delMeeting} from "@/api/system/mentorship";
+import {getMentorship, listMentorship, addMentorship, delMentorship,updateMentorship} from "@/api/system/mentorship";
 import {formatDate} from "@/utils";
 import {listActivity} from "@/api/system/activity";
 
@@ -253,15 +253,15 @@ export default {
       showSecondCard: false,
       selectedFile: null,
       uploadMessage: null,
-      summaryDocument: null,
+      summaryFilePath: null,
       pushMeetingPictures: [],
       formData: {
-        meetingTopic: '',
-        meetingLocation: '',
-        meetingTime: '',
-        mentorComment: '',
-        summaryDocument: '',
-        meetingPictures: [],
+        guidanceTopic: '',
+        guidanceLocation: '',
+        guidanceTime: '',
+        studentComment: '',
+        summaryFilePath: '',
+        photoPaths: [],
         //审核状态
         auditStatus: '',
         //学期
@@ -296,7 +296,7 @@ export default {
           type: 'warning'
         });
 
-        const response = await delMeeting(row.meetingId);
+        const response = await delMentorship(row.recordId);
         if (response.code === 200) {
           this.$message.success('删除成功');
           await this.initData();
@@ -314,13 +314,13 @@ export default {
     // 处理编辑未通过记录
     handleEdit(row) {
       this.formData = {
-        meetingTopic: row.meetingTopic,
-        meetingLocation: row.meetingLocation,
-        meetingTime: row.meetingTime,
-        mentorComment: row.mentorComment,
-        summaryDocument: row.summaryDocument,
-        meetingPictures: [],
-        meetingId: row.meetingId,
+        guidanceTopic: row.guidanceTopic,
+        guidanceLocation: row.guidanceLocation,
+        guidanceTime: row.guidanceTime,
+        studentComment: row.studentComment,
+        summaryFilePath: row.summaryFilePath,
+        photoPaths: [],
+        recordId: row.recordId,
         semester: this.formData.semester,
       };
       this.isEdit = true;
@@ -331,7 +331,7 @@ export default {
     generateSummaryFileName() {
       const date = new Date().toISOString().slice(0, 10);
       const ext = this.getSummaryFileExtension();
-      return `summaryDocument_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+      return `summaryFilePath_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
     },
 
     // 获取文件扩展名
@@ -509,16 +509,16 @@ export default {
     },
     closeCard() {
       this.showSecondCard = false;
-      this.summaryDocument = null;
+      this.summaryFilePath = null;
       this.pushMeetingPictures = [];
       this.showSecondCard = false;
       this.formData = {
-        meetingTopic: '',
-        meetingLocation: '',
-        meetingTime: '',
-        mentorComment: '',
-        summaryDocument: '',
-        meetingPictures: [],
+        guidanceTopic: '',
+        guidanceLocation: '',
+        guidanceTime: '',
+        studentComment: '',
+        summaryFilePath: '',
+        photoPaths: [],
         //审核状态
         auditStatus: '',
         //学期
@@ -527,7 +527,9 @@ export default {
     },
     onFileChange(e) {
       // 当用户选择文件时，更新file变量
-      this.summaryDocument = e.target.files[0];
+      this.summaryFilePath = e.target.files[0];
+      this.formData.summaryFilePath = this.summaryFilePath ? this.summaryFilePath.name : '';
+      console.log("文件：",this.summaryFilePath)
     },
     // 数据获取方法
     async fetchMeetingRecords() {
@@ -589,22 +591,32 @@ export default {
               return;
             }
           }
-          console.log('表单数据:', this.formData.meetingTime);
+
           const formData = new FormData();
-          const json = JSON.stringify(this.formData);
-          formData.append('studentMeeting', json);
-          formData.append('summaryDocument', this.summaryDocument);
+          //const json = JSON.stringify(this.formData);
+          const formattedGuidanceTime = this.formData.guidanceTime //格式化时间
+            ? formatDate(this.formData.guidanceTime, 'yyyy-MM-dd')
+            : null;
+
+          formData.append('studentId', this.$store.state.user.name);
+          formData.append('guidanceTopic', this.formData.guidanceTopic);
+          formData.append('guidanceLocation', this.formData.guidanceLocation);
+          formData.append('guidanceTime', formattedGuidanceTime);
+          formData.append('studentComment', this.formData.studentComment);
+          formData.append('semester', this.formData.semester);
+          formData.append('auditStatus', this.formData.auditStatus);
+          formData.append('summaryFilePath', this.formData.summaryFilePath);
+
           // 添加图片（字段名必须与后端一致）
           this.pushMeetingPictures.forEach((file) => {
-            formData.append("meetingPictures", file.raw);
+            formData.append("photoPaths", file.raw);
           });
-          console.log('表单数据:', this.formData);
-          console.log('传递后端数据:', formData);
+          console.log('tupian:', this.formData.photoPaths);
           // 可以使用 axios 或 fetch 发送请求
           // 例如：
           if (this.isEdit) {
             //修改信息
-            updateMeeting(formData).then(response => {
+            addMentorship(formData).then(response => {
               console.log("+++++++++", response);
               this.$message.success('保存成功');
               this.initData();
@@ -615,7 +627,7 @@ export default {
               });
           } else {
             //第一次添加信息
-            upLoad(formData).then(response => {
+            addMentorship(formData).then(response => {
               console.log("+++++++++", response);
               this.$message.success('提交成功');
               this.initData();
@@ -631,17 +643,17 @@ export default {
       });
     },
     initData() {
-      this.summaryDocument = null;
+      this.summaryFilePath = null;
       this.pushMeetingPictures = [];
       this.showSecondCard = false;
       this.meetingRecords = [];
       this.formData = {
-        meetingTopic: '',
-        meetingLocation: '',
-        meetingTime: '',
-        mentorComment: '',
-        summaryDocument: '',
-        meetingPictures: [],
+        guidanceTopic: '',
+        guidanceLocation: '',
+        guidanceTime: '',
+        studentComment: '',
+        summaryFilePath: '',
+        photoPaths: [],
         //审核状态
         auditStatus: '',
         //学期
