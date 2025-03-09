@@ -193,6 +193,7 @@ import store from "@/store"; // 根据实际路径调整
 export default {
   data() {
     return {
+      currentCompetitionId: null, // 当前修改的竞赛记录ID
       uploadUrl: "http://localhost:8080/competition/add", // 上传接口
       fileList: [], // 已上传的文件列表
       previewVisible: false,
@@ -251,12 +252,13 @@ export default {
     handleEdit(row) {
       this.formData = {
         ...row,
+        competitionId: row.id,
         auditTime:null,
         auditRemark:"",
         awardDate: row.awardDate ? new Date(row.awardDate) : null
       };
       this.isEdit = true;
-      this.currentActivityId = row.id;
+      this.currentCompetitionId = row.id;
       this.showDialog = true;
     },
 
@@ -268,7 +270,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         });
-
+        console.log("row.id:"+row.id)
         const response = await delRecord(row.id);
         if (response.code === 200) {
           this.$message.success('删除成功');
@@ -298,7 +300,7 @@ export default {
     // 修改后的打开对话框方法
     openDialog() {
       this.isEdit = false;
-      this.currentRecordId = null;
+      this.currentCompetitionId= null;
       this.formData = this.initFormData();
       this.showDialog = true;
 
@@ -424,41 +426,54 @@ export default {
         if (valid) {
           const formData = new FormData();
 
+          // 构建核心数据对象
+          const recordData = {
+            competitionId: null,
+            competitionName: this.formData.competitionName,
+            competitionLevel: this.formData.competitionLevel,
+            awardLevel: this.formData.awardLevel,
+            semester: this.activeSemester,
+            studentId: store.state.user.name,
+            auditStatus: state,
+            awardDate: this.formData.awardDate
+          };
+          console.log(this.currentCompetitionId)
+          // 如果是编辑操作，添加ID字段
+          if (this.currentCompetitionId) {
+            recordData.competitionId = this.currentCompetitionId;
+          }
+          console.log(recordData)
           // 构建 JSON 部分（指定类型为 application/json）
           const recordBlob = new Blob(
-            [JSON.stringify({
-              competitionName: this.formData.competitionName,
-              competitionLevel: this.formData.competitionLevel,
-              awardLevel: this.formData.awardLevel,
-              semester: this.activeSemester,
-              studentId:store.state.user.name,
-              auditStatus:this.formData.auditStatus,
-              awardDate: this.formData.awardDate,
-            })],
+            [JSON.stringify(recordData)],
             {type: "application/json"}
           );
           formData.append("record", recordBlob);
 
-          // 添加文件（字段名必须与后端一致）
+          // 添加文件
           this.fileList.forEach((file) => {
             formData.append("proofMaterial", file.raw);
           });
 
-          // 添加 Token 到 Headers
+          // 配置headers
           const config = {
             headers: {
               "Authorization": "Bearer " + localStorage.getItem("token"),
+              "Content-Type": "multipart/form-data"
             }
           };
 
-          addRecord(formData, config)
+          // 根据模式选择API方法
+          const apiMethod = this.currentCompetitionId ? updateRecord : addRecord;
+
+          apiMethod(formData, config)
             .then(() => {
-              this.$message.success("提交成功！");
+              this.$message.success(this.currentCompetitionId ? "更新成功！" : "提交成功！");
               this.fetchCompetitionRecords();
               this.closeDialog();
             })
             .catch(error => {
-              this.$message.error("提交失败：" + error.message);
+              this.$message.error(`操作失败：${error.message}`);
             });
         }
       });
@@ -509,6 +524,7 @@ export default {
           // 添加数据转换
           this.competitionRecords = this.competitionRecords.map(item => ({
             ...item,
+            id: item.competitionId,
             auditStatus: item.auditStatus,
             proofMaterial: this.parseMaterial(item.proofMaterial)
           }));

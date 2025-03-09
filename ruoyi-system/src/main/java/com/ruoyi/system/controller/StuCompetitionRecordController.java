@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,13 +91,78 @@ public class StuCompetitionRecordController extends BaseController
      * 修改学生科创竞赛记录
      */
 //    @PreAuthorize("@ss.hasPermi('system:record:edit')")
+//    @Log(title = "学生科创竞赛记录", businessType = BusinessType.UPDATE)
+//    @PutMapping
+//    public AjaxResult edit(@RequestBody StuCompetitionRecord stuCompetitionRecord)
+//    {
+//        return toAjax(stuCompetitionRecordService.updateStuCompetitionRecord(stuCompetitionRecord));
+//    }
+    /**
+     * 修改学生科创竞赛记录（支持文件上传）
+     */
     @Log(title = "学生科创竞赛记录", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody StuCompetitionRecord stuCompetitionRecord)
-    {
-        return toAjax(stuCompetitionRecordService.updateStuCompetitionRecord(stuCompetitionRecord));
+    public AjaxResult edit(
+            @RequestPart("record") StuCompetitionRecord record,
+            @RequestPart(value = "proofMaterial", required = false) MultipartFile[] proofMaterials,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            // 验证 Token
+            if (token == null || !validateToken(token)) {
+                return AjaxResult.error("认证失败");
+            }
+
+            // 获取旧记录用于清理文件
+            StuCompetitionRecord oldRecord = stuCompetitionRecordService.selectStuCompetitionRecordByCompetitionId(record.getCompetitionId());
+            List<String> oldFiles = parseMaterialPaths(oldRecord.getProofMaterial());
+
+            // 处理新文件上传
+            if (proofMaterials != null && proofMaterials.length > 0) {
+                List<String> newFilePaths = new ArrayList<>();
+                for (MultipartFile file : proofMaterials) {
+                    String filePath = saveFile(file);
+                    newFilePaths.add(filePath);
+                }
+                record.setProofMaterial(new ObjectMapper().writeValueAsString(newFilePaths));
+
+                // 清理旧文件
+                deleteOldFiles(oldFiles);
+            } else {
+                // 保留原有文件路径
+                record.setProofMaterial(oldRecord.getProofMaterial());
+            }
+
+            // 更新记录
+            return toAjax(stuCompetitionRecordService.updateStuCompetitionRecord(record));
+        } catch (Exception e) {
+            logger.error("更新失败", e);
+            return AjaxResult.error("更新失败：" + e.getMessage());
+        }
     }
 
+    // 辅助方法：解析材料路径
+    private List<String> parseMaterialPaths(String materialJson) throws IOException {
+        if (materialJson == null || materialJson.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return new ObjectMapper().readValue(materialJson, new TypeReference<List<String>>() {});
+    }
+
+    // 辅助方法：删除旧文件
+    private void deleteOldFiles(List<String> filePaths) {
+        if (filePaths == null) return;
+
+        for (String path : filePaths) {
+            try {
+                Path filePath = Paths.get(uploadDir).resolve(path).normalize();
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                }
+            } catch (IOException e) {
+                logger.warn("文件删除失败: {}", path, e);
+            }
+        }
+    }
     /**
      * 删除学生科创竞赛记录
      */
