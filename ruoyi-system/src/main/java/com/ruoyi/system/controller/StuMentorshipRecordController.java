@@ -31,7 +31,7 @@ public class StuMentorshipRecordController extends BaseController
     /**
      * 查询导师指导记录列表
      */
-    @PreAuthorize("@ss.hasPermi('system:mentorship:list')")
+
     @GetMapping("/list")
     public TableDataInfo list(StuMentorshipRecord stuMentorshipRecord)
     {

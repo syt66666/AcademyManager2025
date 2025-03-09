@@ -264,7 +264,8 @@ export default {
         score: '/GrowthArchive/StudentScoreShow',
         competition: '/GrowthArchive/CompetitonRecord',
         activity: '/GrowthArchive/ActivityRecord',
-        report: '/ReportManagement/index'
+        report: '/ReportManagement/index',
+        meeting: '/GrowthArchive/MentorshipRecord'
       }
       if (routes[key]) {
         this.$router.push({
@@ -272,12 +273,13 @@ export default {
           query: { semester: this.currentSemester.name }
         })
       }
-      if (key === 'report') {
-        this.$router.push({path:'/ReportManagement/index', query: { semester: this.currentSemester.name } })
-      }
-      if (key === 'meeting') {
-        this.$router.push('')
-      }
+
+      // if (key === 'report') {
+      //   this.$router.push({path:'/ReportManagement/index', query: { semester: this.currentSemester.name } })
+      // }
+      // if (key === 'meeting') {
+      //   this.$router.push({path:'/GrowthArchive/MentorshipRecord', query: { semester: this.currentSemester.name } })
+      // }
     }
   }
 }
