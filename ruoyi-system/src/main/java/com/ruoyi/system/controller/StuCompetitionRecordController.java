@@ -8,15 +8,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ruoyi.system.domain.StuActivityRecord;
+import com.ruoyi.system.domain.dto.CompetitionAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
@@ -76,27 +79,6 @@ public class StuCompetitionRecordController extends BaseController
         return success(stuCompetitionRecordService.selectStuCompetitionRecordByCompetitionId(competitionId));
     }
 
-    /**
-     * 新增学生科创竞赛记录
-     */
-//    @PreAuthorize("@ss.hasPermi('system:record:add')")
-//    @Log(title = "学生科创竞赛记录", businessType = BusinessType.INSERT)
-//    @PostMapping
-//    public AjaxResult add(@RequestBody StuCompetitionRecord stuCompetitionRecord)
-//    {
-//        return toAjax(stuCompetitionRecordService.insertStuCompetitionRecord(stuCompetitionRecord));
-//    }
-
-    /**
-     * 修改学生科创竞赛记录
-     */
-//    @PreAuthorize("@ss.hasPermi('system:record:edit')")
-//    @Log(title = "学生科创竞赛记录", businessType = BusinessType.UPDATE)
-//    @PutMapping
-//    public AjaxResult edit(@RequestBody StuCompetitionRecord stuCompetitionRecord)
-//    {
-//        return toAjax(stuCompetitionRecordService.updateStuCompetitionRecord(stuCompetitionRecord));
-//    }
     /**
      * 修改学生科创竞赛记录（支持文件上传）
      */
@@ -274,5 +256,21 @@ public class StuCompetitionRecordController extends BaseController
 
         // 高效传输文件
         Files.copy(targetPath, response.getOutputStream());
+    }
+
+    /**
+     * 更新审核信息
+     */
+    @Log(title = "科创竞赛审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/audit")
+    public AjaxResult auditActivity(@Validated @RequestBody CompetitionAuditDTO auditDTO) {
+        // 构建更新参数
+        StuCompetitionRecord competition = new StuCompetitionRecord();
+        competition.setCompetitionId(auditDTO.getCompetitionId());
+        competition.setAuditStatus(auditDTO.getAuditStatus());
+        competition.setAuditRemark(auditDTO.getAuditRemark());
+        competition.setAuditTime(new Date());
+        // 执行更新操作
+        return toAjax(stuCompetitionRecordService.updateCompetitionAuditInfo(competition));
     }
 }

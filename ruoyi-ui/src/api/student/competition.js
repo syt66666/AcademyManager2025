@@ -17,6 +17,7 @@
 
 
 import request from '@/utils/request'
+import {auditActivity} from "@/api/system/activity";
 
 // 查询学生科创竞赛记录列表
 export function listRecord(query) {
@@ -66,25 +67,16 @@ export function delRecord(competitionId) {
     method: 'delete'
   })
 }
-// 新增竞赛记录
-// export function addCompetitionRecord(formData) {
-//   return request({
-//     url: "/system/record/add", // 确保路径与后端一致
-//     method: "post",
-//     data: formData,
-//     headers: {
-//       "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
-//     },
-//   });
-// }
-// // 新增竞赛记录
-// export function addCompetitionRecord(formData) {
-//   return request({
-//     url: "/competition/add", // 确保路径与后端一致
-//     method: "post",
-//     data: formData,
-//     headers: {
-//       "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
-//     },
-//   });
-// }
+// 审核学生科创竞赛记录
+export function auditRecord(data) {
+  return request({
+    url: '/system/record/audit',
+    method: 'put',
+    data: {
+      competitionId: data.competitionId,
+      auditStatus: data.auditStatus,
+      auditRemark: data.auditRemark
+    }
+  })
+}
+

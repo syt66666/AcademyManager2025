@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.StuCompetitionRecord;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * 学生科创竞赛记录Mapper接口
@@ -58,4 +59,14 @@ public interface StuCompetitionRecordMapper
      * @return 结果
      */
     public int deleteStuCompetitionRecordByCompetitionIds(Integer[] competitionIds);
+
+
+    @Update({
+            "update stu_competition_record",
+            "set audit_status = #{auditStatus},",
+            "audit_remark = #{auditRemark},",
+            "audit_time = #{auditTime}",
+            "where competition_id = #{competitionId}"
+    })
+    int updateCompetitionAuditInfo(StuCompetitionRecord competition);
 }

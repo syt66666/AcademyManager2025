@@ -58,4 +58,6 @@ public interface IStuCompetitionRecordService
      * @return 结果
      */
     public int deleteStuCompetitionRecordByCompetitionId(Integer competitionId);
+
+    int updateCompetitionAuditInfo(StuCompetitionRecord competition);
 }
