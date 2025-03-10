@@ -150,7 +150,6 @@
             <el-option label="二等奖" value="二等奖"></el-option>
             <el-option label="三等奖" value="三等奖"></el-option>
             <el-option label="优秀奖" value="优秀奖"></el-option>
-            <el-option label="未获奖" value="未获奖"></el-option>
           </el-select>
         </el-form-item>
 
@@ -433,14 +432,16 @@ export default {
             semester: this.activeSemester,
             studentId: store.state.user.name,
             auditStatus: state,
+            auditTime: null,
+            auditRemark: '',
             awardDate: this.formData.awardDate
           };
-          console.log(this.currentCompetitionId)
+
           // 如果是编辑操作，添加ID字段
           if (this.currentCompetitionId) {
             recordData.competitionId = this.currentCompetitionId;
           }
-          console.log(recordData)
+
           // 构建 JSON 部分（指定类型为 application/json）
           const recordBlob = new Blob(
             [JSON.stringify(recordData)],

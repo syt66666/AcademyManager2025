@@ -72,7 +72,11 @@
 
     <el-table v-loading="loading" :data="recordList" @selection-change="handleSelectionChange">
 <!--      <el-table-column type="selection" width="55" align="center" />-->
-      <el-table-column type="index" label="序号" width="50"></el-table-column>
+      <el-table-column label="序号" width="50" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column label="学号" align="center" prop="studentId" />
       <el-table-column label="姓名" align="center" prop="studentName" />
       <el-table-column label="竞赛名称" align="center" prop="competitionName" />

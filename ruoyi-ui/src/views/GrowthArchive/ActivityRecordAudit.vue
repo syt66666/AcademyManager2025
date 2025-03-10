@@ -70,9 +70,13 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="sortedActivityList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column type="index" label="序号" width="50"></el-table-column>
+    <el-table v-loading="loading" :data="activityList" @selection-change="handleSelectionChange">
+<!--      <el-table-column type="index" label="序号" width="50"></el-table-column>-->
+      <el-table-column label="序号" width="50" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column label="学号" align="center" prop="studentId" />
       <el-table-column label="活动名称" align="center" prop="activityName" />
       <el-table-column label="获奖级别" align="center" prop="activityLevel" />
@@ -150,26 +154,7 @@ import { listAuditActivity, getActivity, auditActivity  } from "@/api/system/act
 
 export default {
   name: "Activity",
-  computed: {
-    sortedActivityList() {
-      // 定义状态排序权重
-      const statusOrder = {
-        '未审核': 0,
-        '未通过': 1,
-        '已通过': 2
-      }
-
-      // 创建数组副本避免修改原始数据
-      return [...this.activityList].sort((a, b) => {
-        // 获取状态优先级
-        const orderA = statusOrder[a.auditStatus] ?? 3
-        const orderB = statusOrder[b.auditStatus] ?? 3
-        // 升序排列
-        return orderA - orderB
-      })
-    }
-  },
-      data() {
+    data() {
     return {
       auditStatusOptions: [
         { value: '未审核', label: '未审核' },
