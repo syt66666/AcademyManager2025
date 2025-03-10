@@ -15,16 +15,26 @@
         <el-table-column prop="activityLevel" label="活动级别" ></el-table-column>
         <el-table-column prop="awardLevel" label="活动奖项" ></el-table-column>
         <el-table-column prop="awardDate" label="获奖日期" min-width="100"></el-table-column>
-        <el-table-column prop="proofMaterial" label="证明材料" min-width="120">
+        <el-table-column label="证明材料" width="120">
           <template v-slot:default="scope">
-            <img
-              :src="getImageUrl(scope.row.proofMaterial)"
-              alt="活动证明"
-              style="width: 50px; height: 50px; cursor: pointer;"
-              v-if="scope.row.proofMaterial"
-              @click="handleImageClick(scope.row.proofMaterial)"
-            />
-            <span v-else>无图片</span>
+            <div class="proof-material-cell">
+              <el-link
+                type="primary"
+                :underline="false"
+                @click="handlePreview(scope.row.proofMaterial)"
+                style="margin-right: 10px;"
+              >
+                <i class="el-icon-view"></i> 预览
+              </el-link>
+              <el-button
+                type="primary"
+                icon="el-icon-download"
+                size="mini"
+                @click="downloadFiles(scope.row.proofMaterial)"
+                :disabled="!scope.row.proofMaterial"
+              >下载
+              </el-button>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="auditStatus" label="审核状态" min-width="80">
@@ -74,18 +84,34 @@
       </el-table>
 
       <!-- 图片预览对话框 -->
-      <el-dialog :visible.sync="dialogVisible" title="查看图片" width="50%">
-        <div style="position: relative;">
-          <img :src="getImageUrl(currentImage)" alt="活动证明大图" style="width: 100%; height: auto;" />
-          <div style="position: absolute; bottom: 20px; right: 20px;">
-            <el-button
-              type="primary"
-              icon="el-icon-download"
-              @click="handleDownload"
-              style="background-color: #42b983; border-color: #42b983;">
-              下载图片
-            </el-button>
-          </div>
+      <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img
+            :src="previewImages[currentPreviewIndex]"
+            style="max-width: 100%; display: block; margin: 0 auto;"
+            alt="证明材料预览"
+          />
+          <el-button
+            icon="el-icon-arrow-left"
+            :disabled="currentPreviewIndex === 0"
+            @click="currentPreviewIndex--"
+          ></el-button>
+          <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+          <el-button
+            icon="el-icon-arrow-right"
+            :disabled="currentPreviewIndex === previewImages.length - 1"
+            @click="currentPreviewIndex++"
+          ></el-button>
+        </div>
+
+        <div slot="footer">
+          <el-button
+            type="primary"
+            @click="downloadSingleFile(previewImages[currentPreviewIndex])"
+            style="background-color: #42b983; border-color: #42b983;"
+          >
+            <i class="el-icon-download"></i> 下载当前图片
+          </el-button>
         </div>
       </el-dialog>
 
@@ -139,13 +165,16 @@
         </el-form-item>
 
         <el-form-item label="图片上传" prop="proofMaterial">
-          <imageUpload
-            v-model="formData.proofMaterial"
-            :limit="1"
-            :fileSize="5"
-            :fileType="['png','jpg','jpeg']"
-            :isShowTip="true"
-          />
+          <el-upload
+            multiple
+            :limit="5"
+            :file-list="fileList"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+          >
+            <i class="el-icon-plus"></i>
+            <div slot="tip" class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
+          </el-upload>
         </el-form-item>
         <!-- 在表单底部添加双按钮 -->
         <el-form-item>
@@ -169,6 +198,7 @@
 <script>
 import {listActivity, addActivity, updateActivity, delActivity, checkActivityUnique} from "@/api/system/activity";
 import ImageUpload from '@/components/ImageUpload';
+import axios from "axios";
 
 export default {
   mounted() {
@@ -182,7 +212,12 @@ export default {
   },
   data() {
     return {
-      auditStatus: '',
+      uploadUrl: "http://localhost:8080/competition/add", // 上传接口
+      fileList: [], // 已上传的文件列表
+      previewVisible: false,
+      currentDownloadFile: '',
+      previewImages: [],
+      currentPreviewIndex: 0,
       isEdit: false,
       currentActivityId: null,
       baseUrl: process.env.VUE_APP_BASE_API,
@@ -194,6 +229,7 @@ export default {
       currentPage: 1,
       pageSize: 10,
       totalRecords: 0,
+      proofMaterial: [],
       showDialog: false,
       isLoading: false,
       formData: {
@@ -223,7 +259,93 @@ export default {
   },
 
   methods: {
+    async downloadFiles(filePaths) {
+      try {
+        // 解析文件路径
+        const paths = typeof filePaths === 'string'
+          ? JSON.parse(filePaths)
+          : filePaths;
+        if (!Array.isArray(paths)) {
+          throw new Error("无效的文件路径格式");
+        }
+        // 处理多个文件下载
+        if (paths.length > 1) {
+          this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = this.getFullUrl(path); // 使用 getFullUrl 方法生成完整 URL
+              this.downloadSingleFile(url);
+            });
+          });
+        } else if (paths.length === 1) {
+          this.previewImage = this.getFullUrl(paths[0]);
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
+      }
+    },
+// 下载单个文件
+    async downloadSingleFile(filePath) {
+      try {
+        const response = await axios.get(
+          filePath,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token")
+            }
+          }
+        );
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.generateFileName(filePath));
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(url);
+        link.remove();
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
 
+
+    handlePreview(filePath) {
+      try {
+        const paths = typeof filePath === 'string'
+          ? JSON.parse(filePath)
+          : filePath;
+
+        if (paths.length > 0) {
+          this.previewImages = paths.map(path => this.getFullUrl(path));
+          this.currentPreviewIndex = 0;
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        console.error('预览失败:', error);
+        this.$message.error('预览失败：文件路径格式不正确');
+      }
+    },
+    // 新增获取完整URL的方法
+    getFullUrl(filePath) {
+      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
+    },
+    handleFileChange(file, fileList) {
+      this.fileList = fileList.slice(-5); // 保持最多5个文件
+    },
+
+    // 关闭对话框
+    closeDialog() {
+      this.showDialog = false;
+      this.fileList = []; // 清空已上传的文件列表
+    },
     // 删除处理方法
     async handleDelete(row) {
       try {
@@ -305,16 +427,21 @@ export default {
         const params = {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
+          orderByColumn: 'apply_time', // 新增排序字段
+          isAsc: 'desc',                // 降序排列
           studentId: this.$store.state.user.name,
-          semester:this.activeSemester,
+          semester: this.activeSemester,
           ...this.queryParams
         };
 
         const response = await listActivity(params);
         if (response.code === 200) {
-          this.activityRecords = response.rows || [];
-          this.totalRecords = response.total || 0;
-
+          // 处理证明材料路径
+          this.activityRecords = response.rows.map(item => ({
+            ...item,
+            proofMaterial: this.parseMaterial(item.proofMaterial)
+          }));
+          this.totalRecords = response.total;
         }
       } catch (error) {
         console.error("获取活动记录失败:", error);
@@ -322,6 +449,18 @@ export default {
         this.isLoading = false;
       }
     },
+
+// 新增材料解析方法
+    parseMaterial(material) {
+      try {
+        // 尝试解析为 JSON 数组
+        return typeof material === 'string' ? JSON.parse(material) : material;
+      } catch (e) {
+        // 如果解析失败，假设是单个文件路径
+        return material ? [material] : [];
+      }
+    },
+
 
     // 分页处理
     handleSizeChange(size) {
@@ -352,23 +491,6 @@ export default {
       this.currentActivityId = null;
       this.formData = this.initFormData(); // 使用初始化方法
       this.showDialog = true;
-    },
-    // 对话框关闭
-    closeDialog() {
-      if (!this.isEdit) {
-        // 自动保存草稿
-        const draftData = {
-          ...this.formData,
-          proofMaterial: typeof this.formData.proofMaterial === 'object'
-            ? this.formData.proofMaterial.url
-            : this.formData.proofMaterial
-        };
-        localStorage.setItem(this.getDraftKey(), JSON.stringify(draftData));
-      }
-      this.showDialog = false;
-      this.isEdit = false;
-      this.currentActivityId = null;
-      this.$refs.form.resetFields();
     },
 
     // 处理编辑未通过记录
@@ -410,6 +532,7 @@ export default {
           awardLevel: this.formData.awardLevel,
           semester: this.activeSemester
         };
+        console.log(this.fileList);
         // 编辑时排除自身
         if (this.isEdit) {
           checkParams.excludeId = this.currentActivityId;
@@ -430,16 +553,30 @@ export default {
           studentId: this.$store.state.user.name,
           semester: this.activeSemester,
         };
-
         // 文件路径处理
         if (typeof params.proofMaterial === 'object') {
           params.proofMaterial = params.proofMaterial.url;
         }
 
+
+        //****************
+        const formData = new FormData();
+        const json = JSON.stringify(params);
+        formData.append("stuActivityRecord", json);
+        // 添加文件（字段名必须与后端一致）
+        this.fileList.forEach((file) => {
+          formData.append("proofMaterial", file.raw);
+          console.log(file.raw);
+        });
+
+
+        //********************************
+
+
         // API调用逻辑
         const response = this.isEdit
           ? await updateActivity({ ...params, id: this.currentActivityId })
-          : await addActivity(params);
+          : await addActivity(formData);
         if (response.code === 200) {
           this.$message.success(status === '未提交' ? '保存成功' : '提交成功');
           this.fetchActivityRecords();
