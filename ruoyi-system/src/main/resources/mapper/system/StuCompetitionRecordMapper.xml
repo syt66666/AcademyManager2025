@@ -150,4 +150,16 @@
         END,
         apply_time DESC            -- 按提交时间倒序
     </select>
+
+    <select id="existsByUniqueFields" resultType="boolean">
+        SELECT COUNT(1)
+        FROM stu_competition_record
+        WHERE
+            student_id = #{studentId} AND
+            competition_name = #{competitionName} AND
+            competition_level = #{competitionLevel} AND
+            award_level = #{awardLevel} AND
+            semester = #{semester}
+            LIMIT 1
+    </select>
 </mapper>

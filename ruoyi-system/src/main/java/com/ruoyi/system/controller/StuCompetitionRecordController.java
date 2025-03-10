@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.CompetitionAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -275,5 +276,10 @@ public class StuCompetitionRecordController extends BaseController
         startPage();
         List<StuCompetitionRecord> list = stuCompetitionRecordService.selectCompetitionRecordList(stuCompetitionRecord);
         return getDataTable(list);
+    }
+
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody StuCompetitionRecord competition) {
+        return stuCompetitionRecordService.checkUnique(competition);
     }
 }

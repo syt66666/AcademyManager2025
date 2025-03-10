@@ -186,12 +186,14 @@
 
 <script>
 import axios from "axios";
-import { addRecord, listRecord, delRecord , updateRecord, checkRecordUnique } from "@/api/student/competition";
-import store from "@/store"; // 根据实际路径调整
+import { addRecord, listRecord, delRecord , updateRecord, checkCompetitionUnique } from "@/api/student/competition";
+import store from "@/store";
+import {checkActivityUnique} from "@/api/system/activity"; // 根据实际路径调整
 
 export default {
   data() {
     return {
+      isEdit: false,
       currentCompetitionId: null, // 当前修改的竞赛记录ID
       fileList: [], // 已上传的文件列表
       previewVisible: false,
@@ -418,7 +420,30 @@ export default {
       this.showDialog = false;
       this.fileList = []; // 清空已上传的文件列表
     },
-    submitData(state) {
+
+    // 提交数据
+    async submitData(state) {
+      // 唯一性校验参数
+      const checkParams = {
+        studentId: this.$store.state.user.name,
+        competitionName: this.formData.competitionName,
+        competitionLevel: this.formData.competitionLevel,
+        awardLevel: this.formData.awardLevel,
+        semester: this.activeSemester
+      };
+      // 编辑时排除自身
+      if (this.isEdit) {
+        checkParams.excludeId = this.currentCompetitionId;
+      }
+
+      // 执行唯一性校验
+      const checkRes = await checkCompetitionUnique(checkParams);
+      console.log("checkRes:", checkRes.code);
+      if (checkRes.code !== 200) {
+        return this.$message.error('已存在相同活动记录，不可重复添加');
+      }
+
+
       this.$refs.form.validate((valid) => {
         if (valid) {
           const formData = new FormData();

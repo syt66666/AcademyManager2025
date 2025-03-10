@@ -3,6 +3,7 @@ package com.ruoyi.system.mapper;
 import java.util.List;
 
 import com.ruoyi.system.domain.StuCompetitionRecord;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
 /**
@@ -72,4 +73,9 @@ public interface StuCompetitionRecordMapper
     int updateCompetitionAuditInfo(StuCompetitionRecord competition);
     public List<StuCompetitionRecord> selectAuditCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord);
 
+    boolean existsByUniqueFields(@Param("studentId") String studentId,
+                                 @Param("competitionName") String competitionName,
+                                 @Param("competitionLevel") String competitionLevel,
+                                 @Param("awardLevel") String awardLevel,
+                                 @Param("semester") String semester);
 }

@@ -70,3 +70,11 @@ export function listAuditCompetition(query) {
   })
 }
 
+//唯一性校验
+export function checkCompetitionUnique(params) {
+  return request({
+    url: '/system/record/checkUnique',
+    method: 'post',
+    data: params
+  })
+}

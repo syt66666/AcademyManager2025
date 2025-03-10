@@ -3,6 +3,7 @@ package com.ruoyi.system.service.impl;
 import java.util.Arrays;
 import java.util.List;
 
+import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -108,5 +109,20 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
     @Override
     public List<StuCompetitionRecord> selectCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord) {
         return stuCompetitionRecordMapper.selectAuditCompetitionRecordList(stuCompetitionRecord);
+    }
+
+    @Override
+    public AjaxResult checkUnique(StuCompetitionRecord competition) {
+        // 打印参数日志（确保无隐藏字符）
+        System.out.println(competition.getStudentId()+competition.getCompetitionName()+competition.getCompetitionLevel()+competition.getAwardLevel()+competition.getSemester()
+        );
+        boolean exists = stuCompetitionRecordMapper.existsByUniqueFields(
+                competition.getStudentId(),
+                competition.getCompetitionName(),
+                competition.getCompetitionLevel(),
+                competition.getAwardLevel(),
+                competition.getSemester()
+        );
+        return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
     }
 }

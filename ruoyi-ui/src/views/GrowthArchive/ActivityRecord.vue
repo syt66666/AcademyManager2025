@@ -532,7 +532,6 @@ export default {
           awardLevel: this.formData.awardLevel,
           semester: this.activeSemester
         };
-        console.log(this.fileList);
         // 编辑时排除自身
         if (this.isEdit) {
           checkParams.excludeId = this.currentActivityId;
@@ -548,7 +547,6 @@ export default {
           ...this.formData,
           auditTime:null,
           auditRemark:"",
-
           auditStatus: status,
           studentId: this.$store.state.user.name,
           semester: this.activeSemester,
@@ -558,8 +556,6 @@ export default {
           params.proofMaterial = params.proofMaterial.url;
         }
 
-
-        //****************
         const formData = new FormData();
         const json = JSON.stringify(params);
         formData.append("stuActivityRecord", json);
@@ -568,10 +564,6 @@ export default {
           formData.append("proofMaterial", file.raw);
           console.log(file.raw);
         });
-
-
-        //********************************
-
 
         // API调用逻辑
         const response = this.isEdit
