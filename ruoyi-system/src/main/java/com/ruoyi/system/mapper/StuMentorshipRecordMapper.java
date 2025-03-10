@@ -53,4 +53,11 @@ public interface StuMentorshipRecordMapper
      * @return 结果
      */
     public int deleteStuMentorshipRecordByRecordIds(Integer[] recordIds);
+
+    /**
+     * 根据学生ID返回导师ID
+     * @param studentId
+     * @return
+     */
+    public String searchTutorId(String studentId);
 }
