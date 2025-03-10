@@ -146,7 +146,7 @@
 </template>
 
 <script>
-import { listAuditActivity, getActivity, delActivity, addActivity, updateActivity, auditActivity  } from "@/api/system/activity";
+import { listAuditActivity, getActivity, auditActivity  } from "@/api/system/activity";
 
 export default {
   name: "Activity",

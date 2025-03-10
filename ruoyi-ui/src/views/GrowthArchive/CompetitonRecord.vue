@@ -194,7 +194,6 @@ export default {
   data() {
     return {
       currentCompetitionId: null, // 当前修改的竞赛记录ID
-      uploadUrl: "http://localhost:8080/competition/add", // 上传接口
       fileList: [], // 已上传的文件列表
       previewVisible: false,
       previewImages: [],
@@ -291,7 +290,6 @@ export default {
     async handleSubmit() {
       this.submitData('未审核');
     },
-
 
     getDraftKey() {
       return `competition_draft_${this.$store.state.user.name}_${this.activeSemester}`;

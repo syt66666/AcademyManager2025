@@ -71,9 +71,10 @@
     </el-row>
 
     <el-table v-loading="loading" :data="recordList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
+<!--      <el-table-column type="selection" width="55" align="center" />-->
       <el-table-column type="index" label="序号" width="50"></el-table-column>
       <el-table-column label="学号" align="center" prop="studentId" />
+      <el-table-column label="姓名" align="center" prop="studentName" />
       <el-table-column label="竞赛名称" align="center" prop="competitionName" />
       <el-table-column label="竞赛级别" align="center" prop="competitionLevel" />
       <el-table-column label="竞赛奖项" align="center" prop="awardLevel" />
@@ -82,7 +83,31 @@
           <span>{{ parseTime(scope.row.awardDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-<!--      <el-table-column label="证明材料" align="center" prop="proofMaterial" />-->
+      <el-table-column label="证明材料" width="120">
+        <template v-slot:default="scope">
+          <div class="proof-material-cell">
+            <el-link
+              v-if="scope.row.proofMaterial"
+              type="primary"
+              :underline="false"
+              @click="handlePreview(scope.row.proofMaterial)"
+              style="margin-right: 10px;"
+            >
+              <i class="el-icon-view"></i> 预览
+            </el-link>
+            <el-button
+              v-if="scope.row.proofMaterial"
+              type="primary"
+              icon="el-icon-download"
+              size="mini"
+              @click="downloadFiles(scope.row.proofMaterial)"
+              :disabled="!scope.row.proofMaterial"
+            >下载
+            </el-button>
+            <span v-else>无材料</span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="提交时间" align="center" prop="applyTime" width="150">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.applyTime, '{y}-{m}-{d}') }}</span>
@@ -123,6 +148,37 @@
       </el-table-column>
     </el-table>
 
+
+    <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img
+          :src="previewImages[currentPreviewIndex]"
+          style="max-width: 100%; display: block; margin: 0 auto;"
+          alt="证明材料预览"
+        />
+        <el-button
+          icon="el-icon-arrow-left"
+          :disabled="currentPreviewIndex === 0"
+          @click="currentPreviewIndex--"
+        ></el-button>
+        <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+        <el-button
+          icon="el-icon-arrow-right"
+          :disabled="currentPreviewIndex === previewImages.length - 1"
+          @click="currentPreviewIndex++"
+        ></el-button>
+      </div>
+
+      <div slot="footer">
+        <el-button
+          type="primary"
+          @click="downloadSingleFile(previewImages[currentPreviewIndex])"
+          style="background-color: #42b983; border-color: #42b983;"
+        >
+          <i class="el-icon-download"></i> 下载当前图片
+        </el-button>
+      </div>
+    </el-dialog>
     <pagination
       v-show="total>0"
       :total="total"
@@ -136,6 +192,7 @@
 
 <script>
 import { listAuditCompetition, getRecord, delRecord, addRecord, updateRecord,auditRecord } from "@/api/student/competition";
+import axios from "axios";
 
 export default {
   name: "Record",
@@ -172,6 +229,10 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      previewVisible: false,
+      previewImages: [],
+      currentPreviewIndex: 0,
+      currentDownloadFile: '',
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -202,6 +263,96 @@ export default {
     this.getList();
   },
   methods: {
+    async downloadFiles(filePaths) {
+      try {
+        // 解析文件路径
+        const paths = typeof filePaths === 'string'
+          ? JSON.parse(filePaths)
+          : filePaths;
+        if (!Array.isArray(paths)) {
+          throw new Error("无效的文件路径格式");
+        }
+        // 处理多个文件下载
+        if (paths.length > 1|| paths.length === 1) {
+          this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
+          });
+        } else if (paths.length === 1) {
+          this.previewImage = this.getFullUrl(paths[0]);
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
+      }
+    },
+    // 下载单个文件
+    async downloadSingleFile(filePath) {
+      try {
+        const response = await axios.get(
+          filePath,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token")
+            }
+          }
+        );
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.generateFileName(filePath));
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(url);
+        link.remove();
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
+    // 生成带时间戳的文件名
+    generateFileName(filePath) {
+      const originalName = filePath.split('/').pop() || '证明材料';
+      const timestamp = new Date().getTime();
+      const ext = originalName.split('.').pop() || 'jpg';
+      return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
+    },
+
+    // 获取完整URL（带缓存清除）
+    getFullUrl(filePath) {
+      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
+    },
+    handlePreview(filePath) {
+      try {
+        const paths = typeof filePath === 'string'
+          ? JSON.parse(filePath)
+          : filePath;
+
+        if (paths.length > 0) {
+          this.previewImages = paths.map(path => this.getFullUrl(path));
+          this.currentPreviewIndex = 0;
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error('预览失败：文件路径格式不正确');
+      }
+    },
+// 获取文件名
+    getFileName(filePath) {
+      return filePath.split('/').pop() || '证明材料';
+    },
+    handleFileChange(file, fileList) {
+      this.fileList = fileList.slice(-5); // 保持最多5个文件
+    },
     // 审核状态标签样式
     getStatusTagType(status) {
       const statusMap = {
