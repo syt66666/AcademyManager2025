@@ -36,7 +36,7 @@ public class StuScoreController extends BaseController
     /**
      * 查询成绩列表
      */
-//    @PreAuthorize("@ss.hasPermi('system:score:list')")
+    @PreAuthorize("@ss.hasPermi('system:score:list')")
     @GetMapping("/list")
     public TableDataInfo list(StuScore stuScore)
     {
@@ -101,7 +101,7 @@ public class StuScoreController extends BaseController
         return toAjax(stuScoreService.deleteStuScoreByScoreIds(scoreIds));
     }
 
-
+    @PreAuthorize("@ss.hasPermi('system:score:import')")
     @Log(title = "成绩管理", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
