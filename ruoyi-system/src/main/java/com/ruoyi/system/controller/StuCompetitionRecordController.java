@@ -168,6 +168,7 @@ public class StuCompetitionRecordController extends BaseController
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
             }
+            record.setApplyTime(new Date()); // 确保新插入的数据有最新的时间戳
             // 处理文件上传
             if (proofMaterials != null && proofMaterials.length > 0) {
                 List<String> filePaths = new ArrayList<>();
