@@ -15,7 +15,6 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.CompetitionAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,12 +30,7 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * 学生科创竞赛记录Controller
- *
- * @author ruoyi
- * @date 2025-03-07
- */
+
 @RestController
 @RequestMapping("/system/record")
 public class StuCompetitionRecordController extends BaseController
@@ -263,7 +257,7 @@ public class StuCompetitionRecordController extends BaseController
      */
     @Log(title = "科创竞赛审核", businessType = BusinessType.UPDATE)
     @PutMapping("/audit")
-    public AjaxResult auditActivity(@Validated @RequestBody CompetitionAuditDTO auditDTO) {
+    public AjaxResult auditCompetition(@Validated @RequestBody CompetitionAuditDTO auditDTO) {
         // 构建更新参数
         StuCompetitionRecord competition = new StuCompetitionRecord();
         competition.setCompetitionId(auditDTO.getCompetitionId());
@@ -272,5 +266,13 @@ public class StuCompetitionRecordController extends BaseController
         competition.setAuditTime(new Date());
         // 执行更新操作
         return toAjax(stuCompetitionRecordService.updateCompetitionAuditInfo(competition));
+    }
+
+    @GetMapping("/auditList")
+    public TableDataInfo auditList(StuCompetitionRecord stuCompetitionRecord)
+    {
+        startPage();
+        List<StuCompetitionRecord> list = stuCompetitionRecordService.selectCompetitionRecordList(stuCompetitionRecord);
+        return getDataTable(list);
     }
 }

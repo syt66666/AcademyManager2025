@@ -104,4 +104,9 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
         // 构建更新参数（仅更新审核相关字段）
         return stuCompetitionRecordMapper.updateCompetitionAuditInfo(competition);
     }
+
+    @Override
+    public List<StuCompetitionRecord> selectCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord) {
+        return stuCompetitionRecordMapper.selectAuditCompetitionRecordList(stuCompetitionRecord);
+    }
 }

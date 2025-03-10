@@ -1,6 +1,7 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+
 import com.ruoyi.system.domain.StuCompetitionRecord;
 import org.apache.ibatis.annotations.Update;
 
@@ -69,4 +70,6 @@ public interface StuCompetitionRecordMapper
             "where competition_id = #{competitionId}"
     })
     int updateCompetitionAuditInfo(StuCompetitionRecord competition);
+    public List<StuCompetitionRecord> selectAuditCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord);
+
 }

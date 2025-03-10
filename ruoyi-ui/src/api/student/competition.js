@@ -1,23 +1,4 @@
-// import request from "@/utils/request";
-//
-
-
-// // 查询竞赛记录
-// export function fetchCompetitionRecords(queryParams, currentPage, pageSize) {
-//   return request({
-//     url: "/competition/records",
-//     method: "get",
-//     params: {
-//       ...queryParams, // 查询条件
-//       currentPage, // 当前页码
-//       pageSize, // 每页显示条数
-//     },
-//   });
-// }
-
-
 import request from '@/utils/request'
-import {auditActivity} from "@/api/system/activity";
 
 // 查询学生科创竞赛记录列表
 export function listRecord(query) {
@@ -77,6 +58,15 @@ export function auditRecord(data) {
       auditStatus: data.auditStatus,
       auditRemark: data.auditRemark
     }
+  })
+}
+
+// 管理员端查询学生文体活动记录列表
+export function listAuditCompetition(query) {
+  return request({
+    url: '/system/record/auditList',
+    method: 'get',
+    params: query
   })
 }
 

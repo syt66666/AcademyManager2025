@@ -135,7 +135,7 @@
 </template>
 
 <script>
-import { listRecord, getRecord, delRecord, addRecord, updateRecord,auditRecord } from "@/api/student/competition";
+import { listAuditCompetition, getRecord, delRecord, addRecord, updateRecord,auditRecord } from "@/api/student/competition";
 
 export default {
   name: "Record",
@@ -214,7 +214,7 @@ export default {
     /** 查询学生科创竞赛记录列表 */
     getList() {
       this.loading = true;
-      listRecord(this.queryParams).then(response => {
+      listAuditCompetition(this.queryParams).then(response => {
         this.recordList = response.rows;
         this.total = response.total;
         this.loading = false;

@@ -320,36 +320,7 @@ export default {
         this.title = "修改学生文体活动记录";
       });
     },
-    /** 提交按钮 */
-    submitForm() {
-      this.$refs["form"].validate(valid => {
-        if (valid) {
-          if (this.form.activityId != null) {
-            updateActivity(this.form).then(response => {
-              this.$modal.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
-            });
-          } else {
-            addActivity(this.form).then(response => {
-              this.$modal.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
-            });
-          }
-        }
-      });
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const activityIds = row.activityId || this.ids;
-      this.$modal.confirm('是否确认删除学生文体活动记录编号为"' + activityIds + '"的数据项？').then(function() {
-        return delActivity(activityIds);
-      }).then(() => {
-        this.getList();
-        this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
-    },
+
     /** 导出按钮操作 */
     handleExport() {
       this.download('system/activity/export', {
