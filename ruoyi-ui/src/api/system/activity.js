@@ -22,7 +22,10 @@ export function addActivity(data) {
   return request({
     url: '/system/activity',
     method: 'post',
-    data: data
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   })
 }
 

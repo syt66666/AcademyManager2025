@@ -44,6 +44,7 @@
             <if test="semester != null  and semester != ''"> and semester = #{semester}</if>
             <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
         </where>
+        ORDER BY apply_time DESC
     </select>
 
     <select id="selectStuCompetitionRecordByCompetitionId" parameterType="Integer" resultMap="StuCompetitionRecordResult">
