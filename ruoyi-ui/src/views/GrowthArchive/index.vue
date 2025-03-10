@@ -264,7 +264,8 @@ export default {
         score: '/GrowthArchive/StudentScoreShow',
         competition: '/GrowthArchive/CompetitonRecord',
         activity: '/GrowthArchive/ActivityRecord',
-        report: '/ReportManagement/index'
+        report: '/ReportManagement/index',
+        meeting: '/GrowthArchive/MentorshipRecord'
       }
       if (routes[key]) {
         this.$router.push({
@@ -272,12 +273,13 @@ export default {
           query: { semester: this.currentSemester.name }
         })
       }
-      if (key === 'report') {
-        this.$router.push({path:'/ReportManagement/index', query: { semester: this.currentSemester.name } })
-      }
-      if (key === 'meeting') {
-        this.$router.push('')
-      }
+
+      // if (key === 'report') {
+      //   this.$router.push({path:'/ReportManagement/index', query: { semester: this.currentSemester.name } })
+      // }
+      // if (key === 'meeting') {
+      //   this.$router.push({path:'/GrowthArchive/MentorshipRecord', query: { semester: this.currentSemester.name } })
+      // }
     }
   }
 }
@@ -350,13 +352,12 @@ export default {
 
 /* 基础容器 */
 .container {
-  max-width: 1440px;
+  max-width: 100%; /* 改为全宽 */
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem; /* 减少内边距 */
   background: var(--bg-gradient);
   min-height: 100vh;
-  display: grid;
-  place-items: center;
+  /* 移除 grid 布局 */
 }
 
 .main-container {
@@ -423,21 +424,22 @@ export default {
   white-space: nowrap;
 }
 
-/* 学期卡片网格 */
+/* 优化学期网格容器 */
 .semester-grid-wrapper {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden; /* 隐藏横向滚动 */
   padding-bottom: 2rem;
 }
 
+/* 修改网格布局 */
 .semester-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(280px, 1fr));
-  grid-template-rows: repeat(2, minmax(180px, auto));
-  gap: 2rem;
-  min-width: 1200px;
-  padding: 0 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 自动适应列数 */
+  gap: 1.5rem;
+  width: 100%;
+  padding: 0 1rem;
   margin-top: 1.5rem;
+  min-width: auto; /* 移除固定最小宽度 */
 }
 
 .semester-card {
@@ -589,18 +591,18 @@ export default {
 
 /* 模块项 */
 .module-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  overflow: hidden;
 }
 
 .module-item {
-  background: rgba(255,255,255,0.9);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  border: 1px solid rgba(226, 232, 240, 0.6);
+  flex: 1;
+  min-width: 160px;
+  max-width: 220px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
 }
 
 .module-item:hover {
@@ -651,30 +653,69 @@ export default {
   border-color: transparent;
 }
 
-
-
 .blink {
   animation: blink 1.5s infinite;
 }
 
-/* 响应式 */
-@media (max-width: 1440px) {
-  .semester-grid {
-    gap: 1.5rem;
-    padding: 0 1.5rem;
+/* 优化导航栏响应式 */
+.nav-content {
+  flex-direction: column; /* 小屏垂直排列 */
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+
+/* 优化模块面板 */
+.module-panel {
+  width: 100%;
+  max-width: 900px;
+  max-height: 80vh; /* 限制高度 */
+}
+
+/* 添加移动端触摸滚动优化 */
+.semester-grid-wrapper {
+  -webkit-overflow-scrolling: touch;
+}/* iOS 平滑滚动 */
+/* 响应式调整 */
+@media (max-width: 1280px) {
+  .module-item {
+    min-width: 140px;
+    padding: 1.2rem;
+  }
+  .module-icon {
+    font-size: 2.2rem;
   }
 }
 
 @media (max-width: 1024px) {
-  .semester-grid {
-    grid-template-columns: repeat(2, 1fr);
-    min-width: auto;
+  .module-item {
+    min-width: 120px;
+    padding: 1rem;
+  }
+  .module-icon {
+    font-size: 2rem;
+  }
+  .module-info h4 {
+    font-size: 0.95rem;
   }
 }
 
 @media (max-width: 768px) {
+  .module-item {
+    min-width: 100px;
+    padding: 0.8rem;
+  }
+  .module-icon {
+    font-size: 1.8rem;
+  }
+  .module-info h4 {
+    font-size: 0.85rem;
+  }
+  .module-info p {
+    font-size: 0.8rem;
+  }
   .container {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .main-container {
@@ -682,18 +723,32 @@ export default {
     border-radius: 1rem;
   }
 
-  .nav {
-    margin: -1rem -1rem 1.5rem;
-    border-radius: 1rem;
-  }
-
-  .nav h2 {
-    font-size: 1.4rem;
-  }
-
   .semester-grid {
-    grid-template-columns: 1fr;
-    padding: 0 1rem;
+    grid-template-columns: 1fr; /* 小屏幕单列显示 */
+    gap: 1rem;
+  }
+
+  .module-panel {
+    width: 95%; /* 弹窗更窄 */
+    padding: 1rem;
+  }
+
+  .nav-content {
+    flex-direction: row; /* 大屏水平排列 */
+    align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .module-item {
+    min-width: 80px;
+    padding: 0.6rem;
+  }
+  .module-icon {
+    font-size: 1.5rem;
+  }
+  .module-info h4 {
+    font-size: 0.75rem;
   }
 }
 </style>

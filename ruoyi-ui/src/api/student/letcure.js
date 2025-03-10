@@ -23,3 +23,22 @@ export function fetchLectureReportRecords(queryParams, currentPage, pageSize) {
     }
   });
 }
+//更新学生讲座报告信息
+export function updateActivity(data) {
+  return request({
+    url: '/Lecture/update',
+    method: 'put',
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+}
+//删除学生未提交讲座记录
+// 删除学生科创竞赛记录
+export function delLectureReport(reportId) {
+  return request({
+    url: '/Lecture/delete/' + reportId,
+    method: 'delete'
+  })
+}

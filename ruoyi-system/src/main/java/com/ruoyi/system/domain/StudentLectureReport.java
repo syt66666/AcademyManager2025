@@ -2,11 +2,15 @@ package com.ruoyi.system.domain;
 
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
 /**
  * 学生讲座报告实体类
  */
+@Data
 public class StudentLectureReport {
     /**
      * 学生学号
@@ -31,10 +35,12 @@ public class StudentLectureReport {
     /**
      * 报告时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime reportDate;
     /**
      * 报告提交时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime reportAdmitTime;
     /**
      * 内容简介
@@ -47,11 +53,15 @@ public class StudentLectureReport {
     /**
      *报告心得体会
      */
-    private byte[] reportFeeling;
+    private String reportFeeling;
     /**
      * 报告海报
      */
-    private byte[] lecturePoster;
+    private String lecturePoster;
+    /**
+     * 报告现场图片
+     */
+    private String reportPicture;
     /**
      * 审核状态
      */
@@ -59,6 +69,7 @@ public class StudentLectureReport {
     /**
      *审核时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime auditTime;
     /**
      * 审核意见
@@ -73,131 +84,5 @@ public class StudentLectureReport {
      */
     private int semester;
 
-    public String getStudentId() {
-        return studentId;
-    }
 
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public String getStudentName() {
-        return studentName;
-    }
-
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
-    public int getReportId() {
-        return reportId;
-    }
-
-    public void setReportId(int reportId) {
-        this.reportId = reportId;
-    }
-
-    public String getReportTitle() {
-        return reportTitle;
-    }
-
-    public void setReportTitle(String reportTitle) {
-        this.reportTitle = reportTitle;
-    }
-
-    public String getReporter() {
-        return reporter;
-    }
-
-    public void setReporter(String reporter) {
-        this.reporter = reporter;
-    }
-
-    public LocalDateTime getReportDate() {
-        return reportDate;
-    }
-
-    public void setReportDate(LocalDateTime reportDate) {
-        this.reportDate = reportDate;
-    }
-
-    public LocalDateTime getReportAdmitTime() {
-        return reportAdmitTime;
-    }
-
-    public void setReportAdmitTime(LocalDateTime reportAdmitTime) {
-        this.reportAdmitTime = reportAdmitTime;
-    }
-
-    public String getReportContent() {
-        return reportContent;
-    }
-
-    public void setReportContent(String reportContent) {
-        this.reportContent = reportContent;
-    }
-
-    public String getReportLink() {
-        return reportLink;
-    }
-
-    public void setReportLink(String reportLink) {
-        this.reportLink = reportLink;
-    }
-
-    public byte[] getReportFeeling() {
-        return reportFeeling;
-    }
-
-    public void setReportFeeling(byte[] reportFeeling) {
-        this.reportFeeling = reportFeeling;
-    }
-
-    public byte[] getLecturePoster() {
-        return lecturePoster;
-    }
-
-    public void setLecturePoster(byte[] lecturePoster) {
-        this.lecturePoster = lecturePoster;
-    }
-
-    public int getAuditStatus() {
-        return auditStatus;
-    }
-
-    public void setAuditStatus(int auditStatus) {
-        this.auditStatus = auditStatus;
-    }
-
-    public LocalDateTime getAuditTime() {
-        return auditTime;
-    }
-
-    public void setAuditTime(LocalDateTime auditTime) {
-        this.auditTime = auditTime;
-    }
-
-    public String getAuditRemark() {
-        return auditRemark;
-    }
-
-    public void setAuditRemark(String auditRemark) {
-        this.auditRemark = auditRemark;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public int getSemester() {
-        return semester;
-    }
-
-    public void setSemester(int semester) {
-        this.semester = semester;
-    }
 }

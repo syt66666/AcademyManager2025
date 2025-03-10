@@ -31,7 +31,7 @@ public class StuMentorshipRecordController extends BaseController
     /**
      * 查询导师指导记录列表
      */
-    @PreAuthorize("@ss.hasPermi('system:mentorship:list')")
+    //@PreAuthorize("@ss.hasPermi('system:mentorship:list')")
     @GetMapping("/list")
     public TableDataInfo list(StuMentorshipRecord stuMentorshipRecord)
     {
@@ -66,7 +66,7 @@ public class StuMentorshipRecordController extends BaseController
     /**
      * 新增导师指导记录
      */
-    @PreAuthorize("@ss.hasPermi('system:mentorship:add')")
+    //@PreAuthorize("@ss.hasPermi('system:mentorship:add')")
     @Log(title = "导师指导记录", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody StuMentorshipRecord stuMentorshipRecord)
@@ -77,7 +77,7 @@ public class StuMentorshipRecordController extends BaseController
     /**
      * 修改导师指导记录
      */
-    @PreAuthorize("@ss.hasPermi('system:mentorship:edit')")
+    //@PreAuthorize("@ss.hasPermi('system:mentorship:edit')")
     @Log(title = "导师指导记录", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody StuMentorshipRecord stuMentorshipRecord)
@@ -88,7 +88,7 @@ public class StuMentorshipRecordController extends BaseController
     /**
      * 删除导师指导记录
      */
-    @PreAuthorize("@ss.hasPermi('system:mentorship:remove')")
+    //@PreAuthorize("@ss.hasPermi('system:mentorship:remove')")
     @Log(title = "导师指导记录", businessType = BusinessType.DELETE)
     @DeleteMapping("/{recordIds}")
     public AjaxResult remove(@PathVariable Integer[] recordIds)

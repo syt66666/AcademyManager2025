@@ -3,12 +3,7 @@ package com.ruoyi.system.service;
 import java.util.List;
 import com.ruoyi.system.domain.StuCompetitionRecord;
 
-/**
- * 学生科创竞赛记录Service接口
- *
- * @author ruoyi
- * @date 2025-03-07
- */
+
 public interface IStuCompetitionRecordService
 {
     /**
@@ -58,4 +53,8 @@ public interface IStuCompetitionRecordService
      * @return 结果
      */
     public int deleteStuCompetitionRecordByCompetitionId(Integer competitionId);
+
+    int updateCompetitionAuditInfo(StuCompetitionRecord competition);
+
+    List<StuCompetitionRecord> selectCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord);
 }

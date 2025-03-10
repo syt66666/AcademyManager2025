@@ -24,6 +24,10 @@ public class StuCompetitionRecord extends BaseEntity
     @Excel(name = "学号")
     private String studentId;
 
+    /** 学生姓名 */
+    @Excel(name = "学生姓名")
+    private String studentName;
+
     /** 竞赛名称 */
     @Excel(name = "竞赛名称")
     private String competitionName;
@@ -37,7 +41,6 @@ public class StuCompetitionRecord extends BaseEntity
     private String awardLevel;
 
     /** 折合分数 */
-    @Excel(name = "折合分数")
     private Long scholarshipPoints;
 
     /** 获奖日期 */
@@ -50,7 +53,6 @@ public class StuCompetitionRecord extends BaseEntity
     private String proofMaterial;
 
     /** 审核状态 */
-    @Excel(name = "审核状态")
     private String auditStatus;
 
     /** 学生提交时间 */
@@ -59,7 +61,6 @@ public class StuCompetitionRecord extends BaseEntity
     private Date applyTime;
 
     /** 审核人姓名 */
-    @Excel(name = "审核人姓名")
     private String nickName;
 
     /** 审核时间 */
@@ -68,16 +69,10 @@ public class StuCompetitionRecord extends BaseEntity
     private Date auditTime;
 
     /** 审核意见 */
-    @Excel(name = "审核意见")
     private String auditRemark;
 
     /** 修读学期 */
-    @Excel(name = "修读学期")
     private String semester;
-
-    /** 学生姓名 */
-    @Excel(name = "学生姓名")
-    private String studentName;
 
     public void setCompetitionId(Integer competitionId)
     {
