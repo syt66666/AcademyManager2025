@@ -34,6 +34,7 @@
 <script>
 import axios from "axios";
 import store from "@/store";
+import {getNickName} from "@/api/system/student";
 
 export default {
   name: "WelcomePage",
@@ -46,6 +47,7 @@ export default {
       specialty: '',
       specialClass: '',
       splitFlow: '',
+      nickName:'',
     };
   },
   computed: {
@@ -60,8 +62,14 @@ export default {
     async initializeUserData() {
       if (this.userName === 'admin') {
         this.studentName = '管理员'
-      } else {
-
+      } else if(this.userName === '10001'){
+        // const response = await axios.get(process.env.VUE_APP_BASE_API + `/system/student/nickName`);
+        const response = await getNickName();
+        this.nickName = response.msg;
+        console.log("nickName:")
+        console.log(this.nickName);
+      }
+      else{
         const response = await axios.get(process.env.VUE_APP_BASE_API + `/system/student/${this.userName}`);
         const studentInfo = response.data.studentInfo;
         this.studentName = studentInfo.studentName;

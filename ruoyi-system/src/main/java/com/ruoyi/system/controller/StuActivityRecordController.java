@@ -230,4 +230,5 @@ public class StuActivityRecordController extends BaseController
     public AjaxResult checkUnique(@RequestBody StuActivityRecord activity) {
         return stuActivityRecordService.checkUnique(activity);
     }
+
 }
