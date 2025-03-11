@@ -1,7 +1,9 @@
 package com.ruoyi.system.mapper;
 
+import java.util.Date;
 import java.util.List;
 import com.ruoyi.system.domain.StuMentorshipRecord;
+import org.apache.ibatis.annotations.Param;
 
 
 public interface StuMentorshipRecordMapper
@@ -57,7 +59,15 @@ public interface StuMentorshipRecordMapper
     /**
      * 根据学生ID返回导师ID
      * @param studentId
-     * @return
+     * @return 结果
      */
     public String searchTutorId(String studentId);
+
+    public boolean existsByUniqueFields(@Param("studentId") String studentId,
+                                        @Param("guidanceTopic") String guidanceTopic,
+                                        @Param("guidanceTime") Date guidanceTime,
+                                        @Param("guidanceLocation") String guidanceLocation,
+                                        @Param("semester") String semester,
+                                        @Param("auditStatus") String auditStatus);
+
 }

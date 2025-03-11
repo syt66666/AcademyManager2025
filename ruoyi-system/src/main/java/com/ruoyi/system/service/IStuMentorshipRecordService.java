@@ -1,6 +1,9 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.StuMentorshipRecord;
 
 
@@ -53,4 +56,5 @@ public interface IStuMentorshipRecordService
      * @return 结果
      */
     public int deleteStuMentorshipRecordByRecordId(Integer recordId);
+    public AjaxResult checkUnique(StuMentorshipRecord stuMentorshipRecord);
 }

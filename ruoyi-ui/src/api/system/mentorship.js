@@ -42,3 +42,11 @@ export function delMentorship(recordId) {
     method: 'delete'
   })
 }
+  //唯一性校验
+  export function checkMentorshipUnique(params) {
+    return request({
+      url: '/system/mentorship/checkUnique',
+      method: 'post',
+      data: params
+    })
+}

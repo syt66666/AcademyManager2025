@@ -2,6 +2,8 @@ package com.ruoyi.system.controller;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.system.domain.StuActivityRecord;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -82,6 +84,7 @@ public class StuMentorshipRecordController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestBody StuMentorshipRecord stuMentorshipRecord)
     {
+        System.out.println(stuMentorshipRecord);
         return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(stuMentorshipRecord));
     }
 
@@ -94,5 +97,11 @@ public class StuMentorshipRecordController extends BaseController
     public AjaxResult remove(@PathVariable Integer[] recordIds)
     {
         return toAjax(stuMentorshipRecordService.deleteStuMentorshipRecordByRecordIds(recordIds));
+    }
+
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody StuMentorshipRecord stuMentorshipRecord) {
+
+        return stuMentorshipRecordService.checkUnique(stuMentorshipRecord);
     }
 }
