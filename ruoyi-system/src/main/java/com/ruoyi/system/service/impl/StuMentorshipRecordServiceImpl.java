@@ -2,6 +2,8 @@ package com.ruoyi.system.service.impl;
 
 import java.util.List;
 
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.system.domain.StuActivityRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -95,5 +97,18 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
     public int deleteStuMentorshipRecordByRecordId(Integer recordId)
     {
         return stuMentorshipRecordMapper.deleteStuMentorshipRecordByRecordId(recordId);
+    }
+
+    @Override
+    public AjaxResult checkUnique(StuMentorshipRecord stuMentorshipRecord) {
+        boolean exists = stuMentorshipRecordMapper.existsByUniqueFields(
+                stuMentorshipRecord.getStudentId(),
+                stuMentorshipRecord.getGuidanceTopic(),
+                stuMentorshipRecord.getGuidanceTime(),
+                stuMentorshipRecord.getGuidanceLocation(),
+                stuMentorshipRecord.getSemester(),
+                stuMentorshipRecord.getAuditStatus()
+        );
+        return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
     }
 }

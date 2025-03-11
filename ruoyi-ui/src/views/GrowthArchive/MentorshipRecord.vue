@@ -42,34 +42,38 @@
               <el-link
                 type="primary"
                 :underline="false"
+                v-if="scope.row.photoPaths !=='[]'"
                 @click="handlePreview(scope.row.photoPaths)"
                 style="margin-right: 10px;"
               >
                 <i class="el-icon-view"></i> 预览
               </el-link>
+              <span v-else>暂未上传现场图片</span>
               <el-button
                 type="primary"
                 icon="el-icon-download"
                 size="mini"
                 @click="downloadMeetingPictures(scope.row.photoPaths)"
-                :disabled="!scope.row.photoPaths"
+                v-if="scope.row.photoPaths !=='[]'"
               >下载
               </el-button>
+
             </div>
+
           </template>
         </el-table-column>
 
         <el-table-column label="操作">
           <template v-slot="scope">
             <el-button
-              v-if="formatAuditStatus(scope.row.auditStatus) === '未通过'"
+              v-if="scope.row.auditStatus === '未通过'"
               type="text"
               size="mini"
               @click="handleEditDraft(scope.row)"
             >重新提交
             </el-button>
 
-            <template v-if="formatAuditStatus(scope.row.auditStatus) === '未提交'">
+            <template v-if="scope.row.auditStatus === '未提交'">
               <el-button
                 type="text"
                 size="mini"
@@ -86,7 +90,7 @@
             </template>
 
             <el-tag
-              v-if="['未审核', '已通过'].includes(formatAuditStatus(scope.row.auditStatus))"
+              v-if="['待审核', '已通过'].includes(scope.row.auditStatus)"
               type="info"
               size="mini"
             >不可修改
@@ -96,14 +100,14 @@
         <el-table-column prop="auditStatus" label="审核状态" min-width="150">
           <template slot-scope="scope">
             <span>
-              <el-tag v-if="formatAuditStatus(scope.row.auditStatus) === '未审核'"
-                      type="warning">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '已通过'"
-                      type="success">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未通过'"
-                      type="danger">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未提交'"
-                      type="info">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-if="scope.row.auditStatus === '待审核'"
+                      type="warning">{{ scope.row.auditStatus }}</el-tag>
+              <el-tag v-else-if="scope.row.auditStatus === '已通过'"
+                      type="success">{{ scope.row.auditStatus }}</el-tag>
+              <el-tag v-else-if="scope.row.auditStatus === '未通过'"
+                      type="danger">{{ scope.row.auditStatus }}</el-tag>
+              <el-tag v-else-if="scope.row.auditStatus === '未提交'"
+                      type="info">{{ scope.row.auditStatus }}</el-tag>
               <el-tag v-else>未知状态</el-tag>
             </span>
           </template>
@@ -233,9 +237,17 @@
 
 <script>
 import axios from "axios";
-import {getMentorship, listMentorship, addMentorship, delMentorship,updateMentorship} from "@/api/system/mentorship";
+import {
+  getMentorship,
+  listMentorship,
+  addMentorship,
+  delMentorship,
+  updateMentorship,
+  checkMentorshipUnique,
+} from "@/api/system/mentorship";
 import {formatDate} from "@/utils";
-import {listActivity} from "@/api/system/activity";
+import {addActivity, checkActivityUnique, listActivity, updateActivity} from "@/api/system/activity";
+import {dataScope} from "@/api/system/role";
 
 export default {
   data() {
@@ -273,18 +285,17 @@ export default {
   mounted() {
     // 获取学期数据
     this.activeSemester = this.$route.query.semester || '未知学期';
-    this.formData.semester = this.findSemester(this.activeSemester);
+    this.formData.semester = this.activeSemester;
     this.fetchMeetingRecords();  // 在页面加载时获取数据
   },
   methods: {
-
+//保存草稿
     async handleSave() {
-      this.formData.auditStatus = 3;
-      this.submitForm();
+      this.submitForm("未提交");
     },
+    //正式提交
     async handleSubmit() {
-      this.formData.auditStatus = 0;
-      this.submitForm();
+      this.submitForm("待审核");
     },
 
     // 删除未提交记录
@@ -463,52 +474,12 @@ export default {
       this.fetchMeetingRecords(this.queryParams, this.currentPage, this.pageSize);
     },
 
-    //转化学期
-    findSemester(semester) {
-      const semesterTrimmed = semester.trim();  // 去除前后空格
-      switch (semester) {
-        case '大一上':
-          return 1;
-        case '大一下':
-          return 2;
-        case '大二上':
-          return 3;
-        case '大二下':
-          return 4;
-        case '大三上':
-          return 5;
-        case '大三下':
-          return 6;
-        case '大四上':
-          return 7;
-        case '大四下':
-          return 8;
-        default:
-          return 0;
-      }
-    },
 
-    // 格式化审核状态
-    formatAuditStatus(status) {
-      switch (status) {
-        case 0:
-          return "未审核";
-        case 1:
-          return "已通过";
-        case 2:
-          return "未通过";
-        case 3:
-          return "未提交";
-        default:
-          return "未审核";
-      }
-    },
     addNewCard() {
       this.showSecondCard = true;
       this.isEdit = false;
     },
     closeCard() {
-      this.showSecondCard = false;
       this.summaryFilePath = null;
       this.pushMeetingPictures = [];
       this.showSecondCard = false;
@@ -522,7 +493,7 @@ export default {
         //审核状态
         auditStatus: '',
         //学期
-        semester: this.findSemester(this.activeSemester),
+        semester: this.activeSemester,
       };
     },
     onFileChange(e) {
@@ -544,10 +515,11 @@ export default {
         };
 
         const response = await listMentorship(params);
+        console.log("获取的参数：",params)
         if (response.code === 200) {
-
           this.meetingRecords = response.rows || [];
           console.log("会议记录列表:", this.meetingRecords);
+
           this.totalRecords = response.total || 0;
 
         }
@@ -575,91 +547,54 @@ export default {
     //     this.isLoading = false; // 无论成功还是失败，结束加载状态
     //   }
     // },
-    submitForm() {
-      this.$refs.form.validate((valid) => {
-        if (valid) {
-          //如果不是保存
-          if (this.formData.auditStatus !== 3) {
-            // 如果文件数量少于3张，弹出提示
-            if (this.pushMeetingPictures.length < 3) {
-              this.$message.error('最少上传3张图片');
-              return;
-            }
-            // 如果文件数量大于5张，弹出提示
-            if (this.pushMeetingPictures.length > 5) {
-              this.$message.error('最多上传5张图片');
-              return;
-            }
-          }
-
-          const formData = new FormData();
-          //const json = JSON.stringify(this.formData);
-          const formattedGuidanceTime = this.formData.guidanceTime //格式化时间
-            ? formatDate(this.formData.guidanceTime, 'yyyy-MM-dd')
-            : null;
-
-          formData.append('studentId', this.$store.state.user.name);
-          formData.append('guidanceTopic', this.formData.guidanceTopic);
-          formData.append('guidanceLocation', this.formData.guidanceLocation);
-          formData.append('guidanceTime', formattedGuidanceTime);
-          formData.append('studentComment', this.formData.studentComment);
-          formData.append('semester', this.formData.semester);
-          formData.append('auditStatus', this.formData.auditStatus);
-          formData.append('summaryFilePath', this.formData.summaryFilePath);
-
-          // 添加图片（字段名必须与后端一致）
-          this.pushMeetingPictures.forEach((file) => {
-            formData.append("photoPaths", file.raw);
-          });
-          console.log('tupian:', this.formData.photoPaths);
-          // 可以使用 axios 或 fetch 发送请求
-          // 例如：
-          if (this.isEdit) {
-            //修改信息
-            addMentorship(formData).then(response => {
-              console.log("+++++++++", response);
-              this.$message.success('保存成功');
-              this.initData();
-            })
-              .catch(error => {
-                console.error(error);
-                this.initData();
-              });
-          } else {
-            //第一次添加信息
-            addMentorship(formData).then(response => {
-              console.log("+++++++++", response);
-              this.$message.success('提交成功');
-              this.initData();
-            })
-              .catch(error => {
-                console.error(error);
-                this.initData();
-              });
-          }
-        } else {
-          this.$message.error('请填写完整表单信息');
+    // 统一提交方法
+    async submitForm(status) {
+      try {
+        const checkParams = {
+          studentId: this.$store.state.user.name,
+          guidanceTopic: this.formData.guidanceTopic,
+          guidanceLocation: this.formData.guidanceLocation,
+          guidanceTime: this.formData.guidanceTime,
+          semester: this.activeSemester,
+          studentComment: this.formData.studentComment,
+          auditStatus:status,
+        };
+        const checkRes = await checkMentorshipUnique(checkParams);
+        if (checkRes.code !== 200) {
+          return this.$message.error('已存在相同活动记录，不可重复添加');
         }
-      });
+        console.log("pushMeetingPictures",this.pushMeetingPictures)
+        const params = {
+          ...this.formData,
+          auditTime:null,
+          auditRemark:"",
+          auditStatus: status,
+          studentId: this.$store.state.user.name,
+          semester: this.activeSemester,
+          photoPaths :JSON.stringify(this.pushMeetingPictures.map(file => file.url))
+        };
+        console.log("参数：",params);
+        // // 文件路径处理
+        // if (typeof params.proofMaterial === 'object') {
+        //   params.proofMaterial = params.proofMaterial.url;
+        // }
+
+        // API调用逻辑
+        const response = this.isEdit
+          ? await updateMentorship(params)
+          : await addMentorship(params);
+        if (response.code === 200) {
+          this.$message.success(status === '未提交' ? '保存成功' : '提交成功');
+          this.initData();
+          this.closeCard();
+        }
+      } catch (error) {
+        console.error('操作失败:', error);
+        this.$message.error(`操作失败: ${error.message || '服务器错误'}`);
+      }
     },
+
     initData() {
-      this.summaryFilePath = null;
-      this.pushMeetingPictures = [];
-      this.showSecondCard = false;
-      this.meetingRecords = [];
-      this.formData = {
-        guidanceTopic: '',
-        guidanceLocation: '',
-        guidanceTime: '',
-        studentComment: '',
-        summaryFilePath: '',
-        photoPaths: [],
-        //审核状态
-        auditStatus: '',
-        //学期
-        semester: this.findSemester(this.activeSemester),
-      };
-      this.$refs.fileInput.value = '';
       this.fetchMeetingRecords();  // 在页面加载时获取数据
     },
   }

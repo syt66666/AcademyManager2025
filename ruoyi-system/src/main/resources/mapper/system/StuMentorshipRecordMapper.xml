@@ -150,4 +150,16 @@
             #{recordId}
         </foreach>
     </delete>
+    <select id="existsByUniqueFields" resultType="boolean">
+        SELECT COUNT(1)
+        FROM stu_mentorship_record
+        WHERE
+            student_id = #{studentId} AND
+            guidance_topic = #{guidanceTopic} AND
+            guidance_location = #{guidanceLocation} AND
+            guidance_time = #{guidanceTime} AND
+            semester = #{semester} AND
+            audit_status = #{auditStatus}
+            LIMIT 1
+    </select>
 </mapper>
