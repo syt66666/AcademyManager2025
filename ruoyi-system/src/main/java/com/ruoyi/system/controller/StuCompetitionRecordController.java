@@ -19,6 +19,7 @@ import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.CompetitionAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.ruoyi.common.annotation.Log;
@@ -54,7 +55,7 @@ public class StuCompetitionRecordController extends BaseController
     /**
      * 导出学生科创竞赛记录列表
      */
-//    @PreAuthorize("@ss.hasPermi('system:record:export')")
+    @PreAuthorize("@ss.hasPermi('system:record:export')")
     @Log(title = "学生科创竞赛记录", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, StuCompetitionRecord stuCompetitionRecord)

@@ -1,16 +1,19 @@
 <template>
   <div class="welcome-container">
     <div class="welcome-card">
-      <h1 class="welcome-message">您好，{{ studentName }}！</h1>
-      <p class="user-info" v-if="this.userName !== 'admin'">
-        书院：{{ department }}<br />
+      <h1 class="welcome-message"
+          v-if="this.userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'">
+        您好，{{ studentName }}！</h1>
+      <h1 class="welcome-message"
+          v-if="this.userName === 'admin'||this.userName === '10001'||this.userName === '10002'||this.userName === '10003'||this.userName === '10004'||this.userName === '10005'||this.userName === '10006'||this.userName === '10007'">
+        欢迎管理员！</h1>
+      <p class="user-info" v-if="this.userName !== 'admin'&&this.userName!== '10001'">
+        书院：{{ department }}<br/>
         系统内专业：{{ specialty }}
         <span v-if="this.splitFlow !== '不可变更专业'">
-    <br />招生录取专业：{{ major }}
+    <br/>招生录取专业：{{ major }}
   </span>
       </p>
-
-
       <p
         class="user-info2"
         v-if="
@@ -21,42 +24,28 @@
      specialty === '机械设计制造及其自动化（卓越国合班）')
   "
       >
-      (您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。)
+        (您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。)
       </p>
-      <p class="greeting-message" >大工书院祝您心想事成！😊</p>
-<!--      <button @click="submitForm">?????????</button>-->
+      <p class="greeting-message">大工书院祝您心想事成！😊</p>
     </div>
   </div>
 </template>
 
 <script>
 import axios from "axios";
-import { addCompetitionRecord } from "@/api/student/competition";
 import store from "@/store";
-import {upLoad} from "@/api/student/letcure";
 
 export default {
   name: "WelcomePage",
   data() {
     return {
-      list:{
-
-      },
+      list: {},
       studentName: '',
       department: '',
       major: '',
       specialty: '',
-      specialClass:'',
-      splitFlow:'',
-      formData: {
-        competition_name: '',
-        competition_level: '',
-        award_level: '',
-        scholarship_points: '',
-        proof_material: '',
-        //学期
-        semester: '2',
-      },
+      specialClass: '',
+      splitFlow: '',
     };
   },
   computed: {
@@ -65,89 +54,26 @@ export default {
     }
   },
   mounted() {
-    console.log(this.userName)
     this.initializeUserData();
   },
   methods: {
-    submitForm(){
-      this.$refs.form.validate((valid) => {
-        if (valid) {
-          console.log('表单数据:', this.formData.reportDate);
-          const formData = new FormData();
-          const json = JSON.stringify(this.formData);
-          formData.append('studentLectureReport', json);
-          formData.append('proofMaterial', this.proofMterial);
-          // 在这里编写提交表单的逻辑，例如将表单数据发送到后端
-          console.log('表单数据:', this.formData);
-          console.log('传递后端数据:', formData);
-          // 可以使用 axios 或 fetch 发送请求
-          // 例如：
-          addCompetitionRecord(formData).then(response => {
-            console.log("+++++++++", response);
-          })
-            .catch(error => {
-              console.error(error);
-            });
-        } else {
-          this.$message.error('请填写完整表单信息');
-        }
-      })
-    },
     async initializeUserData() {
       if (this.userName === 'admin') {
         this.studentName = '管理员'
       } else {
 
-          const response = await axios.get(process.env.VUE_APP_BASE_API+`/system/student/${this.userName}`);
-          const studentInfo = response.data.studentInfo;
-          console.log(studentInfo);
-          this.studentName=studentInfo.studentName;
-          this.department=studentInfo.academy;
-          this.splitFlow = studentInfo.divertForm;
-          this.major=studentInfo.major;
-          this.specialty=studentInfo.systemMajor;
-          if(studentInfo.innovationClass===1){
-            this.specialClass='是';
-          }
-          else {
-            this.specialClass='否';
-          }
-
-
-        //   if (response && response.data && response.data.studentInfo) {
-        //     const studentInfo = response.data.studentInfo;
-        //     console.log(studentInfo);
-        //   } else {
-        //     console.warn("No student info found.");
-        //   }
-        //
-        // } catch (error) {
-        //   console.error("Error fetching student info:", error);
-        // }
-
-
-
-
-        // axios
-        //   .get(`http://localhost:3000/api/users/${this.userName}`)
-        //   .then(response => {
-        //     const userData = response.data;  // 获取用户数据
-        //     this.splitFlow = userData.divertForm // 分流形式
-        //     this.studentName = userData.studentName; // 姓名
-        //     this.studentId = userData.studentId; // 学号
-        //     this.major = userData.major; // 招生录取专业
-        //     this.department = userData.academy; // 管理部门
-        //     this.specialty = userData.systemMajor; // 系统内专业
-        //     if(userData.InnovationClass===1){
-        //       this.specialClass='是'
-        //     }else{
-        //       this.specialClass='否'
-        //     }
-        //   })
-        //   .catch(error => {
-        //     console.error("获取用户信息失败", error);
-        //     this.$message.error("获取用户信息失败");
-        //   });
+        const response = await axios.get(process.env.VUE_APP_BASE_API + `/system/student/${this.userName}`);
+        const studentInfo = response.data.studentInfo;
+        this.studentName = studentInfo.studentName;
+        this.department = studentInfo.academy;
+        this.splitFlow = studentInfo.divertForm;
+        this.major = studentInfo.major;
+        this.specialty = studentInfo.systemMajor;
+        if (studentInfo.innovationClass === 1) {
+          this.specialClass = '是';
+        } else {
+          this.specialClass = '否';
+        }
       }
     }
   }
@@ -160,64 +86,112 @@ export default {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f0f4f8;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* 柔和的渐变背景 */
   padding: 20px;
 }
 
 .welcome-card {
-  background-color: #ffffff;
-  padding: 50px;  /* 增加内边距让欢迎框更大 */
-  border-radius: 15px;  /* 使圆角更大 */
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); /* 增加阴影使其更立体 */
-  max-width: 800px;  /* 设置最大宽度 */
+  background: rgba(255, 255, 255, 0.95); /* 半透明白色背景 */
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1),
+  inset 0 0 15px rgba(255, 255, 255, 0.3); /* 内外阴影结合 */
+  max-width: 800px;
   width: 100%;
   text-align: center;
+  transition: transform 0.3s ease;
+  backdrop-filter: blur(5px); /* 背景模糊效果 */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* 柔和边框 */
+}
+
+.welcome-card:hover {
+  transform: translateY(-5px); /* 悬停微动效 */
 }
 
 .welcome-message {
-  font-size: 30px;  /* 增加欢迎信息的字体大小 */
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 30px;  /* 增加下边距 */
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 1rem;
+}
+
+.welcome-message::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #6a89cc 0%, #82ccdd 100%); /* 装饰性下划线 */
 }
 
 .user-info {
-  font-size: 18px;  /* 增加字体大小 */
-  color: #555;
-  margin-bottom: 30px;
+  font-size: 1.1rem;
+  color: #4a5568;
+  margin-bottom: 2rem;
   text-align: left;
+  line-height: 1.8;
+  background: rgba(241, 245, 249, 0.4); /* 浅色背景 */
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.user-info2 {
+  font-size: 0.95rem;
+  color: #2b6cb0;
+  margin-bottom: 2rem;
+  text-align: left;
+  padding: 1rem;
+  background: rgba(66, 153, 225, 0.08);
+  border-left: 4px solid #4299e1; /* 左侧装饰条 */
+  border-radius: 6px;
+  animation: fadeIn 0.5s ease; /* 淡入动画 */
 }
 
 .greeting-message {
-  font-size: 20px;  /* 增加问候信息的字体大小 */
-  color: #28a745;
-  font-weight: bold;
+  font-size: 1.2rem;
+  color: #48bb78;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 30px;
+  background: rgba(72, 187, 120, 0.1); /* 浅绿色背景 */
 }
-.user-info2 {
-  font-size: 14px;
-  color: #395cdc;
-  margin-bottom: 30px;
-  text-align: left;
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
+
 @media (max-width: 768px) {
   .welcome-card {
-    padding: 30px;  /* 减少移动端的内边距 */
+    padding: 2rem;
+    margin: 1rem;
   }
 
   .welcome-message {
-    font-size: 24px;  /* 在小屏幕上减小欢迎信息字体大小 */
+    font-size: 2rem;
   }
 
   .user-info {
-    font-size: 16px;  /* 调整移动端字体大小 */
-  }
-
-  .user-info2 {
-    font-size: 12px;  /* 调整移动端字体大小 */
+    font-size: 1rem;
+    padding: 1rem;
   }
 
   .greeting-message {
-    font-size: 18px;  /* 调整移动端字体大小 */
+    font-size: 1.1rem;
   }
 }
 </style>

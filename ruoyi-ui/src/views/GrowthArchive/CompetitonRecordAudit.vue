@@ -195,7 +195,7 @@
 </template>
 
 <script>
-import { listAuditCompetition, getRecord, delRecord, addRecord, updateRecord,auditRecord } from "@/api/student/competition";
+import { listAuditCompetition,auditRecord } from "@/api/student/competition";
 import axios from "axios";
 
 export default {
@@ -349,13 +349,6 @@ export default {
       } catch (error) {
         this.$message.error('预览失败：文件路径格式不正确');
       }
-    },
-// 获取文件名
-    getFileName(filePath) {
-      return filePath.split('/').pop() || '证明材料';
-    },
-    handleFileChange(file, fileList) {
-      this.fileList = fileList.slice(-5); // 保持最多5个文件
     },
     // 审核状态标签样式
     getStatusTagType(status) {
