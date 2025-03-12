@@ -199,6 +199,7 @@
 import {listActivity, addActivity, updateActivity, delActivity, checkActivityUnique} from "@/api/system/activity";
 import ImageUpload from '@/components/ImageUpload';
 import axios from "axios";
+import store from "@/store";
 
 export default {
   mounted() {
@@ -254,6 +255,7 @@ export default {
         awardLevel: [
           { required: true, message: '请选择奖项', trigger: 'change' }
         ],
+        awardDate: [{ required: true, message: '请选择获奖日期', trigger: 'change' }]
       }
     };
   },
@@ -439,6 +441,8 @@ export default {
           // 处理证明材料路径
           this.activityRecords = response.rows.map(item => ({
             ...item,
+            id: item.activityId,
+            auditStatus: item.auditStatus,
             proofMaterial: this.parseMaterial(item.proofMaterial)
           }));
           this.totalRecords = response.total;
@@ -502,7 +506,7 @@ export default {
         awardDate: row.awardDate ? new Date(row.awardDate) : null
       };
       this.isEdit = true;
-      this.currentActivityId = row.id;
+      this.currentActivityId = row.activityId;
       this.showDialog = true;
     },
 
@@ -523,67 +527,94 @@ export default {
 
     // 统一提交方法
     async submitData(status) {
-      try {
-        // 唯一性校验参数
-        const checkParams = {
-          studentId: this.$store.state.user.name,
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+        // 获取原始记录数据（编辑时）
+        const originalRecord = this.activityRecords.find(
+          item => item.id === this.currentActivityId
+        );
+        console.log("this.currentActivityId:" + this.currentActivityId)
+        // 检测关键字段是否修改
+        const isKeyFieldChanged = !originalRecord ||
+          this.formData.activityName !== originalRecord.activityName ||
+          this.formData.activityLevel !== originalRecord.activityLevel ||
+          this.formData.awardLevel !== originalRecord.awardLevel;
+        console.log("isKeyFieldChanged:" + isKeyFieldChanged)
+        console.log("this.currentActivityId:" + this.currentActivityId)
+        const shouldCheckUnique = !this.currentActivityId || isKeyFieldChanged;
+
+        // 编辑时排除自身
+        if (shouldCheckUnique) {
+          // 唯一性校验参数
+          const checkParams = {
+            studentId: this.$store.state.user.name,
+            activityName: this.formData.activityName,
+            activityLevel: this.formData.activityLevel,
+            awardLevel: this.formData.awardLevel,
+            semester: this.activeSemester
+          };
+          // 执行唯一性校验
+          const checkRes = await checkActivityUnique(checkParams);
+          if (checkRes.code !== 200) {
+            return this.$message.error('已存在相同活动记录，不可重复添加');
+          }
+        }
+        const formData = new FormData();
+        // 构建核心数据对象
+        const recordData = {
+          activityId: null,
           activityName: this.formData.activityName,
           activityLevel: this.formData.activityLevel,
           awardLevel: this.formData.awardLevel,
-          semester: this.activeSemester
-        };
-        // 编辑时排除自身
-        if (this.isEdit) {
-          checkParams.excludeId = this.currentActivityId;
-        }
-
-        // 执行唯一性校验
-        const checkRes = await checkActivityUnique(checkParams);
-        if (checkRes.code !== 200) {
-          return this.$message.error('已存在相同活动记录，不可重复添加');
-        }
-
-        const params = {
-          ...this.formData,
-          auditTime:null,
-          auditRemark:"",
-          auditStatus: status,
-          studentId: this.$store.state.user.name,
           semester: this.activeSemester,
+          studentId: store.state.user.name,
+          auditStatus: status,
+          auditTime: null,
+          auditRemark: '',
+          awardDate: this.formData.awardDate
         };
-        // 文件路径处理
-        if (typeof params.proofMaterial === 'object') {
-          params.proofMaterial = params.proofMaterial.url;
-        }
 
-        const formData = new FormData();
-        const json = JSON.stringify(params);
-        formData.append("stuActivityRecord", json);
-        // 添加文件（字段名必须与后端一致）
+        // 如果是编辑操作，添加ID字段
+        if (this.currentActivityId) {
+          recordData.activityId = this.currentActivityId;
+        }
+        // 构建 JSON 部分（指定类型为 application/json）
+        const recordBlob = new Blob(
+          [JSON.stringify(recordData)],
+          {type: "application/json"}
+        );
+        formData.append("stuActivityRecord", recordBlob); // [!code ++]
+
+        // 添加文件
         this.fileList.forEach((file) => {
           formData.append("proofMaterial", file.raw);
-          console.log(file.raw);
         });
 
-        // API调用逻辑
-        const response = this.isEdit
-          ? await updateActivity({ ...params, id: this.currentActivityId })
-          : await addActivity(formData);
-        if (response.code === 200) {
-          this.$message.success(status === '未提交' ? '保存成功' : '提交成功');
-          this.fetchActivityRecords();
-          this.closeDialog();
+        // 配置headers
+        const config = {
+          headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "Content-Type": "multipart/form-data"
+          }
+        };
+        // 根据模式选择API方法
+        const apiMethod = this.currentActivityId ? updateActivity : addActivity;
+        apiMethod(formData, config)
+          .then(() => {
+            this.$message.success(this.currentActivityId ? "更新成功！" : "提交成功！");
+            this.fetchActivityRecords();
+            this.closeDialog();
+          })
+          .catch(error => {
+            this.$message.error(`操作失败：${error.message}`);
+          });
         }
-      } catch (error) {
-        console.error('操作失败:', error);
-        this.$message.error(`操作失败: ${error.message || '服务器错误'}`);
-      }
+      });
     },
     // 获取本地存储的key
     getDraftKey() {
       return `activity_draft_${this.$store.state.user.name}_${this.activeSemester}`;
     },
-
   }
 };
 </script>

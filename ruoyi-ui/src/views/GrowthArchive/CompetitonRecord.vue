@@ -422,29 +422,40 @@ export default {
 
     // 提交数据
     async submitData(state) {
-      // 唯一性校验参数
-      const checkParams = {
-        studentId: this.$store.state.user.name,
-        competitionName: this.formData.competitionName,
-        competitionLevel: this.formData.competitionLevel,
-        awardLevel: this.formData.awardLevel,
-        semester: this.activeSemester
-      };
-      // 编辑时排除自身
-      if (this.isEdit) {
-        checkParams.excludeId = this.currentCompetitionId;
-      }
-
-      // 执行唯一性校验
-      const checkRes = await checkCompetitionUnique(checkParams);
-      console.log("checkRes:", checkRes.code);
-      if (checkRes.code !== 200) {
-        return this.$message.error('已存在相同活动记录，不可重复添加');
-      }
-
-
-      this.$refs.form.validate((valid) => {
+      this.$refs.form.validate(async (valid) => {
         if (valid) {
+          // 获取原始记录数据（编辑时）
+          const originalRecord = this.competitionRecords.find(
+            item => item.id === this.currentCompetitionId
+          );
+
+          // 检测关键字段是否修改
+          const isKeyFieldChanged = !originalRecord ||
+            this.formData.competitionName !== originalRecord.competitionName ||
+            this.formData.competitionLevel !== originalRecord.competitionLevel ||
+            this.formData.awardLevel !== originalRecord.awardLevel;
+          console.log("isKeyFieldChanged:"+isKeyFieldChanged)
+          console.log("this.currentCompetitionId:"+this.currentCompetitionId)
+          // 需要校验的唯一性条件
+          const shouldCheckUnique = !this.currentCompetitionId || isKeyFieldChanged;
+
+          if (shouldCheckUnique) {
+            try {
+              const checkRes = await checkCompetitionUnique({
+                studentId: this.$store.state.user.name,
+                competitionName: this.formData.competitionName,
+                competitionLevel: this.formData.competitionLevel,
+                awardLevel: this.formData.awardLevel,
+                semester: this.activeSemester
+              });
+
+              if (checkRes.code !== 200) {
+                return this.$message.error('已存在相同活动记录，不可重复添加');
+              }
+            } catch (error) {
+              return this.$message.error(`校验失败: ${error.message}`);
+            }
+          }
           const formData = new FormData();
 
           // 构建核心数据对象

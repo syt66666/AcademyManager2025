@@ -14,10 +14,12 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletResponse;
 
 import com.alibaba.fastjson2.JSON;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.common.core.domain.R;
 import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.system.domain.StuCompetitionRecord;
 import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.dto.ActivityAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,7 +83,7 @@ public class StuActivityRecordController extends BaseController
     /**
      * 新增学生文体活动记录
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:add')")
+//    @PreAuthorize("@ss.hasPermi('system:activity:add')")
     @Log(title = "学生文体活动记录", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestPart("stuActivityRecord") String stuActivityRecordStr,
@@ -179,15 +181,69 @@ public class StuActivityRecordController extends BaseController
         // 高效传输文件
         Files.copy(targetPath, response.getOutputStream());
     }
+    // 辅助方法：解析材料路径
+    private List<String> parseMaterialPaths(String materialJson) throws IOException {
+        if (materialJson == null || materialJson.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return new ObjectMapper().readValue(materialJson, new TypeReference<List<String>>() {});
+    }
+    // 辅助方法：删除旧文件
+    private void deleteOldFiles(List<String> filePaths) {
+        if (filePaths == null) return;
+
+        for (String path : filePaths) {
+            try {
+                Path filePath = Paths.get(uploadDir).resolve(path).normalize();
+                if (Files.exists(filePath)) {
+                    Files.delete(filePath);
+                }
+            } catch (IOException e) {
+                logger.warn("文件删除失败: {}", path, e);
+            }
+        }
+    }
     /**
      * 修改学生文体活动记录
      */
 //    @PreAuthorize("@ss.hasPermi('system:activity:edit')")
     @Log(title = "学生文体活动记录", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody StuActivityRecord stuActivityRecord)
-    {
-        return toAjax(stuActivityRecordService.updateStuActivityRecord(stuActivityRecord));
+    public AjaxResult edit(
+            @RequestPart("stuActivityRecord") StuActivityRecord record,
+            @RequestPart(value = "proofMaterial", required = false) MultipartFile[] proofMaterials,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+        try {
+            // 验证 Token
+            if (token == null || !validateToken(token)) {
+                return AjaxResult.error("认证失败");
+            }
+
+            // 获取旧记录用于清理文件
+            StuActivityRecord oldRecord = stuActivityRecordService.selectStuActivityRecordByActivityId(record.getActivityId());
+            List<String> oldFiles = parseMaterialPaths(oldRecord.getProofMaterial());
+
+            // 处理新文件上传
+            if (proofMaterials != null && proofMaterials.length > 0) {
+                List<String> newFilePaths = new ArrayList<>();
+                for (MultipartFile file : proofMaterials) {
+                    String filePath = saveFile(file);
+                    newFilePaths.add(filePath);
+                }
+                record.setProofMaterial(new ObjectMapper().writeValueAsString(newFilePaths));
+
+                // 清理旧文件
+                deleteOldFiles(oldFiles);
+            } else {
+                // 保留原有文件路径
+                record.setProofMaterial(oldRecord.getProofMaterial());
+            }
+            // 更新记录
+            return toAjax(stuActivityRecordService.updateStuActivityRecord(record));
+        } catch (Exception e) {
+            logger.error("更新失败", e);
+            return AjaxResult.error("更新失败：" + e.getMessage());
+        }
     }
 
     /**
