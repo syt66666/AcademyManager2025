@@ -248,6 +248,7 @@ import {
 import {formatDate} from "@/utils";
 import {addActivity, checkActivityUnique, listActivity, updateActivity} from "@/api/system/activity";
 import {dataScope} from "@/api/system/role";
+import {addRecord, updateRecord} from "@/api/student/competition";
 
 export default {
   data() {
@@ -456,8 +457,10 @@ export default {
       }
     },
     handleFileChange(file, fileList) {
+
       this.pushMeetingPictures = fileList.slice(-5); // 保持最多5个文件
     },
+
     handleRemoveFile(file, fileList) {
       this.pushMeetingPictures = fileList;  // 更新文件列表
     },
@@ -511,6 +514,7 @@ export default {
           pageSize: this.pageSize,
           studentId: this.$store.state.user.name,
           semester:this.activeSemester,
+          pushMeetingPictures:this.pushMeetingPictures,
           ...this.queryParams
         };
 
@@ -557,43 +561,68 @@ export default {
           guidanceTime: this.formData.guidanceTime,
           semester: this.activeSemester,
           studentComment: this.formData.studentComment,
-          auditStatus:status,
+          auditStatus: status,
         };
         const checkRes = await checkMentorshipUnique(checkParams);
         if (checkRes.code !== 200) {
           return this.$message.error('已存在相同活动记录，不可重复添加');
         }
-        console.log("pushMeetingPictures",this.pushMeetingPictures)
+
+        console.log("pushMeetingPictures", this.pushMeetingPictures);
+
+        // 创建 FormData 对象
+        const formData = new FormData();
         const params = {
           ...this.formData,
-          auditTime:null,
-          auditRemark:"",
+          auditTime: null,
+          auditRemark: "",
           auditStatus: status,
           studentId: this.$store.state.user.name,
           semester: this.activeSemester,
-          photoPaths :JSON.stringify(this.pushMeetingPictures.map(file => file.url))
+          // 将 photoPaths 转换为 JSON 字符串
+          photoPaths: JSON.stringify(this.pushMeetingPictures.map(file => file.url))
         };
-        console.log("参数：",params);
-        // // 文件路径处理
-        // if (typeof params.proofMaterial === 'object') {
-        //   params.proofMaterial = params.proofMaterial.url;
-        // }
+        console.log("参数：", params);
 
-        // API调用逻辑
-        const response = this.isEdit
-          ? await updateMentorship(params)
-          : await addMentorship(params);
-        if (response.code === 200) {
-          this.$message.success(status === '未提交' ? '保存成功' : '提交成功');
-          this.initData();
-          this.closeCard();
-        }
+        // 构建 JSON 部分（指定类型为 application/json）
+        const recordBlob = new Blob(
+          [JSON.stringify(params)],
+          { type: "application/json" }
+        );
+        formData.append("record", recordBlob);
+
+        // 添加文件
+        console.log("pushMeetingPictures参数：", this.pushMeetingPictures);
+        this.pushMeetingPictures.forEach((file) => {
+          formData.append("photoPaths", file.raw);
+        });
+        console.log("photoPaths：", formData.get("photoPaths"));
+
+        // 配置 headers
+        const config = {
+          headers: {
+            "Authorization": "Bearer " + localStorage.getItem("token"),
+            "Content-Type": "multipart/form-data"
+          }
+        };
+
+        // 根据模式选择 API 方法
+        const apiMethod = this.isEdit ? updateMentorship : addMentorship;
+
+        apiMethod(formData, config)
+          .then(() => {
+            this.$message.success(this.isEdit ? "更新成功！" : "提交成功！");
+            this.fetchMeetingRecords();
+            this.closeCard();
+          })
+          .catch(error => {
+            this.$message.error(`操作失败：${error.message}`);
+          });
       } catch (error) {
         console.error('操作失败:', error);
         this.$message.error(`操作失败: ${error.message || '服务器错误'}`);
       }
     },
-
     initData() {
       this.fetchMeetingRecords();  // 在页面加载时获取数据
     },

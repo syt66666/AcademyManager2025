@@ -680,7 +680,7 @@ export default {
           this.pushReportPicture.forEach((file) => {
             formData.append("reportPicture", file.raw);
           });
-          console.log('表单数据:', this.formData);
+          console.log('表单数据formData.reportPicture:', this.formData.reportPicture);
           console.log('传递后端数据:', formData);
           // 可以使用 axios 或 fetch 发送请求
           // 例如：

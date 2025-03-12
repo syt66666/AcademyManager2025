@@ -22,7 +22,10 @@ export function addMentorship(data) {
   return request({
     url: '/system/mentorship',
     method: 'post',
-    data: data
+    data: data,
+    headers: {
+      "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
+    },
   })
 }
 
@@ -31,7 +34,10 @@ export function updateMentorship(data) {
   return request({
     url: '/system/mentorship',
     method: 'put',
-    data: data
+    data: data,
+    headers: {
+      "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
+    },
   })
 }
 
