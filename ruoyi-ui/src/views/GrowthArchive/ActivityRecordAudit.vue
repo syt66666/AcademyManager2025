@@ -50,6 +50,19 @@
         </el-select>
       </el-form-item>
 
+        <el-form-item label="获奖时间" prop="awardDate">
+          <el-date-picker
+            v-model="dateRange"
+            type="daterange"
+            @change="handleDateChange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="yyyy-MM-dd"
+          style="width: 350px"
+          ></el-date-picker>
+        </el-form-item>
+
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -70,10 +83,15 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="sortedActivityList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column type="index" label="序号" width="50"></el-table-column>
+    <el-table v-loading="loading" :data="activityList" @selection-change="handleSelectionChange">
+<!--      <el-table-column type="index" label="序号" width="50"></el-table-column>-->
+      <el-table-column label="序号" width="50" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column label="学号" align="center" prop="studentId" />
+      <el-table-column label="姓名" align="center" prop="studentName" />
       <el-table-column label="活动名称" align="center" prop="activityName" />
       <el-table-column label="获奖级别" align="center" prop="activityLevel" />
       <el-table-column label="获奖奖项" align="center" prop="awardLevel" />
@@ -146,31 +164,14 @@
 </template>
 
 <script>
-import { listAuditActivity, getActivity, delActivity, addActivity, updateActivity, auditActivity  } from "@/api/system/activity";
+import { listAuditActivity, getActivity, auditActivity  } from "@/api/system/activity";
+import {parseTime} from "@/utils/ruoyi";
 
 export default {
   name: "Activity",
-  computed: {
-    sortedActivityList() {
-      // 定义状态排序权重
-      const statusOrder = {
-        '未审核': 0,
-        '未通过': 1,
-        '已通过': 2
-      }
-
-      // 创建数组副本避免修改原始数据
-      return [...this.activityList].sort((a, b) => {
-        // 获取状态优先级
-        const orderA = statusOrder[a.auditStatus] ?? 3
-        const orderB = statusOrder[b.auditStatus] ?? 3
-        // 升序排列
-        return orderA - orderB
-      })
-    }
-  },
-      data() {
+    data() {
     return {
+      dateRange:[],
       auditStatusOptions: [
         { value: '未审核', label: '未审核' },
         { value: '已通过', label: '已通过' },
@@ -211,6 +212,8 @@ export default {
         awardLevel: null,
         scholarshipPoints: null,
         awardDate: null,
+        awardDateBegin:null,
+        awardDateEnd:null,
         proofMaterial: null,
         semester: null,
         applyTime: null,
@@ -235,9 +238,6 @@ export default {
         awardLevel: [
           { required: true, message: "活动奖项不能为空", trigger: "blur" }
         ],
-        scholarshipPoints: [
-          { required: true, message: "折合奖学金分数不能为空", trigger: "blur" }
-        ],
         awardDate: [
           { required: true, message: "获奖日期不能为空", trigger: "blur" }
         ],
@@ -254,6 +254,18 @@ export default {
     this.getList();
   },
   methods: {
+    // 日期选择变化事件
+    handleDateChange(range) {
+      // 处理空值情况
+      if (range && range.length === 2) {
+        this.queryParams.awardDateBegin = range[0];
+        this.queryParams.awardDateEnd = range[1];
+      } else {
+        this.queryParams.awardDateBegin = null;
+        this.queryParams.awardDateEnd = null;
+      }
+      console.log('时间参数:', this.queryParams.awardDateBegin, this.queryParams.awardDateEnd);
+    },
     /** 查询学生文体活动记录列表 */
     getList() {
       this.loading = true;
@@ -284,7 +296,9 @@ export default {
         nickName: null,
         auditStatus: null,
         auditTime: null,
-        auditRemark: null
+        auditRemark: null,
+        awardDateBegin: null,
+        awardDateEnd: null
       };
       this.resetForm("form");
     },
@@ -295,7 +309,15 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
+      // 清空日期选择器
+      this.dateRange = [];
+      // 重置查询参数
+      this.queryParams = {
+        ...this.queryParams,
+        awardDateBegin: null,
+        awardDateEnd: null
+      };
+      // 触发查询
       this.handleQuery();
     },
     // 多选框选中数据
@@ -320,41 +342,16 @@ export default {
         this.title = "修改学生文体活动记录";
       });
     },
-    /** 提交按钮 */
-    submitForm() {
-      this.$refs["form"].validate(valid => {
-        if (valid) {
-          if (this.form.activityId != null) {
-            updateActivity(this.form).then(response => {
-              this.$modal.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
-            });
-          } else {
-            addActivity(this.form).then(response => {
-              this.$modal.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
-            });
-          }
-        }
-      });
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const activityIds = row.activityId || this.ids;
-      this.$modal.confirm('是否确认删除学生文体活动记录编号为"' + activityIds + '"的数据项？').then(function() {
-        return delActivity(activityIds);
-      }).then(() => {
-        this.getList();
-        this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
-    },
+
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/activity/export', {
-        ...this.queryParams
-      }, `activity_${new Date().getTime()}.xlsx`)
+      // 确保导出参数包含时间范围
+      const exportParams = {
+        ...this.queryParams,
+        awardDateBegin: this.queryParams.awardDateBegin,
+        awardDateEnd: this.queryParams.awardDateEnd
+      };
+      this.download('system/activity/export', exportParams, `activity_${new Date().getTime()}.xlsx`);
     },
 
     // 文件下载处理
@@ -396,7 +393,6 @@ export default {
     },
 
     // 审核操作
-    // 修改后的审核处理方法
     handleAudit(row, status) {
       const isApproved = status === '通过';
       const statusMapping = {

@@ -1,12 +1,8 @@
 package com.ruoyi.system.controller;
 
-import java.io.IOException;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
-
 import com.ruoyi.common.core.domain.model.LoginUser;
-import com.ruoyi.common.exception.ServiceException;
-import com.ruoyi.common.utils.StringUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -20,12 +16,6 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * 课程信息Controller
- *
- * @author ruoyi
- * @date 2025-03-01
- */
 @RestController
 @RequestMapping("/system/course")
 public class StuCourseController extends BaseController
@@ -102,7 +92,7 @@ public class StuCourseController extends BaseController
     }
 
 
-
+    @PreAuthorize("@ss.hasPermi('system:course:import')")
     @Log(title = "课程管理", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception

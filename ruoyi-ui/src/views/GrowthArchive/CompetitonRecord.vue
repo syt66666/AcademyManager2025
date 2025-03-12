@@ -150,7 +150,6 @@
             <el-option label="二等奖" value="二等奖"></el-option>
             <el-option label="三等奖" value="三等奖"></el-option>
             <el-option label="优秀奖" value="优秀奖"></el-option>
-            <el-option label="未获奖" value="未获奖"></el-option>
           </el-select>
         </el-form-item>
 
@@ -187,13 +186,14 @@
 
 <script>
 import axios from "axios";
-import { addRecord, listRecord, delRecord , updateRecord, checkRecordUnique } from "@/api/student/competition";
-import store from "@/store"; // 根据实际路径调整
+import { addRecord, listRecord, delRecord , updateRecord, checkCompetitionUnique } from "@/api/student/competition";
+import store from "@/store";
 
 export default {
   data() {
     return {
-      uploadUrl: "http://localhost:8080/competition/add", // 上传接口
+      isEdit: false,
+      currentCompetitionId: null, // 当前修改的竞赛记录ID
       fileList: [], // 已上传的文件列表
       previewVisible: false,
       previewImages: [],
@@ -251,12 +251,13 @@ export default {
     handleEdit(row) {
       this.formData = {
         ...row,
+        competitionId: row.id,
         auditTime:null,
         auditRemark:"",
         awardDate: row.awardDate ? new Date(row.awardDate) : null
       };
       this.isEdit = true;
-      this.currentActivityId = row.id;
+      this.currentCompetitionId = row.id;
       this.showDialog = true;
     },
 
@@ -268,7 +269,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         });
-
+        console.log("row.id:"+row.id)
         const response = await delRecord(row.id);
         if (response.code === 200) {
           this.$message.success('删除成功');
@@ -290,7 +291,6 @@ export default {
       this.submitData('未审核');
     },
 
-
     getDraftKey() {
       return `competition_draft_${this.$store.state.user.name}_${this.activeSemester}`;
     },
@@ -298,7 +298,7 @@ export default {
     // 修改后的打开对话框方法
     openDialog() {
       this.isEdit = false;
-      this.currentRecordId = null;
+      this.currentCompetitionId= null;
       this.formData = this.initFormData();
       this.showDialog = true;
 
@@ -419,46 +419,95 @@ export default {
       this.showDialog = false;
       this.fileList = []; // 清空已上传的文件列表
     },
-    submitData(state) {
-      this.$refs.form.validate((valid) => {
+
+    // 提交数据
+    async submitData(state) {
+      this.$refs.form.validate(async (valid) => {
         if (valid) {
+          // 获取原始记录数据（编辑时）
+          const originalRecord = this.competitionRecords.find(
+            item => item.id === this.currentCompetitionId
+          );
+
+          // 检测关键字段是否修改
+          const isKeyFieldChanged = !originalRecord ||
+            this.formData.competitionName !== originalRecord.competitionName ||
+            this.formData.competitionLevel !== originalRecord.competitionLevel ||
+            this.formData.awardLevel !== originalRecord.awardLevel;
+          console.log("isKeyFieldChanged:"+isKeyFieldChanged)
+          console.log("this.currentCompetitionId:"+this.currentCompetitionId)
+          // 需要校验的唯一性条件
+          const shouldCheckUnique = !this.currentCompetitionId || isKeyFieldChanged;
+
+          if (shouldCheckUnique) {
+            try {
+              const checkRes = await checkCompetitionUnique({
+                studentId: this.$store.state.user.name,
+                competitionName: this.formData.competitionName,
+                competitionLevel: this.formData.competitionLevel,
+                awardLevel: this.formData.awardLevel,
+                semester: this.activeSemester
+              });
+
+              if (checkRes.code !== 200) {
+                return this.$message.error('已存在相同活动记录，不可重复添加');
+              }
+            } catch (error) {
+              return this.$message.error(`校验失败: ${error.message}`);
+            }
+          }
           const formData = new FormData();
+
+          // 构建核心数据对象
+          const recordData = {
+            competitionId: null,
+            competitionName: this.formData.competitionName,
+            competitionLevel: this.formData.competitionLevel,
+            awardLevel: this.formData.awardLevel,
+            semester: this.activeSemester,
+            studentId: store.state.user.name,
+            auditStatus: state,
+            auditTime: null,
+            auditRemark: '',
+            awardDate: this.formData.awardDate
+          };
+
+          // 如果是编辑操作，添加ID字段
+          if (this.currentCompetitionId) {
+            recordData.competitionId = this.currentCompetitionId;
+          }
 
           // 构建 JSON 部分（指定类型为 application/json）
           const recordBlob = new Blob(
-            [JSON.stringify({
-              competitionName: this.formData.competitionName,
-              competitionLevel: this.formData.competitionLevel,
-              awardLevel: this.formData.awardLevel,
-              semester: this.activeSemester,
-              studentId:store.state.user.name,
-              auditStatus:this.formData.auditStatus,
-              awardDate: this.formData.awardDate,
-            })],
+            [JSON.stringify(recordData)],
             {type: "application/json"}
           );
           formData.append("record", recordBlob);
 
-          // 添加文件（字段名必须与后端一致）
+          // 添加文件
           this.fileList.forEach((file) => {
             formData.append("proofMaterial", file.raw);
           });
 
-          // 添加 Token 到 Headers
+          // 配置headers
           const config = {
             headers: {
               "Authorization": "Bearer " + localStorage.getItem("token"),
+              "Content-Type": "multipart/form-data"
             }
           };
 
-          addRecord(formData, config)
+          // 根据模式选择API方法
+          const apiMethod = this.currentCompetitionId ? updateRecord : addRecord;
+
+          apiMethod(formData, config)
             .then(() => {
-              this.$message.success("提交成功！");
+              this.$message.success(this.currentCompetitionId ? "更新成功！" : "提交成功！");
               this.fetchCompetitionRecords();
               this.closeDialog();
             })
             .catch(error => {
-              this.$message.error("提交失败：" + error.message);
+              this.$message.error(`操作失败：${error.message}`);
             });
         }
       });
@@ -509,6 +558,7 @@ export default {
           // 添加数据转换
           this.competitionRecords = this.competitionRecords.map(item => ({
             ...item,
+            id: item.competitionId,
             auditStatus: item.auditStatus,
             proofMaterial: this.parseMaterial(item.proofMaterial)
           }));

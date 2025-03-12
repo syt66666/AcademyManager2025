@@ -50,3 +50,11 @@ export function delStudent(id) {
     method: 'delete'
   })
 }
+
+// 查询用户昵称
+export function getNickName() {
+  return request({
+    url: '/system/student/nickName',
+    method: 'get'
+  })
+}

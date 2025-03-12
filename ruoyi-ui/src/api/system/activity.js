@@ -22,7 +22,10 @@ export function addActivity(data) {
   return request({
     url: '/system/activity',
     method: 'post',
-    data: data
+    data: data,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
   })
 }
 
@@ -31,7 +34,10 @@ export function updateActivity(data) {
   return request({
     url: '/system/activity',
     method: 'put',
-    data: data
+    data: data,
+    headers: {
+      "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
+    },
   })
 }
 

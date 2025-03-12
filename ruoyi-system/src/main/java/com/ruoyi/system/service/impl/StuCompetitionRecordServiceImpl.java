@@ -1,6 +1,10 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.Arrays;
 import java.util.List;
+
+import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.StuCompetitionRecordMapper;
@@ -89,5 +93,36 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
     public int deleteStuCompetitionRecordByCompetitionId(Integer competitionId)
     {
         return stuCompetitionRecordMapper.deleteStuCompetitionRecordByCompetitionId(competitionId);
+    }
+
+    @Override
+    public int updateCompetitionAuditInfo(StuCompetitionRecord competition) {
+        // 校验审核状态是否合法
+        if (!Arrays.asList("已通过", "未通过").contains(competition.getAuditStatus())) {
+            throw new ServiceException("无效的审核状态");
+        }
+
+        // 构建更新参数（仅更新审核相关字段）
+        return stuCompetitionRecordMapper.updateCompetitionAuditInfo(competition);
+    }
+
+    @Override
+    public List<StuCompetitionRecord> selectCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord) {
+        return stuCompetitionRecordMapper.selectAuditCompetitionRecordList(stuCompetitionRecord);
+    }
+
+    @Override
+    public AjaxResult checkUnique(StuCompetitionRecord competition) {
+        // 打印参数日志（确保无隐藏字符）
+        System.out.println(competition.getStudentId()+competition.getCompetitionName()+competition.getCompetitionLevel()+competition.getAwardLevel()+competition.getSemester()
+        );
+        boolean exists = stuCompetitionRecordMapper.existsByUniqueFields(
+                competition.getStudentId(),
+                competition.getCompetitionName(),
+                competition.getCompetitionLevel(),
+                competition.getAwardLevel(),
+                competition.getSemester()
+        );
+        return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
     }
 }

@@ -13,12 +13,7 @@ import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.service.IStuActivityRecordService;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 学生文体活动记录Service业务层处理
- *
- * @author ruoyi
- * @date 2025-03-02
- */
+
 @Service
 public class StuActivityRecordServiceImpl implements IStuActivityRecordService
 {

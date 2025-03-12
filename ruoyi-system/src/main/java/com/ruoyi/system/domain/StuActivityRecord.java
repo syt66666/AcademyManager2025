@@ -13,12 +13,20 @@ public class StuActivityRecord extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
+    private String awardDateBegin;
+
+    private String awardDateEnd;
+
     /** 主键ID */
     private Integer activityId;
 
     /** 学号 */
     @Excel(name = "学号")
     private String studentId;
+
+    /** 姓名 */
+    @Excel(name = "姓名")
+    private String studentName;
 
     /** 活动名称 */
     @Excel(name = "活动名称")
@@ -65,6 +73,30 @@ public class StuActivityRecord extends BaseEntity
 
     /** 审核意见 */
     private String auditRemark;
+
+    public String getAwardDateBegin() {
+        return awardDateBegin;
+    }
+
+    public void setAwardDateBegin(String awardDateBegin) {
+        this.awardDateBegin = awardDateBegin;
+    }
+
+    public String getAwardDateEnd() {
+        return awardDateEnd;
+    }
+
+    public void setAwardDateEnd(String awardDateEnd) {
+        this.awardDateEnd = awardDateEnd;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
     public void setActivityId(Integer activityId)
     {
