@@ -137,7 +137,7 @@
             type="text"
             icon="el-icon-check"
             @click="handleAudit(scope.row, '通过')"
-            v-hasPermi="['system:record:audit']"
+            v-hasPermi="['system:competition:audit']"
             v-if="scope.row.auditStatus !== '已通过'"
           >通过</el-button>
           <el-button

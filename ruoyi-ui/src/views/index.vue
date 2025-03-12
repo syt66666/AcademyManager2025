@@ -5,8 +5,11 @@
           v-if="this.userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'">
         您好，{{ studentName }}！</h1>
       <h1 class="welcome-message"
-          v-if="this.userName === 'admin'||this.userName === '10001'||this.userName === '10002'||this.userName === '10003'||this.userName === '10004'||this.userName === '10005'||this.userName === '10006'||this.userName === '10007'">
-        欢迎管理员！</h1>
+          v-if="this.userName === 'admin'">
+        您好，管理员！</h1>
+      <h1 class="welcome-message"
+          v-if="this.userName === '10001'||this.userName === '10002'||this.userName === '10003'||this.userName === '10004'||this.userName === '10005'||this.userName === '10006'||this.userName === '10007'">
+        您好，{{ studentName }}管理员！</h1>
       <p class="user-info" v-if="this.userName !== 'admin'&&this.userName!== '10001'">
         书院：{{ department }}<br/>
         系统内专业：{{ specialty }}
@@ -62,12 +65,15 @@ export default {
     async initializeUserData() {
       if (this.userName === 'admin') {
         this.studentName = '管理员'
-      } else if(this.userName === '10001'){
-        // const response = await axios.get(process.env.VUE_APP_BASE_API + `/system/student/nickName`);
+      } else if(this.userName === '10001' ||
+        this.userName === '10002'||
+        this.userName === '10003'||
+        this.userName === '10004'||
+        this.userName === '10005'||
+        this.userName === '10006'||
+        this.userName === '10007'){
         const response = await getNickName();
-        this.nickName = response.msg;
-        console.log("nickName:")
-        console.log(this.nickName);
+        this.studentName = response.msg;
       }
       else{
         const response = await axios.get(process.env.VUE_APP_BASE_API + `/system/student/${this.userName}`);
