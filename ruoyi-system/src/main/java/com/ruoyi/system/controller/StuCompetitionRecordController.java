@@ -60,7 +60,7 @@ public class StuCompetitionRecordController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, StuCompetitionRecord stuCompetitionRecord)
     {
-        List<StuCompetitionRecord> list = stuCompetitionRecordService.selectStuCompetitionRecordList(stuCompetitionRecord);
+        List<StuCompetitionRecord> list = stuCompetitionRecordService.selectCompetitionRecordList(stuCompetitionRecord);
         ExcelUtil<StuCompetitionRecord> util = new ExcelUtil<StuCompetitionRecord>(StuCompetitionRecord.class);
         util.exportExcel(response, list, "学生科创竞赛记录数据");
     }

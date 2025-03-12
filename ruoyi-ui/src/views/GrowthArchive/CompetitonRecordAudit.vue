@@ -49,6 +49,18 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item label="获奖时间" prop="awardDate">
+        <el-date-picker
+          v-model="dateRange"
+          type="daterange"
+          @change="handleDateChange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="yyyy-MM-dd"
+          style="width: 350px"
+        ></el-date-picker>
+      </el-form-item>
 
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
@@ -71,7 +83,6 @@
     </el-row>
 
     <el-table v-loading="loading" :data="recordList" @selection-change="handleSelectionChange">
-<!--      <el-table-column type="selection" width="55" align="center" />-->
       <el-table-column label="序号" width="50" align="center">
         <template slot-scope="scope">
           {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
@@ -202,6 +213,7 @@ export default {
   name: "Record",
   data() {
     return {
+      dateRange:[],
       auditStatusOptions: [
         { value: '未审核', label: '未审核' },
         { value: '已通过', label: '已通过' },
@@ -254,7 +266,9 @@ export default {
         auditTime: null,
         auditRemark: null,
         semester: null,
-        studentName: null
+        studentName: null,
+        awardDateBegin: null,
+        awardDateEnd: null
       },
       // 表单参数
       form: {},
@@ -267,6 +281,18 @@ export default {
     this.getList();
   },
   methods: {
+    // 日期选择变化事件
+    handleDateChange(range) {
+      // 处理空值情况
+      if (range && range.length === 2) {
+        this.queryParams.awardDateBegin = range[0];
+        this.queryParams.awardDateEnd = range[1];
+      } else {
+        this.queryParams.awardDateBegin = null;
+        this.queryParams.awardDateEnd = null;
+      }
+      console.log('时间参数:', this.queryParams.awardDateBegin, this.queryParams.awardDateEnd);
+    },
     async downloadFiles(filePaths) {
       try {
         // 解析文件路径
@@ -390,7 +416,9 @@ export default {
         auditTime: null,
         auditRemark: null,
         semester: null,
-        studentName: null
+        studentName: null,
+        awardDateBegin: null,
+        awardDateEnd: null
       };
       this.resetForm("form");
     },
@@ -401,7 +429,15 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
+      // 清空日期选择器
+      this.dateRange = [];
+      // 重置查询参数
+      this.queryParams = {
+        ...this.queryParams,
+        awardDateBegin: null,
+        awardDateEnd: null
+      };
+      // 触发查询
       this.handleQuery();
     },
 

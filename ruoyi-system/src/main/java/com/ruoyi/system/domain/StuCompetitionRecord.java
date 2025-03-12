@@ -7,18 +7,17 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
-/**
- * 学生科创竞赛记录对象 stu_competition_record
- *
- * @author ruoyi
- * @date 2025-03-07
- */
+
 public class StuCompetitionRecord extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
     /** 主键ID */
     private Integer competitionId;
+
+    private String awardDateBegin;
+
+    private String awardDateEnd;
 
     /** 学号 */
     @Excel(name = "学号")
@@ -73,6 +72,22 @@ public class StuCompetitionRecord extends BaseEntity
 
     /** 修读学期 */
     private String semester;
+
+    public String getAwardDateEnd() {
+        return awardDateEnd;
+    }
+
+    public void setAwardDateEnd(String awardDateEnd) {
+        this.awardDateEnd = awardDateEnd;
+    }
+
+    public String getAwardDateBegin() {
+        return awardDateBegin;
+    }
+
+    public void setAwardDateBegin(String awardDateBegin) {
+        this.awardDateBegin = awardDateBegin;
+    }
 
     public void setCompetitionId(Integer competitionId)
     {
