@@ -12,15 +12,11 @@ export function upLoad(query) {
   })
 }
 // 查询讲座记录
-export function fetchLectureReportRecords(queryParams, currentPage, pageSize) {
+export function fetchLectureReportRecords(query) {
   return request({
     url: '/Lecture/records',
     method: 'get',
-    params: {
-      ...queryParams,        // 查询条件
-      currentPage,           // 当前页码
-      pageSize               // 每页显示条数
-    }
+    params: query,
   });
 }
 //更新学生讲座报告信息

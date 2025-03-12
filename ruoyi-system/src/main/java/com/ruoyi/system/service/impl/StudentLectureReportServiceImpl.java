@@ -1,5 +1,9 @@
 package com.ruoyi.system.service.impl;
 
+import com.ruoyi.common.constant.HttpStatus;
+import com.ruoyi.common.core.controller.BaseController;
+import com.github.pagehelper.PageInfo;
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.StuInfo;
 import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
@@ -13,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.ruoyi.common.utils.PageUtils.startPage;
 
 @Service
 public class StudentLectureReportServiceImpl implements StudentLectureReportService {
@@ -52,24 +58,27 @@ public class StudentLectureReportServiceImpl implements StudentLectureReportServ
      * @return
      */
     @Override
-    public List<StuLectureReportVo> getAllCompetitionRecords() {
-        //获取当前登录用户学号
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String studentId = "";
-        if (principal instanceof UserDetails) {
-            studentId = ((UserDetails) principal).getUsername();
-            // 如果用户名就是用户ID，或者你可以根据用户名查询用户ID
-        } else if (principal instanceof String) {
-            // 有时principal可能直接是用户名字符串
-            studentId = (String) principal;
-        }
-        List<StudentLectureReport> allLectureReportRecords = stuLectureReportMapper.getAllLectureReportRecords(studentId);
+    public TableDataInfo getAllCompetitionRecords(Integer semester, String studentId) {
+        startPage();  // 启动分页
+        List<StudentLectureReport> allLectureReportRecords = stuLectureReportMapper.getAllLectureReportRecords(studentId, semester);
+        // 提取分页信息
+        PageInfo<StudentLectureReport> pageInfo = new PageInfo<>(allLectureReportRecords);
+        //拿到总条数
+        long total = pageInfo.getTotal();
+
         List<StuLectureReportVo> lectureReportVoList = allLectureReportRecords.stream().map(record -> {
             StuLectureReportVo vo = new StuLectureReportVo();
             BeanUtils.copyProperties(record, vo);
             return vo;
         }).collect(Collectors.toList());
-        return lectureReportVoList;
+
+        // 封装返回数据
+        TableDataInfo rspData = new TableDataInfo();
+        rspData.setCode(HttpStatus.SUCCESS);
+        rspData.setMsg("查询成功");
+        rspData.setRows(lectureReportVoList);  // 当前页数据
+        rspData.setTotal(total);  // 总记录数
+        return rspData;
     }
 
     @Override

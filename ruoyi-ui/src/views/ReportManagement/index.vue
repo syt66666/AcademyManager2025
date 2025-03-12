@@ -130,7 +130,7 @@
       <!-- 分页器 -->
       <el-pagination
         layout="total, sizes, prev, pager, next, jumper"
-        :current-page.sync="currentPage"
+        :current-page="currentPage"
         :page-size="pageSize"
         :total="totalRecords"
         :page-sizes="[10, 20, 30, 40]"
@@ -244,14 +244,20 @@
             </el-form-item>
             <!-- 报告现场图片上传 -->
             <el-form-item label="现场图片上传" prop="reportPicture">
+<!--              <img-->
+<!--              v-for="(url, i) in previewImages" :key="i"-->
+<!--              :src="url"-->
+<!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
+<!--              alt="证明材料预览"-->
+<!--            />-->
               <el-upload
                 multiple
                 :limit="5"
-                :value="pushReportPicture"
                 :auto-upload="false"
                 :on-change="handleFileChange"
                 :on-remove="handleRemoveFile"
                 :file-list="pushReportPicture"
+                list-type="picture"
               >
                 <i class="el-icon-plus"></i>
                 <template #tip>
@@ -279,6 +285,7 @@
 import axios from "axios";
 import {upLoad, fetchLectureReportRecords, updateActivity, delLectureReport} from "@/api/student/letcure";
 import {formatDate} from "@/utils";
+import store from "@/store";
 
 export default {
   data() {
@@ -376,6 +383,13 @@ export default {
         reportId: row.reportId,
         semester: this.formData.semester,
       };
+      //把过去传入图片回显
+      const paths = typeof row.reportPicture === 'string'
+        ? JSON.parse(row.reportPicture)
+        : row.reportPicture;
+      this.previewImages = paths.map(path => this.getFullUrl(path));
+      // this.pushReportPicture = ["/dev-api/profile/76f8229392c5460f8ec265b69759f6c9_1741441025793.jpg", "/dev-api/profile/76f8229392c5460f8ec265b69759f6c9_1741441025793.jpg", "/dev-api/profile/76f8229392c5460f8ec265b69759f6c9_1741441025793.jpg"];
+
       this.isEdit = true;
       this.showSecondCard = true;
     },
@@ -633,18 +647,19 @@ export default {
     //   // 当用户选择图片时，更新images数组
     //   this.lecturePoster = Array.from(e.target.files);
     // },
-    async fetchLectureReportRecords(queryParams = {}, currentPage = 1, pageSize = 20) {
+    async fetchLectureReportRecords() {
       this.isLoading = true; // 设置为加载状态
       try {
         const data = await fetchLectureReportRecords({
-          ...queryParams,
-          pageNum: currentPage,
-          pageSize: pageSize
+          pageNum: this.currentPage,
+          pageSize: this.pageSize,
+          semester: this.formData.semester,
+          studentId: store.state.user.name,
+          // ...this.queryParams,
         });
         console.log(data);
-        console.log(data.data);
-        this.competitionRecords = data.data.rows || []; // 假设后端返回的数据格式包含 rows
-        this.totalRecords = data.data.total || 0;       // 假设返回总记录数 total
+        this.competitionRecords = data.rows || []; // 假设后端返回的数据格式包含 rows
+        this.totalRecords = data.total || 0;       // 假设返回总记录数 total
       } catch (error) {
         console.error("Error fetching competition records:", error);
       } finally {
@@ -730,6 +745,7 @@ export default {
         //学期
         semester: this.findSemester(this.activeSemester),
       };
+      this.previewImages = [];
       this.$refs.fileInput.value = '';
       this.fetchLectureReportRecords();  // 在页面加载时获取数据
     },

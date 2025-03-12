@@ -1,12 +1,13 @@
 package com.ruoyi.system.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-public class StuLectureReportVo {
+public class StuLectureReportVo extends BaseEntity {
     /**
      * 主键id
      */
