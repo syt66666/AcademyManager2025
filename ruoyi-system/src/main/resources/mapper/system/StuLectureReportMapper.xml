@@ -36,7 +36,15 @@
     </insert>
 
     <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StudentLectureReport">
-        SELECT * FROM stu_lec_report where student_id = #{id}
+        SELECT * FROM stu_lec_report
+        <where>
+            <if test="id != null and id != ''">
+                AND student_id = #{id}
+            </if>
+            <if test="semester != null and semester != ''">
+                AND semester = #{semester}
+            </if>
+        </where>
     </select>
 
     <update id="updateStuLectureInformation">

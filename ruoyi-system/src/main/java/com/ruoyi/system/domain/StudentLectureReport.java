@@ -3,6 +3,7 @@ package com.ruoyi.system.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
  * 学生讲座报告实体类
  */
 @Data
-public class StudentLectureReport {
+public class StudentLectureReport extends BaseEntity {
     /**
      * 学生学号
      */

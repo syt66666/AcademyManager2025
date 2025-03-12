@@ -1,6 +1,7 @@
 package com.ruoyi.system.service;
 
 
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
 
@@ -17,7 +18,7 @@ public interface StudentLectureReportService {
      * 查询学生讲座报告信息
      * @return
      */
-    List<StuLectureReportVo> getAllCompetitionRecords();
+    TableDataInfo getAllCompetitionRecords(Integer semester, String studentId);
 
     /**
      * 更新学生讲座报告信息

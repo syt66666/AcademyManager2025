@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
 import com.ruoyi.system.service.StudentLectureReportService;
@@ -52,10 +53,9 @@ public class StudentLectureReportController extends BaseController{
      * @return
      */
     @GetMapping("/records")
-    public AjaxResult getCompetitionRecords(@RequestParam(value = "semester", required = false) String semester) {
-        startPage();  // 启动分页
-        List<StuLectureReportVo> records = studentLectureReportService.getAllCompetitionRecords(); // 查询记录
-        return AjaxResult.success(getDataTable(records));  // 返回分页数据
+    public TableDataInfo getCompetitionRecords(@RequestParam(value = "semester", required = false) Integer semester,
+                                               @RequestParam(value = "studentId", required = false) String studentId) {
+        return studentLectureReportService.getAllCompetitionRecords(semester, studentId);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.StudentLectureReport;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface StuLectureReportMapper {
     public int insertStuLectureInformation(StudentLectureReport studentLectureReport);
 
     // 查询所有竞赛记录
-    public List<StudentLectureReport> getAllLectureReportRecords(String id);
+    public List<StudentLectureReport> getAllLectureReportRecords(@Param("id") String id,  @Param("semester") Integer semester);
 
     /**
      * 更新学生讲座报告信息
