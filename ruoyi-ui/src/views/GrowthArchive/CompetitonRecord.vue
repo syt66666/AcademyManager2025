@@ -188,7 +188,6 @@
 import axios from "axios";
 import { addRecord, listRecord, delRecord , updateRecord, checkCompetitionUnique } from "@/api/student/competition";
 import store from "@/store";
-import {checkActivityUnique} from "@/api/system/activity"; // 根据实际路径调整
 
 export default {
   data() {

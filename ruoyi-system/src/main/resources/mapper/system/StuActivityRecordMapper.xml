@@ -19,16 +19,18 @@
         <result property="auditStatus"    column="audit_status"    />
         <result property="auditTime"    column="audit_time"    />
         <result property="auditRemark"    column="audit_remark"    />
+        <result property="studentName"    column="student_name"    />
     </resultMap>
 
     <sql id="selectStuActivityRecordVo">
-        select activity_id, student_id, activity_name, activity_level, award_level, scholarship_points, award_date, proof_material, semester, apply_time, nick_name, audit_status, audit_time, audit_remark from stu_activity_record
+        select activity_id, stu_info.student_id, activity_name, activity_level, award_level, scholarship_points, award_date, proof_material, semester, apply_time, nick_name, audit_status, audit_time, audit_remark ,stu_info.student_name from stu_activity_record left join stu_info on stu_activity_record.student_id = stu_info.student_id
     </sql>
 
     <select id="selectStuActivityRecordList" parameterType="StuActivityRecord" resultMap="StuActivityRecordResult">
         <include refid="selectStuActivityRecordVo"/>
         <where>
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="studentId != null  and studentId != ''"> and stu_info.student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''"> and stu_info.student_name = #{studentName}</if>
             <if test="activityName != null  and activityName != ''"> and activity_name like concat('%', #{activityName}, '%')</if>
             <if test="activityLevel != null  and activityLevel != ''"> and activity_level = #{activityLevel}</if>
             <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
@@ -41,6 +43,12 @@
             <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
             <if test="auditTime != null "> and audit_time = #{auditTime}</if>
             <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="awardDateBegin != null and awardDateBegin != ''">
+                AND award_date &gt;= #{awardDateBegin}
+            </if>
+            <if test="awardDateEnd != null and awardDateEnd != ''">
+                AND award_date &lt;= #{awardDateEnd}
+            </if>
         </where>
         ORDER BY
         CASE audit_status
@@ -70,6 +78,12 @@
             <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
             <if test="auditTime != null "> and audit_time = #{auditTime}</if>
             <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="awardDateBegin != null and awardDateBegin != ''">
+                AND award_date &gt;= #{awardDateBegin}
+            </if>
+            <if test="awardDateEnd != null and awardDateEnd != ''">
+                AND award_date &lt;= #{awardDateEnd}
+            </if>
         </where>
         ORDER BY
         CASE audit_status

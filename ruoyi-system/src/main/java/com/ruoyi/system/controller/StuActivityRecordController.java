@@ -63,7 +63,7 @@ public class StuActivityRecordController extends BaseController
     @PostMapping("/export")
     public void export(HttpServletResponse response, StuActivityRecord stuActivityRecord)
     {
-        List<StuActivityRecord> list = stuActivityRecordService.selectStuActivityRecordList(stuActivityRecord);
+        List<StuActivityRecord> list = stuActivityRecordService.selectAuditActivityRecordList(stuActivityRecord);
         ExcelUtil<StuActivityRecord> util = new ExcelUtil<StuActivityRecord>(StuActivityRecord.class);
         util.exportExcel(response, list, "学生文体活动记录数据");
     }
@@ -81,7 +81,7 @@ public class StuActivityRecordController extends BaseController
     /**
      * 新增学生文体活动记录
      */
-//    @PreAuthorize("@ss.hasPermi('system:activity:add')")
+    @PreAuthorize("@ss.hasPermi('system:activity:add')")
     @Log(title = "学生文体活动记录", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestPart("stuActivityRecord") String stuActivityRecordStr,
