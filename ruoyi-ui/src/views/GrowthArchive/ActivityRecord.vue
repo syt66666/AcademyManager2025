@@ -48,15 +48,12 @@
         </el-table-column>
         <el-table-column label="操作">
           <template v-slot="scope">
-            <!-- 原有按钮保持不变 -->
             <el-button
               v-if="scope.row.auditStatus === '未通过'"
               type="text"
               size="mini"
               @click="handleEditDraft(scope.row)"
             >重新提交</el-button>
-
-            <!-- 未提交状态新增删除按钮 -->
             <template v-if="scope.row.auditStatus === '未提交'">
               <el-button
                 type="text"
@@ -131,7 +128,6 @@
     <!-- 新增活动对话框 -->
     <el-dialog :visible.sync="showDialog" title="活动填写" width="50%" @close="closeDialog">
       <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
-        <!-- 表单字段保持不变 -->
         <el-form-item label="活动名称" prop="activityName">
           <el-input v-model="formData.activityName" placeholder="请输入活动名称" style="width: 100%;"></el-input>
         </el-form-item>
@@ -176,7 +172,7 @@
             <div slot="tip" class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
           </el-upload>
         </el-form-item>
-        <!-- 在表单底部添加双按钮 -->
+
         <el-form-item>
           <el-button
             type="info"
@@ -213,7 +209,6 @@ export default {
   },
   data() {
     return {
-      uploadUrl: "http://localhost:8080/competition/add", // 上传接口
       fileList: [], // 已上传的文件列表
       previewVisible: false,
       currentDownloadFile: '',
@@ -243,7 +238,6 @@ export default {
         auditStatus: '未提交',
         auditTime: null,
         auditRemark: '',
-
       },
       rules: {
         activityName: [
@@ -255,7 +249,9 @@ export default {
         awardLevel: [
           { required: true, message: '请选择奖项', trigger: 'change' }
         ],
-        awardDate: [{ required: true, message: '请选择获奖日期', trigger: 'change' }]
+        awardDate: [
+          { required: true, message: '请选择获奖日期', trigger: 'change' }
+        ]
       }
     };
   },
@@ -271,7 +267,7 @@ export default {
           throw new Error("无效的文件路径格式");
         }
         // 处理多个文件下载
-        if (paths.length > 1) {
+        if (paths.length >=1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -282,10 +278,6 @@ export default {
               this.downloadSingleFile(url);
             });
           });
-        } else if (paths.length === 1) {
-          this.previewImage = this.getFullUrl(paths[0]);
-          this.currentDownloadFile = paths[0];
-          this.previewVisible = true;
         }
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
@@ -583,7 +575,7 @@ export default {
           [JSON.stringify(recordData)],
           {type: "application/json"}
         );
-        formData.append("stuActivityRecord", recordBlob); // [!code ++]
+        formData.append("stuActivityRecord", recordBlob);
 
         // 添加文件
         this.fileList.forEach((file) => {
