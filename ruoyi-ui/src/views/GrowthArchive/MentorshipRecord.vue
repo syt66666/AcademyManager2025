@@ -592,6 +592,7 @@ export default {
             guidanceTime: this.formData.guidanceTime,
             semester: this.activeSemester,
             auditStatus: status,
+            studentComment: this.formData.studentComment,
             studentId: this.$store.state.user.name,
             summaryFilePath: this.formData.summaryFilePath,
             photoPaths: JSON.stringify(this.pushMeetingPictures.map(file => file.url)),

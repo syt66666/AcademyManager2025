@@ -116,6 +116,7 @@ public class StuMentorshipRecordController extends BaseController {
                 logger.warn("没有接收到图片++++++++++");
             }
             // 保存记录
+            stuMentorshipRecord.setSubmitTime(new Date());
             stuMentorshipRecordService.insertStuMentorshipRecord(stuMentorshipRecord);
             return AjaxResult.success();
         } catch (Exception e) {
@@ -203,7 +204,7 @@ public class StuMentorshipRecordController extends BaseController {
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
             }
-            stuMentorshipRecord.setUpdateTime(new Date()); // 确保新插入的数据有最新的时间戳
+            stuMentorshipRecord.setSubmitTime(new Date());// 确保新插入的数据有最新的时间戳
             StuMentorshipRecord oldRecord = stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(stuMentorshipRecord.getRecordId());
             List<String> oldFiles = parseMaterialPaths(oldRecord.getPhotoPaths());
             // 处理文件上传

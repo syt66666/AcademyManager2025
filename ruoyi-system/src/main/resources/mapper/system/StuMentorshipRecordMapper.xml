@@ -7,7 +7,6 @@
     <resultMap type="StuMentorshipRecord" id="StuMentorshipRecordResult">
         <result property="recordId"    column="record_id"    />
         <result property="studentId"    column="student_id"    />
-        <result property="tutorId"    column="tutor_id"    />
         <result property="guidanceTopic"    column="guidance_topic"    />
         <result property="guidanceLocation"    column="guidance_location"    />
         <result property="guidanceTime"    column="guidance_time"    />
@@ -40,7 +39,7 @@
     </resultMap>
 
     <sql id="selectStuMentorshipRecordVo">
-        select record_id, student_id, tutor_id, guidance_topic, guidance_location, guidance_time, summary_file_path, photo_paths, semester, submit_time, student_comment, audit_status, audit_time, audit_remark from stu_mentorship_record
+        select record_id, student_id, guidance_topic, guidance_location, guidance_time, summary_file_path, photo_paths, semester, submit_time, student_comment, audit_status, audit_time, audit_remark from stu_mentorship_record
     </sql>
 
     <select id="selectStuMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
@@ -186,7 +185,7 @@
             <if test="submitTime != null">submit_time = #{submitTime},</if>
             <if test="studentComment != null">student_comment = #{studentComment},</if>
             <if test="auditStatus != null">audit_status = #{auditStatus},</if>
-            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            audit_time = #{auditTime},
             <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
         </trim>
         where record_id = #{recordId}

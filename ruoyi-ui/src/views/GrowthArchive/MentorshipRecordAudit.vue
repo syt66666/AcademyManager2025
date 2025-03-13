@@ -54,7 +54,22 @@
           <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="总结文档" align="center" prop="summaryFilePath" />
+<!--      <el-table-column label="总结文档" align="center" prop="summaryFilePath" />-->
+      <el-table-column label="总结文档" width="120">
+        <template v-slot:default="scope">
+          <div class="proof-material-cell">
+            <el-button
+              type="primary"
+              icon="el-icon-download"
+              size="mini"
+              v-if="scope.row.summaryFilePath"
+              @click="downloadSummaryDocument(scope.row.summaryFilePath)"
+            >下载
+            </el-button>
+            <span v-else> </span>
+          </div>
+        </template>
+      </el-table-column>
       <el-table-column label="指导照片" width="120">
         <template v-slot:default="scope">
           <div class="proof-material-cell">
@@ -235,6 +250,33 @@ export default {
     this.getList();
   },
   methods: {
+    // 生成带时间戳的文件名
+    generateSummaryFileName() {
+      const date = new Date().toISOString().slice(0, 10);
+      const ext = this.getSummaryFileExtension();
+      return `summaryFilePath_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+    },
+
+    // 获取文件扩展名
+    getSummaryFileExtension() {
+      if (!this.selectedFile) return '';
+      const match = this.selectedFile.name.match(/\.([a-zA-Z0-9]+)(\?.*)?$/);
+      return match ? match[1].toLowerCase() : '';
+    },
+    //总结文档下载
+    async downloadSummaryDocument(filePath) {
+      try {
+        const link = document.createElement('a');
+        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
+        link.download = this.generateSummaryFileName();
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
+      }
+    },
     async downloadFiles(filePaths) {
       try {
         // 解析文件路径
