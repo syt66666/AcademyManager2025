@@ -10,9 +10,9 @@
 
       <el-table :data="meetingRecords" style="width: 100%" border stripe highlight-current-row>
         <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column prop="guidanceTopic" label="会议主题" min-width="100"></el-table-column>
-        <el-table-column prop="guidanceLocation" label="会议地点" min-width="100"></el-table-column>
-        <el-table-column prop="guidanceTime" label="会议时间" min-width="100"></el-table-column>
+        <el-table-column prop="guidanceTopic" label="指导主题" min-width="100"></el-table-column>
+        <el-table-column prop="guidanceLocation" label="指导地点" min-width="100"></el-table-column>
+        <el-table-column prop="guidanceTime" label="指导时间" min-width="100"></el-table-column>
         <el-table-column label="总结文档" width="120">
           <template v-slot:default="scope">
             <div class="proof-material-cell">
@@ -24,7 +24,7 @@
                 @click="downloadSummaryDocument(scope.row.summaryFilePath)"
               >下载
               </el-button>
-              <span v-else>暂未上传总结文档</span>
+              <span v-else> </span>
             </div>
           </template>
         </el-table-column>
@@ -40,7 +40,7 @@
               >
                 <i class="el-icon-view"></i> 预览
               </el-link>
-              <span v-else>暂未上传现场图片</span>
+              <span v-else> </span>
               <el-button
                 type="primary"
                 icon="el-icon-download"
@@ -145,7 +145,7 @@
       />
     </el-card>
 
-    <!-- 新增会议对话框 -->
+    <!-- 新增指导对话框 -->
     <el-dialog :visible.sync="showDialog" title="导师指导填写" id="newCard"
                style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
       <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
@@ -240,7 +240,6 @@ import {Properties as $download} from "svg-sprite-loader/examples/custom-runtime
 export default {
   data() {
     return {
-      summaryFile: null, //
       currentRecordId: null, // 新增当前记录ID
       isEdit: false,//判断修改还是插入
       previewVisible: false,
@@ -371,12 +370,11 @@ export default {
 
     // 获取文件扩展名
     getSummaryFileExtension() {
-      try {
-        return this.selectedFile.name.split('.').pop().split(/[#?]/)[0] || 'docx';
-      } catch {
-        return 'docx';
-      }
+      if (!this.selectedFile) return '';
+      const match = this.selectedFile.name.match(/\.([a-zA-Z0-9]+)(\?.*)?$/);
+      return match ? match[1].toLowerCase() : '';
     },
+
     //总结文档下载
     async downloadSummaryDocument(filePath) {
       try {
@@ -609,9 +607,7 @@ export default {
           this.pushMeetingPictures.forEach((file) => {
             formData.append("photoPaths", file.raw);
           });
-          console.log("photoPaths：", formData.get("photoPaths"));
           formData.append('summaryFile', this.selectedFile);
-          console.log("summaryFile：", this.selectedFile);
           // 配置 headers
           const config = {
             headers: {
