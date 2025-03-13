@@ -33,8 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/system/mentorship")
-public class StuMentorshipRecordController extends BaseController
-{
+public class StuMentorshipRecordController extends BaseController {
     @Autowired
     private IStuMentorshipRecordService stuMentorshipRecordService;
 
@@ -43,8 +42,7 @@ public class StuMentorshipRecordController extends BaseController
      */
     //@PreAuthorize("@ss.hasPermi('system:mentorship:list')")
     @GetMapping("/list")
-    public TableDataInfo list(StuMentorshipRecord stuMentorshipRecord)
-    {
+    public TableDataInfo list(StuMentorshipRecord stuMentorshipRecord) {
         startPage();
         List<StuMentorshipRecord> list = stuMentorshipRecordService.selectStuMentorshipRecordList(stuMentorshipRecord);
         return getDataTable(list);
@@ -56,8 +54,7 @@ public class StuMentorshipRecordController extends BaseController
     @PreAuthorize("@ss.hasPermi('system:mentorship:export')")
     @Log(title = "导师指导记录", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, StuMentorshipRecord stuMentorshipRecord)
-    {
+    public void export(HttpServletResponse response, StuMentorshipRecord stuMentorshipRecord) {
         List<StuMentorshipRecord> list = stuMentorshipRecordService.selectStuMentorshipRecordList(stuMentorshipRecord);
         ExcelUtil<StuMentorshipRecord> util = new ExcelUtil<StuMentorshipRecord>(StuMentorshipRecord.class);
         util.exportExcel(response, list, "导师指导记录数据");
@@ -68,8 +65,7 @@ public class StuMentorshipRecordController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:mentorship:query')")
     @GetMapping(value = "/{recordId}")
-    public AjaxResult getInfo(@PathVariable("recordId") Integer recordId)
-    {
+    public AjaxResult getInfo(@PathVariable("recordId") Integer recordId) {
         return success(stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(recordId));
     }
 
@@ -85,15 +81,23 @@ public class StuMentorshipRecordController extends BaseController
     @PostMapping
 
     public AjaxResult add(@RequestPart("record") StuMentorshipRecord stuMentorshipRecord,
+                          @RequestPart(value = "summaryFile", required = false) MultipartFile summaryFile,
                           @RequestPart(value = "photoPaths", required = false) MultipartFile[] photoPaths,
-                          @RequestHeader(value = "Authorization", required = false) String token)
-    {
+                          @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             // 验证 Token
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
             }
             stuMentorshipRecord.setUpdateTime(new Date()); // 确保新插入的数据有最新的时间戳
+            System.out.println("接收到的文件参数: " + summaryFile);
+            // 处理总结文档
+            if (summaryFile != null && !summaryFile.isEmpty()) {
+                String summaryPath = saveFile(summaryFile);
+                stuMentorshipRecord.setSummaryFilePath(summaryPath);
+                System.out.println("接收到的总结文档路径: " + summaryPath);
+            }
+
             // 处理文件上传
             if (photoPaths != null && photoPaths.length > 0) {
                 List<String> filePaths = new ArrayList<>();
@@ -146,10 +150,12 @@ public class StuMentorshipRecordController extends BaseController
 
         return fileName; // 返回带时间戳的文件名
     }
+
     private boolean validateToken(String token) {
         // TODO: 实现 Token 验证逻辑
         return true; // 暂时返回 true
     }
+
     @GetMapping("/download")
     public void downloadFile(@RequestParam String filePath,
                              HttpServletResponse response) throws IOException {
@@ -179,6 +185,7 @@ public class StuMentorshipRecordController extends BaseController
         // 高效传输文件
         Files.copy(targetPath, response.getOutputStream());
     }
+
     /**
      * 修改导师指导记录
      */
@@ -187,8 +194,7 @@ public class StuMentorshipRecordController extends BaseController
     @PutMapping
     public AjaxResult edit(@RequestPart("record") StuMentorshipRecord stuMentorshipRecord,
                            @RequestPart(value = "photoPaths", required = false) MultipartFile[] photoPaths,
-                           @RequestHeader(value = "Authorization", required = false) String token)
-    {
+                           @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             // 验证 Token
             if (token == null || !validateToken(token)) {
@@ -207,8 +213,7 @@ public class StuMentorshipRecordController extends BaseController
                 stuMentorshipRecord.setPhotoPaths(new ObjectMapper().writeValueAsString(filePaths));
                 // 清理旧文件
                 deleteOldFiles(oldFiles);
-            }
-            else {
+            } else {
                 // 保留原有文件路径
                 stuMentorshipRecord.setPhotoPaths(oldRecord.getPhotoPaths());
             }
@@ -220,12 +225,14 @@ public class StuMentorshipRecordController extends BaseController
         }
         //return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(stuMentorshipRecord));
     }
+
     // 辅助方法：解析材料路径
     private List<String> parseMaterialPaths(String materialJson) throws IOException {
         if (materialJson == null || materialJson.isEmpty()) {
             return new ArrayList<>();
         }
-        return new ObjectMapper().readValue(materialJson, new TypeReference<List<String>>() {});
+        return new ObjectMapper().readValue(materialJson, new TypeReference<List<String>>() {
+        });
     }
 
     // 辅助方法：删除旧文件
@@ -250,8 +257,7 @@ public class StuMentorshipRecordController extends BaseController
     //@PreAuthorize("@ss.hasPermi('system:mentorship:remove')")
     @Log(title = "导师指导记录", businessType = BusinessType.DELETE)
     @DeleteMapping("/{recordIds}")
-    public AjaxResult remove(@PathVariable Integer[] recordIds)
-    {
+    public AjaxResult remove(@PathVariable Integer[] recordIds) {
         return toAjax(stuMentorshipRecordService.deleteStuMentorshipRecordByRecordIds(recordIds));
     }
 

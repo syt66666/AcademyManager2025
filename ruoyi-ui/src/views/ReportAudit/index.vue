@@ -64,7 +64,7 @@
             </el-form-item>
             <el-form-item>
               <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">连接</span>
+                <span class="form-item-label" style="font-size: 16px;">链接</span>
                 <el-input v-model="formData.link" style="width: 100%; flex: 1;"></el-input>
               </div>
             </el-form-item>

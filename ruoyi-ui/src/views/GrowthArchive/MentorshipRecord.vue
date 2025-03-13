@@ -77,20 +77,23 @@
                 type="text"
                 size="mini"
                 @click="handleEditDraft(scope.row)"
-              >编辑草稿</el-button>
+              >编辑草稿
+              </el-button>
               <el-button
                 type="text"
                 size="mini"
                 style="color: #F56C6C;"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+              >删除
+              </el-button>
             </template>
 
             <el-tag
               v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
               type="info"
               size="mini"
-            >不可修改</el-tag>
+            >不可修改
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="auditTime" label="审核时间" min-width="100"></el-table-column>
@@ -143,79 +146,101 @@
     </el-card>
 
     <!-- 新增会议对话框 -->
-      <el-dialog :visible.sync="showDialog" title="导师指导填写" id="newCard" style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
-          <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
-            <el-form-item label="指导主题" prop="guidanceTopic">
-              <el-input v-model="formData.guidanceTopic" placeholder="请输入指导主题" style="width: 100%;"></el-input>
-            </el-form-item>
-            <el-form-item label="指导地点" prop="guidanceLocation">
-              <el-input v-model="formData.guidanceLocation" placeholder="请输入指导地点" style="width: 100%;"></el-input>
-            </el-form-item>
+    <el-dialog :visible.sync="showDialog" title="导师指导填写" id="newCard"
+               style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
+      <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
+        <el-form-item label="指导主题" prop="guidanceTopic">
+          <el-input v-model="formData.guidanceTopic" placeholder="请输入指导主题" style="width: 100%;"></el-input>
+        </el-form-item>
+        <el-form-item label="指导地点" prop="guidanceLocation">
+          <el-input v-model="formData.guidanceLocation" placeholder="请输入指导地点" style="width: 100%;"></el-input>
+        </el-form-item>
 
-            <el-form-item label="指导日期" prop="guidanceTime">
-              <el-date-picker
-                clearable
-                v-model="formData.guidanceTime"
-                type="date"
-                value-format="yyyy-MM-dd"
-                placeholder="请选择指导日期"
-                style="width: 100%;">
-              </el-date-picker>
-            </el-form-item>
-            <el-form-item label="评价导师" prop="studentComment">
-              <el-input v-model="formData.studentComment" placeholder="请输入对本次导师指导的评价" style="width: 100%;"></el-input>
-            </el-form-item>
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">总结文档上传</span>
-                <input type="file" @change="onFileChange" accept="*/*" ref="fileInput"/>
+        <el-form-item label="指导日期" prop="guidanceTime">
+          <el-date-picker
+            clearable
+            v-model="formData.guidanceTime"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择指导日期"
+            style="width: 100%;">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="评价导师" prop="studentComment">
+          <el-input v-model="formData.studentComment" placeholder="请输入对本次导师指导的评价"
+                    style="width: 100%;"></el-input>
+        </el-form-item>
+        <!-- 总结文档上传 -->
+        <el-form-item label="总结文档" prop="summaryFilePath">
+          <el-upload
+            :auto-upload="false"
+            :limit="1"
+            :on-change="handleSummaryChange"
+            :on-remove="handleSummaryRemove"
+            :file-list="summaryFileList"
+          >
+            <el-button type="primary">选择文件</el-button>
+            <template #tip>
+              <div class="el-upload__tip">仅支持单个文件上传</div>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <!-- 现场图片上传 -->
+        <el-form-item label="现场图片上传" prop="photoPaths">
+          <el-upload
+            multiple
+            :limit="5"
+            :value="pushMeetingPictures"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+            :on-remove="handleRemoveFile"
+            :file-list="pushMeetingPictures"
+          >
+            <i class="el-icon-plus"></i>
+            <template #tip>
+              <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
+                <br>
+                <span
+                  style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写总结文档和现场图片，且之前总结文档和现场图片不会保留</span>
               </div>
-            </el-form-item>
-            <!-- 现场图片上传 -->
-            <el-form-item label="现场图片上传" prop="photoPaths">
-              <el-upload
-                multiple
-                :limit="5"
-                :value="pushMeetingPictures"
-                :auto-upload="false"
-                :on-change="handleFileChange"
-                :on-remove="handleRemoveFile"
-                :file-list="pushMeetingPictures"
-              >
-                <i class="el-icon-plus"></i>
-                <template #tip>
-                  <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
-                    <br>
-                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写总结文档和现场图片，且之前总结文档和现场图片不会保留</span>
-                  </div>
-                </template>
-              </el-upload>
-            </el-form-item>
+            </template>
+          </el-upload>
+        </el-form-item>
 
-            <el-form-item>
-              <el-button
-                type="info"
-                @click="handleSave"
-                style="margin-right: 10px;"
-              >保存草稿</el-button>
-              <el-button
-                type="primary"
-                @click="handleSubmit"
-                style="background-color: #42b983; border-color: #42b983;"
-              >正式提交</el-button>
-            </el-form-item>
-          </el-form>
-      </el-dialog>
+        <el-form-item>
+          <el-button
+            type="info"
+            @click="handleSave"
+            style="margin-right: 10px;"
+          >保存草稿
+          </el-button>
+          <el-button
+            type="primary"
+            @click="handleSubmit"
+            style="background-color: #42b983; border-color: #42b983;"
+          >正式提交
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </el-row>
 </template>
 
 <script>
 import axios from "axios";
-import {listMentorship, addMentorship, delMentorship, updateMentorship, checkMentorshipUnique,} from "@/api/system/mentorship";
+import {
+  listMentorship,
+  addMentorship,
+  delMentorship,
+  updateMentorship,
+  checkMentorshipUnique, uploadFile,
+} from "@/api/system/mentorship";
+import {Properties as $download} from "svg-sprite-loader/examples/custom-runtime-generator/build/main";
 
 export default {
   data() {
     return {
+      summaryFile: null, //
       currentRecordId: null, // 新增当前记录ID
       isEdit: false,//判断修改还是插入
       previewVisible: false,
@@ -231,6 +256,7 @@ export default {
       selectedFile: null,
       uploadMessage: null,
       summaryFilePath: null,
+      summaryFileList: [],
       pushMeetingPictures: [],
       activeSemester: '', // 当前学期
       formData: {
@@ -247,13 +273,13 @@ export default {
       },
       rules: {
         guidanceTopic: [
-          { required: true, message: '指导主题不能为空', trigger: 'blur' }
+          {required: true, message: '指导主题不能为空', trigger: 'blur'}
         ],
         guidanceLocation: [
-          { required: true, message: '指导地点不能为空', trigger: 'blur' }
+          {required: true, message: '指导地点不能为空', trigger: 'blur'}
         ],
         guidanceTime: [
-          { required: true, message: '请选择指导时间', trigger: 'change' }
+          {required: true, message: '请选择指导时间', trigger: 'change'}
         ]
       }
     };
@@ -265,6 +291,27 @@ export default {
     this.fetchMeetingRecords();  // 在页面加载时获取数据
   },
   methods: {
+// 修改后的总结文档处理方法
+    handleSummaryChange(file, fileList) {
+      if (fileList.length > 1) {
+        this.$message.warning('只能上传一个文件')
+        fileList.splice(0, 1)
+      }
+
+      // 关键修改：获取原生文件对象
+      this.summaryFileList = fileList
+      this.selectedFile = file.raw // 使用 raw 属性获取原生 File
+      console.log(this.selectedFile)
+    },
+
+    // 文件移除回调
+    handleSummaryRemove() {
+      this.summaryFileList = []
+    },
+
+    $download() {
+      return $download
+    },
     //保存草稿
     async handleSave() {
       await this.submitForm("未提交");
@@ -356,7 +403,7 @@ export default {
           throw new Error("无效的文件路径格式");
         }
         // 处理多个文件下载
-        if (paths.length >=1) {
+        if (paths.length >= 1) {
           this.$confirm(`本次下载包含${paths.length}个图片，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -476,7 +523,6 @@ export default {
       // 当用户选择文件时，更新file变量
       this.summaryFilePath = e.target.files[0];
       this.formData.summaryFilePath = this.summaryFilePath ? this.summaryFilePath.name : '';
-      console.log("文件：",this.summaryFilePath)
     },
     // 数据获取方法
     async fetchMeetingRecords() {
@@ -486,17 +532,14 @@ export default {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
           studentId: this.$store.state.user.name,
-          semester:this.activeSemester,
-          pushMeetingPictures:this.pushMeetingPictures,
+          semester: this.activeSemester,
+          pushMeetingPictures: this.pushMeetingPictures,
           ...this.queryParams
         };
 
         const response = await listMentorship(params);
-        console.log("获取的参数：",params)
         if (response.code === 200) {
           this.meetingRecords = response.rows || [];
-          console.log("会议记录列表:", this.meetingRecords);
-
           this.totalRecords = response.total || 0;
 
         }
@@ -509,92 +552,93 @@ export default {
     // 统一提交方法
     async submitForm(status) {
       this.$refs.form.validate(async (valid) => {
-          if (valid) {
-            // 获取原始记录数据（编辑时）
-            const originalRecord = this.activityRecords.find(
-              item => item.recordId === this.currentRecordId
-            );
-            console.log("this.currentRecordId:" + this.currentRecordId)
-            // 检测关键字段是否修改
-            const isKeyFieldChanged = !originalRecord ||
-              this.formData.guidanceTopic !== originalRecord.guidanceTopic ||
-              this.formData.guidanceLocation !== originalRecord.guidanceLocation ||
-              this.formData.guidanceTime !== originalRecord.guidanceTime;
-              console.log("isKeyFieldChanged:" + isKeyFieldChanged)
-              console.log("this.currentRecordId:" + this.currentRecordId)
-              const shouldCheckUnique = !this.currentRecordId || isKeyFieldChanged;
-            // 编辑时排除自身
-            if (shouldCheckUnique) {
-              // 唯一性校验参数
-              const checkParams = {
-                studentId: this.$store.state.user.name,
-                guidanceTopic: this.formData.guidanceTopic,
-                guidanceLocation: this.formData.guidanceLocation,
-                guidanceTime: this.formData.guidanceTime,
-                semester: this.activeSemester,
-                // studentComment: this.formData.studentComment,
-                // auditStatus: status,
-              };
-              const checkRes = await checkMentorshipUnique(checkParams);
-              if (checkRes.code !== 200) {
-                return this.$message.error('已存在相同活动记录，不可重复添加');
-              }
+        if (valid) {
+          // 获取原始记录数据（编辑时）
+          const originalRecord = this.meetingRecords.find(
+            item => item.recordId === this.currentRecordId
+          );
+          // 检测关键字段是否修改
+          const isKeyFieldChanged = !originalRecord ||
+            this.formData.guidanceTopic !== originalRecord.guidanceTopic ||
+            this.formData.guidanceLocation !== originalRecord.guidanceLocation ||
+            this.formData.guidanceTime !== originalRecord.guidanceTime;
+          const shouldCheckUnique = !this.currentRecordId || isKeyFieldChanged;
+          // 编辑时排除自身
+          if (shouldCheckUnique) {
+            // 唯一性校验参数
+            const checkParams = {
+              studentId: this.$store.state.user.name,
+              guidanceTopic: this.formData.guidanceTopic,
+              guidanceLocation: this.formData.guidanceLocation,
+              guidanceTime: this.formData.guidanceTime,
+              semester: this.activeSemester,
+              // studentComment: this.formData.studentComment,
+              // auditStatus: status,
+            };
+            const checkRes = await checkMentorshipUnique(checkParams);
+            if (checkRes.code !== 200) {
+              return this.$message.error('已存在相同活动记录，不可重复添加');
             }
-        const formData = new FormData();
-        // 构建核心数据对象
-        const recordData = {
-          recordId: this.currentRecordId, // 携带当前记录ID
-          guidanceTopic: this.formData.guidanceTopic,
-          guidanceLocation: this.formData.guidanceLocation,
-          guidanceTime: this.formData.guidanceTime,
-          semester: this.activeSemester,
-          auditStatus: status,
-          studentId: this.$store.state.user.name,
-          photoPaths: JSON.stringify(this.pushMeetingPictures.map(file => file.url)),
-          auditTime: null,
-          auditRemark: "",
-        };
-        if (this.currentRecordId) {
-          recordData.activityId = this.currentRecordId;
-        }
-        // 构建 JSON 部分（指定类型为 application/json）
-        const recordBlob = new Blob(
-          [JSON.stringify(recordData)],
-          { type: "application/json" }
-        );
-        formData.append("record", recordBlob);
-        //添加文件
-        this.pushMeetingPictures.forEach((file) => {
-          formData.append("photoPaths", file.raw);
-        });
-        console.log("photoPaths：", formData.get("photoPaths"));
-
-        // 配置 headers
-        const config = {
-          headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token"),
-            "Content-Type": "multipart/form-data"
           }
-        };
+          const formData = new FormData();
 
-        // 根据模式选择 API 方法
-        const apiMethod = this.currentRecordId ? updateMentorship : addMentorship;
-        apiMethod(formData, config)
-          .then(() => {
-            this.$message.success(this.currentRecordId ? "更新成功！" : "提交成功！");
-            this.fetchMeetingRecords();
-            this.closeCard();
-            this.currentRecordId = null; // 清空当前记录ID
-          })
-          .catch(error => {
-            this.$message.error(`操作失败：${error.message}`);
+          // 构建核心数据对象
+          const recordData = {
+            recordId: this.currentRecordId, // 携带当前记录ID
+            guidanceTopic: this.formData.guidanceTopic,
+            guidanceLocation: this.formData.guidanceLocation,
+            guidanceTime: this.formData.guidanceTime,
+            semester: this.activeSemester,
+            auditStatus: status,
+            studentId: this.$store.state.user.name,
+            summaryFilePath: this.formData.summaryFilePath,
+            photoPaths: JSON.stringify(this.pushMeetingPictures.map(file => file.url)),
+            auditTime: null,
+            auditRemark: "",
+          };
+          if (this.currentRecordId) {
+            recordData.recordId = this.currentRecordId;
+          }
+          // 构建 JSON 部分（指定类型为 application/json）
+          const recordBlob = new Blob(
+            [JSON.stringify(recordData)],
+            {type: "application/json"}
+          );
+          formData.append("record", recordBlob);
+          //添加文件
+          this.pushMeetingPictures.forEach((file) => {
+            formData.append("photoPaths", file.raw);
           });
-          }
+          console.log("photoPaths：", formData.get("photoPaths"));
+          formData.append('summaryFile', this.selectedFile);
+          console.log("summaryFile：", this.selectedFile);
+          // 配置 headers
+          const config = {
+            headers: {
+              "Authorization": "Bearer " + localStorage.getItem("token"),
+              "Content-Type": "multipart/form-data"
+            }
+          };
+
+          // 根据模式选择 API 方法
+          const apiMethod = this.currentRecordId ? updateMentorship : addMentorship;
+          apiMethod(formData, config)
+            .then(() => {
+              this.$message.success(this.currentRecordId ? "更新成功！" : "提交成功！");
+              this.fetchMeetingRecords();
+              this.closeCard();
+              this.currentRecordId = null; // 清空当前记录ID
+            })
+            .catch(error => {
+              this.$message.error(`操作失败：${error.message}`);
+            });
+        }
       });
     },
     initData() {
       this.fetchMeetingRecords();  // 在页面加载时获取数据
     },
+
   }
 };
 </script>

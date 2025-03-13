@@ -642,11 +642,9 @@ export default {
     onFileChange(e) {
       // 当用户选择文件时，更新file变量
       this.reportFeeling = e.target.files[0];
+      console.log('选择的文件:', this.reportFeeling);
     },
-    // onImageChange(e) {
-    //   // 当用户选择图片时，更新images数组
-    //   this.lecturePoster = Array.from(e.target.files);
-    // },
+
     async fetchLectureReportRecords() {
       this.isLoading = true; // 设置为加载状态
       try {
@@ -666,6 +664,7 @@ export default {
         this.isLoading = false; // 无论成功还是失败，结束加载状态
       }
     },
+
     submitForm() {
       this.$refs.form.validate((valid) => {
         if (valid) {
@@ -691,6 +690,7 @@ export default {
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
           formData.append('reportFeeling', this.reportFeeling);
+          console.log('表单数据formData.reportFeeling:', this.reportFeeling);
           // 添加图片（字段名必须与后端一致）
           this.pushReportPicture.forEach((file) => {
             formData.append("reportPicture", file.raw);
