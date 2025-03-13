@@ -1,36 +1,30 @@
 <template>
-  <el-row type="flex" justify="center">
-
-    <!-- 讲座报告卡片 -->
+  <el-row type="flex" justify="center" style="margin-top: 4vh;">
     <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
       <!-- 顶部标题栏 -->
       <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px;">
-        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">
-          <span>📚</span>
-          讲座报告
-          <span class="current-semester">{{ activeSemester }} 报告记录</span>
-        </h1>
+        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">讲座报告</h1>
         <el-button type="primary" icon="el-icon-plus" circle size="medium" @click="addNewCard"
                    style="background-color: #42b983; border-color: #42b983;"></el-button>
       </div>
 
-      <el-table :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
+      <el-table :data="records" style="width: 100%" border stripe highlight-current-row>
         <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column prop="reportTitle" label="题目" min-width="180"></el-table-column>
-        <el-table-column prop="reporter" label="报告人" min-width="150"></el-table-column>
-        <el-table-column prop="reportDate" label="报告时间" min-width="151"></el-table-column>
-        <el-table-column prop="reportContent" label="内容简介" min-width="150"></el-table-column>
-        <el-table-column prop="reportLink" label="链接" min-width="150"></el-table-column>
-        <el-table-column label="报告海报" width="120">
+        <el-table-column prop="reportTitle" label="讲座题目" ></el-table-column>
+        <el-table-column prop="reporter" label="讲师姓名" ></el-table-column>
+        <el-table-column prop="reportDate" label="讲座时间" ></el-table-column>
+        <el-table-column prop="reportContent" label="讲座内容简介" ></el-table-column>
+        <el-table-column prop="reportLink" label="讲座链接" ></el-table-column>
+        <el-table-column label="讲座海报" >
           <template v-slot:default="scope">
             <img
               :src="getImageUrl(scope.row.lecturePoster)"
-              alt="报告海报"
+              alt="讲座海报"
               style="width: 50px; height: 50px; cursor: pointer;"
               v-if="scope.row.lecturePoster"
               @click="handleImageClick(scope.row.lecturePoster)"
             />
-            <span v-else>无图片</span>
+            <span v-else> </span>
           </template>
         </el-table-column>
         <el-table-column label="心得体会" width="120">
@@ -44,7 +38,7 @@
                 @click="downloadReportFeeling(scope.row.reportFeeling)"
               >下载
               </el-button>
-              <span v-else>暂未上交过心得体会</span>
+              <span v-else> </span>
             </div>
           </template>
         </el-table-column>
@@ -70,7 +64,21 @@
             </div>
           </template>
         </el-table-column>
-
+        <el-table-column prop="auditStatus" label="审核状态" min-width="80">
+          <template slot-scope="scope">
+            <span>
+              <el-tag v-if="formatAuditStatus(scope.row.auditStatus) === '未审核'"
+                      type="warning">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '已通过'"
+                      type="success">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未通过'"
+                      type="danger">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未提交'"
+                      type="info">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else>未知状态</el-tag>
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column label="操作">
           <template v-slot="scope">
             <el-button
@@ -96,7 +104,6 @@
               >删除
               </el-button>
             </template>
-
             <el-tag
               v-if="['未审核', '已通过'].includes(formatAuditStatus(scope.row.auditStatus))"
               type="info"
@@ -105,48 +112,17 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="auditStatus" label="审核状态" min-width="150">
-          <template slot-scope="scope">
-            <span>
-              <el-tag v-if="formatAuditStatus(scope.row.auditStatus) === '未审核'"
-                      type="warning">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '已通过'"
-                      type="success">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未通过'"
-                      type="danger">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未提交'"
-                      type="info">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
-              <el-tag v-else>未知状态</el-tag>
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="reportAdmitTime" label="报告提交时间" min-width="151"></el-table-column>
-        <el-table-column prop="auditTime" label="审核时间" min-width="150"></el-table-column>
+        <el-table-column prop="auditTime" label="审核时间" min-width="100"></el-table-column>
         <el-table-column prop="auditRemark" label="审核意见" min-width="150"></el-table-column>
-        <el-table-column prop="nickName" label="审核人姓名" min-width="150"></el-table-column>
-
       </el-table>
 
-      <!-- 分页器 -->
-      <el-pagination
-        layout="total, sizes, prev, pager, next, jumper"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :total="totalRecords"
-        :page-sizes="[10, 20, 30, 40]"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        style="text-align: center; margin-top: 10px;"
-      />
-    </el-card>
-
-    <!-- 图片预览对话框 -->
+    <!-- 现场图片预览对话框 -->
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
       <div style="text-align: center; margin-bottom: 20px;">
         <img
           :src="previewImages[currentPreviewIndex]"
           style="max-width: 100%; display: block; margin: 0 auto;"
-          alt="证明材料预览"
+          alt="现场照片预览"
         />
         <el-button
           icon="el-icon-arrow-left"
@@ -172,8 +148,8 @@
       </div>
     </el-dialog>
 
-    <!-- 图片预览对话框 -->
-    <el-dialog :visible.sync="dialogVisible" title="查看图片" width="50%">
+    <!-- 讲座海报图片预览对话框 -->
+    <el-dialog :visible.sync="dialogVisible" title="图片预览" width="50%">
       <div style="position: relative;">
         <img :src="getImageUrl(currentLecturePoster)" alt="报告海报大图" style="width: 100%; height: auto;"/>
         <div style="position: absolute; bottom: 20px; right: 20px;">
@@ -188,51 +164,22 @@
       </div>
     </el-dialog>
 
-    <transition name="fade">
-      <el-dialog :visible.sync="showSecondCard" id="newCard" style="width: 100%; margin-top: 2vh;margin-left: 1%"
-                 @close="closeCard">
-        <div style="display: flex; align-items: center; justify-content: center;">
-          <h1>报告填写</h1>
-        </div>
-        <div style="display: flex; flex-direction: column;">
-          <el-form ref="form" :model="formData" label-width="120px" label-position="right">
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">题目</span>
-                <el-input v-model="formData.reportTitle" style="width: 100%; flex: 1;"></el-input>
-              </div>
-            </el-form-item>
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">报告人</span>
-                <el-input v-model="formData.reporter" style="width: 100%; flex: 1;"></el-input>
-              </div>
-            </el-form-item>
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">时间</span>
-                <el-date-picker v-model="formData.reportDate" type="datetime"
-                                style="width: 100%; flex: 1;"></el-date-picker>
-              </div>
-            </el-form-item>
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">讲座简介</span>
-                <el-input v-model="formData.reportContent" type="textarea" style="width: 100%; flex: 1;"></el-input>
-              </div>
-            </el-form-item>
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;">链接</span>
-                <el-input v-model="formData.reportLink" style="width: 100%; flex: 1;"></el-input>
-              </div>
-            </el-form-item>
-            <el-form-item>
-              <div style="display: flex; align-items: center;">
-                <span class="form-item-label" style="font-size: 16px;height: auto">报告心得体会上传</span>
-                <input type="file" @change="onFileChange" accept="*/*" ref="fileInput"/>
-              </div>
-            </el-form-item>
+      <!-- 分页器 -->
+      <el-pagination
+        layout="total, sizes, prev, pager, next, jumper"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total="totalRecords"
+        :page-sizes="[10, 20, 30, 40]"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        style="text-align: center; margin-top: 10px;"
+      />
+    </el-card>
+
+        <el-dialog :visible.sync="showDialog" title="讲座报告填写" id="newCard"
+                   style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
+          <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
             <el-form-item label="报告海报上传" prop="lecturePoster">
               <imageUpload
                 v-model="formData.lecturePoster"
@@ -242,15 +189,54 @@
                 :isShowTip="true"
               />
             </el-form-item>
+            <el-form-item label="讲座题目" prop="reportTitle">
+              <el-input v-model="formData.reportTitle" placeholder="请输入讲座题目" style="width: 100%;"></el-input>
+            </el-form-item>
+            <el-form-item label="讲师姓名" prop="reporter">
+              <el-input v-model="formData.reporter" placeholder="请输入讲师姓名" style="width: 100%;"></el-input>
+            </el-form-item>
+            <el-form-item label="讲座日期" prop="reportDate">
+              <el-date-picker
+                clearable
+                v-model="formData.reportDate"
+                type="date"
+                value-format="yyyy-MM-dd"
+                placeholder="请选择讲座日期"
+                style="width: 100%;">
+              </el-date-picker>
+            </el-form-item>
+            <el-form-item label="讲座简介" prop="reportContent">
+              <el-input v-model="formData.reportContent" placeholder="请输入讲座简介" style="width: 100%;"></el-input>
+            </el-form-item>
+            <el-form-item label="讲座链接" prop="reportLink">
+              <el-input v-model="formData.reportLink" placeholder="请输入讲座链接" style="width: 100%;"></el-input>
+            </el-form-item>
+            <!-- 总结文档上传 -->
+            <el-form-item label="总结文档" prop="summaryFilePath">
+              <el-upload
+                :auto-upload="false"
+                :limit="1"
+                :on-change="handleSummaryChange"
+                :on-remove="handleSummaryRemove"
+                :file-list="reportFeelingList"
+              >
+                <el-button type="primary">选择文件</el-button>
+                <template #tip>
+                  <div class="el-upload__tip">仅支持单个文件上传</div>
+                </template>
+              </el-upload>
+            </el-form-item>
+
             <!-- 报告现场图片上传 -->
             <el-form-item label="现场图片上传" prop="reportPicture">
-<!--              <img-->
-<!--              v-for="(url, i) in previewImages" :key="i"-->
-<!--              :src="url"-->
-<!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
-<!--              alt="证明材料预览"-->
-<!--            />-->
-              <div v-for="(url, i) in previewImages" :key="i" style="position: relative; display: inline-block; margin: 0 auto;">
+              <!--              <img-->
+              <!--              v-for="(url, i) in previewImages" :key="i"-->
+              <!--              :src="url"-->
+              <!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
+              <!--              alt="证明材料预览"-->
+              <!--            />-->
+              <div v-for="(url, i) in previewImages" :key="i"
+                   style="position: relative; display: inline-block; margin: 0 auto;">
                 <img
                   :src="url"
                   style="width: 100px; height: 100px; display: inline-block;"
@@ -275,22 +261,22 @@
                 <i class="el-icon-plus"></i>
                 <template #tip>
                   <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
-<!--                    <br>-->
-<!--                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>-->
+                    <!--                    <br>-->
+                    <!--                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>-->
                   </div>
                 </template>
               </el-upload>
             </el-form-item>
             <el-form-item>
+
               <div style="display: flex; align-items: center; justify-content: right;">
                 <el-button type="info" @click="handleSave">保存草稿</el-button>
                 <el-button type="primary" @click="handleSubmit" style="margin-right: 3vh">正式提交</el-button>
               </div>
             </el-form-item>
           </el-form>
-        </div>
       </el-dialog>
-    </transition>
+
   </el-row>
 </template>
 
@@ -303,6 +289,7 @@ import store from "@/store";
 export default {
   data() {
     return {
+      reportFeelingList: [], // 总结文档上传列表
       isEdit: false,//判断修改还是插入
       previewVisible: false,
       previewImages: [],
@@ -311,14 +298,13 @@ export default {
       dialogVisible: false,
       currentLecturePoster: '',
       baseUrl: process.env.VUE_APP_BASE_API,
-      competitionRecords: [],// 存储后端返回的讲座报告记录数据
+      records: [],// 存储后端返回的讲座报告记录数据
       queryParams: {}, // 查询条件
       currentPage: 1, // 当前页
       pageSize: 10, // 每页显示的条数
       totalRecords: 0, // 总记录数
-      showSecondCard: false,
+      showDialog: false,
       newCardInfo: '',
-      selectedFile: null,
       uploadMessage: null,
       reportFeeling: null,
       currentImage: '',
@@ -368,7 +354,7 @@ export default {
         const response = await delLectureReport(row.reportId);
         if (response.code === 200) {
           this.$message.success('删除成功');
-          await this.initData();
+          this.initData();
           // localStorage.removeItem(this.getDraftKey());
         }
       } catch (error) {
@@ -403,9 +389,8 @@ export default {
       this.previewImages = paths.map(path => this.getFullUrl(path));
 
       this.isEdit = true;
-      this.showSecondCard = true;
+      this.showDialog = true;
     },
-
 
     // 生成带时间戳的文件名
     generateFeelingFileName() {
@@ -413,14 +398,11 @@ export default {
       const ext = this.getFeelingFileExtension();
       return `reportFeeling_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
     },
-
     // 获取文件扩展名
     getFeelingFileExtension() {
-      try {
-        return this.currentImage.split('.').pop().split(/[#?]/)[0] || 'docx';
-      } catch {
-        return 'docx';
-      }
+      if (!this.reportFeeling) return '';
+      const match = this.reportFeeling.name.match(/\.([a-zA-Z0-9]+)(\?.*)?$/);
+      return match ? match[1].toLowerCase() : '';
     },
     //心得体会下载
     async downloadReportFeeling(filePaths) {
@@ -505,6 +487,7 @@ export default {
     getFullUrl(filePath) {
       return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
     },
+
     handlePreview(filePath) {
       try {
         const paths = typeof filePath === 'string'
@@ -635,14 +618,14 @@ export default {
       }
     },
     addNewCard() {
-      this.showSecondCard = true;
+      this.showDialog = true;
       this.isEdit = false;
     },
     closeCard() {
-      this.showSecondCard = false;
+      this.showDialog = false;
       this.reportFeeling = null;
       this.pushReportPicture = [];
-      this.showSecondCard = false;
+      this.showDialog = false;
       this.formData = {
         reportTitle: '',
         reporter: '',
@@ -657,10 +640,22 @@ export default {
         semester: this.findSemester(this.activeSemester),
       };
     },
-    onFileChange(e) {
-      // 当用户选择文件时，更新file变量
-      this.reportFeeling = e.target.files[0];
-      console.log('选择的文件:', this.reportFeeling);
+    // 修改后的总结文档处理方法
+    handleSummaryChange(file, fileList) {
+      if (fileList.length > 1) {
+        this.$message.warning('只能上传一个文件')
+        fileList.splice(0, 1)
+      }
+
+      // 关键修改：获取原生文件对象
+      this.reportFeelingList = fileList
+      this.reportFeeling = file.raw // 使用 raw 属性获取原生 File
+      console.log(this.reportFeeling)
+    },
+
+    // 文件移除回调
+    handleSummaryRemove() {
+      this.reportFeelingList = []
     },
 
     async fetchLectureReportRecords() {
@@ -674,7 +669,7 @@ export default {
           // ...this.queryParams,
         });
         console.log(data);
-        this.competitionRecords = data.rows || []; // 假设后端返回的数据格式包含 rows
+        this.records = data.rows || []; // 假设后端返回的数据格式包含 rows
         this.totalRecords = data.total || 0;       // 假设返回总记录数 total
       } catch (error) {
         console.error("Error fetching competition records:", error);
@@ -750,8 +745,8 @@ export default {
     initData() {
       this.reportFeeling = null;
       this.pushReportPicture = [];
-      this.showSecondCard = false;
-      this.competitionRecords = [];
+      this.showDialog = false;
+      this.records = [];
       this.formData = {
         reportTitle: '',
         reporter: '',
