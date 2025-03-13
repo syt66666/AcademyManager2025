@@ -61,7 +61,7 @@ export function auditRecord(data) {
   })
 }
 
-// 管理员端查询学生文体活动记录列表
+// 管理员端查询学生科创竞赛记录列表
 export function listAuditCompetition(query) {
   return request({
     url: '/system/record/auditList',

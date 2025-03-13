@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import com.ruoyi.system.domain.StuMentorshipRecord;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 
 public interface StuMentorshipRecordMapper
@@ -70,4 +71,14 @@ public interface StuMentorshipRecordMapper
                                         @Param("semester") String semester,
                                         @Param("auditStatus") String auditStatus);
 
+    List<StuMentorshipRecord> selectAuditMentorshipRecordList(StuMentorshipRecord stuMentorshipRecord);
+
+    @Update({
+            "update stu_mentorship_record",
+            "set audit_status = #{auditStatus},",
+            "audit_remark = #{auditRemark},",
+            "audit_time = #{auditTime}",
+            "where record_id = #{recordId}"
+    })
+    int updateMentorshipAuditInfo(StuMentorshipRecord mentorship);
 }

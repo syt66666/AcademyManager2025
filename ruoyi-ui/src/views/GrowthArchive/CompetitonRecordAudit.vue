@@ -119,7 +119,7 @@
               :disabled="!scope.row.proofMaterial"
             >下载
             </el-button>
-            <span v-else>无材料</span>
+            <span v-else> </span>
           </div>
         </template>
       </el-table-column>

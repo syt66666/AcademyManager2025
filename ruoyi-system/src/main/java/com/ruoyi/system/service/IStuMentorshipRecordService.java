@@ -57,4 +57,8 @@ public interface IStuMentorshipRecordService
      */
     public int deleteStuMentorshipRecordByRecordId(Integer recordId);
     public AjaxResult checkUnique(StuMentorshipRecord stuMentorshipRecord);
+
+    List<StuMentorshipRecord> selectMentorshipRecordList(StuMentorshipRecord stuMentorshipRecord);
+
+    int updateMentorshipAuditInfo(StuMentorshipRecord mentorship);
 }

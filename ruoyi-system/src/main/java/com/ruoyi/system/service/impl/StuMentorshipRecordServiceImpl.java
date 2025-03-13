@@ -1,8 +1,10 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.system.domain.StuActivityRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,5 +112,20 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
                 stuMentorshipRecord.getAuditStatus()
         );
         return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
+    }
+
+    @Override
+    public List<StuMentorshipRecord> selectMentorshipRecordList(StuMentorshipRecord stuMentorshipRecord) {
+        return stuMentorshipRecordMapper.selectAuditMentorshipRecordList(stuMentorshipRecord);
+    }
+
+    @Override
+    public int updateMentorshipAuditInfo(StuMentorshipRecord mentorship) {        // 校验审核状态是否合法
+        if (!Arrays.asList("已通过", "未通过").contains(mentorship.getAuditStatus())) {
+            throw new ServiceException("无效的审核状态");
+        }
+
+        // 构建更新参数（仅更新审核相关字段）
+        return stuMentorshipRecordMapper.updateMentorshipAuditInfo(mentorship);
     }
 }
