@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学生学号" prop="studentId">
+      <el-form-item label="学号" prop="studentId">
         <el-input
           v-model="queryParams.studentId"
           placeholder="请输入学生学号"
@@ -17,54 +17,6 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="指导主题" prop="guidanceTopic">
-        <el-input
-          v-model="queryParams.guidanceTopic"
-          placeholder="请输入指导主题"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="指导地点" prop="guidanceLocation">
-        <el-input
-          v-model="queryParams.guidanceLocation"
-          placeholder="请输入指导地点"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="指导时间" prop="guidanceTime">
-        <el-date-picker clearable
-                        v-model="queryParams.guidanceTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择指导时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="总结文档路径" prop="summaryFilePath">
-        <el-input
-          v-model="queryParams.summaryFilePath"
-          placeholder="请输入总结文档路径"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="提交时间" prop="submitTime">
-        <el-date-picker clearable
-                        v-model="queryParams.submitTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择提交时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="审核时间" prop="auditTime">
-        <el-date-picker clearable
-                        v-model="queryParams.auditTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择审核时间">
-        </el-date-picker>
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -72,38 +24,6 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['system:mentorship:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:mentorship:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['system:mentorship:remove']"
-        >删除</el-button>
-      </el-col>
       <el-col :span="1.5">
         <el-button
           type="warning"
@@ -118,10 +38,15 @@
     </el-row>
 
     <el-table v-loading="loading" :data="mentorshipList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="记录ID" align="center" prop="recordId" />
-      <el-table-column label="学生学号" align="center" prop="studentId" />
+      <el-table-column label="序号" width="50" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
+      <el-table-column label="学号" align="center" prop="studentId" />
+      <el-table-column label="姓名" align="center" prop="studentName" />
       <el-table-column label="导师工号" align="center" prop="tutorId" />
+      <el-table-column label="导师姓名" align="center" prop="tutorName" />
       <el-table-column label="指导主题" align="center" prop="guidanceTopic" />
       <el-table-column label="指导地点" align="center" prop="guidanceLocation" />
       <el-table-column label="指导时间" align="center" prop="guidanceTime" width="180">
@@ -129,16 +54,46 @@
           <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="总结文档路径" align="center" prop="summaryFilePath" />
-      <el-table-column label="照片路径数组" align="center" prop="photoPaths" />
-      <el-table-column label="学期" align="center" prop="semester" />
+      <el-table-column label="总结文档" align="center" prop="summaryFilePath" />
+      <el-table-column label="指导照片" width="120">
+        <template v-slot:default="scope">
+          <div class="proof-material-cell">
+            <el-link
+              v-if="scope.row.photoPaths"
+              type="primary"
+              :underline="false"
+              @click="handlePreview(scope.row.photoPaths)"
+              style="margin-right: 10px;"
+            >
+              <i class="el-icon-view"></i> 预览
+            </el-link>
+            <el-button
+              v-if="scope.row.photoPaths"
+              type="primary"
+              icon="el-icon-download"
+              size="mini"
+              @click="downloadFiles(scope.row.photoPaths)"
+              :disabled="!scope.row.photoPaths"
+            >下载
+            </el-button>
+            <span v-else> </span>
+          </div>
+        </template>
+      </el-table-column>
+
       <el-table-column label="提交时间" align="center" prop="submitTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.submitTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="学生评价" align="center" prop="studentComment" />
-      <el-table-column label="审核状态" align="center" prop="auditStatus" />
+      <el-table-column label="审核状态" align="center" prop="auditStatus">
+        <template slot-scope="scope">
+          <el-tag :type="getStatusTagType(scope.row.auditStatus)">
+            {{ scope.row.auditStatus || '未审核' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="审核时间" align="center" prop="auditTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
@@ -150,21 +105,51 @@
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:mentorship:edit']"
-          >修改</el-button>
+            icon="el-icon-check"
+            @click="handleAudit(scope.row,'通过')"
+            v-hasPermi="['system:mentorship:audit']"
+          >通过</el-button>
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['system:mentorship:remove']"
-          >删除</el-button>
+            icon="el-icon-close"
+            @click="handleAudit(scope.row,'拒绝')"
+            v-hasPermi="['system:mentorship:audit']"
+          >拒绝</el-button>
         </template>
       </el-table-column>
     </el-table>
 
+    <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img
+          :src="previewImages[currentPreviewIndex]"
+          style="max-width: 100%; display: block; margin: 0 auto;"
+          alt="证明材料预览"
+        />
+        <el-button
+          icon="el-icon-arrow-left"
+          :disabled="currentPreviewIndex === 0"
+          @click="currentPreviewIndex--"
+        ></el-button>
+        <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+        <el-button
+          icon="el-icon-arrow-right"
+          :disabled="currentPreviewIndex === previewImages.length - 1"
+          @click="currentPreviewIndex++"
+        ></el-button>
+      </div>
+
+      <div slot="footer">
+        <el-button
+          type="primary"
+          @click="downloadSingleFile(previewImages[currentPreviewIndex])"
+          style="background-color: #42b983; border-color: #42b983;"
+        >
+          <i class="el-icon-download"></i> 下载当前图片
+        </el-button>
+      </div>
+    </el-dialog>
     <pagination
       v-show="total>0"
       :total="total"
@@ -173,65 +158,12 @@
       @pagination="getList"
     />
 
-    <!-- 添加或修改导师指导记录对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="学生学号" prop="studentId">
-          <el-input v-model="form.studentId" placeholder="请输入学生学号" />
-        </el-form-item>
-        <el-form-item label="导师工号" prop="tutorId">
-          <el-input v-model="form.tutorId" placeholder="请输入导师工号" />
-        </el-form-item>
-        <el-form-item label="指导主题" prop="guidanceTopic">
-          <el-input v-model="form.guidanceTopic" placeholder="请输入指导主题" />
-        </el-form-item>
-        <el-form-item label="指导地点" prop="guidanceLocation">
-          <el-input v-model="form.guidanceLocation" placeholder="请输入指导地点" />
-        </el-form-item>
-        <el-form-item label="指导时间" prop="guidanceTime">
-          <el-date-picker clearable
-                          v-model="form.guidanceTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择指导时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="总结文档路径" prop="summaryFilePath">
-          <el-input v-model="form.summaryFilePath" placeholder="请输入总结文档路径" />
-        </el-form-item>
-        <el-form-item label="提交时间" prop="submitTime">
-          <el-date-picker clearable
-                          v-model="form.submitTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择提交时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="学生评价" prop="studentComment">
-          <el-input v-model="form.studentComment" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-        <el-form-item label="审核时间" prop="auditTime">
-          <el-date-picker clearable
-                          v-model="form.auditTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择审核时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="审核意见" prop="auditRemark">
-          <el-input v-model="form.auditRemark" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listMentorship, getMentorship, delMentorship, addMentorship, updateMentorship } from "@/api/system/mentorship";
+import { listAuditMentorship, auditMentorship } from "@/api/system/mentorship";
+import axios from "axios";
 
 export default {
   name: "Mentorship",
@@ -255,6 +187,10 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      previewVisible: false,
+      previewImages: [],
+      currentPreviewIndex: 0,
+      currentDownloadFile: '',
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -299,10 +235,102 @@ export default {
     this.getList();
   },
   methods: {
+    async downloadFiles(filePaths) {
+      try {
+        // 解析文件路径
+        const paths = typeof filePaths === 'string'
+          ? JSON.parse(filePaths)
+          : filePaths;
+        if (!Array.isArray(paths)) {
+          throw new Error("无效的文件路径格式");
+        }
+        // 处理多个文件下载
+        if (paths.length > 1|| paths.length === 1) {
+          this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
+          });
+        } else if (paths.length === 1) {
+          this.previewImage = this.getFullUrl(paths[0]);
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
+      }
+    },
+    // 下载单个文件
+    async downloadSingleFile(filePath) {
+      try {
+        const response = await axios.get(
+          filePath,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token")
+            }
+          }
+        );
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.generateFileName(filePath));
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(url);
+        link.remove();
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
+    // 生成带时间戳的文件名
+    generateFileName(filePath) {
+      const originalName = filePath.split('/').pop() || '证明材料';
+      const timestamp = new Date().getTime();
+      const ext = originalName.split('.').pop() || 'jpg';
+      return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
+    },
+
+    // 获取完整URL（带缓存清除）
+    getFullUrl(filePath) {
+      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
+    },
+    handlePreview(filePath) {
+      try {
+        const paths = typeof filePath === 'string'
+          ? JSON.parse(filePath)
+          : filePath;
+
+        if (paths.length > 0) {
+          this.previewImages = paths.map(path => this.getFullUrl(path));
+          this.currentPreviewIndex = 0;
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error('预览失败：文件路径格式不正确');
+      }
+    },
+    // 审核状态标签样式
+    getStatusTagType(status) {
+      const statusMap = {
+        '已通过': 'success',
+        '未通过': 'danger',
+        '未审核': 'warning'
+      };
+      return statusMap[status] || 'info';
+    },
     /** 查询导师指导记录列表 */
     getList() {
       this.loading = true;
-      listMentorship(this.queryParams).then(response => {
+      listAuditMentorship(this.queryParams).then(response => {
         this.mentorshipList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -318,7 +346,9 @@ export default {
       this.form = {
         recordId: null,
         studentId: null,
+        studentName: null,
         tutorId: null,
+        tutorName: null,
         guidanceTopic: null,
         guidanceLocation: null,
         guidanceTime: null,
@@ -343,63 +373,49 @@ export default {
       this.resetForm("queryForm");
       this.handleQuery();
     },
-    // 多选框选中数据
-    handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.recordId)
-      this.single = selection.length!==1
-      this.multiple = !selection.length
-    },
-    /** 新增按钮操作 */
-    handleAdd() {
-      this.reset();
-      this.open = true;
-      this.title = "添加导师指导记录";
-    },
-    /** 修改按钮操作 */
-    handleUpdate(row) {
-      this.reset();
-      const recordId = row.recordId || this.ids
-      getMentorship(recordId).then(response => {
-        this.form = response.data;
-        this.open = true;
-        this.title = "修改导师指导记录";
-      });
-    },
-    /** 提交按钮 */
-    submitForm() {
-      this.$refs["form"].validate(valid => {
-        if (valid) {
-          if (this.form.recordId != null) {
-            updateMentorship(this.form).then(response => {
-              this.$modal.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
-            });
-          } else {
-            addMentorship(this.form).then(response => {
-              this.$modal.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
-            });
-          }
-        }
-      });
-    },
-    /** 删除按钮操作 */
-    handleDelete(row) {
-      const recordIds = row.recordId || this.ids;
-      this.$modal.confirm('是否确认删除导师指导记录编号为"' + recordIds + '"的数据项？').then(function() {
-        return delMentorship(recordIds);
-      }).then(() => {
-        this.getList();
-        this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
-    },
     /** 导出按钮操作 */
     handleExport() {
       this.download('system/mentorship/export', {
         ...this.queryParams
       }, `mentorship_${new Date().getTime()}.xlsx`)
+    },
+    // 审核操作
+    handleAudit(row, status) {
+      const isApproved = status === '通过';
+      const statusMapping = {
+        '通过': '已通过',
+        '拒绝': '未通过'
+      };
+
+      this.$prompt(
+        isApproved ? '确认通过审核吗？' : '请输入拒绝原因',
+        '审核确认',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: isApproved ? null : /.+/,
+          inputErrorMessage: '拒绝原因不能为空'
+        }
+      ).then(({ value }) => {
+        // 构建符合API要求的参数
+        console.log('审核操作:', row.recordId, status, value);
+        const auditData = {
+          recordId: row.recordId,
+          auditStatus: statusMapping[status],
+          auditRemark: isApproved ? '系统审核通过' : value
+        };
+
+        // 调用专用审核接口
+        auditMentorship(auditData).then(response => {
+          this.$modal.msgSuccess(`已${status}审核`);
+          this.getList(); // 刷新列表
+        }).catch(error => {
+          console.error('审核操作失败:', error);
+          this.$modal.msgError(`${status}审核失败: ${error.message || ''}`);
+        });
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
     }
   }
 };

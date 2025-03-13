@@ -113,9 +113,6 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
 
     @Override
     public AjaxResult checkUnique(StuCompetitionRecord competition) {
-        // 打印参数日志（确保无隐藏字符）
-        System.out.println(competition.getStudentId()+competition.getCompetitionName()+competition.getCompetitionLevel()+competition.getAwardLevel()+competition.getSemester()
-        );
         boolean exists = stuCompetitionRecordMapper.existsByUniqueFields(
                 competition.getStudentId(),
                 competition.getCompetitionName(),

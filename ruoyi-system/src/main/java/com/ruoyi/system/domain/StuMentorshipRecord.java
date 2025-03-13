@@ -24,6 +24,11 @@ public class StuMentorshipRecord extends BaseEntity {
     private String studentId;
 
     /**
+     * 学生姓名
+     */
+    @Excel(name = "学生姓名")
+    private String studentName;
+    /**
      * 导师工号
      */
     @Excel(name = "导师工号")
@@ -34,7 +39,6 @@ public class StuMentorshipRecord extends BaseEntity {
      */
     @Excel(name = "导师姓名")
     private String tutorName;
-
 
     /**
      * 指导主题
@@ -104,6 +108,14 @@ public class StuMentorshipRecord extends BaseEntity {
      */
     @Excel(name = "审核意见")
     private String auditRemark;
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
 
     public void setRecordId(Integer recordId) {
         this.recordId = recordId;

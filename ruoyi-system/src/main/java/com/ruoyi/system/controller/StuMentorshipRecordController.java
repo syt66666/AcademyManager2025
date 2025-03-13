@@ -16,10 +16,13 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.system.domain.StuActivityRecord;
-import com.ruoyi.system.domain.StuCompetitionRecord;
+import com.ruoyi.system.domain.StuMentorshipRecord;
+import com.ruoyi.system.domain.StuMentorshipRecord;
+import com.ruoyi.system.domain.dto.MentorshipAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
@@ -261,9 +264,33 @@ public class StuMentorshipRecordController extends BaseController {
         return toAjax(stuMentorshipRecordService.deleteStuMentorshipRecordByRecordIds(recordIds));
     }
 
+    @GetMapping("/auditList")
+    public TableDataInfo auditList(StuMentorshipRecord stuMentorshipRecord)
+    {
+        startPage();
+        List<StuMentorshipRecord> list = stuMentorshipRecordService.selectMentorshipRecordList(stuMentorshipRecord);
+        return getDataTable(list);
+    }
+    @PreAuthorize("@ss.hasPermi('system:mentorship:audit')")
     @PostMapping("/checkUnique")
     public AjaxResult checkUnique(@RequestBody StuMentorshipRecord stuMentorshipRecord) {
 
         return stuMentorshipRecordService.checkUnique(stuMentorshipRecord);
+    }
+
+    /**
+     * 更新审核信息
+     */
+    @Log(title = "导师指导审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/audit")
+    public AjaxResult auditMentorship(@Validated @RequestBody MentorshipAuditDTO auditDTO) {
+        // 构建更新参数
+        StuMentorshipRecord mentorship = new StuMentorshipRecord();
+        mentorship.setRecordId(auditDTO.getRecordId());
+        mentorship.setAuditStatus(auditDTO.getAuditStatus());
+        mentorship.setAuditRemark(auditDTO.getAuditRemark());
+        mentorship.setAuditTime(new Date());
+        // 执行更新操作
+        return toAjax(stuMentorshipRecordService.updateMentorshipAuditInfo(mentorship));
     }
 }

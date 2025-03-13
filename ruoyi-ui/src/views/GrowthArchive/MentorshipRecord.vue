@@ -560,7 +560,10 @@ export default {
             this.formData.guidanceTopic !== originalRecord.guidanceTopic ||
             this.formData.guidanceLocation !== originalRecord.guidanceLocation ||
             this.formData.guidanceTime !== originalRecord.guidanceTime;
+          console.log("isKeyFieldChanged:"+isKeyFieldChanged)
+          console.log("this.currentRecordId:"+this.currentRecordId)
           const shouldCheckUnique = !this.currentRecordId || isKeyFieldChanged;
+          console.log("shouldCheckUnique:"+shouldCheckUnique)
           // 编辑时排除自身
           if (shouldCheckUnique) {
             // 唯一性校验参数
@@ -573,6 +576,7 @@ export default {
               // studentComment: this.formData.studentComment,
               // auditStatus: status,
             };
+            console.log(checkParams)
             const checkRes = await checkMentorshipUnique(checkParams);
             if (checkRes.code !== 200) {
               return this.$message.error('已存在相同活动记录，不可重复添加');

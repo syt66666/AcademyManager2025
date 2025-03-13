@@ -46,15 +46,20 @@
     <select id="selectStuMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
         SELECT
         smr.*,
-        t.tutor_name
+        si.student_name,
+        t.tutor_name,
+        t.tutor_id
         FROM
         stu_mentorship_record smr
         LEFT JOIN
-        stu_mentor_info smi ON smr.student_id = smi.stu_id
+        stu_info si ON smr.student_id = si.student_id
         LEFT JOIN
-        tutors t ON smi.mentor_id = t.tutor_id
+        stu_mentor_info smi ON smr.student_id = smi.student_id
+        LEFT JOIN
+        tutors t ON smi.tutor_id = t.tutor_id
         <where>
-            <if test="studentId != null and studentId != ''">AND smr.student_id = #{studentId}</if>
+            <if test="studentId != null and studentId != ''">AND si.student_id = #{studentId}</if>
+            <if test="studentName != null and studentName != ''">AND si.student_Name = #{studentName}</if>
             <if test="tutorId != null and tutorId != ''">AND t.tutor_id = #{tutorId}</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">AND smr.guidance_topic = #{guidanceTopic}</if>
             <if test="guidanceLocation != null and guidanceLocation != ''">AND smr.guidance_location = #{guidanceLocation}</if>
@@ -68,6 +73,56 @@
             <if test="auditTime != null ">AND smr.audit_time = #{auditTime}</if>
             <if test="auditRemark != null and auditRemark != ''">AND smr.audit_remark = #{auditRemark}</if>
         </where>
+        ORDER BY
+        CASE audit_status
+        WHEN '未提交' THEN 0    -- 未审核排最前
+        WHEN '未通过' THEN 1    -- 未审核排最前
+        WHEN '未审核' THEN 2    -- 未通过其次
+        WHEN '已通过' THEN 3    -- 已通过最后
+        ELSE 4                 -- 其他状态（如果有）
+        END,
+        apply_time DESC
+    </select>
+
+    <select id="selectAuditMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
+        SELECT
+        smr.*,
+        si.student_name,
+        t.tutor_name,
+        t.tutor_id
+        FROM
+        stu_mentorship_record smr
+        LEFT JOIN
+        stu_info si ON smr.student_id = si.student_id
+        LEFT JOIN
+        stu_mentor_info smi ON smr.student_id = smi.student_id
+        LEFT JOIN
+        tutors t ON smi.tutor_id = t.tutor_id
+        <where>
+            <if test="studentId != null and studentId != ''">AND si.student_id = #{studentId}</if>
+            <if test="studentName != null and studentName != ''">AND si.student_Name = #{studentName}</if>
+            <if test="tutorId != null and tutorId != ''">AND t.tutor_id = #{tutorId}</if>
+            <if test="guidanceTopic != null and guidanceTopic != ''">AND smr.guidance_topic = #{guidanceTopic}</if>
+            <if test="guidanceLocation != null and guidanceLocation != ''">AND smr.guidance_location = #{guidanceLocation}</if>
+            <if test="guidanceTime != null ">AND smr.guidance_time = #{guidanceTime}</if>
+            <if test="summaryFilePath != null and summaryFilePath != ''">AND smr.summary_file_path = #{summaryFilePath}</if>
+            <if test="photoPaths != null and photoPaths != ''">AND smr.photo_paths = #{photoPaths}</if>
+            <if test="semester != null and semester != ''">AND smr.semester = #{semester}</if>
+            <if test="submitTime != null ">AND smr.submit_time = #{submitTime}</if>
+            <if test="studentComment != null and studentComment != ''">AND smr.student_comment = #{studentComment}</if>
+            <if test="auditStatus != null and auditStatus != ''">AND smr.audit_status = #{auditStatus}</if>
+            <if test="auditTime != null ">AND smr.audit_time = #{auditTime}</if>
+            <if test="auditRemark != null and auditRemark != ''">AND smr.audit_remark = #{auditRemark}</if>
+                    AND audit_status != '未提交'
+        </where>
+        ORDER BY
+        CASE audit_status
+        WHEN '未审核' THEN 0    -- 未审核排最前
+        WHEN '未通过' THEN 1    -- 未通过其次
+        WHEN '已通过' THEN 2    -- 已通过最后
+        ELSE 3                 -- 其他状态（如果有）
+        END,
+        submit_time DESC
     </select>
 
     <select id="selectStuMentorshipRecordByRecordId" parameterType="Integer" resultMap="StuMentorshipRecordResult">
@@ -158,8 +213,7 @@
             guidance_topic = #{guidanceTopic} AND
             guidance_location = #{guidanceLocation} AND
             guidance_time = #{guidanceTime} AND
-            semester = #{semester} AND
-            audit_status = #{auditStatus}
+            semester = #{semester}
             LIMIT 1
     </select>
 </mapper>

@@ -48,7 +48,7 @@ export function delMentorship(recordId) {
     method: 'delete'
   })
 }
-  //唯一性校验
+//唯一性校验
   export function checkMentorshipUnique(params) {
     return request({
       url: '/system/mentorship/checkUnique',
@@ -56,4 +56,24 @@ export function delMentorship(recordId) {
       data: params
     })
 }
+//管理员查询导师指导记录列表
+export function listAuditMentorship(query) {
+  return request({
+    url: '/system/mentorship/auditList',
+    method: 'get',
+    params: query
+  })
+}
 
+// 审核学生科创竞赛记录
+export function auditMentorship(data) {
+  return request({
+    url: '/system/mentorship/audit',
+    method: 'put',
+    data: {
+      recordId: data.recordId,
+      auditStatus: data.auditStatus,
+      auditRemark: data.auditRemark
+    }
+  })
+}
