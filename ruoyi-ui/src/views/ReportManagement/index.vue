@@ -250,6 +250,19 @@
 <!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
 <!--              alt="证明材料预览"-->
 <!--            />-->
+              <div v-for="(url, i) in previewImages" :key="i" style="position: relative; display: inline-block; margin: 0 auto;">
+                <img
+                  :src="url"
+                  style="width: 100px; height: 100px; display: inline-block;"
+                  alt="证明材料预览"
+                />
+                <!-- 删除按钮（叉号） -->
+                <i
+                  class="el-icon-delete"
+                  @click="removeImage(i)"
+                  style="position: absolute; top: 0; right: 0; cursor: pointer; color: white; font-size: 20px; background-color: red; border-radius: 50%; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                </i>
+              </div>
               <el-upload
                 multiple
                 :limit="5"
@@ -262,8 +275,8 @@
                 <i class="el-icon-plus"></i>
                 <template #tip>
                   <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
-                    <br>
-                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>
+<!--                    <br>-->
+<!--                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>-->
                   </div>
                 </template>
               </el-upload>
@@ -388,7 +401,6 @@ export default {
         ? JSON.parse(row.reportPicture)
         : row.reportPicture;
       this.previewImages = paths.map(path => this.getFullUrl(path));
-      // this.pushReportPicture = ["/dev-api/profile/76f8229392c5460f8ec265b69759f6c9_1741441025793.jpg", "/dev-api/profile/76f8229392c5460f8ec265b69759f6c9_1741441025793.jpg", "/dev-api/profile/76f8229392c5460f8ec265b69759f6c9_1741441025793.jpg"];
 
       this.isEdit = true;
       this.showSecondCard = true;
@@ -511,6 +523,12 @@ export default {
       } catch (error) {
         this.$message.error('预览失败：文件路径格式不正确');
       }
+    },
+
+    // 删除提交信息时的现场图片
+    removeImage(index) {
+      this.previewImages.splice(index, 1); // 删除对应的图片
+      console.log((this.previewImages));
     },
     handleFileChange(file, fileList) {
       this.pushReportPicture = fileList.slice(-5); // 保持最多5个文件
@@ -695,6 +713,8 @@ export default {
           this.pushReportPicture.forEach((file) => {
             formData.append("reportPicture", file.raw);
           });
+          const previewImagesJson = JSON.stringify(this.previewImages);
+          formData.append('previewImages', previewImagesJson);
           console.log('表单数据formData.reportPicture:', this.formData.reportPicture);
           console.log('传递后端数据:', formData);
           // 可以使用 axios 或 fetch 发送请求
