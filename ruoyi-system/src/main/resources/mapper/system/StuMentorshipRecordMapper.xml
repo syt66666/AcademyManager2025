@@ -81,7 +81,7 @@
         WHEN '已通过' THEN 3    -- 已通过最后
         ELSE 4                 -- 其他状态（如果有）
         END,
-        apply_time DESC
+        submit_time DESC
     </select>
 
     <select id="selectAuditMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
@@ -132,11 +132,11 @@
 
     <select id="searchTutorId" resultType="java.lang.String">
         SELECT
-            smi.mentor_id
+            smi.tutor_id
         FROM
             stu_mentorship_record smr
                 LEFT JOIN
-            stu_mentor_info smi ON smr.student_id = smi.stu_id
+            stu_mentor_info smi ON smr.student_id = smi.student_id
         WHERE smr.student_id = #{studentId}
         limit 1
     </select>
@@ -145,7 +145,6 @@
         insert into stu_mentorship_record
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id,</if>
-            <if test="tutorId != null and tutorId != ''">tutor_id,</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic,</if>
             <if test="guidanceLocation != null">guidance_location,</if>
             <if test="guidanceTime != null">guidance_time,</if>
@@ -160,7 +159,6 @@
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
-            <if test="tutorId != null and tutorId != ''">#{tutorId},</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">#{guidanceTopic},</if>
             <if test="guidanceLocation != null">#{guidanceLocation},</if>
             <if test="guidanceTime != null">#{guidanceTime},</if>
@@ -179,7 +177,6 @@
         update stu_mentorship_record
         <trim prefix="SET" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
-            <if test="tutorId != null and tutorId != ''">tutor_id = #{tutorId},</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic = #{guidanceTopic},</if>
             <if test="guidanceLocation != null">guidance_location = #{guidanceLocation},</if>
             <if test="guidanceTime != null">guidance_time = #{guidanceTime},</if>

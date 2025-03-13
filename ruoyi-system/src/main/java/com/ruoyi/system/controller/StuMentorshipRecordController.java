@@ -271,7 +271,7 @@ public class StuMentorshipRecordController extends BaseController {
         List<StuMentorshipRecord> list = stuMentorshipRecordService.selectMentorshipRecordList(stuMentorshipRecord);
         return getDataTable(list);
     }
-    @PreAuthorize("@ss.hasPermi('system:mentorship:audit')")
+
     @PostMapping("/checkUnique")
     public AjaxResult checkUnique(@RequestBody StuMentorshipRecord stuMentorshipRecord) {
 
@@ -281,6 +281,7 @@ public class StuMentorshipRecordController extends BaseController {
     /**
      * 更新审核信息
      */
+    @PreAuthorize("@ss.hasPermi('system:mentorship:audit')")
     @Log(title = "导师指导审核", businessType = BusinessType.UPDATE)
     @PutMapping("/audit")
     public AjaxResult auditMentorship(@Validated @RequestBody MentorshipAuditDTO auditDTO) {
