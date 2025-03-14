@@ -54,7 +54,6 @@
           <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-<!--      <el-table-column label="总结文档" align="center" prop="summaryFilePath" />-->
       <el-table-column label="总结文档" width="120">
         <template v-slot:default="scope">
           <div class="proof-material-cell">

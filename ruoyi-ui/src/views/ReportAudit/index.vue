@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学生学号" prop="studentId">
+      <el-form-item label="学号" prop="studentId">
         <el-input
           v-model="queryParams.studentId"
           placeholder="请输入学生学号"
@@ -9,82 +9,10 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="学生姓名" prop="studentName">
-        <el-input
-          v-model="queryParams.studentName"
-          placeholder="请输入学生姓名"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="题目" prop="reportTitle">
+      <el-form-item label="讲座题目" prop="reportTitle">
         <el-input
           v-model="queryParams.reportTitle"
           placeholder="请输入题目"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="报告人" prop="reporter">
-        <el-input
-          v-model="queryParams.reporter"
-          placeholder="请输入报告人"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="报告时间" prop="reportDate">
-        <el-date-picker clearable
-                        v-model="queryParams.reportDate"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择报告时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="报告链接" prop="reportLink">
-        <el-input
-          v-model="queryParams.reportLink"
-          placeholder="请输入报告链接"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="报告心得体会" prop="reportFeeling">
-        <el-input
-          v-model="queryParams.reportFeeling"
-          placeholder="请输入报告心得体会"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="报告提交时间" prop="reportAdmitTime">
-        <el-date-picker clearable
-                        v-model="queryParams.reportAdmitTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择报告提交时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="审核时间" prop="auditTime">
-        <el-date-picker clearable
-                        v-model="queryParams.auditTime"
-                        type="date"
-                        value-format="yyyy-MM-dd"
-                        placeholder="请选择审核时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item label="审核人姓名" prop="nickName">
-        <el-input
-          v-model="queryParams.nickName"
-          placeholder="请输入审核人姓名"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="上传学期" prop="semester">
-        <el-input
-          v-model="queryParams.semester"
-          placeholder="请输入上传学期"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -110,55 +38,68 @@
     </el-row>
 
     <el-table v-loading="loading" :data="reportList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="报告唯一编号" align="center" prop="reportId" />
-      <el-table-column label="学生学号" align="center" prop="studentId" />
-      <el-table-column label="学生姓名" align="center" prop="studentName" />
-      <el-table-column label="题目" align="center" prop="reportTitle" />
-      <el-table-column label="报告人" align="center" prop="reporter" />
-      <el-table-column label="报告时间" align="center" prop="reportDate" width="180">
+      <el-table-column label="序号" width="50" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
+      <el-table-column label="学号" align="center" prop="studentId" />
+      <el-table-column label="姓名" align="center" prop="studentName" />
+      <el-table-column label="讲座题目" align="center" prop="reportTitle" />
+      <el-table-column label="讲师姓名" align="center" prop="reporter" />
+      <el-table-column label="讲座时间" align="center" prop="reportDate" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.reportDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="报告内容简介" align="center" prop="reportContent" />
-      <el-table-column label="报告链接" align="center" prop="reportLink" />
-      <el-table-column label="报告心得体会" align="center" prop="reportFeeling" />
-      <el-table-column label="演讲海报" align="center" prop="lecturePoster" />
-      <el-table-column label="报告现场图片" align="center" prop="reportPicture" />
-      <el-table-column label="报告提交时间" align="center" prop="reportAdmitTime" width="180">
+      <el-table-column label="讲座内容简介" align="center" prop="reportContent" />
+      <el-table-column label="讲座链接" align="center" prop="reportLink" />
+      <el-table-column label="讲座心得体会" align="center" prop="reportFeeling" />
+      <el-table-column label="讲座海报" align="center" prop="lecturePoster" />
+      <el-table-column label="讲座现场图片" align="center" prop="reportPicture" />
+      <el-table-column label="提交时间" align="center" prop="reportAdmitTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.reportAdmitTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="审核状态" align="center" prop="auditStatus" />
+      <el-table-column prop="auditStatus" label="审核状态" min-width="80">
+        <template slot-scope="scope">
+            <span>
+              <el-tag v-if="formatAuditStatus(scope.row.auditStatus) === '未审核'"
+                      type="warning">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '已通过'"
+                      type="success">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else-if="formatAuditStatus(scope.row.auditStatus) === '未通过'"
+                      type="danger">{{ formatAuditStatus(scope.row.auditStatus) }}</el-tag>
+              <el-tag v-else>未知状态</el-tag>
+            </span>
+        </template>
+      </el-table-column>
+
       <el-table-column label="审核时间" align="center" prop="auditTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="审核意见" align="center" prop="auditRemark" />
-      <el-table-column label="审核人姓名" align="center" prop="nickName" />
-      <el-table-column label="上传学期" align="center" prop="semester" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:report:edit']"
-          >修改</el-button>
+            icon="el-icon-check"
+            @click="handleAudit(scope.row,'通过')"
+            v-hasPermi="['system:report:audit']"
+          >通过</el-button>
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['system:report:remove']"
-          >删除</el-button>
+            icon="el-icon-close"
+            @click="handleAudit(scope.row,'拒绝')"
+            v-hasPermi="['system:report:audit']"
+          >拒绝</el-button>
         </template>
-      </el-table-column>
-    </el-table>
+      </el-table-column></el-table>
 
     <pagination
       v-show="total>0"
@@ -167,81 +108,11 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
-
-    <!-- 添加或修改学生参与报告信息对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="学生学号" prop="studentId">
-          <el-input v-model="form.studentId" placeholder="请输入学生学号" />
-        </el-form-item>
-        <el-form-item label="学生姓名" prop="studentName">
-          <el-input v-model="form.studentName" placeholder="请输入学生姓名" />
-        </el-form-item>
-        <el-form-item label="题目" prop="reportTitle">
-          <el-input v-model="form.reportTitle" placeholder="请输入题目" />
-        </el-form-item>
-        <el-form-item label="报告人" prop="reporter">
-          <el-input v-model="form.reporter" placeholder="请输入报告人" />
-        </el-form-item>
-        <el-form-item label="报告时间" prop="reportDate">
-          <el-date-picker clearable
-                          v-model="form.reportDate"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择报告时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="报告内容简介">
-          <editor v-model="form.reportContent" :min-height="192"/>
-        </el-form-item>
-        <el-form-item label="报告链接" prop="reportLink">
-          <el-input v-model="form.reportLink" placeholder="请输入报告链接" />
-        </el-form-item>
-        <el-form-item label="报告心得体会" prop="reportFeeling">
-          <el-input v-model="form.reportFeeling" placeholder="请输入报告心得体会" />
-        </el-form-item>
-        <el-form-item label="演讲海报" prop="lecturePoster">
-          <el-input v-model="form.lecturePoster" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-        <el-form-item label="报告现场图片" prop="reportPicture">
-          <el-input v-model="form.reportPicture" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-        <el-form-item label="报告提交时间" prop="reportAdmitTime">
-          <el-date-picker clearable
-                          v-model="form.reportAdmitTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择报告提交时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="审核时间" prop="auditTime">
-          <el-date-picker clearable
-                          v-model="form.auditTime"
-                          type="date"
-                          value-format="yyyy-MM-dd"
-                          placeholder="请选择审核时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="审核意见" prop="auditRemark">
-          <el-input v-model="form.auditRemark" type="textarea" placeholder="请输入内容" />
-        </el-form-item>
-        <el-form-item label="审核人姓名" prop="nickName">
-          <el-input v-model="form.nickName" placeholder="请输入审核人姓名" />
-        </el-form-item>
-        <el-form-item label="上传学期" prop="semester">
-          <el-input v-model="form.semester" placeholder="请输入上传学期" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listReport } from "@/api/student/letcure";
+import { listAuditReport,auditReport } from "@/api/student/letcure";
 
 export default {
   name: "Report",
@@ -297,10 +168,25 @@ export default {
     this.getList();
   },
   methods: {
+    // 格式化审核状态
+    formatAuditStatus(status) {
+      switch (status) {
+        case 0:
+          return "未审核";
+        case 1:
+          return "已通过";
+        case 2:
+          return "未通过";
+        case 3:
+          return "未提交";
+        default:
+          return "未审核";
+      }
+    },
     /** 查询学生参与报告信息列表 */
     getList() {
       this.loading = true;
-      listReport(this.queryParams).then(response => {
+      listAuditReport(this.queryParams).then(response => {
         this.reportList = response.rows;
         this.total = response.total;
         this.loading = false;
@@ -362,6 +248,43 @@ export default {
       this.download('system/report/export', {
         ...this.queryParams
       }, `report_${new Date().getTime()}.xlsx`)
+    },
+    handleAudit(row, status) {
+      const isApproved = status === '通过';
+      const statusMapping = {
+        '通过': 1,
+        '拒绝': 2,
+      };
+
+      this.$prompt(
+        isApproved ? '确认通过审核吗？' : '请输入拒绝原因',
+        '审核确认',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: isApproved ? null : /.+/,
+          inputErrorMessage: '拒绝原因不能为空'
+        }
+      ).then(({ value }) => {
+        // 构建符合API要求的参数
+        console.log('审核操作:', row.reportId, statusMapping[status], value);
+        const auditData = {
+          reportId: row.reportId,
+          auditStatus: statusMapping[status],
+          auditRemark: isApproved ? '系统审核通过' : value
+        };
+
+        // 调用专用审核接口
+        auditReport(auditData).then(response => {
+          this.$modal.msgSuccess(`已${status}审核`);
+          this.getList(); // 刷新列表
+        }).catch(error => {
+          console.error('审核操作失败:', error);
+          this.$modal.msgError(`${status}审核失败: ${error.message || ''}`);
+        });
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
     }
   }
 };

@@ -38,3 +38,24 @@ export function delReport(reportId) {
     method: 'delete'
   })
 }
+// 管理员端查询学生讲座报告记录列表
+export function listAuditReport(query) {
+  return request({
+    url: '/system/lecture/auditList',
+    method: 'get',
+    params: query
+  })
+}
+
+// 审核学生讲座报告记录
+export function auditReport(data) {
+  return request({
+    url: '/system/lecture/audit',
+    method: 'put',
+    data: {
+      reportId: data.reportId,
+      auditStatus: data.auditStatus,
+      auditRemark: data.auditRemark
+    }
+  })
+}

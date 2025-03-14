@@ -3,11 +3,10 @@ package com.ruoyi.system.service;
 
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.StudentLectureReport;
-import com.ruoyi.system.domain.vo.StuLectureReportVo;
 
 import java.util.List;
 
-public interface StudentLectureReportService {
+public interface IStudentLectureReportService {
     /**
      * 插入学生讲座报告信息
      * @param studentLectureReport
@@ -31,4 +30,13 @@ public interface StudentLectureReportService {
      * @param
      */
     public int deleteStuLectureReportByReportIds(Integer[] reportIds);
+    /**
+     * 管理员查询学生参与报告信息列表
+     *
+     * @param studentLectureReport 学生参与报告信息
+     * @return 学生参与报告信息集合
+     */
+    public List<StudentLectureReport> selectStuLecReportList(StudentLectureReport studentLectureReport);
+
+    int updateMentorshipAuditInfo(StudentLectureReport report);
 }

@@ -38,13 +38,52 @@
     <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StudentLectureReport">
         SELECT * FROM stu_lec_report
         <where>
-            <if test="id != null and id != ''">
-                AND student_id = #{id}
+            <if test="studentId != null and studentId != ''">
+                AND student_id = #{studentId}
             </if>
             <if test="semester != null and semester != ''">
                 AND semester = #{semester}
             </if>
         </where>
+        ORDER BY
+        CASE audit_status
+        WHEN 3 THEN 0    -- 未审核排最前
+        WHEN 1 THEN 1    -- 未审核排最前
+        WHEN 0 THEN 2    -- 未通过其次
+        WHEN 2 THEN 3    -- 已通过最后
+        ELSE 4                 -- 其他状态（如果有）
+        END,
+        report_admit_time DESC
+    </select>
+
+    <select id="selectStuLecReportList" resultType="com.ruoyi.system.domain.StudentLectureReport">
+        SELECT * FROM stu_lec_report
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
+            <if test="reportTitle != null  and reportTitle != ''"> and report_title = #{reportTitle}</if>
+            <if test="reporter != null  and reporter != ''"> and reporter = #{reporter}</if>
+            <if test="reportDate != null "> and report_date = #{reportDate}</if>
+            <if test="reportContent != null  and reportContent != ''"> and report_content = #{reportContent}</if>
+            <if test="reportLink != null  and reportLink != ''"> and report_link = #{reportLink}</if>
+            <if test="reportFeeling != null  and reportFeeling != ''"> and report_feeling = #{reportFeeling}</if>
+            <if test="lecturePoster != null  and lecturePoster != ''"> and lecture_poster = #{lecturePoster}</if>
+            <if test="reportPicture != null  and reportPicture != ''"> and report_picture = #{reportPicture}</if>
+            <if test="reportAdmitTime != null "> and report_admit_time = #{reportAdmitTime}</if>
+            <if test="auditStatus != null "> and audit_status = #{auditStatus}</if>
+            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="semester != null "> and semester = #{semester}</if>
+            and audit_status != 3
+        </where>
+        ORDER BY
+        CASE audit_status
+        WHEN 0 THEN 0    -- 未审核排最前
+        WHEN 2 THEN 1    -- 未通过其次
+        WHEN 1 THEN 2    -- 已通过最后
+        ELSE 3
+        END,
+        report_admit_time DESC
     </select>
 
     <update id="updateStuLectureInformation">

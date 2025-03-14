@@ -65,7 +65,7 @@ export function listAuditMentorship(query) {
   })
 }
 
-// 审核学生科创竞赛记录
+// 审核学生导师指导记录
 export function auditMentorship(data) {
   return request({
     url: '/system/mentorship/audit',

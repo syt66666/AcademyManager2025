@@ -1,27 +1,29 @@
 package com.ruoyi.system.service.impl;
 
 import com.ruoyi.common.constant.HttpStatus;
-import com.ruoyi.common.core.controller.BaseController;
 import com.github.pagehelper.PageInfo;
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.system.domain.StuInfo;
 import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
 import com.ruoyi.system.mapper.StuInfoMapper;
 import com.ruoyi.system.mapper.StuLectureReportMapper;
-import com.ruoyi.system.service.StudentLectureReportService;
+import com.ruoyi.system.service.IStudentLectureReportService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.ruoyi.common.utils.PageUtils.startPage;
 
 @Service
-public class StudentLectureReportServiceImpl implements StudentLectureReportService {
+public class IStudentLectureReportServiceImpl implements IStudentLectureReportService {
     @Autowired
     private StuInfoMapper stuInfoMapper;
     @Autowired
@@ -112,5 +114,20 @@ public class StudentLectureReportServiceImpl implements StudentLectureReportServ
     @Override
     public int deleteStuLectureReportByReportIds(Integer[] reportIds) {
         return stuLectureReportMapper.deleteStuLectureReportByReportIds(reportIds);
+    }
+
+    @Override
+    public List<StudentLectureReport> selectStuLecReportList(StudentLectureReport studentLectureReport) {
+        return stuLectureReportMapper.selectStuLecReportList(studentLectureReport);
+    }
+
+    @Override
+    public int updateMentorshipAuditInfo(StudentLectureReport report) {
+        if (!Arrays.asList(1, 2).contains(report.getAuditStatus())) {
+            throw new ServiceException("无效的审核状态");
+        }
+
+        // 构建更新参数（仅更新审核相关字段）
+        return stuLectureReportMapper.updateMentorshipAuditInfo(report);
     }
 }
