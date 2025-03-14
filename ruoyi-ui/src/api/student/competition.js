@@ -24,7 +24,7 @@ export function addRecord(data) {
     method: 'post',
     data: data,
     headers: {
-      "Content-Type": "multipart/form-data", // 确保使用 multipart/form-data
+      "Content-Type": "multipart/form-data",
     },
   })
 }

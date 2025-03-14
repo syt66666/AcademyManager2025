@@ -32,7 +32,7 @@ import static com.ruoyi.common.core.domain.AjaxResult.MSG_TAG;
  * 学生讲座报告管理
  */
 @RestController
-@RequestMapping("/Lecture")
+@RequestMapping("/system/lecture")
 public class StudentLectureReportController extends BaseController{
 
     @Value("${file.upload-dir}") // 注入配置路径
@@ -53,7 +53,7 @@ public class StudentLectureReportController extends BaseController{
      * 获取学生报告信息
      * @return
      */
-    @GetMapping("/records")
+    @GetMapping("/list")
     public TableDataInfo getCompetitionRecords(@RequestParam(value = "semester", required = false) Integer semester,
                                                @RequestParam(value = "studentId", required = false) String studentId) {
         return studentLectureReportService.getAllCompetitionRecords(semester, studentId);
@@ -87,7 +87,7 @@ public class StudentLectureReportController extends BaseController{
      * @param
      * @return
      */
-    @PostMapping("/insert")
+    @PostMapping("/add")
     public AjaxResult uploadExcel(@RequestParam(value = "studentLectureReport", required = false) String studentLectureReport,
                                   @RequestParam(value = "reportFeeling", required = false) MultipartFile reportFeeling,
                                   @RequestParam(value = "reportPicture", required = false) MultipartFile[] reportPictures,

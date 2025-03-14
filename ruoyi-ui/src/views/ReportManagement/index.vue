@@ -282,8 +282,7 @@
 
 <script>
 import axios from "axios";
-import {upLoad, fetchLectureReportRecords, updateActivity, delLectureReport} from "@/api/student/letcure";
-import {formatDate} from "@/utils";
+import {addReport, listReport, updateReport, delReport} from "@/api/student/letcure";
 import store from "@/store";
 
 export default {
@@ -329,7 +328,7 @@ export default {
     // 获取学期数据
     this.activeSemester = this.$route.query.semester || '未知学期';
     this.formData.semester = this.findSemester(this.activeSemester);
-    this.fetchLectureReportRecords();  // 在页面加载时获取数据
+    this.listReport();  // 在页面加载时获取数据
   },
   methods: {
 
@@ -351,7 +350,7 @@ export default {
           type: 'warning'
         });
 
-        const response = await delLectureReport(row.reportId);
+        const response = await delReport(row.reportId);
         if (response.code === 200) {
           this.$message.success('删除成功');
           this.initData();
@@ -568,13 +567,13 @@ export default {
     // 分页大小变化
     handleSizeChange(size) {
       this.pageSize = size;
-      this.fetchLectureReportRecords(this.queryParams, this.currentPage, this.pageSize);
+      this.listReport(this.queryParams, this.currentPage, this.pageSize);
     },
 
     // 当前页变化
     handleCurrentChange(page) {
       this.currentPage = page;
-      this.fetchLectureReportRecords(this.queryParams, this.currentPage, this.pageSize);
+      this.listReport(this.queryParams, this.currentPage, this.pageSize);
     },
 
     //转化学期
@@ -658,10 +657,10 @@ export default {
       this.reportFeelingList = []
     },
 
-    async fetchLectureReportRecords() {
+    async listReport() {
       this.isLoading = true; // 设置为加载状态
       try {
-        const data = await fetchLectureReportRecords({
+        const data = await listReport({
           pageNum: this.currentPage,
           pageSize: this.pageSize,
           semester: this.formData.semester,
@@ -716,7 +715,7 @@ export default {
           // 例如：
           if (this.isEdit) {
             //修改信息
-            updateActivity(formData).then(response => {
+            updateReport(formData).then(response => {
               console.log("+++++++++", response);
               this.$message.success('保存成功');
               this.initData();
@@ -727,7 +726,7 @@ export default {
               });
           } else {
             //第一次添加信息
-            upLoad(formData).then(response => {
+            addReport(formData).then(response => {
               console.log("+++++++++", response);
               this.$message.success('提交成功');
               this.initData();
@@ -762,7 +761,7 @@ export default {
       };
       this.previewImages = [];
       this.$refs.fileInput.value = '';
-      this.fetchLectureReportRecords();  // 在页面加载时获取数据
+      this.listReport();  // 在页面加载时获取数据
     },
   }
 };

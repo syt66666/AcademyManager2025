@@ -1,9 +1,9 @@
 import request from '@/utils/request'
 
-// 查询学生管理列表
-export function upLoad(query) {
+// 新增讲座记录
+export function addReport(query) {
   return request({
-    url: '/Lecture/insert',
+    url: '/system/lecture/add',
     method: 'post',
     data: query,
     headers: {
@@ -12,17 +12,17 @@ export function upLoad(query) {
   })
 }
 // 查询讲座记录
-export function fetchLectureReportRecords(query) {
+export function listReport(query) {
   return request({
-    url: '/Lecture/records',
+    url: '/system/lecture/list',
     method: 'get',
     params: query,
   });
 }
 //更新学生讲座报告信息
-export function updateActivity(data) {
+export function updateReport(data) {
   return request({
-    url: '/Lecture/update',
+    url: '/system/lecture/update',
     method: 'put',
     data: data,
     headers: {
@@ -30,11 +30,11 @@ export function updateActivity(data) {
     },
   })
 }
-//删除学生未提交讲座记录
-// 删除学生科创竞赛记录
-export function delLectureReport(reportId) {
+
+// 删除学生讲座报告信息
+export function delReport(reportId) {
   return request({
-    url: '/Lecture/delete/' + reportId,
+    url: '/system/lecture/delete/' + reportId,
     method: 'delete'
   })
 }
