@@ -166,7 +166,7 @@ export default {
         this.number--;
         this.$modal.closeLoading();
         this.$modal.msgError(res.msg);
-        this.$refs.imageUpload.handleRemove(file);
+        this.$refs.imageUpload.handleDelete(file);
         this.uploadedSuccessfully();
       }
     },
