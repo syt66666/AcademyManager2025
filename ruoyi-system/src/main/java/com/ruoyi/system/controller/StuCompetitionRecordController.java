@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -94,21 +95,30 @@ public class StuCompetitionRecordController extends BaseController
             StuCompetitionRecord oldRecord = stuCompetitionRecordService.selectStuCompetitionRecordByCompetitionId(record.getCompetitionId());
             List<String> oldFiles = parseMaterialPaths(oldRecord.getProofMaterial());
 
-            // 处理新文件上传
+            // 处理文件合并逻辑
+            List<String> finalFilePaths = new ArrayList<>();
+
+            // 1. 添加保留的旧文件
+            if (record.getExistingProofMaterial() != null) {
+                finalFilePaths.addAll(record.getExistingProofMaterial());
+            }
+
+            // 2. 处理新上传文件
             if (proofMaterials != null && proofMaterials.length > 0) {
-                List<String> newFilePaths = new ArrayList<>();
                 for (MultipartFile file : proofMaterials) {
                     String filePath = saveFile(file);
-                    newFilePaths.add(filePath);
+                    finalFilePaths.add(filePath);
                 }
-                record.setProofMaterial(new ObjectMapper().writeValueAsString(newFilePaths));
-
-                // 清理旧文件
-                deleteOldFiles(oldFiles);
-            } else {
-                // 保留原有文件路径
-                record.setProofMaterial(oldRecord.getProofMaterial());
             }
+
+            // 3. 更新文件路径到记录
+            record.setProofMaterial(new ObjectMapper().writeValueAsString(finalFilePaths));
+
+            // 4. 清理被删除的旧文件
+            List<String> filesToDelete = oldFiles.stream()
+                    .filter(oldFile -> !finalFilePaths.contains(oldFile))
+                    .collect(Collectors.toList());
+            deleteOldFiles(filesToDelete);
 
             // 更新记录
             return toAjax(stuCompetitionRecordService.updateStuCompetitionRecord(record));

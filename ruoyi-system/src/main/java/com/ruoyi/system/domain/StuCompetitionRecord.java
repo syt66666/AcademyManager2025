@@ -1,6 +1,8 @@
 package com.ruoyi.system.domain;
 
 import java.util.Date;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -51,6 +53,9 @@ public class StuCompetitionRecord extends BaseEntity
     @Excel(name = "证明材料", readConverterExp = "多=个图片路径的JSON数组")
     private String proofMaterial;
 
+    /** 旧文件路径 */
+    private List<String> existingProofMaterial;;
+
     /** 审核状态 */
     private String auditStatus;
 
@@ -72,6 +77,14 @@ public class StuCompetitionRecord extends BaseEntity
 
     /** 修读学期 */
     private String semester;
+
+    public List<String> getExistingProofMaterial() {
+        return existingProofMaterial;
+    }
+
+    public void setExistingProofMaterial(List<String> existingProofMaterial) {
+        this.existingProofMaterial = existingProofMaterial;
+    }
 
     public String getAwardDateEnd() {
         return awardDateEnd;

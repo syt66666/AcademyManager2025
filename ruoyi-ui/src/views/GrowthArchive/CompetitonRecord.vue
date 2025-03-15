@@ -11,7 +11,11 @@
       <!-- 竞赛表格 -->
       <el-table
         :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
-        <el-table-column type="index" label="序号"></el-table-column>
+        <el-table-column label="序号" width="80">
+          <template v-slot="scope">
+            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
         <el-table-column prop="competitionName" label="竞赛名称" min-width="100"></el-table-column>
         <el-table-column prop="competitionLevel" label="竞赛级别"></el-table-column>
         <el-table-column prop="awardLevel" label="竞赛奖项"></el-table-column>
@@ -169,6 +173,9 @@
             :file-list="fileList"
             :auto-upload="false"
             :on-change="handleFileChange"
+            :on-remove="handleFileRemove"
+            :on-preview="handlePreviewFile"
+            list-type="picture-card"
           >
             <i class="el-icon-plus"></i>
             <div slot="tip" class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
@@ -246,19 +253,94 @@ export default {
       this.handleEdit(row);
       localStorage.removeItem(this.getDraftKey());
     },
+// 修改后的parseMaterial方法
+    parseMaterial(material) {
+      try {
+        // 情况1：已经是数组直接返回
+        if (Array.isArray(material)) {
+          console.log('[DEBUG] 已解析为数组:', material);
+          return [...material]; // 解除响应式绑定
+        }
 
-    // 处理编辑未通过记录
+        // 情况2：字符串类型尝试解析
+        if (typeof material === 'string') {
+          // 处理Vue响应式对象字符串的特殊情况
+          const cleaned = material.replace(/__ob__:.*?($$|$$)/gs, '');
+          console.log('[DEBUG] 已解析为字符串:', cleaned);
+          return JSON.parse(cleaned);
+        }
+
+        // 情况3：其他类型返回空数组
+        return [];
+      } catch (e) {
+        console.error('材料解析失败:', {
+          input: material,
+          error: e.stack
+        });
+        return [];
+      }
+    },
     handleEdit(row) {
-      this.formData = {
-        ...row,
-        competitionId: row.id,
-        auditTime:null,
-        auditRemark:"",
-        awardDate: row.awardDate ? new Date(row.awardDate) : null
-      };
+      // 创建深拷贝避免响应式数据问题
+      const rawData = JSON.parse(JSON.stringify(row));
+
+      this.formData = { ...rawData };
       this.isEdit = true;
-      this.currentCompetitionId = row.id;
+      this.currentCompetitionId = rawData.id;
       this.showDialog = true;
+
+      // 调试输出原始数据
+      console.log('[DEBUG] 原始proofMaterial结构:', {
+        type: typeof rawData.proofMaterial,
+        value: rawData.proofMaterial
+      });
+
+      // 解析文件路径
+      const proofMaterial = this.parseMaterial(rawData.proofMaterial);
+      console.log('[DEBUG] 解析结果:', proofMaterial);
+
+      // 生成符合el-upload要求的文件列表
+      this.fileList = proofMaterial.map((path, index) => {
+        // 路径有效性验证
+        if (!path || typeof path !== 'string') {
+          console.warn(`无效文件路径[${index}]:`, path);
+          return null;
+        }
+
+        // 生成完整访问URL
+        const fullUrl = `${process.env.VUE_APP_BASE_API}/profile/${encodeURIComponent(path)}`;
+
+        return {
+          uid: Date.now() + index, // 唯一标识
+          name: path.split('/').pop(),
+          url: fullUrl,
+          status: 'success',
+          isOld: true,
+          path: path
+        };
+      }).filter(Boolean);
+
+      console.log('[DEBUG] 生成的文件列表:', this.fileList);
+    },
+// 文件预览处理
+    handlePreviewFile(file) {
+      if (file.isOld) {
+        // 旧文件直接使用存储的URL
+        window.open(file.url);
+      } else {
+        // 新上传文件使用本地预览
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          window.open(e.target.result);
+        };
+        reader.readAsDataURL(file.raw);
+      }
+    },
+    handleFileRemove(file, fileList) {
+      this.fileList = fileList;
+    },
+    handleFileChange(file, fileList) {
+      this.fileList = fileList.slice(-5); // 保持最多5个文件
     },
 
     // 新增方法
@@ -405,14 +487,6 @@ export default {
         this.$message.error('预览失败：文件路径格式不正确');
       }
     },
-// 获取文件名
-    getFileName(filePath) {
-      return filePath.split('/').pop() || '证明材料';
-    },
-    handleFileChange(file, fileList) {
-      this.fileList = fileList.slice(-5); // 保持最多5个文件
-    },
-
 
     // 关闭对话框
     closeDialog() {
@@ -456,6 +530,17 @@ export default {
               return this.$message.error(`校验失败: ${error.message}`);
             }
           }
+
+
+          // 获取保留的旧文件路径
+          const existingPaths = this.fileList
+            .filter(file => file.isOld)
+            .map(file => file.path);
+
+          // 获取新上传的文件
+          const newFiles = this.fileList
+            .filter(file => !file.isOld)
+            .map(file => file.raw);
           const formData = new FormData();
 
           // 构建核心数据对象
@@ -469,7 +554,8 @@ export default {
             auditStatus: state,
             auditTime: null,
             auditRemark: '',
-            awardDate: this.formData.awardDate
+            awardDate: this.formData.awardDate,
+            existingProofMaterial: existingPaths, // 旧文件路径
           };
 
           // 如果是编辑操作，添加ID字段
@@ -571,16 +657,6 @@ export default {
         this.$message.error('数据加载异常');
       }
     },
-
-// 新增材料解析方法
-    parseMaterial(material) {
-      try {
-        return material ? JSON.parse(material) : [];
-      } catch (e) {
-        console.error('材料解析失败:', material);
-        return [];
-      }
-    }
 
 
   },
