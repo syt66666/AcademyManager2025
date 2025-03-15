@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 import com.alibaba.fastjson2.JSON;
@@ -90,7 +91,6 @@ public class StuActivityRecordController extends BaseController
                           @RequestPart(value = "proofMaterial", required = false) MultipartFile[] proofMaterials,
                           @RequestHeader(value = "Authorization", required = false) String token)
     {
-        System.out.println(123535);
         try {
             // 验证 Token
             if (token == null || !validateToken(token)) {
@@ -107,6 +107,7 @@ public class StuActivityRecordController extends BaseController
                 }
                 stuActivityRecord.setProofMaterial(new ObjectMapper().writeValueAsString(filePaths));
             }
+            stuActivityRecord.setApplyTime(new Date());
             // 保存记录
             stuActivityRecordService.insertStuActivityRecord(stuActivityRecord);
             return AjaxResult.success();
@@ -218,26 +219,35 @@ public class StuActivityRecordController extends BaseController
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
             }
-
+            record.setApplyTime(new Date());
             // 获取旧记录用于清理文件
             StuActivityRecord oldRecord = stuActivityRecordService.selectStuActivityRecordByActivityId(record.getActivityId());
             List<String> oldFiles = parseMaterialPaths(oldRecord.getProofMaterial());
 
-            // 处理新文件上传
+            // 处理文件合并逻辑
+            List<String> finalFilePaths = new ArrayList<>();
+
+            // 1. 添加保留的旧文件
+            if (record.getExistingProofMaterial() != null) {
+                finalFilePaths.addAll(record.getExistingProofMaterial());
+            }
+
+            // 2. 处理新上传文件
             if (proofMaterials != null && proofMaterials.length > 0) {
-                List<String> newFilePaths = new ArrayList<>();
                 for (MultipartFile file : proofMaterials) {
                     String filePath = saveFile(file);
-                    newFilePaths.add(filePath);
+                    finalFilePaths.add(filePath);
                 }
-                record.setProofMaterial(new ObjectMapper().writeValueAsString(newFilePaths));
-
-                // 清理旧文件
-                deleteOldFiles(oldFiles);
-            } else {
-                // 保留原有文件路径
-                record.setProofMaterial(oldRecord.getProofMaterial());
             }
+            // 3. 更新文件路径到记录
+            record.setProofMaterial(new ObjectMapper().writeValueAsString(finalFilePaths));
+
+            // 4. 清理被删除的旧文件
+            List<String> filesToDelete = oldFiles.stream()
+                    .filter(oldFile -> !finalFilePaths.contains(oldFile))
+                    .collect(Collectors.toList());
+            deleteOldFiles(filesToDelete);
+
             // 更新记录
             return toAjax(stuActivityRecordService.updateStuActivityRecord(record));
         } catch (Exception e) {

@@ -2,6 +2,8 @@ package com.ruoyi.system.domain;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -51,6 +53,9 @@ public class StuActivityRecord extends BaseEntity
     /** 证明材料路径 */
     private String proofMaterial;
 
+    /** 旧文件路径 */
+    private List<String> existingProofMaterial;
+
     /** 修读学期 */
     @Excel(name = "修读学期")
     private String semester;
@@ -73,6 +78,14 @@ public class StuActivityRecord extends BaseEntity
 
     /** 审核意见 */
     private String auditRemark;
+
+    public List<String> getExistingProofMaterial() {
+        return existingProofMaterial;
+    }
+
+    public void setExistingProofMaterial(List<String> existingProofMaterial) {
+        this.existingProofMaterial = existingProofMaterial;
+    }
 
     public String getAwardDateBegin() {
         return awardDateBegin;

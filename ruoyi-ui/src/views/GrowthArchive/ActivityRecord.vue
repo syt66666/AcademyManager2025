@@ -10,7 +10,11 @@
 
       <!-- 数据表格 -->
       <el-table :data="activityRecords" style="width: 100%" border stripe highlight-current-row>
-        <el-table-column type="index" label="序号"></el-table-column>
+        <el-table-column label="序号" width="80">
+          <template v-slot="scope">
+            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
         <el-table-column prop="activityName" label="活动名称" min-width="100"></el-table-column>
         <el-table-column prop="activityLevel" label="活动级别" ></el-table-column>
         <el-table-column prop="awardLevel" label="活动奖项" ></el-table-column>
@@ -22,6 +26,7 @@
                 type="primary"
                 :underline="false"
                 @click="handlePreview(scope.row.proofMaterial)"
+                list-type="picture-card"
                 style="margin-right: 10px;"
               >
                 <i class="el-icon-view"></i> 预览
@@ -160,13 +165,16 @@
           </el-date-picker>
         </el-form-item>
 
-        <el-form-item label="图片上传" prop="proofMaterial">
+        <el-form-item label="证明材料" prop="proofMaterial">
           <el-upload
             multiple
             :limit="5"
             :file-list="fileList"
             :auto-upload="false"
             :on-change="handleFileChange"
+            :on-remove="handleFileRemove"
+            :on-preview="handlePreviewFile"
+            list-type="picture-card"
           >
             <i class="el-icon-plus"></i>
             <div slot="tip" class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
@@ -257,6 +265,26 @@ export default {
   },
 
   methods: {
+    // 文件预览处理
+    handlePreviewFile(file) {
+      if (file.isOld) {
+        // 旧文件直接使用存储的URL
+        window.open(file.url);
+      } else {
+        // 新上传文件使用本地预览
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          window.open(e.target.result);
+        };
+        reader.readAsDataURL(file.raw);
+      }
+    },
+    handleFileRemove(file, fileList) {
+      this.fileList = fileList;
+    },
+    handleFileChange(file, fileList) {
+      this.fileList = fileList.slice(-5); // 保持最多5个文件
+    },
     async downloadFiles(filePaths) {
       try {
         // 解析文件路径
@@ -331,9 +359,7 @@ export default {
     getFullUrl(filePath) {
       return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
     },
-    handleFileChange(file, fileList) {
-      this.fileList = fileList.slice(-5); // 保持最多5个文件
-    },
+
 
     // 关闭对话框
     closeDialog() {
@@ -421,8 +447,6 @@ export default {
         const params = {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
-          orderByColumn: 'apply_time', // 新增排序字段
-          isAsc: 'desc',                // 降序排列
           studentId: this.$store.state.user.name,
           semester: this.activeSemester,
           ...this.queryParams
@@ -445,18 +469,6 @@ export default {
         this.isLoading = false;
       }
     },
-
-// 新增材料解析方法
-    parseMaterial(material) {
-      try {
-        // 尝试解析为 JSON 数组
-        return typeof material === 'string' ? JSON.parse(material) : material;
-      } catch (e) {
-        // 如果解析失败，假设是单个文件路径
-        return material ? [material] : [];
-      }
-    },
-
 
     // 分页处理
     handleSizeChange(size) {
@@ -489,17 +501,67 @@ export default {
       this.showDialog = true;
     },
 
-    // 处理编辑未通过记录
+// 修改后的parseMaterial方法
+    parseMaterial(material) {
+      try {
+        // 情况1：已经是数组直接返回
+        if (Array.isArray(material)) {
+          console.log('[DEBUG] 已解析为数组:', material);
+          return [...material]; // 解除响应式绑定
+        }
+
+        // 情况2：字符串类型尝试解析
+        if (typeof material === 'string') {
+          // 处理Vue响应式对象字符串的特殊情况
+          const cleaned = material.replace(/__ob__:.*?($$|$$)/gs, '');
+          console.log('[DEBUG] 已解析为字符串:', cleaned);
+          return JSON.parse(cleaned);
+        }
+
+        // 情况3：其他类型返回空数组
+        return [];
+      } catch (e) {
+        console.error('材料解析失败:', {
+          input: material,
+          error: e.stack
+        });
+        return [];
+      }
+    },
     handleEdit(row) {
-      this.formData = {
-        ...row,
-        auditTime:null,
-        auditRemark:"",
-        awardDate: row.awardDate ? new Date(row.awardDate) : null
-      };
+      // 创建深拷贝避免响应式数据问题
+      const rawData = JSON.parse(JSON.stringify(row));
+
+      this.formData = {...rawData};
       this.isEdit = true;
-      this.currentActivityId = row.activityId;
+      this.currentActivityId = rawData.id;
       this.showDialog = true;
+
+      // 解析文件路径
+      const proofMaterial = this.parseMaterial(rawData.proofMaterial);
+
+      // 生成符合el-upload要求的文件列表
+      this.fileList = proofMaterial.map((path, index) => {
+        // 路径有效性验证
+        if (!path || typeof path !== 'string') {
+          console.warn(`无效文件路径[${index}]:`, path);
+          return null;
+        }
+
+        // 生成完整访问URL
+        const fullUrl = `${process.env.VUE_APP_BASE_API}/profile/${encodeURIComponent(path)}`;
+
+        return {
+          uid: Date.now() + index, // 唯一标识
+          name: path.split('/').pop(),
+          url: fullUrl,
+          status: 'success',
+          isOld: true,
+          path: path
+        };
+      }).filter(Boolean);
+
+      console.log('[DEBUG] 生成的文件列表:', this.fileList);
     },
 
     // 处理草稿修改
@@ -551,6 +613,17 @@ export default {
             return this.$message.error('已存在相同活动记录，不可重复添加');
           }
         }
+
+          // 获取保留的旧文件路径
+          const existingPaths = this.fileList
+            .filter(file => file.isOld)
+            .map(file => file.path);
+
+          // 获取新上传的文件
+          const newFiles = this.fileList
+            .filter(file => !file.isOld)
+            .map(file => file.raw);
+
         const formData = new FormData();
         // 构建核心数据对象
         const recordData = {
@@ -563,7 +636,8 @@ export default {
           auditStatus: status,
           auditTime: null,
           auditRemark: '',
-          awardDate: this.formData.awardDate
+          awardDate: this.formData.awardDate,
+          existingProofMaterial: existingPaths, // 旧文件路径
         };
 
         // 如果是编辑操作，添加ID字段

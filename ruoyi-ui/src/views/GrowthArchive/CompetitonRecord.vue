@@ -58,27 +58,31 @@
               type="text"
               size="mini"
               @click="handleEditDraft(scope.row)"
-            >重新提交</el-button>
+            >重新提交
+            </el-button>
 
             <template v-if="scope.row.auditStatus === '未提交'">
               <el-button
                 type="text"
                 size="mini"
                 @click="handleEditDraft(scope.row)"
-              >编辑草稿</el-button>
+              >编辑草稿
+              </el-button>
               <el-button
                 type="text"
                 size="mini"
                 style="color: #F56C6C;"
                 @click="handleDelete(scope.row)"
-              >删除</el-button>
+              >删除
+              </el-button>
             </template>
 
             <el-tag
               v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
               type="info"
               size="mini"
-            >不可修改</el-tag>
+            >不可修改
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="auditTime" label="审核时间" min-width="100"></el-table-column>
@@ -193,7 +197,7 @@
 
 <script>
 import axios from "axios";
-import { addRecord, listRecord, delRecord , updateRecord, checkCompetitionUnique } from "@/api/student/competition";
+import {addRecord, listRecord, delRecord, updateRecord, checkCompetitionUnique} from "@/api/student/competition";
 import store from "@/store";
 
 export default {
@@ -229,15 +233,15 @@ export default {
         competitionName: '', // 竞赛名称
         competitionLevel: '', // 竞赛级别
         awardLevel: '', // 奖项
-        awardDate:'',//竞赛获奖时间
+        awardDate: '',//竞赛获奖时间
         scholarshipPoints: '', // 折合分数
         proofMaterial: '', // 图片地址
       },
       rules: {
-          competitionName: [{ required: true, message: '竞赛名称不能为空', trigger: 'blur' }],
-          competitionLevel: [{ required: true, message: '请选择竞赛级别', trigger: 'change' }],
-          awardLevel: [{ required: true, message: '请选择奖项', trigger: 'change' }],
-          awardDate: [{ required: true, message: '请选择获奖日期', trigger: 'change' }]
+        competitionName: [{required: true, message: '竞赛名称不能为空', trigger: 'blur'}],
+        competitionLevel: [{required: true, message: '请选择竞赛级别', trigger: 'change'}],
+        awardLevel: [{required: true, message: '请选择奖项', trigger: 'change'}],
+        awardDate: [{required: true, message: '请选择获奖日期', trigger: 'change'}]
       },
     };
   },
@@ -284,7 +288,7 @@ export default {
       // 创建深拷贝避免响应式数据问题
       const rawData = JSON.parse(JSON.stringify(row));
 
-      this.formData = { ...rawData };
+      this.formData = {...rawData};
       this.isEdit = true;
       this.currentCompetitionId = rawData.id;
       this.showDialog = true;
@@ -322,7 +326,7 @@ export default {
 
       console.log('[DEBUG] 生成的文件列表:', this.fileList);
     },
-// 文件预览处理
+    // 文件预览处理
     handlePreviewFile(file) {
       if (file.isOld) {
         // 旧文件直接使用存储的URL
@@ -351,7 +355,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         });
-        console.log("row.id:"+row.id)
+        console.log("row.id:" + row.id)
         const response = await delRecord(row.id);
         if (response.code === 200) {
           this.$message.success('删除成功');
@@ -366,11 +370,11 @@ export default {
     },
 
     async handleSave() {
-      this.submitData('未提交');
+      await this.submitData('未提交');
     },
 
     async handleSubmit() {
-      this.submitData('未审核');
+      await this.submitData('未审核');
     },
 
     getDraftKey() {
@@ -380,7 +384,7 @@ export default {
     // 修改后的打开对话框方法
     openDialog() {
       this.isEdit = false;
-      this.currentCompetitionId= null;
+      this.currentCompetitionId = null;
       this.formData = this.initFormData();
       this.showDialog = true;
 
@@ -508,8 +512,8 @@ export default {
             this.formData.competitionName !== originalRecord.competitionName ||
             this.formData.competitionLevel !== originalRecord.competitionLevel ||
             this.formData.awardLevel !== originalRecord.awardLevel;
-          console.log("isKeyFieldChanged:"+isKeyFieldChanged)
-          console.log("this.currentCompetitionId:"+this.currentCompetitionId)
+          console.log("isKeyFieldChanged:" + isKeyFieldChanged)
+          console.log("this.currentCompetitionId:" + this.currentCompetitionId)
           // 需要校验的唯一性条件
           const shouldCheckUnique = !this.currentCompetitionId || isKeyFieldChanged;
 
@@ -634,7 +638,7 @@ export default {
           pageNum: this.currentPage,
           pageSize: this.pageSize,
           semester: this.activeSemester,
-          studentId:store.state.user.name
+          studentId: store.state.user.name
         });
 
         if (response && response.code === 200) {

@@ -52,13 +52,13 @@
         </where>
         ORDER BY
         CASE audit_status
-        WHEN '未提交' THEN 0    -- 未审核排最前
-        WHEN '未通过' THEN 1    -- 未审核排最前
-        WHEN '未审核' THEN 2    -- 未通过其次
-        WHEN '已通过' THEN 3    -- 已通过最后
-        ELSE 4                 -- 其他状态（如果有）
+            WHEN '未提交' THEN 0
+            WHEN '未通过' THEN 1
+            WHEN '未审核' THEN 2
+            WHEN '已通过' THEN 3
+            ELSE 4
         END,
-        apply_time DESC            -- 按提交时间倒序
+        apply_time DESC
     </select>
 
     <select id="selectAuditActivityRecordList" parameterType="StuActivityRecord" resultMap="StuActivityRecordResult">
@@ -87,12 +87,12 @@
         </where>
         ORDER BY
         CASE audit_status
-        WHEN '未审核' THEN 0    -- 未审核排最前
-        WHEN '未通过' THEN 1    -- 未通过其次
-        WHEN '已通过' THEN 2    -- 已通过最后
-        ELSE 3                 -- 其他状态（如果有）
+        WHEN '未审核' THEN 0
+        WHEN '未通过' THEN 1
+        WHEN '已通过' THEN 2
+        ELSE 3
         END,
-        apply_time DESC            -- 按提交时间倒序
+        apply_time DESC
     </select>
 
     <select id="selectStuActivityRecordByActivityId" parameterType="Integer" resultMap="StuActivityRecordResult">

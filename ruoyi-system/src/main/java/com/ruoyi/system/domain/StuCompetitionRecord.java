@@ -54,7 +54,7 @@ public class StuCompetitionRecord extends BaseEntity
     private String proofMaterial;
 
     /** 旧文件路径 */
-    private List<String> existingProofMaterial;;
+    private List<String> existingProofMaterial;
 
     /** 审核状态 */
     private String auditStatus;
