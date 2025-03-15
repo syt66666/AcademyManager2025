@@ -32,7 +32,8 @@
           size="mini"
           @click="handleExport"
           v-hasPermi="['system:report:export']"
-        >导出</el-button>
+        >导出
+        </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -43,10 +44,10 @@
           {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="学号" align="center" prop="studentId" />
-      <el-table-column label="姓名" align="center" prop="studentName" />
-      <el-table-column label="讲座题目" align="center" prop="reportTitle" />
-      <el-table-column label="讲师姓名" align="center" prop="reporter" />
+      <el-table-column label="学号" align="center" prop="studentId"/>
+      <el-table-column label="姓名" align="center" prop="studentName"/>
+      <el-table-column label="讲座题目" align="center" prop="reportTitle"/>
+      <el-table-column label="讲师姓名" align="center" prop="reporter"/>
       <el-table-column label="讲座时间" align="center" prop="reportDate" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.reportDate, '{y}-{m}-{d}') }}</span>
@@ -67,9 +68,21 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column label="讲座内容简介" align="center" prop="reportContent" />
-      <el-table-column label="讲座链接" align="center" prop="reportLink" />
-      <el-table-column label="讲座海报" align="center" prop="lecturePoster" />
+      <el-table-column label="讲座内容简介" align="center" prop="reportContent"/>
+      <el-table-column label="讲座链接" align="center" prop="reportLink"/>
+      <el-table-column label="讲座海报" align="center" prop="lecturePoster"/>
+      <el-table-column label="讲座海报">
+        <template v-slot:default="scope">
+          <img
+            :src="getImageUrl(scope.row.lecturePoster)"
+            alt="讲座海报"
+            style="width: 50px; height: 50px; cursor: pointer;"
+            v-if="scope.row.lecturePoster"
+            @click="handleImageClick(scope.row.lecturePoster)"
+          />
+          <span v-else> </span>
+        </template>
+      </el-table-column>
       <el-table-column label="讲座现场照片" width="120">
         <template v-slot:default="scope">
           <div class="proof-material-cell">
@@ -119,7 +132,7 @@
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="审核意见" align="center" prop="auditRemark" />
+      <el-table-column label="审核意见" align="center" prop="auditRemark"/>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -128,16 +141,19 @@
             icon="el-icon-check"
             @click="handleAudit(scope.row,'通过')"
             v-hasPermi="['system:report:audit']"
-          >通过</el-button>
+          >通过
+          </el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-close"
             @click="handleAudit(scope.row,'拒绝')"
             v-hasPermi="['system:report:audit']"
-          >拒绝</el-button>
+          >拒绝
+          </el-button>
         </template>
-      </el-table-column></el-table>
+      </el-table-column>
+    </el-table>
 
     <pagination
       v-show="total>0"
@@ -177,18 +193,26 @@
         </el-button>
       </div>
     </el-dialog>
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+    <!-- 讲座海报图片预览对话框 -->
+    <el-dialog :visible.sync="dialogVisible" title="图片预览" width="50%">
+      <div style="position: relative;">
+        <img :src="getImageUrl(currentLecturePoster)" alt="报告海报大图" style="width: 100%; height: auto;"/>
+        <div style="position: absolute; bottom: 20px; right: 20px;">
+          <el-button
+            type="primary"
+            icon="el-icon-download"
+            @click="downloadLecturePoster(currentLecturePoster)"
+            style="background-color: #42b983; border-color: #42b983;">
+            下载图片
+          </el-button>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listAuditReport,auditReport } from "@/api/student/letcure";
+import {listAuditReport, auditReport} from "@/api/student/letcure";
 import axios from "axios";
 
 export default {
@@ -217,6 +241,8 @@ export default {
       previewImages: [],
       currentPreviewIndex: 0,
       currentDownloadFile: '',
+      dialogVisible: false,
+      currentLecturePoster: '',
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -241,14 +267,22 @@ export default {
       // 表单参数
       form: {},
       // 表单校验
-      rules: {
-      }
+      rules: {}
     };
   },
   created() {
     this.getList();
   },
   methods: {
+    //展开报告海报大图
+    handleImageClick(imageUrl) {
+      this.currentLecturePoster = imageUrl;
+      this.dialogVisible = true;
+    },
+    // 获取完整图片路径
+    getImageUrl(path) {
+      return `${process.env.VUE_APP_BASE_API}/${path}`;
+    },
     // 生成带时间戳的文件名
     generateReportFeeling() {
       const date = new Date().toISOString().slice(0, 10);
@@ -276,6 +310,10 @@ export default {
         console.error("下载错误详情:", error);
       }
     },
+    async downloadLecturePoster(filePath) {
+      const url = `${process.env.VUE_APP_BASE_API}/${filePath}`;
+      await this.downloadSingleFile(url);
+    },
     async downloadFiles(filePaths) {
       try {
         // 解析文件路径
@@ -286,7 +324,7 @@ export default {
           throw new Error("无效的文件路径格式");
         }
         // 处理多个文件下载
-        if (paths.length > 1|| paths.length === 1) {
+        if (paths.length > 1 || paths.length === 1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -424,7 +462,7 @@ export default {
     // 多选框选中数据
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.reportId)
-      this.single = selection.length!==1
+      this.single = selection.length !== 1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
@@ -456,7 +494,7 @@ export default {
           inputPattern: isApproved ? null : /.+/,
           inputErrorMessage: '拒绝原因不能为空'
         }
-      ).then(({ value }) => {
+      ).then(({value}) => {
         // 构建符合API要求的参数
         console.log('审核操作:', row.reportId, statusMapping[status], value);
         const auditData = {

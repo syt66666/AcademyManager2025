@@ -10,12 +10,12 @@
 
       <el-table :data="records" style="width: 100%" border stripe highlight-current-row>
         <el-table-column type="index" label="序号" width="80"></el-table-column>
-        <el-table-column prop="reportTitle" label="讲座题目" ></el-table-column>
-        <el-table-column prop="reporter" label="讲师姓名" ></el-table-column>
-        <el-table-column prop="reportDate" label="讲座时间" ></el-table-column>
-        <el-table-column prop="reportContent" label="讲座内容简介" ></el-table-column>
-        <el-table-column prop="reportLink" label="讲座链接" ></el-table-column>
-        <el-table-column label="讲座海报" >
+        <el-table-column prop="reportTitle" label="讲座题目"></el-table-column>
+        <el-table-column prop="reporter" label="讲师姓名"></el-table-column>
+        <el-table-column prop="reportDate" label="讲座时间"></el-table-column>
+        <el-table-column prop="reportContent" label="讲座内容简介"></el-table-column>
+        <el-table-column prop="reportLink" label="讲座链接"></el-table-column>
+        <el-table-column label="讲座海报">
           <template v-slot:default="scope">
             <img
               :src="getImageUrl(scope.row.lecturePoster)"
@@ -116,53 +116,53 @@
         <el-table-column prop="auditRemark" label="审核意见" min-width="150"></el-table-column>
       </el-table>
 
-    <!-- 现场图片预览对话框 -->
-    <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
-      <div style="text-align: center; margin-bottom: 20px;">
-        <img
-          :src="previewImages[currentPreviewIndex]"
-          style="max-width: 100%; display: block; margin: 0 auto;"
-          alt="现场照片预览"
-        />
-        <el-button
-          icon="el-icon-arrow-left"
-          :disabled="currentPreviewIndex === 0"
-          @click="currentPreviewIndex--"
-        ></el-button>
-        <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
-        <el-button
-          icon="el-icon-arrow-right"
-          :disabled="currentPreviewIndex === previewImages.length - 1"
-          @click="currentPreviewIndex++"
-        ></el-button>
-      </div>
+      <!-- 现场图片预览对话框 -->
+      <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img
+            :src="previewImages[currentPreviewIndex]"
+            style="max-width: 100%; display: block; margin: 0 auto;"
+            alt="现场照片预览"
+          />
+          <el-button
+            icon="el-icon-arrow-left"
+            :disabled="currentPreviewIndex === 0"
+            @click="currentPreviewIndex--"
+          ></el-button>
+          <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+          <el-button
+            icon="el-icon-arrow-right"
+            :disabled="currentPreviewIndex === previewImages.length - 1"
+            @click="currentPreviewIndex++"
+          ></el-button>
+        </div>
 
-      <div slot="footer">
-        <el-button
-          type="primary"
-          @click="downloadSingleFile(previewImages[currentPreviewIndex])"
-          style="background-color: #42b983; border-color: #42b983;"
-        >
-          <i class="el-icon-download"></i> 下载当前图片
-        </el-button>
-      </div>
-    </el-dialog>
-
-    <!-- 讲座海报图片预览对话框 -->
-    <el-dialog :visible.sync="dialogVisible" title="图片预览" width="50%">
-      <div style="position: relative;">
-        <img :src="getImageUrl(currentLecturePoster)" alt="报告海报大图" style="width: 100%; height: auto;"/>
-        <div style="position: absolute; bottom: 20px; right: 20px;">
+        <div slot="footer">
           <el-button
             type="primary"
-            icon="el-icon-download"
-            @click="downloadFiles(currentLecturePoster)"
-            style="background-color: #42b983; border-color: #42b983;">
-            下载图片
+            @click="downloadSingleFile(previewImages[currentPreviewIndex])"
+            style="background-color: #42b983; border-color: #42b983;"
+          >
+            <i class="el-icon-download"></i> 下载当前图片
           </el-button>
         </div>
-      </div>
-    </el-dialog>
+      </el-dialog>
+
+      <!-- 讲座海报图片预览对话框 -->
+      <el-dialog :visible.sync="dialogVisible" title="图片预览" width="50%">
+        <div style="position: relative;">
+          <img :src="getImageUrl(currentLecturePoster)" alt="报告海报大图" style="width: 100%; height: auto;"/>
+          <div style="position: absolute; bottom: 20px; right: 20px;">
+            <el-button
+              type="primary"
+              icon="el-icon-download"
+              @click="downloadLecturePoster(currentLecturePoster)"
+              style="background-color: #42b983; border-color: #42b983;">
+              下载图片
+            </el-button>
+          </div>
+        </div>
+      </el-dialog>
 
       <!-- 分页器 -->
       <el-pagination
@@ -177,105 +177,105 @@
       />
     </el-card>
 
-        <el-dialog :visible.sync="showDialog" title="讲座报告填写" id="newCard"
-                   style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
-          <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
-            <el-form-item label="报告海报上传" prop="lecturePoster">
-              <imageUpload
-                v-model="formData.lecturePoster"
-                :limit="1"
-                :fileSize="5"
-                :fileType="['png','jpg','jpeg']"
-                :isShowTip="true"
-              />
-            </el-form-item>
-            <el-form-item label="讲座题目" prop="reportTitle">
-              <el-input v-model="formData.reportTitle" placeholder="请输入讲座题目" style="width: 100%;"></el-input>
-            </el-form-item>
-            <el-form-item label="讲师姓名" prop="reporter">
-              <el-input v-model="formData.reporter" placeholder="请输入讲师姓名" style="width: 100%;"></el-input>
-            </el-form-item>
-            <el-form-item label="讲座日期" prop="reportDate">
-              <el-date-picker
-                clearable
-                v-model="formData.reportDate"
-                type="date"
-                value-format="yyyy-MM-dd"
-                placeholder="请选择讲座日期"
-                style="width: 100%;">
-              </el-date-picker>
-            </el-form-item>
-            <el-form-item label="讲座简介" prop="reportContent">
-              <el-input v-model="formData.reportContent" placeholder="请输入讲座简介" style="width: 100%;"></el-input>
-            </el-form-item>
-            <el-form-item label="讲座链接" prop="reportLink">
-              <el-input v-model="formData.reportLink" placeholder="请输入讲座链接" style="width: 100%;"></el-input>
-            </el-form-item>
-            <!-- 总结文档上传 -->
-            <el-form-item label="总结文档" prop="summaryFilePath">
-              <el-upload
-                :auto-upload="false"
-                :limit="1"
-                :on-change="handleSummaryChange"
-                :on-remove="handleSummaryRemove"
-                :file-list="reportFeelingList"
-              >
-                <el-button type="primary">选择文件</el-button>
-                <template #tip>
-                  <div class="el-upload__tip">仅支持单个文件上传</div>
-                </template>
-              </el-upload>
-            </el-form-item>
+    <el-dialog :visible.sync="showDialog" title="讲座报告填写" id="newCard"
+               style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
+      <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
+        <el-form-item label="报告海报上传" prop="lecturePoster">
+          <imageUpload
+            v-model="formData.lecturePoster"
+            :limit="1"
+            :fileSize="5"
+            :fileType="['png','jpg','jpeg']"
+            :isShowTip="true"
+          />
+        </el-form-item>
+        <el-form-item label="讲座题目" prop="reportTitle">
+          <el-input v-model="formData.reportTitle" placeholder="请输入讲座题目" style="width: 100%;"></el-input>
+        </el-form-item>
+        <el-form-item label="讲师姓名" prop="reporter">
+          <el-input v-model="formData.reporter" placeholder="请输入讲师姓名" style="width: 100%;"></el-input>
+        </el-form-item>
+        <el-form-item label="讲座日期" prop="reportDate">
+          <el-date-picker
+            clearable
+            v-model="formData.reportDate"
+            type="date"
+            value-format="yyyy-MM-dd"
+            placeholder="请选择讲座日期"
+            style="width: 100%;">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="讲座简介" prop="reportContent">
+          <el-input v-model="formData.reportContent" placeholder="请输入讲座简介" style="width: 100%;"></el-input>
+        </el-form-item>
+        <el-form-item label="讲座链接" prop="reportLink">
+          <el-input v-model="formData.reportLink" placeholder="请输入讲座链接" style="width: 100%;"></el-input>
+        </el-form-item>
+        <!-- 总结文档上传 -->
+        <el-form-item label="总结文档" prop="summaryFilePath">
+          <el-upload
+            :auto-upload="false"
+            :limit="1"
+            :on-change="handleSummaryChange"
+            :on-remove="handleSummaryRemove"
+            :file-list="reportFeelingList"
+          >
+            <el-button type="primary">选择文件</el-button>
+            <template #tip>
+              <div class="el-upload__tip">仅支持单个文件上传</div>
+            </template>
+          </el-upload>
+        </el-form-item>
 
-            <!-- 报告现场图片上传 -->
-            <el-form-item label="现场图片上传" prop="reportPicture">
-              <!--              <img-->
-              <!--              v-for="(url, i) in previewImages" :key="i"-->
-              <!--              :src="url"-->
-              <!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
-              <!--              alt="证明材料预览"-->
-              <!--            />-->
-              <div v-for="(url, i) in previewImages" :key="i"
-                   style="position: relative; display: inline-block; margin: 0 auto;">
-                <img
-                  :src="url"
-                  style="width: 100px; height: 100px; display: inline-block;"
-                  alt="证明材料预览"
-                />
-                <!-- 删除按钮（叉号） -->
-                <i
-                  class="el-icon-delete"
-                  @click="removeImage(i)"
-                  style="position: absolute; top: 0; right: 0; cursor: pointer; color: white; font-size: 20px; background-color: red; border-radius: 50%; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-                </i>
+        <!-- 报告现场图片上传 -->
+        <el-form-item label="现场图片上传" prop="reportPicture">
+          <!--              <img-->
+          <!--              v-for="(url, i) in previewImages" :key="i"-->
+          <!--              :src="url"-->
+          <!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
+          <!--              alt="证明材料预览"-->
+          <!--            />-->
+          <div v-for="(url, i) in previewImages" :key="i"
+               style="position: relative; display: inline-block; margin: 0 auto;">
+            <img
+              :src="url"
+              style="width: 100px; height: 100px; display: inline-block;"
+              alt="证明材料预览"
+            />
+            <!-- 删除按钮（叉号） -->
+            <i
+              class="el-icon-delete"
+              @click="removeImage(i)"
+              style="position: absolute; top: 0; right: 0; cursor: pointer; color: white; font-size: 20px; background-color: red; border-radius: 50%; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+            </i>
+          </div>
+          <el-upload
+            multiple
+            :limit="5"
+            :auto-upload="false"
+            :on-change="handleFileChange"
+            :on-remove="handleRemoveFile"
+            :file-list="pushReportPicture"
+            list-type="picture"
+          >
+            <i class="el-icon-plus"></i>
+            <template #tip>
+              <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
+                <!--                    <br>-->
+                <!--                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>-->
               </div>
-              <el-upload
-                multiple
-                :limit="5"
-                :auto-upload="false"
-                :on-change="handleFileChange"
-                :on-remove="handleRemoveFile"
-                :file-list="pushReportPicture"
-                list-type="picture"
-              >
-                <i class="el-icon-plus"></i>
-                <template #tip>
-                  <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
-                    <!--                    <br>-->
-                    <!--                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>-->
-                  </div>
-                </template>
-              </el-upload>
-            </el-form-item>
-            <el-form-item>
+            </template>
+          </el-upload>
+        </el-form-item>
+        <el-form-item>
 
-              <div style="display: flex; align-items: center; justify-content: right;">
-                <el-button type="info" @click="handleSave">保存草稿</el-button>
-                <el-button type="primary" @click="handleSubmit" style="margin-right: 3vh">正式提交</el-button>
-              </div>
-            </el-form-item>
-          </el-form>
-      </el-dialog>
+          <div style="display: flex; align-items: center; justify-content: right;">
+            <el-button type="info" @click="handleSave">保存草稿</el-button>
+            <el-button type="primary" @click="handleSubmit" style="margin-right: 3vh">正式提交</el-button>
+          </div>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
 
   </el-row>
 </template>
@@ -331,7 +331,10 @@ export default {
     this.listReport();  // 在页面加载时获取数据
   },
   methods: {
-
+    async downloadLecturePoster(filePath) {
+      const url = `${process.env.VUE_APP_BASE_API}/${filePath}`;
+      await this.downloadSingleFile(url);
+    },
     async handleSave() {
       this.formData.auditStatus = 3;
       this.submitForm();
@@ -526,13 +529,7 @@ export default {
     },
     // 获取完整图片路径
     getImageUrl(path) {
-      if (!path) return '';
-      // 处理两种路径情况：
-      // 1. 完整路径直接返回
-      // 2. 相对路径拼接基础URL
-      return path.startsWith('http')
-        ? `${path}?t=${Date.now()}`  // 添加时间戳防止缓存
-        : `${this.baseUrl}${path}?t=${Date.now()}`;
+      return `${process.env.VUE_APP_BASE_API}/${path}`;
     },
     // 生成带时间戳的文件名
     generateFileName() {
