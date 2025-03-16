@@ -353,79 +353,6 @@ import store from "@/store";
 export default {
   data() {
     return {
-      // 新增表格相关方法
-      getLevelTagType(level) {
-        const typeMap = {
-          '院级': 'info',
-          '校级': '',
-          '省级': 'primary',
-          '国家级': 'success',
-          '国际级': 'warning'
-        }
-        return typeMap[level] || 'info'
-      },
-
-      getAwardTagType(award) {
-        const typeMap = {
-          '特等奖': 'warning',
-          '一等奖': 'success',
-          '二等奖': 'primary',
-          '三等奖': '',
-          '优秀奖': 'info'
-        }
-        return typeMap[award] || ''
-      },
-
-      getStatusTagType(status) {
-        const typeMap = {
-          '已通过': 'success',
-          '未审核': 'warning',
-          '未通过': 'danger',
-          '未提交': 'info'
-        }
-        return typeMap[status] || 'info'
-      },
-
-      getStatusIcon(status) {
-        const iconMap = {
-          '已通过': 'el-icon-circle-check',
-          '未审核': 'el-icon-time',
-          '未通过': 'el-icon-circle-close',
-          '未提交': 'el-icon-edit'
-        }
-        return iconMap[status] || 'el-icon-question'
-      },
-
-      formatDate(dateString) {
-        if (!dateString) return '-'
-        const date = new Date(dateString)
-        return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
-      },
-
-      formatDateTime(dateString) {
-        if (!dateString) return '-'
-        const date = new Date(dateString)
-        return `${this.formatDate(dateString)} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
-      },
-
-      handleFileCommand(command) {
-        if (command.action === 'preview') {
-          this.handlePreview(command.files)
-        } else if (command.action === 'download') {
-          this.downloadFiles(command.files)
-        }
-      },
-
-      handleRowClick(row) {
-        if (['未提交', '未通过'].includes(row.auditStatus)) {
-          this.handleEditDraft(row)
-        }
-      },
-
-      tableRowClassName({ rowIndex }) {
-        return rowIndex % 2 === 1 ? 'stripe-row' : ''
-      },
-
       levelOptions: [
         { value: '院级', label: '院级' },
         { value: '校级', label: '校级' },
@@ -495,6 +422,78 @@ export default {
     this.fetchCompetitionRecords();
   },
   methods: {
+    // 新增表格相关方法
+    getLevelTagType(level) {
+      const typeMap = {
+        '院级': 'info',
+        '校级': '',
+        '省级': 'primary',
+        '国家级': 'success',
+        '国际级': 'warning'
+      }
+      return typeMap[level] || 'info'
+    },
+
+    getAwardTagType(award) {
+      const typeMap = {
+        '特等奖': 'warning',
+        '一等奖': 'success',
+        '二等奖': 'primary',
+        '三等奖': '',
+        '优秀奖': 'info'
+      }
+      return typeMap[award] || ''
+    },
+
+    getStatusTagType(status) {
+      const typeMap = {
+        '已通过': 'success',
+        '未审核': 'warning',
+        '未通过': 'danger',
+        '未提交': 'info'
+      }
+      return typeMap[status] || 'info'
+    },
+
+    getStatusIcon(status) {
+      const iconMap = {
+        '已通过': 'el-icon-circle-check',
+        '未审核': 'el-icon-time',
+        '未通过': 'el-icon-circle-close',
+        '未提交': 'el-icon-edit'
+      }
+      return iconMap[status] || 'el-icon-question'
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+    },
+
+    formatDateTime(dateString) {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      return `${this.formatDate(dateString)} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+    },
+
+    handleFileCommand(command) {
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadFiles(command.files)
+      }
+    },
+
+    handleRowClick(row) {
+      if (['未提交', '未通过'].includes(row.auditStatus)) {
+        this.handleEditDraft(row)
+      }
+    },
+
+    tableRowClassName({ rowIndex }) {
+      return rowIndex % 2 === 1 ? 'stripe-row' : ''
+    },
     parseMaterial(material) {
       try {
         if (Array.isArray(material)) return [...material];
