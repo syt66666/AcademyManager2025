@@ -2,11 +2,13 @@ package com.ruoyi.system.domain;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
+@Data
 public class StudentLectureReport extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -76,139 +78,139 @@ public class StudentLectureReport extends BaseEntity
     /** 上传学期（1.2.3.4.5.6.7.8） */
     private Integer semester;
 
-    public Long getReportId() {
-        return reportId;
-    }
-
-    public void setReportId(Long reportId) {
-        this.reportId = reportId;
-    }
-
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public String getStudentName() {
-        return studentName;
-    }
-
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
-    public String getReportTitle() {
-        return reportTitle;
-    }
-
-    public void setReportTitle(String reportTitle) {
-        this.reportTitle = reportTitle;
-    }
-
-    public String getReporter() {
-        return reporter;
-    }
-
-    public void setReporter(String reporter) {
-        this.reporter = reporter;
-    }
-
-    public Date getReportDate() {
-        return reportDate;
-    }
-
-    public void setReportDate(Date reportDate) {
-        this.reportDate = reportDate;
-    }
-
-    public String getReportContent() {
-        return reportContent;
-    }
-
-    public void setReportContent(String reportContent) {
-        this.reportContent = reportContent;
-    }
-
-    public String getReportLink() {
-        return reportLink;
-    }
-
-    public void setReportLink(String reportLink) {
-        this.reportLink = reportLink;
-    }
-
-    public String getReportFeeling() {
-        return reportFeeling;
-    }
-
-    public void setReportFeeling(String reportFeeling) {
-        this.reportFeeling = reportFeeling;
-    }
-
-    public String getLecturePoster() {
-        return lecturePoster;
-    }
-
-    public void setLecturePoster(String lecturePoster) {
-        this.lecturePoster = lecturePoster;
-    }
-
-    public String getReportPicture() {
-        return reportPicture;
-    }
-
-    public void setReportPicture(String reportPicture) {
-        this.reportPicture = reportPicture;
-    }
-
-    public Date getReportAdmitTime() {
-        return reportAdmitTime;
-    }
-
-    public void setReportAdmitTime(Date reportAdmitTime) {
-        this.reportAdmitTime = reportAdmitTime;
-    }
-
-    public Integer getAuditStatus() {
-        return auditStatus;
-    }
-
-    public void setAuditStatus(Integer auditStatus) {
-        this.auditStatus = auditStatus;
-    }
-
-    public Date getAuditTime() {
-        return auditTime;
-    }
-
-    public void setAuditTime(Date auditTime) {
-        this.auditTime = auditTime;
-    }
-
-    public String getAuditRemark() {
-        return auditRemark;
-    }
-
-    public void setAuditRemark(String auditRemark) {
-        this.auditRemark = auditRemark;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public Integer getSemester() {
-        return semester;
-    }
-
-    public void setSemester(Integer semester) {
-        this.semester = semester;
-    }
+//    public Long getReportId() {
+//        return reportId;
+//    }
+//
+//    public void setReportId(Long reportId) {
+//        this.reportId = reportId;
+//    }
+//
+//    public String getStudentId() {
+//        return studentId;
+//    }
+//
+//    public void setStudentId(String studentId) {
+//        this.studentId = studentId;
+//    }
+//
+//    public String getStudentName() {
+//        return studentName;
+//    }
+//
+//    public void setStudentName(String studentName) {
+//        this.studentName = studentName;
+//    }
+//
+//    public String getReportTitle() {
+//        return reportTitle;
+//    }
+//
+//    public void setReportTitle(String reportTitle) {
+//        this.reportTitle = reportTitle;
+//    }
+//
+//    public String getReporter() {
+//        return reporter;
+//    }
+//
+//    public void setReporter(String reporter) {
+//        this.reporter = reporter;
+//    }
+//
+//    public Date getReportDate() {
+//        return reportDate;
+//    }
+//
+//    public void setReportDate(Date reportDate) {
+//        this.reportDate = reportDate;
+//    }
+//
+//    public String getReportContent() {
+//        return reportContent;
+//    }
+//
+//    public void setReportContent(String reportContent) {
+//        this.reportContent = reportContent;
+//    }
+//
+//    public String getReportLink() {
+//        return reportLink;
+//    }
+//
+//    public void setReportLink(String reportLink) {
+//        this.reportLink = reportLink;
+//    }
+//
+//    public String getReportFeeling() {
+//        return reportFeeling;
+//    }
+//
+//    public void setReportFeeling(String reportFeeling) {
+//        this.reportFeeling = reportFeeling;
+//    }
+//
+//    public String getLecturePoster() {
+//        return lecturePoster;
+//    }
+//
+//    public void setLecturePoster(String lecturePoster) {
+//        this.lecturePoster = lecturePoster;
+//    }
+//
+//    public String getReportPicture() {
+//        return reportPicture;
+//    }
+//
+//    public void setReportPicture(String reportPicture) {
+//        this.reportPicture = reportPicture;
+//    }
+//
+//    public Date getReportAdmitTime() {
+//        return reportAdmitTime;
+//    }
+//
+//    public void setReportAdmitTime(Date reportAdmitTime) {
+//        this.reportAdmitTime = reportAdmitTime;
+//    }
+//
+//    public Integer getAuditStatus() {
+//        return auditStatus;
+//    }
+//
+//    public void setAuditStatus(Integer auditStatus) {
+//        this.auditStatus = auditStatus;
+//    }
+//
+//    public Date getAuditTime() {
+//        return auditTime;
+//    }
+//
+//    public void setAuditTime(Date auditTime) {
+//        this.auditTime = auditTime;
+//    }
+//
+//    public String getAuditRemark() {
+//        return auditRemark;
+//    }
+//
+//    public void setAuditRemark(String auditRemark) {
+//        this.auditRemark = auditRemark;
+//    }
+//
+//    public String getNickName() {
+//        return nickName;
+//    }
+//
+//    public void setNickName(String nickName) {
+//        this.nickName = nickName;
+//    }
+//
+//    public Integer getSemester() {
+//        return semester;
+//    }
+//
+//    public void setSemester(Integer semester) {
+//        this.semester = semester;
+//    }
 }

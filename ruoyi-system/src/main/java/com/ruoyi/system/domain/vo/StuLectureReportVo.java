@@ -5,13 +5,14 @@ import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Data
 public class StuLectureReportVo extends BaseEntity {
     /**
      * 主键id
      */
-    private int reportId;
+    private Long reportId;
     /**
      * 学生学号
      */
@@ -31,13 +32,13 @@ public class StuLectureReportVo extends BaseEntity {
     /**
      * 报告时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime reportDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date reportDate;
     /**
      * 报告提交时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime reportAdmitTime;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date reportAdmitTime;
     /**
      * 内容简介
      */
@@ -61,12 +62,12 @@ public class StuLectureReportVo extends BaseEntity {
     /**
      * 审核状态
      */
-    private int auditStatus = 0;
+    private Integer auditStatus ;
     /**
      *审核时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime auditTime;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date auditTime;
     /**
      * 审核意见
      */

@@ -622,6 +622,7 @@ export default {
       this.reportFeeling = null;
       this.pushReportPicture = [];
       this.showDialog = false;
+      this.previewImages = [];
       this.formData = {
         reportTitle: '',
         reporter: '',
@@ -655,6 +656,7 @@ export default {
     },
 
     async listReport() {
+      console.log("**********************************")
       this.isLoading = true; // 设置为加载状态
       try {
         const data = await listReport({
@@ -739,6 +741,7 @@ export default {
       });
     },
     initData() {
+      console.log(2454645746);
       this.reportFeeling = null;
       this.pushReportPicture = [];
       this.showDialog = false;
@@ -757,7 +760,7 @@ export default {
         semester: this.findSemester(this.activeSemester),
       };
       this.previewImages = [];
-      this.$refs.fileInput.value = '';
+      // this.$refs.fileInput.value = '';
       this.listReport();  // 在页面加载时获取数据
     },
   }

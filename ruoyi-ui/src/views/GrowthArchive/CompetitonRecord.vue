@@ -1,106 +1,193 @@
 <template>
-  <el-row type="flex" justify="center" style="margin-top: 4vh;">
-    <el-card id="reportCard" shadow="hover" style="width: 70%; margin-top: 2vh; border-radius: 10px;">
-      <!-- 头部区域 -->
-      <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px;">
-        <h1 style="font-size: 24px; font-weight: 500; color: #2c3e50;">科创竞赛</h1>
-        <el-button type="primary" icon="el-icon-plus" circle size="medium" @click="openDialog"
-                   style="background-color: #42b983; border-color: #42b983;"></el-button>
+  <div class="container">
+    <div class="main-container">
+      <!-- 顶部标题栏 -->
+      <div class="nav">
+        <div class="nav-content">
+          <h2>
+            <span class="score-icon">🏆</span>
+            科创竞赛记录
+            <span class="current-semester">{{ activeSemester }} 竞赛成果</span>
+          </h2>
+          <el-button
+            type="primary"
+            class="add-button"
+            @click="openDialog"
+            icon="el-icon-plus"
+          >新增记录</el-button>
+        </div>
       </div>
 
       <!-- 竞赛表格 -->
-      <el-table
-        :data="competitionRecords" style="width: 100%" border stripe highlight-current-row>
-        <el-table-column label="序号" width="80">
-          <template v-slot="scope">
-            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="competitionName" label="竞赛名称" min-width="100"></el-table-column>
-        <el-table-column prop="competitionLevel" label="竞赛级别"></el-table-column>
-        <el-table-column prop="awardLevel" label="竞赛奖项"></el-table-column>
-        <el-table-column prop="awardDate" label="获奖日期" min-width="100"></el-table-column>
-        <el-table-column label="证明材料" width="120">
-          <template v-slot:default="scope">
-            <div class="proof-material-cell">
-              <el-link
-                type="primary"
-                :underline="false"
-                @click="handlePreview(scope.row.proofMaterial)"
-                style="margin-right: 10px;"
-              >
-                <i class="el-icon-view"></i> 预览
-              </el-link>
-              <el-button
-                type="primary"
-                icon="el-icon-download"
-                size="mini"
-                @click="downloadFiles(scope.row.proofMaterial)"
-                :disabled="!scope.row.proofMaterial"
-              >下载
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="auditStatus" label="审核状态" min-width="150">
-          <template v-slot:default="scope">
-            <el-tag v-if="scope.row.auditStatus === '未审核'" type="warning">未审核</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '已通过'" type="success">已通过</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '未通过'" type="danger">未通过</el-tag>
-            <el-tag v-else-if="scope.row.auditStatus === '未提交'" type="info">未提交</el-tag>
-            <el-tag v-else>未知状态</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作">
-          <template v-slot="scope">
-            <el-button
-              v-if="scope.row.auditStatus === '未通过'"
-              type="text"
-              size="mini"
-              @click="handleEditDraft(scope.row)"
-            >重新提交
-            </el-button>
-
-            <template v-if="scope.row.auditStatus === '未提交'">
-              <el-button
-                type="text"
-                size="mini"
-                @click="handleEditDraft(scope.row)"
-              >编辑草稿
-              </el-button>
-              <el-button
-                type="text"
-                size="mini"
-                style="color: #F56C6C;"
-                @click="handleDelete(scope.row)"
-              >删除
-              </el-button>
+      <div class="score-table-card">
+        <el-table
+          :data="competitionRecords"
+          style="width: 100%"
+          class="optimized-table"
+          :header-cell-style="headerStyle"
+          v-loading="loading"
+          :row-class-name="tableRowClassName"
+          @row-click="handleRowClick"
+        >
+          <!-- 序号列 -->
+          <el-table-column label="序号" width="80" align="center">
+            <template v-slot="scope">
+            <span class="index-badge">
+              {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+            </span>
             </template>
+          </el-table-column>
 
-            <el-tag
-              v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
-              type="info"
-              size="mini"
-            >不可修改
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="auditTime" label="审核时间" min-width="100"></el-table-column>
-        <el-table-column prop="auditRemark" label="审核备注" min-width="120"></el-table-column>
-      </el-table>
+          <!-- 竞赛名称 -->
+          <el-table-column prop="competitionName" label="竞赛名称" min-width="180">
+            <template v-slot="scope">
+              <div class="competition-name">
+                <i class="el-icon-trophy name-icon"></i>
+                <span class="name-text">{{ scope.row.competitionName }}</span>
+              </div>
+            </template>
+          </el-table-column>
 
-      <!-- 分页组件 -->
-      <el-pagination
-        layout="total, sizes, prev, pager, next, jumper"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :total="totalRecords"
-        :page-sizes="[10, 20, 30, 50]"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        style="text-align: center; margin-top: 10px;"
-      />
-    </el-card>
+          <!-- 竞赛级别 -->
+          <el-table-column prop="competitionLevel" label="竞赛级别" width="120" align="center">
+            <template v-slot="scope">
+              <el-tag
+                :type="getLevelTagType(scope.row.competitionLevel)"
+                effect="light"
+                class="level-tag"
+              >
+                {{ scope.row.competitionLevel }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <!-- 获奖等级 -->
+          <el-table-column prop="awardLevel" label="获奖等级" width="120" align="center">
+            <template v-slot="scope">
+              <el-tag
+                :type="getAwardTagType(scope.row.awardLevel)"
+                effect="light"
+                class="award-tag"
+              >
+                {{ scope.row.awardLevel }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <!-- 获奖日期 -->
+          <el-table-column prop="awardDate" label="获奖日期" width="120" align="center">
+            <template v-slot="scope">
+            <span class="time-display">
+              {{ formatDate(scope.row.awardDate) }}
+            </span>
+            </template>
+          </el-table-column>
+
+          <!-- 证明材料 -->
+          <el-table-column label="证明材料" width="140" align="center">
+            <template v-slot="scope">
+              <el-dropdown trigger="click" @command="handleFileCommand">
+                <el-button type="primary" size="mini" plain>
+                  <i class="el-icon-document"></i> 文件操作
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item
+                    :command="{ action: 'preview', files: scope.row.proofMaterial }"
+                    :disabled="!scope.row.proofMaterial"
+                  >
+                    <i class="el-icon-view"></i>预览
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    :command="{ action: 'download', files: scope.row.proofMaterial }"
+                    :disabled="!scope.row.proofMaterial"
+                  >
+                    <i class="el-icon-download"></i>下载
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </template>
+          </el-table-column>
+
+          <!-- 审核状态 -->
+          <el-table-column prop="auditStatus" label="审核状态" width="140" align="center">
+            <template v-slot="scope">
+              <el-tag
+                :type="getStatusTagType(scope.row.auditStatus)"
+                effect="light"
+                class="status-tag"
+              >
+                <i :class="getStatusIcon(scope.row.auditStatus)"></i>
+                {{ scope.row.auditStatus }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <!-- 操作列 -->
+          <el-table-column label="操作" width="180" align="center">
+            <template v-slot="scope">
+              <template v-if="scope.row.auditStatus === '未通过'">
+                <el-button
+                  type="text"
+                  size="mini"
+                  @click.stop="handleEditDraft(scope.row)"
+                >重新提交</el-button>
+              </template>
+
+              <template v-if="scope.row.auditStatus === '未提交'">
+                <el-button
+                  type="text"
+                  size="mini"
+                  @click.stop="handleEditDraft(scope.row)"
+                >编辑</el-button>
+                <el-button
+                  type="text"
+                  size="mini"
+                  style="color: #F56C6C;"
+                  @click.stop="handleDelete(scope.row)"
+                >删除</el-button>
+              </template>
+
+              <el-tag
+                v-if="['未审核', '已通过'].includes(scope.row.auditStatus)"
+                type="info"
+                size="mini"
+                class="no-edit-tag"
+              >不可修改</el-tag>
+            </template>
+          </el-table-column>
+
+          <!-- 审核时间 -->
+          <el-table-column prop="auditTime" label="审核时间" width="140" align="center">
+            <template v-slot="scope">
+            <span class="time-display">
+              {{ formatDateTime(scope.row.auditTime) }}
+            </span>
+            </template>
+          </el-table-column>
+
+          <!-- 审核备注 -->
+          <el-table-column prop="auditRemark" label="审核备注" min-width="160">
+            <template v-slot="scope">
+              <div class="remark-text">
+                {{ scope.row.auditRemark || '暂无备注' }}
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页 -->
+        <pagination
+          v-show="totalRecords>0"
+          :total="totalRecords"
+          :page.sync="currentPage"
+          :limit.sync="pageSize"
+          @pagination="fetchCompetitionRecords"
+          class="custom-pagination"
+        />
+      </div>
+
+
+    </div>
 
     <!-- 图片预览对话框 -->
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
@@ -134,42 +221,91 @@
       </div>
     </el-dialog>
 
-    <!-- 竞赛填写对话框 -->
-    <el-dialog :visible.sync="showDialog" title="竞赛填写" width="50%" @close="closeDialog">
-      <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
+    <!-- 竞赛新增对话框 -->
+    <el-dialog
+      :visible.sync="showDialog"
+      title="竞赛信息填报"
+      width="580px"
+      class="competition-dialog"
+      @close="closeDialog"
+    >
+      <div class="dialog-header">
+<!--        <span class="form-icon">📝</span>-->
+        <h3 class="form-title">{{ isEdit ? '编辑竞赛记录' : '新增竞赛记录' }}</h3>
+        <p class="form-tips">请填写本学期参与的竞赛信息（带<span class="required">*</span>为必填项）</p>
+      </div>
+
+      <el-form
+        ref="form"
+        :model="formData"
+        :rules="rules"
+        label-width="110px"
+        class="competition-form"
+      >
+        <!-- 竞赛名称 -->
         <el-form-item label="竞赛名称" prop="competitionName">
-          <el-input v-model="formData.competitionName" placeholder="请输入竞赛名称"></el-input>
+          <el-input
+            v-model="formData.competitionName"
+            placeholder="请输入完整竞赛名称"
+            class="custom-input"
+          >
+            <i slot="prefix" class="el-icon-trophy input-icon"></i>
+          </el-input>
         </el-form-item>
 
+        <!-- 竞赛级别 -->
         <el-form-item label="竞赛级别" prop="competitionLevel">
-          <el-select v-model="formData.competitionLevel" placeholder="请选择竞赛级别">
-            <el-option label="院级" value="院级"></el-option>
-            <el-option label="校级" value="校级"></el-option>
-            <el-option label="省级" value="省级"></el-option>
-            <el-option label="国家级" value="国家级"></el-option>
-            <el-option label="国际级" value="国际级"></el-option>
+          <el-select
+            v-model="formData.competitionLevel"
+            placeholder="请选择级别"
+            class="custom-select"
+          >
+            <el-option
+              v-for="item in levelOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span class="option-icon">{{ levelIcons[item.value] }}</span>
+              {{ item.label }}
+            </el-option>
           </el-select>
         </el-form-item>
 
-        <el-form-item label="奖项等级" prop="awardLevel">
-          <el-select v-model="formData.awardLevel" placeholder="请选择奖项">
-            <el-option label="特等奖" value="特等奖"></el-option>
-            <el-option label="一等奖" value="一等奖"></el-option>
-            <el-option label="二等奖" value="二等奖"></el-option>
-            <el-option label="三等奖" value="三等奖"></el-option>
-            <el-option label="优秀奖" value="优秀奖"></el-option>
+        <!-- 获奖等级 -->
+        <el-form-item label="获奖等级" prop="awardLevel">
+          <el-select
+            v-model="formData.awardLevel"
+            placeholder="请选择奖项"
+            class="custom-select"
+          >
+            <el-option
+              v-for="item in awardOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+              <span class="option-icon">{{ awardIcons[item.value] }}</span>
+              {{ item.label }}
+            </el-option>
           </el-select>
         </el-form-item>
 
+        <!-- 获奖日期 -->
         <el-form-item label="获奖日期" prop="awardDate">
           <el-date-picker
             v-model="formData.awardDate"
             type="date"
             value-format="yyyy-MM-dd"
-            placeholder="选择获奖日期">
+            placeholder="选择日期"
+            class="custom-date"
+            :picker-options="pickerOptions"
+          >
+            <i slot="suffix" class="el-icon-date date-icon"></i>
           </el-date-picker>
         </el-form-item>
 
+        <!-- 证明材料 -->
         <el-form-item label="证明材料" prop="proofMaterial">
           <el-upload
             multiple
@@ -180,19 +316,33 @@
             :on-remove="handleFileRemove"
             :on-preview="handlePreviewFile"
             list-type="picture-card"
+            class="custom-upload"
           >
             <i class="el-icon-plus"></i>
-            <div slot="tip" class="el-upload__tip">最多上传5个文件，单个不超过10MB</div>
+            <div slot="tip" class="el-upload__tip">支持格式：JPG/PNG 单文件≤10MB 最多5个文件</div>
           </el-upload>
         </el-form-item>
 
-        <el-form-item>
-          <el-button type="info" @click="handleSave">保存草稿</el-button>
-          <el-button type="primary" @click="handleSubmit">正式提交</el-button>
+        <!-- 操作按钮 -->
+        <el-form-item class="form-actions">
+          <el-button
+            type="info"
+            class="save-btn"
+            @click="handleSave"
+          >
+            <i class="el-icon-document"></i> 保存草稿
+          </el-button>
+          <el-button
+            type="primary"
+            class="submit-btn"
+            @click="handleSubmit"
+          >
+            <i class="el-icon-check"></i> 正式提交
+          </el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
-  </el-row>
+  </div>
 </template>
 
 <script>
@@ -203,39 +353,134 @@ import store from "@/store";
 export default {
   data() {
     return {
+      // 新增表格相关方法
+      getLevelTagType(level) {
+        const typeMap = {
+          '院级': 'info',
+          '校级': '',
+          '省级': 'primary',
+          '国家级': 'success',
+          '国际级': 'warning'
+        }
+        return typeMap[level] || 'info'
+      },
+
+      getAwardTagType(award) {
+        const typeMap = {
+          '特等奖': 'warning',
+          '一等奖': 'success',
+          '二等奖': 'primary',
+          '三等奖': '',
+          '优秀奖': 'info'
+        }
+        return typeMap[award] || ''
+      },
+
+      getStatusTagType(status) {
+        const typeMap = {
+          '已通过': 'success',
+          '未审核': 'warning',
+          '未通过': 'danger',
+          '未提交': 'info'
+        }
+        return typeMap[status] || 'info'
+      },
+
+      getStatusIcon(status) {
+        const iconMap = {
+          '已通过': 'el-icon-circle-check',
+          '未审核': 'el-icon-time',
+          '未通过': 'el-icon-circle-close',
+          '未提交': 'el-icon-edit'
+        }
+        return iconMap[status] || 'el-icon-question'
+      },
+
+      formatDate(dateString) {
+        if (!dateString) return '-'
+        const date = new Date(dateString)
+        return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+      },
+
+      formatDateTime(dateString) {
+        if (!dateString) return '-'
+        const date = new Date(dateString)
+        return `${this.formatDate(dateString)} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+      },
+
+      handleFileCommand(command) {
+        if (command.action === 'preview') {
+          this.handlePreview(command.files)
+        } else if (command.action === 'download') {
+          this.downloadFiles(command.files)
+        }
+      },
+
+      handleRowClick(row) {
+        if (['未提交', '未通过'].includes(row.auditStatus)) {
+          this.handleEditDraft(row)
+        }
+      },
+
+      tableRowClassName({ rowIndex }) {
+        return rowIndex % 2 === 1 ? 'stripe-row' : ''
+      },
+
+      levelOptions: [
+        { value: '院级', label: '院级' },
+        { value: '校级', label: '校级' },
+        { value: '省级', label: '省级' },
+        { value: '国家级', label: '国家级' },
+        { value: '国际级', label: '国际级' }
+      ],
+      awardOptions: [
+        { value: '特等奖', label: '特等奖' },
+        { value: '一等奖', label: '一等奖' },
+        { value: '二等奖', label: '二等奖' },
+        { value: '三等奖', label: '三等奖' },
+        { value: '优秀奖', label: '优秀奖' }
+      ],
+      levelIcons: {
+        '院级': '🏛️',
+        '校级': '🏫',
+        '省级': '🌉',
+        '国家级': '🇨🇳',
+        '国际级': '🌍'
+      },
+      awardIcons: {
+        '特等奖': '🏆',
+        '一等奖': '🥇',
+        '二等奖': '🥈',
+        '三等奖': '🥉',
+        '优秀奖': '🎖️'
+      },
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
       isEdit: false,
-      currentCompetitionId: null, // 当前修改的竞赛记录ID
-      fileList: [], // 已上传的文件列表
+      currentCompetitionId: null,
+      fileList: [],
       previewVisible: false,
       previewImages: [],
       currentPreviewIndex: 0,
       loading: false,
       previewImage: '',
       currentDownloadFile: '',
-      currentImage: '', // 当前点击的图片 URL
-      competitionRecords: [], // 竞赛记录数据
-      queryParams: {}, // 查询条件
-      currentPage: 1, // 当前页
-      pageSize: 10, // 每页显示的条数
-      totalRecords: 0, // 总记录数
-      showDialog: false, // 控制对话框显示
-      activeSemester: '', // 当前学期
-      competitionName: '',
-      competitionLevel: '',
-      awardLevel: '',
-      awardDate: '',
-      proofMaterial: [],
-      auditStatus: '未提交',
-      auditTime: null,
-      auditRemark: '',
-      semester: '',
+      competitionRecords: [],
+      queryParams: {},
+      currentPage: 1,
+      pageSize: 10,
+      totalRecords: 0,
+      showDialog: false,
+      activeSemester: '',
       formData: {
-        competitionName: '', // 竞赛名称
-        competitionLevel: '', // 竞赛级别
-        awardLevel: '', // 奖项
-        awardDate: '',//竞赛获奖时间
-        scholarshipPoints: '', // 折合分数
-        proofMaterial: '', // 图片地址
+        competitionName: '',
+        competitionLevel: '',
+        awardLevel: '',
+        awardDate: '',
+        proofMaterial: '',
       },
       rules: {
         competitionName: [{required: true, message: '竞赛名称不能为空', trigger: 'blur'}],
@@ -246,93 +491,48 @@ export default {
     };
   },
   mounted() {
-    // 获取学期数据
     this.activeSemester = this.$route.query.semester || '未知学期';
-    this.fetchCompetitionRecords(); // 加载数据
+    this.fetchCompetitionRecords();
   },
   methods: {
-
-    // 处理草稿修改
+    parseMaterial(material) {
+      try {
+        if (Array.isArray(material)) return [...material];
+        if (typeof material === 'string') {
+          const cleaned = material.replace(/__ob__:.*?($$|$$)/gs, '');
+          return JSON.parse(cleaned);
+        }
+        return [];
+      } catch (e) {
+        console.error('材料解析失败:', e);
+        return [];
+      }
+    },
     handleEditDraft(row) {
       this.handleEdit(row);
       localStorage.removeItem(this.getDraftKey());
     },
-// 修改后的parseMaterial方法
-    parseMaterial(material) {
-      try {
-        // 情况1：已经是数组直接返回
-        if (Array.isArray(material)) {
-          console.log('[DEBUG] 已解析为数组:', material);
-          return [...material]; // 解除响应式绑定
-        }
-
-        // 情况2：字符串类型尝试解析
-        if (typeof material === 'string') {
-          // 处理Vue响应式对象字符串的特殊情况
-          const cleaned = material.replace(/__ob__:.*?($$|$$)/gs, '');
-          console.log('[DEBUG] 已解析为字符串:', cleaned);
-          return JSON.parse(cleaned);
-        }
-
-        // 情况3：其他类型返回空数组
-        return [];
-      } catch (e) {
-        console.error('材料解析失败:', {
-          input: material,
-          error: e.stack
-        });
-        return [];
-      }
-    },
     handleEdit(row) {
-      // 创建深拷贝避免响应式数据问题
       const rawData = JSON.parse(JSON.stringify(row));
-
       this.formData = {...rawData};
       this.isEdit = true;
       this.currentCompetitionId = rawData.id;
       this.showDialog = true;
 
-      // 调试输出原始数据
-      console.log('[DEBUG] 原始proofMaterial结构:', {
-        type: typeof rawData.proofMaterial,
-        value: rawData.proofMaterial
-      });
-
-      // 解析文件路径
       const proofMaterial = this.parseMaterial(rawData.proofMaterial);
-      console.log('[DEBUG] 解析结果:', proofMaterial);
-
-      // 生成符合el-upload要求的文件列表
-      this.fileList = proofMaterial.map((path, index) => {
-        // 路径有效性验证
-        if (!path || typeof path !== 'string') {
-          console.warn(`无效文件路径[${index}]:`, path);
-          return null;
-        }
-
-        // 生成完整访问URL
-        const fullUrl = `${process.env.VUE_APP_BASE_API}/profile/${encodeURIComponent(path)}`;
-
-        return {
-          uid: Date.now() + index, // 唯一标识
-          name: path.split('/').pop(),
-          url: fullUrl,
-          status: 'success',
-          isOld: true,
-          path: path
-        };
-      }).filter(Boolean);
-
-      console.log('[DEBUG] 生成的文件列表:', this.fileList);
+      this.fileList = proofMaterial.map((path, index) => ({
+        uid: Date.now() + index,
+        name: path.split('/').pop(),
+        url: `${process.env.VUE_APP_BASE_API}/profile/${encodeURIComponent(path)}`,
+        status: 'success',
+        isOld: true,
+        path: path
+      })).filter(Boolean);
     },
-    // 文件预览处理
     handlePreviewFile(file) {
       if (file.isOld) {
-        // 旧文件直接使用存储的URL
         window.open(file.url);
       } else {
-        // 新上传文件使用本地预览
         const reader = new FileReader();
         reader.onload = (e) => {
           window.open(e.target.result);
@@ -344,10 +544,8 @@ export default {
       this.fileList = fileList;
     },
     handleFileChange(file, fileList) {
-      this.fileList = fileList.slice(-5); // 保持最多5个文件
+      this.fileList = fileList.slice(-5);
     },
-
-    // 新增方法
     async handleDelete(row) {
       try {
         await this.$confirm('确定删除该记录吗？', '删除确认', {
@@ -355,7 +553,6 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         });
-        console.log("row.id:" + row.id)
         const response = await delRecord(row.id);
         if (response.code === 200) {
           this.$message.success('删除成功');
@@ -368,33 +565,23 @@ export default {
         }
       }
     },
-
     async handleSave() {
       await this.submitData('未提交');
     },
-
     async handleSubmit() {
       await this.submitData('未审核');
     },
-
     getDraftKey() {
       return `competition_draft_${this.$store.state.user.name}_${this.activeSemester}`;
     },
-
-    // 修改后的打开对话框方法
     openDialog() {
       this.isEdit = false;
       this.currentCompetitionId = null;
       this.formData = this.initFormData();
       this.showDialog = true;
-
-      // 加载草稿
       const draft = localStorage.getItem(this.getDraftKey());
-      if (draft) {
-        this.formData = JSON.parse(draft);
-      }
+      if (draft) this.formData = JSON.parse(draft);
     },
-
     initFormData() {
       return {
         competitionName: '',
@@ -410,14 +597,7 @@ export default {
     },
     async downloadFiles(filePaths) {
       try {
-        // 解析文件路径
-        const paths = typeof filePaths === 'string'
-          ? JSON.parse(filePaths)
-          : filePaths;
-        if (!Array.isArray(paths)) {
-          throw new Error("无效的文件路径格式");
-        }
-        // 处理多个文件下载
+        const paths = typeof filePaths === 'string' ? JSON.parse(filePaths) : filePaths;
         if (paths.length > 1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
@@ -436,21 +616,14 @@ export default {
         }
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
-        console.error("下载错误详情:", error);
       }
     },
-    // 下载单个文件
     async downloadSingleFile(filePath) {
       try {
-        const response = await axios.get(
-          filePath,
-          {
-            responseType: 'blob',
-            headers: {
-              Authorization: "Bearer " + localStorage.getItem("token")
-            }
-          }
-        );
+        const response = await axios.get(filePath, {
+          responseType: 'blob',
+          headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+        });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
         link.href = url;
@@ -463,24 +636,18 @@ export default {
         this.$message.error(`下载失败: ${error.message}`);
       }
     },
-    // 生成带时间戳的文件名
     generateFileName(filePath) {
       const originalName = filePath.split('/').pop() || '证明材料';
       const timestamp = new Date().getTime();
       const ext = originalName.split('.').pop() || 'jpg';
       return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
     },
-
-    // 获取完整URL（带缓存清除）
     getFullUrl(filePath) {
       return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
     },
     handlePreview(filePath) {
       try {
-        const paths = typeof filePath === 'string'
-          ? JSON.parse(filePath)
-          : filePath;
-
+        const paths = typeof filePath === 'string' ? JSON.parse(filePath) : filePath;
         if (paths.length > 0) {
           this.previewImages = paths.map(path => this.getFullUrl(path));
           this.currentPreviewIndex = 0;
@@ -491,33 +658,22 @@ export default {
         this.$message.error('预览失败：文件路径格式不正确');
       }
     },
-
-    // 关闭对话框
     closeDialog() {
       this.showDialog = false;
-      this.fileList = []; // 清空已上传的文件列表
+      this.fileList = [];
     },
-
-    // 提交数据
     async submitData(state) {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
-          // 获取原始记录数据（编辑时）
           const originalRecord = this.competitionRecords.find(
             item => item.id === this.currentCompetitionId
           );
-
-          // 检测关键字段是否修改
           const isKeyFieldChanged = !originalRecord ||
             this.formData.competitionName !== originalRecord.competitionName ||
             this.formData.competitionLevel !== originalRecord.competitionLevel ||
             this.formData.awardLevel !== originalRecord.awardLevel;
-          console.log("isKeyFieldChanged:" + isKeyFieldChanged)
-          console.log("this.currentCompetitionId:" + this.currentCompetitionId)
-          // 需要校验的唯一性条件
-          const shouldCheckUnique = !this.currentCompetitionId || isKeyFieldChanged;
 
-          if (shouldCheckUnique) {
+          if (isKeyFieldChanged) {
             try {
               const checkRes = await checkCompetitionUnique({
                 studentId: this.$store.state.user.name,
@@ -526,28 +682,20 @@ export default {
                 awardLevel: this.formData.awardLevel,
                 semester: this.activeSemester
               });
-
-              if (checkRes.code !== 200) {
-                return this.$message.error('已存在相同活动记录，不可重复添加');
-              }
+              if (checkRes.code !== 200) return this.$message.error('已存在相同活动记录');
             } catch (error) {
               return this.$message.error(`校验失败: ${error.message}`);
             }
           }
 
-
-          // 获取保留的旧文件路径
           const existingPaths = this.fileList
             .filter(file => file.isOld)
             .map(file => file.path);
-
-          // 获取新上传的文件
           const newFiles = this.fileList
             .filter(file => !file.isOld)
             .map(file => file.raw);
           const formData = new FormData();
 
-          // 构建核心数据对象
           const recordData = {
             competitionId: null,
             competitionName: this.formData.competitionName,
@@ -559,35 +707,20 @@ export default {
             auditTime: null,
             auditRemark: '',
             awardDate: this.formData.awardDate,
-            existingProofMaterial: existingPaths, // 旧文件路径
+            existingProofMaterial: existingPaths,
           };
 
-          // 如果是编辑操作，添加ID字段
-          if (this.currentCompetitionId) {
-            recordData.competitionId = this.currentCompetitionId;
-          }
-
-          // 构建 JSON 部分（指定类型为 application/json）
-          const recordBlob = new Blob(
-            [JSON.stringify(recordData)],
-            {type: "application/json"}
-          );
+          if (this.currentCompetitionId) recordData.competitionId = this.currentCompetitionId;
+          const recordBlob = new Blob([JSON.stringify(recordData)], {type: "application/json"});
           formData.append("record", recordBlob);
+          this.fileList.forEach((file) => formData.append("proofMaterial", file.raw));
 
-          // 添加文件
-          this.fileList.forEach((file) => {
-            formData.append("proofMaterial", file.raw);
-          });
-
-          // 配置headers
           const config = {
             headers: {
               "Authorization": "Bearer " + localStorage.getItem("token"),
               "Content-Type": "multipart/form-data"
             }
           };
-
-          // 根据模式选择API方法
           const apiMethod = this.currentCompetitionId ? updateRecord : addRecord;
 
           apiMethod(formData, config)
@@ -602,36 +735,14 @@ export default {
         }
       });
     },
-
-    // 重置表单
-    resetForm() {
-      this.formData = {
-        competitionName: "",
-        competitionLevel: "",
-        awardLevel: "",
-        scholarshipPoints: "",
-        proofMaterial: "",
-      };
-      this.fileList = []; // 清空已上传的文件列表
-    },
-
-    // 分页大小变化
     handleSizeChange(size) {
       this.pageSize = size;
       this.fetchCompetitionRecords();
     },
-
-    // 当前页变化
     handleCurrentChange(page) {
       this.currentPage = page;
       this.fetchCompetitionRecords();
     },
-    handleImageClick(imageUrl) {
-      this.previewImage = this.getFullUrl(imageUrl);
-      this.previewVisible = true; // 使用正确的变量名
-    },
-
-    // 加载竞赛记录
     async fetchCompetitionRecords() {
       try {
         const response = await listRecord({
@@ -640,19 +751,14 @@ export default {
           semester: this.activeSemester,
           studentId: store.state.user.name
         });
-
         if (response && response.code === 200) {
-          this.competitionRecords = response.rows || [];
-          this.totalRecords = response.total || 0;
-
-          // 添加数据转换
-          this.competitionRecords = this.competitionRecords.map(item => ({
+          this.competitionRecords = response.rows.map(item => ({
             ...item,
             id: item.competitionId,
             auditStatus: item.auditStatus,
             proofMaterial: this.parseMaterial(item.proofMaterial)
           }));
-
+          this.totalRecords = response.total || 0;
         } else {
           this.$message.error(response.msg || '数据加载失败');
         }
@@ -661,75 +767,293 @@ export default {
         this.$message.error('数据加载异常');
       }
     },
-
-
-  },
+    headerStyle() {
+      return {
+        backgroundColor: '#EBF4FF',
+        color: '#2B6CB0',
+        fontWeight: "600",
+      };
+    }
+  }
 };
 </script>
 
 <style scoped>
-h1 {
-  color: #333;
+/* ================= 全局容器样式 ================= */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: linear-gradient(160deg, #EBF4FF 0%, #EBF8FF 100%);
+  min-height: 100vh;
 }
 
-input, button {
-  margin: 10px;
+.main-container {
+  background: #ffffff;
+  border-radius: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
 }
 
-#reportCard {
-  transition: all 0.3s ease;
+/* ================= 导航栏样式 ================= */
+.nav {
+  background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
+  border-radius: 1rem;
+  margin: -2rem -2rem 2rem;
+  position: relative;
+  overflow: hidden;
 }
 
-#reportCard:hover {
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+.nav::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg,
+  rgba(255, 255, 255, 0.1) 25%,
+  transparent 50%,
+  rgba(255, 255, 255, 0.1) 75%
+  );
+  opacity: 0.3;
 }
 
-.el-upload__tip {
-  font-size: 12px;
-  color: #666;
-  margin-top: 5px;
-}
-
-.el-upload-list--picture .el-upload-list__item {
-  width: 100px;
-  height: 100px;
-  margin-top: 10px;
-}
-
-.current-semester {
-  font-size: 16px;
-  color: #666;
-  margin-left: 10px;
-}
-
-.file-list {
+.nav-content {
+  padding: 1.5rem 2rem;
+  position: relative;
+  z-index: 1;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.file-item {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.file-item:hover {
+.nav h2 {
+  color: white;
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0;
+}
+
+/* ================= 表格相关样式 ================= */
+.score-table-card {
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  margin-top: 1.5rem;
+}
+
+/* 表格基础样式 */
+.optimized-table {
+  --table-header-bg: #f8fafc;
+  --table-hover-bg: #f7fafc;
+  --table-stripe-bg: #f8fafc;
+  --table-border-color: #e2e8f0;
+  --table-text-primary: #2d3748;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 表头样式 */
+.optimized-table /deep/ .el-table__header th {
+  background: var(--table-header-bg) !important;
+  color: #2b6cb0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* 表格行样式 */
+.optimized-table /deep/ .el-table__body td {
+  color: var(--table-text-primary);
+  transition: background 0.2s;
+  border-color: var(--table-border-color);
+}
+
+.optimized-table /deep/ .el-table__body tr:hover td {
+  background: var(--table-hover-bg) !important;
   cursor: pointer;
-  color: #409EFF;
 }
 
-.el-button--mini {
-  padding: 5px 10px;
-  font-size: 12px;
+.optimized-table /deep/ .stripe-row td {
+  background-color: var(--table-stripe-bg);
 }
 
-.el-button--primary {
-  background-color: #42b983;
-  border-color: #42b983;
+/* 表格元素样式 */
+.index-badge {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  background: #ebf4ff;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  color: #2b6cb0;
 }
 
-.el-button--primary:hover {
-  background-color: #3aa876;
-  border-color: #3aa876;
+.competition-name {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+/* 标签统一样式 */
+.level-tag,
+.award-tag,
+.status-tag {
+  border-radius: 12px;
+  padding: 0 10px;
+  font-weight: 500;
+}
+
+/* ================= 对话框样式 ================= */
+.competition-dialog {
+  border-radius: 12px;
+}
+
+.competition-dialog /deep/ .el-dialog__header {
+  display: none; /* 隐藏原生标题 */
+}
+
+.dialog-header {
+  text-align: center;
+  padding: 20px 0 15px;
+  background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 表单元素样式 */
+.competition-form {
+  padding: 0 30px 20px;
+}
+
+.custom-input /deep/ .el-input__inner {
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E0;
+  padding-left: 40px;
+  transition: all 0.3s;
+}
+
+/* 操作按钮样式 */
+.form-actions {
+  margin-top: 25px;
+  text-align: center;
+}
+
+/* ================= 分页样式 ================= */
+.custom-pagination {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 覆盖 element 分页样式 */
+.custom-pagination /deep/ .el-pagination {
+  font-weight: 500;
+}
+
+/* 页码按钮样式 */
+.custom-pagination /deep/ .el-pager li {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin: 0 4px;
+  min-width: 32px;
+  height: 32px;
+  line-height: 32px;
+  transition: all 0.2s;
+}
+
+/* 当前页样式 */
+.custom-pagination /deep/ .el-pager li.active {
+  background: #4299e1;
+  border-color: #4299e1;
+  color: white;
+  font-weight: 600;
+}
+
+/* 悬停效果 */
+.custom-pagination /deep/ .el-pager li:hover {
+  border-color: #4299e1;
+  color: #4299e1;
+}
+
+/* 页码按钮禁用状态 */
+.custom-pagination /deep/ .el-pagination button.disabled {
+  background: transparent;
+  border-color: #e2e8f0;
+}
+
+/* 跳转输入框样式 */
+.custom-pagination /deep/ .el-pagination__jump {
+  margin-left: 12px;
+}
+.custom-pagination /deep/ .el-pagination__editor {
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+/* 调整图标按钮样式 */
+.custom-pagination /deep/ .btn-prev,
+.custom-pagination /deep/ .btn-next {
+  background: transparent !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 0 8px;
+  margin: 0 4px;
+}
+.custom-pagination /deep/ .btn-prev:hover,
+.custom-pagination /deep/ .btn-next:hover {
+  border-color: #4299e1;
+  color: #4299e1;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .custom-pagination {
+    padding: 8px;
+    justify-content: center;
+  }
+  .custom-pagination /deep/ .el-pagination__jump {
+    display: none;
+  }
+  .custom-pagination /deep/ .el-pagination__total {
+    display: none;
+  }
+}
+
+/* ================= 响应式设计 ================= */
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .nav h2 {
+    font-size: 1.4rem;
+  }
+
+  /* 移动端表格适配 */
+  .optimized-table /deep/ .el-table__column--award-date {
+    display: none;
+  }
+}
+
+/* 媒体查询统一放在文件末尾 */
+@media (max-width: 1200px) {
+  .optimized-table /deep/ .el-table__column--audit-time,
+  .optimized-table /deep/ .el-table__column--audit-remark {
+    display: none;
+  }
 }
 </style>

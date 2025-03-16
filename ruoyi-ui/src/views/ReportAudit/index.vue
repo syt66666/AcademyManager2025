@@ -474,10 +474,11 @@ export default {
 
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/report/export', {
+      this.download('system/lecture/export', {
         ...this.queryParams
       }, `report_${new Date().getTime()}.xlsx`)
     },
+
     handleAudit(row, status) {
       const isApproved = status === '通过';
       const statusMapping = {
