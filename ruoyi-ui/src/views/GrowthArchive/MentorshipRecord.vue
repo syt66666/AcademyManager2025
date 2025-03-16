@@ -757,7 +757,7 @@ export default {
           // 如果是编辑操作，添加ID字段
           if (this.currentRecordId) {
             recordData.recordId = this.currentRecordId;
-          };
+          }
 
           // 构建 JSON 部分（指定类型为 application/json）
           const recordBlob = new Blob(
@@ -966,10 +966,6 @@ export default {
   border-radius: 12px;
 }
 
-.competition-dialog /deep/ .el-dialog__header {
-  display: none;
-}
-
 .dialog-header {
   text-align: center;
   padding: 20px 0 15px;
@@ -998,33 +994,11 @@ export default {
   padding: 0 30px 20px;
 }
 
-.custom-input /deep/ .el-input__inner {
-  height: 42px;
-  border-radius: 8px;
-  border: 1px solid #CBD5E0;
-  padding-left: 40px;
-  transition: all 0.3s;
-}
-
 .input-icon {
   color: #a0aec0;
   margin-left: 8px;
 }
 
-/* 日期选择器 */
-.custom-date /deep/ .el-input__inner {
-  padding-left: 35px;
-}
-
-/* 上传组件 */
-.custom-upload /deep/ .el-upload {
-  border: 2px dashed #cbd5e0;
-  background: #f7fafc;
-}
-
-.custom-upload /deep/ .el-upload:hover {
-  border-color: #4299e1;
-}
 
 .el-upload__tip {
   color: #718096;
@@ -1064,13 +1038,22 @@ export default {
   justify-content: flex-end;
 }
 
-/* 图片预览对话框 */
-.preview-dialog {
-  border-radius: 12px;
+/* 页码按钮样式 */
+.custom-pagination /deep/ .el-pager li {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin: 0 4px;
+  min-width: 32px;
+  height: 32px;
+  line-height: 32px;
+  transition: all 0.2s;
 }
 
-.preview-dialog /deep/ .el-dialog__body {
-  padding: 20px;
+/* 悬停效果 */
+.custom-pagination /deep/ .el-pager li:hover {
+  border-color: #4299e1;
+  color: #4299e1;
 }
 
 /* 响应式调整 */
@@ -1081,11 +1064,6 @@ export default {
 
   .nav h2 {
     font-size: 1.4rem;
-  }
-
-  .optimized-table /deep/ .el-table__column--audit-time,
-  .optimized-table /deep/ .el-table__column--audit-remark {
-    display: none;
   }
 
   .competition-form {

@@ -716,7 +716,7 @@ export default {
 
           if (this.currentCompetitionId) {
             recordData.competitionId = this.currentCompetitionId
-          };
+          }
 
           const recordBlob = new Blob([JSON.stringify(recordData)], {type: "application/json"});
           formData.append("record", recordBlob);
@@ -915,10 +915,6 @@ export default {
   border-radius: 12px;
 }
 
-.competition-dialog /deep/ .el-dialog__header {
-  display: none; /* 隐藏原生标题 */
-}
-
 .dialog-header {
   text-align: center;
   padding: 20px 0 15px;
@@ -930,14 +926,6 @@ export default {
 /* 表单元素样式 */
 .competition-form {
   padding: 0 30px 20px;
-}
-
-.custom-input /deep/ .el-input__inner {
-  height: 42px;
-  border-radius: 8px;
-  border: 1px solid #CBD5E0;
-  padding-left: 40px;
-  transition: all 0.3s;
 }
 
 /* 操作按钮样式 */
@@ -957,11 +945,6 @@ export default {
   justify-content: flex-end;
 }
 
-/* 覆盖 element 分页样式 */
-.custom-pagination /deep/ .el-pagination {
-  font-weight: 500;
-}
-
 /* 页码按钮样式 */
 .custom-pagination /deep/ .el-pager li {
   background: transparent;
@@ -975,47 +958,9 @@ export default {
 }
 
 /* 当前页样式 */
-.custom-pagination /deep/ .el-pager li.active {
-  background: #4299e1;
-  border-color: #4299e1;
-  color: white;
-  font-weight: 600;
-}
 
 /* 悬停效果 */
 .custom-pagination /deep/ .el-pager li:hover {
-  border-color: #4299e1;
-  color: #4299e1;
-}
-
-/* 页码按钮禁用状态 */
-.custom-pagination /deep/ .el-pagination button.disabled {
-  background: transparent;
-  border-color: #e2e8f0;
-}
-
-/* 跳转输入框样式 */
-.custom-pagination /deep/ .el-pagination__jump {
-  margin-left: 12px;
-}
-
-.custom-pagination /deep/ .el-pagination__editor {
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-}
-
-/* 调整图标按钮样式 */
-.custom-pagination /deep/ .btn-prev,
-.custom-pagination /deep/ .btn-next {
-  background: transparent !important;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 0 8px;
-  margin: 0 4px;
-}
-
-.custom-pagination /deep/ .btn-prev:hover,
-.custom-pagination /deep/ .btn-next:hover {
   border-color: #4299e1;
   color: #4299e1;
 }
@@ -1027,13 +972,6 @@ export default {
     justify-content: center;
   }
 
-  .custom-pagination /deep/ .el-pagination__jump {
-    display: none;
-  }
-
-  .custom-pagination /deep/ .el-pagination__total {
-    display: none;
-  }
 }
 
 /* ================= 响应式设计 ================= */
@@ -1045,18 +983,6 @@ export default {
   .nav h2 {
     font-size: 1.4rem;
   }
-
-  /* 移动端表格适配 */
-  .optimized-table /deep/ .el-table__column--award-date {
-    display: none;
-  }
 }
 
-/* 媒体查询统一放在文件末尾 */
-@media (max-width: 1200px) {
-  .optimized-table /deep/ .el-table__column--audit-time,
-  .optimized-table /deep/ .el-table__column--audit-remark {
-    display: none;
-  }
-}
 </style>

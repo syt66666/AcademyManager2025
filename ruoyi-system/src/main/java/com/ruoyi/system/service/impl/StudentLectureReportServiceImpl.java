@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static com.ruoyi.common.utils.PageUtils.startPage;
 
 @Service
-public class IStudentLectureReportServiceImpl implements IStudentLectureReportService {
+public class StudentLectureReportServiceImpl implements IStudentLectureReportService {
     @Autowired
     private StuInfoMapper stuInfoMapper;
     @Autowired
