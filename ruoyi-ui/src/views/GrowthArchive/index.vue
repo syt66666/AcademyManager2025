@@ -287,58 +287,6 @@ export default {
 
 
 <style scoped>
-/* 添加禁用样式 */
-.semester-card.disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-  filter: grayscale(0.8);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 禁用状态的辉光效果 */
-.semester-card.disabled .glow-effect {
-  display: none;
-}
-
-/* 添加遮罩层 */
-.semester-card.disabled::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255,255,255,0.6);
-  z-index: 1;
-}
-
-/* 调整进度条颜色 */
-.semester-card.disabled .progress-bar {
-  background: linear-gradient(90deg, #e2e8f0 0%, #cbd5e0 100%) !important;
-}
-
-/* 禁用状态下的文字颜色 */
-.semester-card.disabled .semester-name,
-.semester-card.disabled .time {
-  color: #94a3b8;
-}
-
-
-.semester-card.current {
-  border-left: 4px solid var(--primary);
-  animation: pulse 2s infinite; /* 核心动画效果 */
-}
-
-/* 动画 */
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(66,153,225,0.3); }
-  100% { box-shadow: 0 0 0 15px rgba(66,153,225,0); }
-}
-
-@keyframes blink {
-  50% { opacity: 0.5; }
-}
 /* 设计系统变量 */
 :root {
   --primary: #2B6CB0;
@@ -352,70 +300,70 @@ export default {
 
 /* 基础容器 */
 .container {
-  max-width: 100%; /* 改为全宽 */
-  margin: 0 auto;
-  padding: 1rem; /* 减少内边距 */
   background: var(--bg-gradient);
+  margin: 0 auto;
+  max-width: 100%;
   min-height: 100vh;
-  /* 移除 grid 布局 */
+  padding: 1rem;
 }
 
 .main-container {
   background: #ffffff;
   border-radius: 1.5rem;
   box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-  padding: 2rem;
   margin: 0 auto;
   max-width: 1440px;
-  position: relative;
   overflow: hidden;
+  padding: 2rem;
+  position: relative;
 }
 
-/* 导航栏 */
+/* 导航栏样式 */
 .nav {
   background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
   border-radius: 1.5rem 1.5rem 0 0;
-  margin: -2rem -2rem 2rem;
   box-shadow: var(--shadow-lg);
-  position: relative;
+  margin: -2rem -2rem 2rem;
   overflow: hidden;
+  position: relative;
 }
 
 .nav::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
   background: linear-gradient(45deg,
   rgba(255,255,255,0.1) 25%,
   transparent 50%,
   rgba(255,255,255,0.1) 75%
   );
+  content: "";
+  height: 100%;
+  left: 0;
   opacity: 0.3;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 .nav-content {
-  padding: 1.5rem 2rem;
-  display: flex;
   align-items: center;
+  display: flex;
+  gap: 0.5rem;
   justify-content: space-between;
+  padding: 1.5rem 2rem;
 }
 
 .nav h2 {
+  align-items: center;
   color: white;
   display: flex;
-  align-items: center;
+  font-size: clamp(1.2rem, 3vw, 2rem);
   gap: 0.5rem;
   margin: 0;
-  font-size: clamp(1.2rem, 3vw, 2rem);
   white-space: nowrap;
 }
 
 .campus-icon {
-  font-size: 1.8em;
   filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.2));
+  font-size: 1.8em;
 }
 
 .academic-year {
@@ -424,50 +372,75 @@ export default {
   white-space: nowrap;
 }
 
-/* 优化学期网格容器 */
+/* 学期卡片容器 */
 .semester-grid-wrapper {
-  width: 100%;
-  overflow-x: hidden; /* 隐藏横向滚动 */
+  overflow-x: hidden;
   padding-bottom: 2rem;
+  width: 100%;
 }
 
-/* 修改网格布局 */
 .semester-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 自动适应列数 */
   gap: 1.5rem;
-  width: 100%;
-  padding: 0 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   margin-top: 1.5rem;
-  min-width: auto; /* 移除固定最小宽度 */
+  min-width: auto;
+  padding: 0 1rem;
+  width: 100%;
 }
 
 .semester-card {
   background: var(--surface);
   border-radius: 1rem;
-  padding: 1.5rem;
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-  box-shadow 0.3s ease;
+  box-sizing: border-box;
   cursor: pointer;
-  width: 100%;
   height: 100%;
   min-height: 180px;
-  box-sizing: border-box;
+  overflow: hidden;
+  padding: 1.5rem;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  box-shadow 0.3s ease;
+  width: 100%;
 }
 
-.glow-effect {
-  position: absolute;
-  top: 0;
+/* 卡片状态样式 */
+.semester-card.current {
+  animation: pulse 2s infinite;
+  border-left: 4px solid var(--primary);
+}
+
+.semester-card.disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  opacity: 0.7;
+  overflow: hidden;
+  position: relative;
+}
+
+.semester-card.disabled::after {
+  background: rgba(255,255,255,0.6);
+  bottom: 0;
+  content: "";
   left: 0;
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 1;
+}
+
+/* 卡片内部元素 */
+.glow-effect {
   background: radial-gradient(circle at var(--x) var(--y),
   rgba(66, 153, 225, 0.1) 0%,
   transparent 70%);
+  height: 100%;
+  left: 0;
   opacity: 0;
+  position: absolute;
+  top: 0;
   transition: opacity 0.3s;
+  width: 100%;
 }
 
 .semester-card:hover .glow-effect {
@@ -475,15 +448,15 @@ export default {
 }
 
 .semester-header {
+  align-items: center;
   display: flex;
   justify-content: space-between;
-  align-items: center;
   margin-bottom: 1.2rem;
 }
 
 .semester-name {
-  font-weight: 600;
   color: #2D3748;
+  font-weight: 600;
 }
 
 .time {
@@ -491,37 +464,31 @@ export default {
   font-size: 0.9rem;
 }
 
-/* 进度条 */
+/* 进度条相关 */
 .progress-wrapper {
   background: rgba(237, 242, 247, 0.6);
   border-radius: 0.5rem;
-  padding: 0.3rem;
   margin-top: auto;
+  padding: 0.3rem;
 }
 
 .progress {
-  height: 1rem;
   background: rgba(237, 242, 247, 0.8);
   border-radius: 0.4rem;
+  height: 1rem;
   overflow: hidden;
   position: relative;
 }
 
 .progress-bar {
-  height: 100%;
   border-radius: 0.4rem;
+  height: 100%;
   position: relative;
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1),
-  background 0.4s ease;
+  transition: background 0.4s ease,
+  width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .progress-bar::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background-image: linear-gradient(
     -45deg,
     rgba(255,255,255,0.15) 25%,
@@ -533,150 +500,150 @@ export default {
   );
   background-size: 1.5rem 1.5rem;
   border-radius: 0.4rem;
+  bottom: 0;
+  content: "";
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .progress-text {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
   color: white;
   font-size: 0.7rem;
   font-weight: 500;
+  position: absolute;
+  right: 0.5rem;
   text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  top: 50%;
+  transform: translateY(-50%);
 }
 
+/* 状态指示器 */
 .status-indicator {
-  margin-top: 1rem;
-  font-size: 0.8rem;
+  align-items: center;
   color: var(--success);
   display: flex;
-  align-items: center;
+  font-size: 0.8rem;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 /* 模块面板 */
 .module-panel {
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 1.5rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  left: 50%;
+  max-width: 1000px;
+  padding: 2rem;
   position: fixed;
   top: 50%;
-  left: 50%;
   transform: translate(-50%, -30%);
   width: 80%;
-  max-width: 1000px;
   z-index: 1000;
-  background: rgba(255,255,255,0.98);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.3);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  border-radius: 1.5rem;
-  padding: 2rem;
 }
 
 .panel-header {
+  align-items: center;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(0,0,0,0.1);
   margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 .gpa {
+  background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #48BB78 0%, #38A169 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* 模块项 */
+/* 模块列表 */
 .module-list {
   display: flex;
-  justify-content: space-between;
   gap: 1rem;
+  justify-content: space-between;
   overflow: hidden;
 }
 
 .module-item {
+  cursor: pointer;
   flex: 1;
-  min-width: 160px;
-  max-width: 220px;
   flex-shrink: 0;
+  max-width: 220px;
+  min-width: 160px;
   transition: all 0.3s ease;
 }
 
 .module-item:hover {
-  transform: translateY(-5px);
   box-shadow: 0 16px 24px -6px rgba(66, 153, 225, 0.15);
+  transform: translateY(-5px);
 }
 
 .module-icon {
+  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
   position: relative;
   z-index: 1;
 }
 
 .module-info h4 {
-  margin: 0 0 0.5rem;
   color: #2d3748;
   font-weight: 600;
+  margin: 0 0 0.5rem;
 }
 
 .module-info p {
-  margin: 0;
   color: #718096;
   font-size: 0.9rem;
   line-height: 1.4;
+  margin: 0;
 }
 
+/* 关闭按钮 */
 .close-btn {
+  align-items: center;
   background: rgba(255,255,255,0.9);
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1.5rem;
   color: #718096;
+  cursor: pointer;
+  display: flex;
+  font-size: 1.5rem;
+  height: 32px;
+  justify-content: center;
+  transition: all 0.3s ease;
+  width: 32px;
 }
 
 .close-btn:hover {
   background: var(--primary);
+  border-color: transparent;
   color: white;
   transform: rotate(90deg);
-  border-color: transparent;
+}
+
+/* 动画效果 */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(66,153,225,0.3); }
+  100% { box-shadow: 0 0 0 15px rgba(66,153,225,0); }
+}
+
+@keyframes blink {
+  50% { opacity: 0.5; }
 }
 
 .blink {
   animation: blink 1.5s infinite;
 }
 
-/* 优化导航栏响应式 */
-.nav-content {
-  flex-direction: column; /* 小屏垂直排列 */
-  align-items: flex-start;
-  gap: 0.5rem;
-}
-
-
-/* 优化模块面板 */
-.module-panel {
-  width: 100%;
-  max-width: 900px;
-  max-height: 80vh; /* 限制高度 */
-}
-
-/* 添加移动端触摸滚动优化 */
-.semester-grid-wrapper {
-  -webkit-overflow-scrolling: touch;
-}/* iOS 平滑滚动 */
-/* 响应式调整 */
+/* 响应式设计 */
 @media (max-width: 1280px) {
   .module-item {
     min-width: 140px;
@@ -701,6 +668,24 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .container {
+    padding: 0.5rem;
+  }
+  .main-container {
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+  .nav-content {
+    flex-direction: column;
+  }
+  .semester-grid {
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  .module-panel {
+    padding: 1rem;
+    width: 95%;
+  }
   .module-item {
     min-width: 100px;
     padding: 0.8rem;
@@ -713,29 +698,6 @@ export default {
   }
   .module-info p {
     font-size: 0.8rem;
-  }
-  .container {
-    padding: 0.5rem;
-  }
-
-  .main-container {
-    padding: 1rem;
-    border-radius: 1rem;
-  }
-
-  .semester-grid {
-    grid-template-columns: 1fr; /* 小屏幕单列显示 */
-    gap: 1rem;
-  }
-
-  .module-panel {
-    width: 95%; /* 弹窗更窄 */
-    padding: 1rem;
-  }
-
-  .nav-content {
-    flex-direction: row; /* 大屏水平排列 */
-    align-items: center;
   }
 }
 

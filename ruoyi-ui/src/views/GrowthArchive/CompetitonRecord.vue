@@ -14,7 +14,8 @@
             class="add-button"
             @click="openDialog"
             icon="el-icon-plus"
-          >新增记录</el-button>
+          >新增记录
+          </el-button>
         </div>
       </div>
 
@@ -130,7 +131,8 @@
                   type="text"
                   size="mini"
                   @click.stop="handleEditDraft(scope.row)"
-                >重新提交</el-button>
+                >重新提交
+                </el-button>
               </template>
 
               <template v-if="scope.row.auditStatus === '未提交'">
@@ -138,13 +140,15 @@
                   type="text"
                   size="mini"
                   @click.stop="handleEditDraft(scope.row)"
-                >编辑</el-button>
+                >编辑
+                </el-button>
                 <el-button
                   type="text"
                   size="mini"
                   style="color: #F56C6C;"
                   @click.stop="handleDelete(scope.row)"
-                >删除</el-button>
+                >删除
+                </el-button>
               </template>
 
               <el-tag
@@ -152,7 +156,8 @@
                 type="info"
                 size="mini"
                 class="no-edit-tag"
-              >不可修改</el-tag>
+              >不可修改
+              </el-tag>
             </template>
           </el-table-column>
 
@@ -230,7 +235,7 @@
       @close="closeDialog"
     >
       <div class="dialog-header">
-<!--        <span class="form-icon">📝</span>-->
+        <!--        <span class="form-icon">📝</span>-->
         <h3 class="form-title">{{ isEdit ? '编辑竞赛记录' : '新增竞赛记录' }}</h3>
         <p class="form-tips">请填写本学期参与的竞赛信息（带<span class="required">*</span>为必填项）</p>
       </div>
@@ -354,18 +359,18 @@ export default {
   data() {
     return {
       levelOptions: [
-        { value: '院级', label: '院级' },
-        { value: '校级', label: '校级' },
-        { value: '省级', label: '省级' },
-        { value: '国家级', label: '国家级' },
-        { value: '国际级', label: '国际级' }
+        {value: '院级', label: '院级'},
+        {value: '校级', label: '校级'},
+        {value: '省级', label: '省级'},
+        {value: '国家级', label: '国家级'},
+        {value: '国际级', label: '国际级'}
       ],
       awardOptions: [
-        { value: '特等奖', label: '特等奖' },
-        { value: '一等奖', label: '一等奖' },
-        { value: '二等奖', label: '二等奖' },
-        { value: '三等奖', label: '三等奖' },
-        { value: '优秀奖', label: '优秀奖' }
+        {value: '特等奖', label: '特等奖'},
+        {value: '一等奖', label: '一等奖'},
+        {value: '二等奖', label: '二等奖'},
+        {value: '三等奖', label: '三等奖'},
+        {value: '优秀奖', label: '优秀奖'}
       ],
       levelIcons: {
         '院级': '🏛️',
@@ -468,7 +473,7 @@ export default {
     formatDate(dateString) {
       if (!dateString) return '-'
       const date = new Date(dateString)
-      return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
     },
 
     formatDateTime(dateString) {
@@ -491,7 +496,7 @@ export default {
       }
     },
 
-    tableRowClassName({ rowIndex }) {
+    tableRowClassName({rowIndex}) {
       return rowIndex % 2 === 1 ? 'stripe-row' : ''
     },
     parseMaterial(material) {
@@ -621,7 +626,7 @@ export default {
       try {
         const response = await axios.get(filePath, {
           responseType: 'blob',
-          headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+          headers: {Authorization: "Bearer " + localStorage.getItem("token")}
         });
         const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
@@ -661,7 +666,7 @@ export default {
       this.showDialog = false;
       this.fileList = [];
     },
-    async submitData(state) {
+    async submitData(status) {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           const originalRecord = this.competitionRecords.find(
@@ -681,7 +686,7 @@ export default {
                 awardLevel: this.formData.awardLevel,
                 semester: this.activeSemester
               });
-              if (checkRes.code !== 200) return this.$message.error('已存在相同活动记录');
+              if (checkRes.code !== 200) return this.$message.error('已存在相同活动记录,不可重复添加');
             } catch (error) {
               return this.$message.error(`校验失败: ${error.message}`);
             }
@@ -709,7 +714,10 @@ export default {
             existingProofMaterial: existingPaths,
           };
 
-          if (this.currentCompetitionId) recordData.competitionId = this.currentCompetitionId;
+          if (this.currentCompetitionId) {
+            recordData.competitionId = this.currentCompetitionId
+          };
+
           const recordBlob = new Blob([JSON.stringify(recordData)], {type: "application/json"});
           formData.append("record", recordBlob);
           this.fileList.forEach((file) => formData.append("proofMaterial", file.raw));
@@ -733,14 +741,6 @@ export default {
             });
         }
       });
-    },
-    handleSizeChange(size) {
-      this.pageSize = size;
-      this.fetchCompetitionRecords();
-    },
-    handleCurrentChange(page) {
-      this.currentPage = page;
-      this.fetchCompetitionRecords();
     },
     async fetchCompetitionRecords() {
       try {
@@ -998,6 +998,7 @@ export default {
 .custom-pagination /deep/ .el-pagination__jump {
   margin-left: 12px;
 }
+
 .custom-pagination /deep/ .el-pagination__editor {
   border-radius: 6px;
   border: 1px solid #e2e8f0;
@@ -1012,6 +1013,7 @@ export default {
   padding: 0 8px;
   margin: 0 4px;
 }
+
 .custom-pagination /deep/ .btn-prev:hover,
 .custom-pagination /deep/ .btn-next:hover {
   border-color: #4299e1;
@@ -1024,9 +1026,11 @@ export default {
     padding: 8px;
     justify-content: center;
   }
+
   .custom-pagination /deep/ .el-pagination__jump {
     display: none;
   }
+
   .custom-pagination /deep/ .el-pagination__total {
     display: none;
   }

@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ruoyi.system.domain.StuActivityRecord;
-import com.ruoyi.system.domain.StuMentorshipRecord;
+import com.ruoyi.system.domain.*;
 import com.ruoyi.system.domain.StuMentorshipRecord;
 import com.ruoyi.system.domain.dto.MentorshipAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
@@ -196,7 +196,7 @@ public class StuMentorshipRecordController extends BaseController {
     //@PreAuthorize("@ss.hasPermi('system:mentorship:edit')")
     @Log(title = "导师指导记录", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestPart("record") StuMentorshipRecord stuMentorshipRecord,
+    public AjaxResult edit(@RequestPart("record") StuMentorshipRecord record,
                            @RequestPart(value = "photoPaths", required = false) MultipartFile[] photoPaths,
                            @RequestHeader(value = "Authorization", required = false) String token) {
         try {
@@ -204,30 +204,41 @@ public class StuMentorshipRecordController extends BaseController {
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
             }
-            stuMentorshipRecord.setSubmitTime(new Date());// 确保新插入的数据有最新的时间戳
-            StuMentorshipRecord oldRecord = stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(stuMentorshipRecord.getRecordId());
+            // 获取旧记录用于清理文件
+            StuMentorshipRecord oldRecord = stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(record.getRecordId());
             List<String> oldFiles = parseMaterialPaths(oldRecord.getPhotoPaths());
-            // 处理文件上传
+
+            // 处理文件合并逻辑
+            List<String> finalFilePaths = new ArrayList<>();
+
+            // 1. 添加保留的旧文件
+            if (record.getExistingProofMaterial() != null) {
+                finalFilePaths.addAll(record.getExistingProofMaterial());
+            }
+
+            // 2. 处理新上传文件
             if (photoPaths != null && photoPaths.length > 0) {
-                List<String> filePaths = new ArrayList<>();
                 for (MultipartFile file : photoPaths) {
                     String filePath = saveFile(file);
-                    filePaths.add(filePath);
+                    finalFilePaths.add(filePath);
                 }
-                stuMentorshipRecord.setPhotoPaths(new ObjectMapper().writeValueAsString(filePaths));
-                // 清理旧文件
-                deleteOldFiles(oldFiles);
-            } else {
-                // 保留原有文件路径
-                stuMentorshipRecord.setPhotoPaths(oldRecord.getPhotoPaths());
             }
+
+            // 3. 更新文件路径到记录
+            record.setPhotoPaths(new ObjectMapper().writeValueAsString(finalFilePaths));
+
+            // 4. 清理被删除的旧文件
+            List<String> filesToDelete = oldFiles.stream()
+                    .filter(oldFile -> !finalFilePaths.contains(oldFile))
+                    .collect(Collectors.toList());
+            deleteOldFiles(filesToDelete);
+
             // 更新记录
-            return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(stuMentorshipRecord));
+            return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(record));
         } catch (Exception e) {
-            logger.error("提交失败", e);
-            return AjaxResult.error("提交失败：" + e.getMessage());
+            logger.error("更新失败", e);
+            return AjaxResult.error("更新失败：" + e.getMessage());
         }
-        //return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(stuMentorshipRecord));
     }
 
     // 辅助方法：解析材料路径

@@ -190,20 +190,17 @@
           <el-upload
             multiple
             :limit="5"
-            :value="pushMeetingPictures"
+            :value="fileList"
+            :file-list="fileList"
             :auto-upload="false"
             :on-change="handleFileChange"
-            :on-remove="handleRemoveFile"
-            :file-list="pushMeetingPictures"
+            :on-remove="handleFileRemove"
+            :on-preview="handlePreviewFile"
+            list-type="picture-card"
+            class="custom-upload"
           >
             <i class="el-icon-plus"></i>
-            <template #tip>
-              <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
-                <br>
-                <span
-                  style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写总结文档和现场图片，且之前总结文档和现场图片不会保留</span>
-              </div>
-            </template>
+              <div slot="tip" class="el-upload__tip">支持格式：JPG/PNG 单文件≤10MB 最多5个文件</div>
           </el-upload>
         </el-form-item>
 
@@ -233,7 +230,7 @@ import {
   addMentorship,
   delMentorship,
   updateMentorship,
-  checkMentorshipUnique, uploadFile,
+  checkMentorshipUnique,
 } from "@/api/system/mentorship";
 import {Properties as $download} from "svg-sprite-loader/examples/custom-runtime-generator/build/main";
 
@@ -256,7 +253,7 @@ export default {
       uploadMessage: null,
       summaryFilePath: null,
       summaryFileList: [],
-      pushMeetingPictures: [],
+      fileList: [],
       activeSemester: '', // 当前学期
       formData: {
         guidanceTopic: '',
@@ -313,11 +310,11 @@ export default {
     },
     //保存草稿
     async handleSave() {
-      await this.submitForm("未提交");
+      await this.submitData("未提交");
     },
     //正式提交
     async handleSubmit() {
-      await this.submitForm("未审核");
+      await this.submitData("未审核");
     },
 
     // 删除未提交记录
@@ -340,25 +337,42 @@ export default {
         }
       }
     },
+
     // 处理草稿修改
     handleEditDraft(row) {
       this.handleEdit(row);
     },
-    // 处理编辑未通过记录
+
     handleEdit(row) {
-      this.formData = {
-        guidanceTopic: row.guidanceTopic,
-        guidanceLocation: row.guidanceLocation,
-        guidanceTime: row.guidanceTime,
-        studentComment: row.studentComment,
-        summaryFilePath: row.summaryFilePath,
-        photoPaths: [],
-        recordId: row.recordId,
-        semester: this.formData.semester,
-      };
+      const rawData = JSON.parse(JSON.stringify(row));
+      this.formData = {...rawData};
       this.isEdit = true;
-      this.currentRecordId = row.recordId;
+      this.currentRecordId = rawData.id;
       this.showDialog = true;
+
+      const proofMaterial = this.parseMaterial(rawData.photoPaths);
+      this.fileList = proofMaterial.map((path, index) => ({
+        uid: Date.now() + index,
+        name: path.split('/').pop(),
+        url: `${process.env.VUE_APP_BASE_API}/profile/${encodeURIComponent(path)}`,
+        status: 'success',
+        isOld: true,
+        path: path
+      })).filter(Boolean);
+    },
+
+    parseMaterial(material) {
+      try {
+        if (Array.isArray(material)) return [...material];
+        if (typeof material === 'string') {
+          const cleaned = material.replace(/__ob__:.*?($$|$$)/gs, '');
+          return JSON.parse(cleaned);
+        }
+        return [];
+      } catch (e) {
+        console.error('材料解析失败:', e);
+        return [];
+      }
     },
 
     // 生成带时间戳的文件名
@@ -473,13 +487,24 @@ export default {
         this.$message.error('预览失败：文件路径格式不正确');
       }
     },
-    handleFileChange(file, fileList) {
 
-      this.pushMeetingPictures = fileList.slice(-5); // 保持最多5个文件
+    handlePreviewFile(file) {
+      if (file.isOld) {
+        window.open(file.url);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          window.open(e.target.result);
+        };
+        reader.readAsDataURL(file.raw);
+      }
+    },
+    handleFileChange(file, fileList) {
+      this.fileList = fileList.slice(-5); // 保持最多5个文件
     },
 
-    handleRemoveFile(file, fileList) {
-      this.pushMeetingPictures = fileList;  // 更新文件列表
+    handleFileRemove(file, fileList) {
+      this.fileList = fileList;
     },
 
     // 分页大小变化
@@ -501,7 +526,7 @@ export default {
     },
     closeCard() {
       this.summaryFilePath = null;
-      this.pushMeetingPictures = [];
+      this.fileList = [];
       this.currentRecordId = null;
       this.showDialog = false;
       this.formData = {
@@ -531,7 +556,7 @@ export default {
           pageSize: this.pageSize,
           studentId: this.$store.state.user.name,
           semester: this.activeSemester,
-          pushMeetingPictures: this.pushMeetingPictures,
+          fileList: this.fileList,
           ...this.queryParams
         };
 
@@ -548,7 +573,7 @@ export default {
       }
     },
     // 统一提交方法
-    async submitForm(status) {
+    async submitData(status) {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
           // 获取原始记录数据（编辑时）
@@ -560,12 +585,9 @@ export default {
             this.formData.guidanceTopic !== originalRecord.guidanceTopic ||
             this.formData.guidanceLocation !== originalRecord.guidanceLocation ||
             this.formData.guidanceTime !== originalRecord.guidanceTime;
-          console.log("isKeyFieldChanged:"+isKeyFieldChanged)
-          console.log("this.currentRecordId:"+this.currentRecordId)
-          const shouldCheckUnique = !this.currentRecordId || isKeyFieldChanged;
-          console.log("shouldCheckUnique:"+shouldCheckUnique)
+
           // 编辑时排除自身
-          if (shouldCheckUnique) {
+          if (isKeyFieldChanged) {
             // 唯一性校验参数
             const checkParams = {
               studentId: this.$store.state.user.name,
@@ -573,20 +595,24 @@ export default {
               guidanceLocation: this.formData.guidanceLocation,
               guidanceTime: this.formData.guidanceTime,
               semester: this.activeSemester,
-              // studentComment: this.formData.studentComment,
-              // auditStatus: status,
             };
-            console.log(checkParams)
             const checkRes = await checkMentorshipUnique(checkParams);
             if (checkRes.code !== 200) {
               return this.$message.error('已存在相同活动记录，不可重复添加');
             }
           }
+
+          const existingPaths = this.fileList
+            .filter(file => file.isOld)
+            .map(file => file.path);
+          const newFiles = this.fileList
+            .filter(file => !file.isOld)
+            .map(file => file.raw);
           const formData = new FormData();
 
           // 构建核心数据对象
           const recordData = {
-            recordId: this.currentRecordId, // 携带当前记录ID
+            recordId: this.currentRecordId,
             guidanceTopic: this.formData.guidanceTopic,
             guidanceLocation: this.formData.guidanceLocation,
             guidanceTime: this.formData.guidanceTime,
@@ -595,24 +621,31 @@ export default {
             studentComment: this.formData.studentComment,
             studentId: this.$store.state.user.name,
             summaryFilePath: this.formData.summaryFilePath,
-            photoPaths: JSON.stringify(this.pushMeetingPictures.map(file => file.url)),
+            photoPaths: JSON.stringify(this.fileList.map(file => file.url)),
             auditTime: null,
             auditRemark: "",
+            existingProofMaterial: existingPaths,
           };
+
+          // 如果是编辑操作，添加ID字段
           if (this.currentRecordId) {
             recordData.recordId = this.currentRecordId;
-          }
+          };
+
           // 构建 JSON 部分（指定类型为 application/json）
           const recordBlob = new Blob(
             [JSON.stringify(recordData)],
             {type: "application/json"}
           );
           formData.append("record", recordBlob);
+
           //添加文件
-          this.pushMeetingPictures.forEach((file) => {
+          this.fileList.forEach((file) => {
             formData.append("photoPaths", file.raw);
           });
+
           formData.append('summaryFile', this.selectedFile);
+
           // 配置 headers
           const config = {
             headers: {
@@ -623,6 +656,7 @@ export default {
 
           // 根据模式选择 API 方法
           const apiMethod = this.currentRecordId ? updateMentorship : addMentorship;
+
           apiMethod(formData, config)
             .then(() => {
               this.$message.success(this.currentRecordId ? "更新成功！" : "提交成功！");

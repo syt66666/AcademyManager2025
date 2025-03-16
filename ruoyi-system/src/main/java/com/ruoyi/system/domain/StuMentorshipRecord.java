@@ -1,6 +1,7 @@
 package com.ruoyi.system.domain;
 
 import java.util.Date;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -71,6 +72,9 @@ public class StuMentorshipRecord extends BaseEntity {
     @Excel(name = "照片路径数组")
     private String photoPaths;
 
+    /** 旧文件路径 */
+    private List<String> existingProofMaterial;
+
     /**
      * 学期
      */
@@ -108,6 +112,14 @@ public class StuMentorshipRecord extends BaseEntity {
      */
     @Excel(name = "审核意见")
     private String auditRemark;
+
+    public List<String> getExistingProofMaterial() {
+        return existingProofMaterial;
+    }
+
+    public void setExistingProofMaterial(List<String> existingProofMaterial) {
+        this.existingProofMaterial = existingProofMaterial;
+    }
 
     public String getStudentName() {
         return studentName;
