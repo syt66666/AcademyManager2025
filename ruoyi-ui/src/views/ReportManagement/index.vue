@@ -120,7 +120,7 @@
       <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
         <div style="text-align: center; margin-bottom: 20px;">
           <img
-            :src="previewImages[currentPreviewIndex]"
+            :src="fileList[currentPreviewIndex]"
             style="max-width: 100%; display: block; margin: 0 auto;"
             alt="现场照片预览"
           />
@@ -129,10 +129,10 @@
             :disabled="currentPreviewIndex === 0"
             @click="currentPreviewIndex--"
           ></el-button>
-          <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+          <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ fileList.length }}</span>
           <el-button
             icon="el-icon-arrow-right"
-            :disabled="currentPreviewIndex === previewImages.length - 1"
+            :disabled="currentPreviewIndex === fileList.length - 1"
             @click="currentPreviewIndex++"
           ></el-button>
         </div>
@@ -140,7 +140,7 @@
         <div slot="footer">
           <el-button
             type="primary"
-            @click="downloadSingleFile(previewImages[currentPreviewIndex])"
+            @click="downloadSingleFile(fileList[currentPreviewIndex])"
             style="background-color: #42b983; border-color: #42b983;"
           >
             <i class="el-icon-download"></i> 下载当前图片
@@ -177,6 +177,7 @@
       />
     </el-card>
 
+<!--讲座记录添加-->
     <el-dialog :visible.sync="showDialog" title="讲座报告填写" id="newCard"
                style="width: 100%; margin-top: 2vh;margin-left: 1%" @close="closeCard">
       <el-form ref="form" :model="formData" :rules="rules" label-width="120px" style="padding: 20px;">
@@ -229,42 +230,18 @@
 
         <!-- 报告现场图片上传 -->
         <el-form-item label="现场图片上传" prop="reportPicture">
-          <!--              <img-->
-          <!--              v-for="(url, i) in previewImages" :key="i"-->
-          <!--              :src="url"-->
-          <!--              style="width:100px; height:100px; display: inline-block; margin: 0 auto;"-->
-          <!--              alt="证明材料预览"-->
-          <!--            />-->
-          <div v-for="(url, i) in previewImages" :key="i"
-               style="position: relative; display: inline-block; margin: 0 auto;">
-            <img
-              :src="url"
-              style="width: 100px; height: 100px; display: inline-block;"
-              alt="证明材料预览"
-            />
-            <!-- 删除按钮（叉号） -->
-            <i
-              class="el-icon-delete"
-              @click="removeImage(i)"
-              style="position: absolute; top: 0; right: 0; cursor: pointer; color: white; font-size: 20px; background-color: red; border-radius: 50%; padding: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
-            </i>
-          </div>
           <el-upload
             multiple
             :limit="5"
+            :file-list="fileList"
             :auto-upload="false"
             :on-change="handleFileChange"
-            :on-remove="handleRemoveFile"
-            :file-list="pushReportPicture"
-            list-type="picture"
+            :on-remove="handleFileRemove"
+            :on-preview="handlePreviewFile"
+            list-type="picture-card"
           >
             <i class="el-icon-plus"></i>
-            <template #tip>
-              <div class="el-upload__tip">最少上传3个图片，最多上传5个图片，单个不超过10MB
-                <!--                    <br>-->
-                <!--                    <span style="color: red; font-size: 16px;">注意:如果用户选择正式提交，必须填写报告心得和现场图片，且之前报告和现场图片不会保留</span>-->
-              </div>
-            </template>
+            <div slot="tip" class="el-upload__tip">支持格式：JPG/PNG 单文件≤10MB 最多5个文件</div>
           </el-upload>
         </el-form-item>
         <el-form-item>
@@ -291,7 +268,8 @@ export default {
       reportFeelingList: [], // 总结文档上传列表
       isEdit: false,//判断修改还是插入
       previewVisible: false,
-      previewImages: [],
+      fileList: [],
+      existingFiles: [],
       currentPreviewIndex: 0,
       currentDownloadFile: '',
       dialogVisible: false,
@@ -307,7 +285,6 @@ export default {
       uploadMessage: null,
       reportFeeling: null,
       currentImage: '',
-      pushReportPicture: [],
       formData: {
         reportTitle: '',
         reporter: '',
@@ -322,6 +299,11 @@ export default {
         semester: '',
       },
       activeSemester: '', // 当前学期
+      rules: {
+        reportTitle: [{required: true, message: '讲座题目不为空', trigger: 'blur'}],
+        reporter: [{required: true, message: '讲师姓名不为空', trigger: 'blur'}],
+        reportDate: [{required: true, message: '请选择讲座日期', trigger: 'change'}]
+      },
     };
   },
   mounted() {
@@ -368,32 +350,134 @@ export default {
     // 处理草稿修改
     handleEditDraft(row) {
       this.handleEdit(row);
-      localStorage.removeItem(this.getDraftKey());
+      // localStorage.removeItem(this.getDraftKey());
     },
-    // 处理编辑未通过记录
+// 修改后的handleEdit方法
     handleEdit(row) {
-      this.formData = {
-        // ...row,
-        reportTitle: row.reportTitle,
-        reporter: row.reporter,
-        reportDate: row.reportDate,
-        reportContent: row.reportContent,
-        reportLink: row.reportLink,
-        lecturePoster: row.lecturePoster,
-        reportPicture: [],
-        reportId: row.reportId,
-        semester: this.formData.semester,
-      };
-      //把过去传入图片回显
-      const paths = typeof row.reportPicture === 'string'
-        ? JSON.parse(row.reportPicture)
-        : row.reportPicture;
-      this.previewImages = paths.map(path => this.getFullUrl(path));
+      try {
+        // 初始化基础表单数据
+        this.formData = {
+          reportTitle: row.reportTitle,
+          reporter: row.reporter,
+          reportDate: row.reportDate,
+          reportContent: row.reportContent,
+          reportLink: row.reportLink,
+          lecturePoster: row.lecturePoster,
+          reportId: row.reportId,  // 重要：保留记录ID
+          semester: this.formData.semester,
+          auditStatus: row.auditStatus
+        };
 
-      this.isEdit = true;
-      this.showDialog = true;
+        // 解析图片路径
+        const paths = typeof row.reportPicture === 'string'
+          ? JSON.parse(row.reportPicture)
+          : row.reportPicture || [];
+
+        // 生成符合要求的文件列表
+        this.fileList = paths.map((path, index) => ({
+          uid: `existing-${Date.now()}-${index}`,
+          name: path.split('/').pop(),
+          url: this.getFullUrl(path),
+          status: 'success',
+          isOld: true,
+          path: path
+        }));
+
+        // 显示对话框
+        this.showDialog = true;
+        this.isEdit = true;
+
+        console.log('初始化编辑数据:', {
+          formData: this.formData,
+          fileList: this.fileList
+        });
+
+      } catch (error) {
+        console.error('编辑初始化失败:', error);
+        this.$message.error('数据加载失败，请检查控制台');
+      }
     },
 
+// 修正后的文件路径方法
+    getFullUrl(filePath) {
+      // 处理可能存在的重复profile目录
+      const cleanPath = filePath.replace(/^profile\//, '');
+      return `${process.env.VUE_APP_BASE_API}/profile/${cleanPath}`;
+    },
+// 新增文件处理
+    handleFileChange(file, fileList) {
+      // 限制最大数量
+      this.fileList = fileList.slice(-5)
+
+      // 自动压缩处理（示例）
+      if(file.raw.size > 2 * 1024 * 1024) { // 2MB以上压缩
+        this.compressImage(file.raw).then(compressedFile => {
+          file.raw = compressedFile
+        })
+      }
+    },
+
+// 文件移除处理
+    handleFileRemove(file, fileList) {
+      // 如果是已存在文件，记录需要删除
+      if(file.isOld) {
+        this.$set(file, 'deleteFlag', true)
+      }
+      this.fileList = fileList
+    },
+    handlePreviewFile(file) {
+      if (file.isOld) {
+        window.open(file.url);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          window.open(e.target.result);
+        };
+        reader.readAsDataURL(file.raw);
+      }
+    },
+// 图片压缩方法
+    compressImage(file) {
+      return new Promise(resolve => {
+        const reader = new FileReader()
+        reader.onload = e => {
+          const img = new Image()
+          img.onload = () => {
+            const canvas = document.createElement('canvas')
+            // 保持宽高比压缩到800px以内
+            const MAX_SIZE = 800
+            let width = img.width
+            let height = img.height
+
+            if (width > height) {
+              if (width > MAX_SIZE) {
+                height *= MAX_SIZE / width
+                width = MAX_SIZE
+              }
+            } else {
+              if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height
+                height = MAX_SIZE
+              }
+            }
+
+            canvas.width = width
+            canvas.height = height
+            const ctx = canvas.getContext('2d')
+            ctx.drawImage(img, 0, 0, width, height)
+
+            canvas.toBlob(blob => {
+              resolve(new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              }))
+            }, 'image/jpeg', 0.8)
+          }
+          img.src = e.target.result
+        }
+        reader.readAsDataURL(file)
+      })
+    },
     // 生成带时间戳的文件名
     generateFeelingFileName() {
       const date = new Date().toISOString().slice(0, 10);
@@ -485,11 +569,6 @@ export default {
       return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
     },
 
-    // 获取完整URL（带缓存清除）
-    getFullUrl(filePath) {
-      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
-    },
-
     handlePreview(filePath) {
       try {
         const paths = typeof filePath === 'string'
@@ -500,7 +579,7 @@ export default {
           this.$message.error('预览失败,当前没有添加过现场图片');
         }
         if (paths.length > 0) {
-          this.previewImages = paths.map(path => this.getFullUrl(path));
+          this.fileList = paths.map(path => this.getFullUrl(path));
           this.currentPreviewIndex = 0;
           this.currentDownloadFile = paths[0];
           this.previewVisible = true;
@@ -512,14 +591,8 @@ export default {
 
     // 删除提交信息时的现场图片
     removeImage(index) {
-      this.previewImages.splice(index, 1); // 删除对应的图片
-      console.log((this.previewImages));
-    },
-    handleFileChange(file, fileList) {
-      this.pushReportPicture = fileList.slice(-5); // 保持最多5个文件
-    },
-    handleRemoveFile(file, fileList) {
-      this.pushReportPicture = fileList;  // 更新文件列表
+      this.fileList.splice(index, 1); // 删除对应的图片
+      console.log((this.fileList));
     },
 
     //展开报告海报大图
@@ -545,21 +618,6 @@ export default {
       } catch {
         return 'jpg';
       }
-    },
-    // 下载图片
-    downloadFiles(filePaths) {
-      if (!filePaths) {
-        this.$message.warning('没有可下载的图片');
-        return;
-      }
-
-      const link = document.createElement('a');
-      link.href = this.getImageUrl(filePaths);
-      link.download = this.generateFileName();
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     },
     // 分页大小变化
     handleSizeChange(size) {
@@ -620,9 +678,9 @@ export default {
     closeCard() {
       this.showDialog = false;
       this.reportFeeling = null;
-      this.pushReportPicture = [];
+      this.existingFiles = [];
       this.showDialog = false;
-      this.previewImages = [];
+      this.fileList = [];
       this.formData = {
         reportTitle: '',
         reporter: '',
@@ -682,12 +740,12 @@ export default {
           //如果不是保存
           if (this.formData.auditStatus !== 3) {
             // 如果文件数量少于3张，弹出提示
-            if (this.pushReportPicture.length < 3) {
+            if (this.existingFiles.length < 3) {
               this.$message.error('最少上传3张图片');
               return;
             }
             // 如果文件数量大于5张，弹出提示
-            if (this.pushReportPicture.length > 5) {
+            if (this.existingFiles.length > 5) {
               this.$message.error('最多上传5张图片');
               return;
             }
@@ -698,16 +756,31 @@ export default {
           //   this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
           // }
           const formData = new FormData();
+
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
           formData.append('reportFeeling', this.reportFeeling);
           console.log('表单数据formData.reportFeeling:', this.reportFeeling);
           // 添加图片（字段名必须与后端一致）
-          this.pushReportPicture.forEach((file) => {
+          this.existingFiles.forEach((file) => {
             formData.append("reportPicture", file.raw);
           });
-          const previewImagesJson = JSON.stringify(this.previewImages);
-          formData.append('previewImages', previewImagesJson);
+
+
+          // 构建文件数据
+          const keepFiles = this.fileList
+            .filter(file => !file.deleteFlag)
+            .map(file => file.isOld ? file.path : file.raw)
+
+          // 分离新旧文件
+          const oldFiles = keepFiles.filter(f => typeof f === 'string')
+          const newFiles = keepFiles.filter(f => f instanceof File)
+
+          // 添加数据
+          formData.append('previewImages', JSON.stringify(oldFiles))
+          newFiles.forEach(file => {
+            formData.append('newFiles', file)
+          })
           console.log('表单数据formData.reportPicture:', this.formData.reportPicture);
           console.log('传递后端数据:', formData);
           // 可以使用 axios 或 fetch 发送请求
@@ -743,7 +816,7 @@ export default {
     initData() {
       console.log(2454645746);
       this.reportFeeling = null;
-      this.pushReportPicture = [];
+      this.existingFiles = [];
       this.showDialog = false;
       this.records = [];
       this.formData = {
@@ -759,7 +832,7 @@ export default {
         //学期
         semester: this.findSemester(this.activeSemester),
       };
-      this.previewImages = [];
+      this.fileList = [];
       // this.$refs.fileInput.value = '';
       this.listReport();  // 在页面加载时获取数据
     },
@@ -776,14 +849,4 @@ input, button {
   margin: 10px;
 }
 
-.el-form-item__label {
-  text-align: right;
-}
-
-.form-item-label {
-  display: inline-block;
-  height: 32px;
-  line-height: 32px;
-  margin-right: 10px;
-}
 </style>
