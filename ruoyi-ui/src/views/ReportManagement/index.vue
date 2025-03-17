@@ -36,8 +36,8 @@
             </template>
           </el-table-column>
 
-          <!-- 指导主题 -->
-          <el-table-column prop="reportTitle" label="讲座题目" min-width="180">
+          <!-- 讲座题目 -->
+          <el-table-column prop="reportTitle" label="讲座题目" width="120" align="center">
             <template v-slot="scope">
               <div class="lecture-title">
                 <i class="el-icon-notebook-2 title-icon"></i>
@@ -47,15 +47,15 @@
           </el-table-column>
 
           <!-- 讲座地点 -->
-          <el-table-column prop="guidanceLocation" label="讲座地点" width="120" align="center">
+          <el-table-column prop="reportLocation" label="讲座地点" width="120" align="center">
             <template v-slot="scope">
               <el-tag effect="light" class="location-tag">
-                {{ scope.row.guidanceLocation }}
+                {{ scope.row.reportLocation }}
               </el-tag>
             </template>
           </el-table-column>
 
-          <!-- 时间 -->
+          <!-- 讲座时间 -->
           <el-table-column prop="reportDate" label="讲座时间" width="140" align="center">
             <template v-slot="scope">
               <span class="time-display">
@@ -65,7 +65,13 @@
           </el-table-column>
 
           <!-- 讲座链接 -->
-          <el-table-column prop="reportLink" label="讲座链接"></el-table-column>
+          <el-table-column prop="reportLink" label="讲座链接" width="140" align="center">
+            <template v-slot="scope">
+              <el-tag effect="light" class="location-tag">
+                {{ scope.row.reportLink }}
+              </el-tag>
+            </template>
+          </el-table-column>
 
           <!-- 总结文档 -->
           <el-table-column label="总结文档" width="140" align="center">
@@ -175,9 +181,9 @@
           </el-form-item>
 
           <!-- 地点 -->
-          <el-form-item label="讲座地点" prop="guidanceLocation">
+          <el-form-item label="讲座地点" prop="reportLocation">
             <el-input
-              v-model="formData.guidanceLocation"
+              v-model="formData.reportLocation"
               placeholder="请输入讲座地点"
               class="location-input"
             >
@@ -222,6 +228,7 @@
 
           <!-- 现场图片 -->
           <el-form-item label="现场图片" prop="reportPicture">
+
             <el-upload
               multiple
               :limit="5"
@@ -332,14 +339,14 @@ export default {
         lecturePoster: '',
         reportPicture: [],
         auditStatus: '',
-        guidanceLocation:'',
+        reportLocation:'',
         semester: '',
       },
       activeSemester: '', // 当前学期
       rules: {
         reportTitle: [{required: true, message: '讲座题目不为空', trigger: 'blur'}],
         reporter: [{required: true, message: '讲师姓名不为空', trigger: 'blur'}],
-        guidanceLocation: [{required: true, message: '讲座地点不为空', trigger: 'blur'}],
+        reportLocation: [{required: true, message: '讲座地点不为空', trigger: 'blur'}],
         reportDate: [{required: true, message: '请选择讲座日期', trigger: 'change'}]
       },
     };
@@ -351,6 +358,155 @@ export default {
     this.listReport();  // 在页面加载时获取数据
   },
   methods: {
+    handlePreview(filePath) {
+      try {
+        const paths = typeof filePath === 'string'
+          ? JSON.parse(filePath)
+          : filePath;
+
+        if (paths.length === 0) {
+          this.$message.error('预览失败,当前没有添加过现场图片');
+        }
+        if (paths.length > 0) {
+          this.fileList = paths.map(path => this.getFullUrl(path));
+          this.currentPreviewIndex = 0;
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error('预览失败：文件路径格式不正确');
+      }
+    },
+
+
+    //现场报告多张图片下载
+    async downloadReportPicture(filePaths) {
+      try {
+        // 解析文件路径
+        const paths = typeof filePaths === 'string'
+          ? JSON.parse(filePaths)
+          : filePaths;
+        if (!Array.isArray(paths)) {
+          throw new Error("无效的文件路径格式");
+        }
+        // 处理多个文件下载
+        if (paths.length > 1) {
+          this.$confirm(`本次下载包含${paths.length}个图片，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
+          });
+        } else if (paths.length === 1) {
+          this.previewImage = this.getFullUrl(paths[0]);
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
+      }
+    },
+    // 下载单个文件
+    async downloadSingleFile(filePath) {
+      try {
+        const response = await axios.get(
+          filePath,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token")
+            }
+          }
+        );
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.generateFileName1(filePath));
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(url);
+        link.remove();
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
+    // 给现场报告图片生成带时间戳的文件名
+    generateFileName1(filePath) {
+      const originalName = filePath.split('/').pop() || '现场报告图片';
+      const timestamp = new Date().getTime();
+      const ext = originalName.split('.').pop() || 'jpg';
+      return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
+    },
+
+    // 删除提交信息时的现场图片
+    removeImage(index) {
+      this.fileList.splice(index, 1); // 删除对应的图片
+      console.log((this.fileList));
+    },
+
+    // 获取文件扩展名
+    getFileExtension() {
+      try {
+        return this.currentImage.split('.').pop().split(/[#?]/)[0] || 'jpg';
+      } catch {
+        return 'jpg';
+      }
+    },
+    // 在methods中添加以下方法
+    handleFileCommand(command) {
+      console.log(2415346554657);
+      console.log(command.files);
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadReportPicture(command.files)
+      }
+    },
+    // // 修正后的文件处理方法
+    // async handlePreview(files) {
+    //   try {
+    //     const filePaths = Array.isArray(files) ? files : JSON.parse(files)
+    //     this.fileList = filePaths.map(path => ({
+    //       url: `${process.env.VUE_APP_BASE_API}/profile/${path}`,
+    //       name: path.split('/').pop()
+    //     }))
+    //     this.previewVisible = true
+    //   } catch (error) {
+    //     this.$message.error('预览失败：' + error.message)
+    //   }
+    // },
+
+// 修正后的文件上传处理
+    handleFileChange(file, fileList) {
+      // 限制图片类型和大小
+      const isImage = ['image/jpeg', 'image/png'].includes(file.raw.type)
+      const isLt10M = file.raw.size / 1024 / 1024 < 10
+
+      if (!isImage) {
+        this.$message.error('只能上传JPG/PNG格式图片!')
+        return false
+      }
+
+      if (!isLt10M) {
+        this.$message.error('图片大小不能超过10MB!')
+        return false
+      }
+
+      // 压缩大图片
+      if (file.raw.size > 2 * 1024 * 1024) {
+        this.compressImage(file.raw).then(compressed => {
+          file.raw = compressed
+          this.fileList = [...fileList.slice(-5)]
+        })
+      } else {
+        this.fileList = [...fileList.slice(-5)]
+      }
+    },
     // 状态标签样式
     getStatusTagType(status) {
       const typeMap = {
@@ -418,17 +574,20 @@ export default {
       try {
         // 初始化基础表单数据
         this.formData = {
+          reportId: row.reportId,
           reportTitle: row.reportTitle,
           reporter: row.reporter,
           reportDate: row.reportDate,
           reportContent: row.reportContent,
-
+          reportLocation: row.reportLocation,
           reportLink: row.reportLink,
           lecturePoster: row.lecturePoster,
-          reportId: row.reportId,  // 重要：保留记录ID
           semester: this.formData.semester,
           auditStatus: row.auditStatus
         };
+
+        //已有照片列表
+        this.existingFiles = row.reportPicture;
 
         // 解析图片路径
         const paths = typeof row.reportPicture === 'string'
@@ -465,18 +624,6 @@ export default {
       // 处理可能存在的重复profile目录
       const cleanPath = filePath.replace(/^profile\//, '');
       return `${process.env.VUE_APP_BASE_API}/profile/${cleanPath}`;
-    },
-// 新增文件处理
-    handleFileChange(file, fileList) {
-      // 限制最大数量
-      this.fileList = fileList.slice(-5)
-
-      // 自动压缩处理（示例）
-      if(file.raw.size > 2 * 1024 * 1024) { // 2MB以上压缩
-        this.compressImage(file.raw).then(compressedFile => {
-          file.raw = compressedFile
-        })
-      }
     },
 
 // 文件移除处理
@@ -567,120 +714,7 @@ export default {
         console.error("下载错误详情:", error);
       }
     },
-    //现场报告多张图片下载
-    async downloadReportPicture(filePaths) {
-      try {
-        // 解析文件路径
-        const paths = typeof filePaths === 'string'
-          ? JSON.parse(filePaths)
-          : filePaths;
-        if (!Array.isArray(paths)) {
-          throw new Error("无效的文件路径格式");
-        }
-        // 处理多个文件下载
-        if (paths.length > 1) {
-          this.$confirm(`本次下载包含${paths.length}个图片，是否继续？`, '批量下载提示', {
-            confirmButtonText: '立即下载',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }).then(() => {
-            paths.forEach(path => {
-              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
-              this.downloadSingleFile(url);
-            });
-          });
-        } else if (paths.length === 1) {
-          this.previewImage = this.getFullUrl(paths[0]);
-          this.currentDownloadFile = paths[0];
-          this.previewVisible = true;
-        }
-      } catch (error) {
-        this.$message.error(`下载失败: ${error.message}`);
-        console.error("下载错误详情:", error);
-      }
-    },
-    // 下载单个文件
-    async downloadSingleFile(filePath) {
-      try {
-        const response = await axios.get(
-          filePath,
-          {
-            responseType: 'blob',
-            headers: {
-              Authorization: "Bearer " + localStorage.getItem("token")
-            }
-          }
-        );
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', this.generateFileName1(filePath));
-        document.body.appendChild(link);
-        link.click();
-        URL.revokeObjectURL(url);
-        link.remove();
-      } catch (error) {
-        this.$message.error(`下载失败: ${error.message}`);
-      }
-    },
-    // 给现场报告图片生成带时间戳的文件名
-    generateFileName1(filePath) {
-      const originalName = filePath.split('/').pop() || '现场报告图片';
-      const timestamp = new Date().getTime();
-      const ext = originalName.split('.').pop() || 'jpg';
-      return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
-    },
 
-    handlePreview(filePath) {
-      try {
-        const paths = typeof filePath === 'string'
-          ? JSON.parse(filePath)
-          : filePath;
-
-        if (paths.length === 0) {
-          this.$message.error('预览失败,当前没有添加过现场图片');
-        }
-        if (paths.length > 0) {
-          this.fileList = paths.map(path => this.getFullUrl(path));
-          this.currentPreviewIndex = 0;
-          this.currentDownloadFile = paths[0];
-          this.previewVisible = true;
-        }
-      } catch (error) {
-        this.$message.error('预览失败：文件路径格式不正确');
-      }
-    },
-
-    // 删除提交信息时的现场图片
-    removeImage(index) {
-      this.fileList.splice(index, 1); // 删除对应的图片
-      console.log((this.fileList));
-    },
-
-    //展开报告海报大图
-    handleImageClick(imageUrl) {
-      this.currentLecturePoster = imageUrl;
-      this.dialogVisible = true;
-    },
-    // 获取完整图片路径
-    getImageUrl(path) {
-      return `${process.env.VUE_APP_BASE_API}/${path}`;
-    },
-    // 生成带时间戳的文件名
-    generateFileName() {
-      const date = new Date().toISOString().slice(0, 10);
-      const ext = this.getFileExtension();
-      return `activity_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-    },
-
-    // 获取文件扩展名
-    getFileExtension() {
-      try {
-        return this.currentImage.split('.').pop().split(/[#?]/)[0] || 'jpg';
-      } catch {
-        return 'jpg';
-      }
-    },
     // 分页大小变化
     handleSizeChange(size) {
       this.pageSize = size;
@@ -749,6 +783,7 @@ export default {
         reportDate: '',
         reportContent: '',
         reportLink: '',
+        reportLocation: '',
         lecturePoster: '',
         reportPicture: [],
         //审核状态
@@ -776,7 +811,6 @@ export default {
     },
 
     async listReport() {
-      console.log("**********************************")
       this.isLoading = true; // 设置为加载状态
       try {
         const data = await listReport({
@@ -796,37 +830,18 @@ export default {
       }
     },
 
+
     submitForm() {
       this.$refs.form.validate((valid) => {
         if (valid) {
-          //如果不是保存
-          if (this.formData.auditStatus !== 3) {
-            // 如果文件数量少于3张，弹出提示
-            if (this.existingFiles.length < 3) {
-              this.$message.error('最少上传3张图片');
-              return;
-            }
-            // 如果文件数量大于5张，弹出提示
-            if (this.existingFiles.length > 5) {
-              this.$message.error('最多上传5张图片');
-              return;
-            }
-          }
           console.log('表单数据:', this.formData.reportDate);
-          //将本地时间转为 ISO 格式的 UTC 时间
-          // if (this.formData.reportDate && !isNaN(Date.parse(this.formData.reportDate))) {
-          //   this.formData.reportDate = new Date(`${this.formData.reportDate} UTC`).toISOString();
-          // }
           const formData = new FormData();
 
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
           formData.append('reportFeeling', this.reportFeeling);
           console.log('表单数据formData.reportFeeling:', this.reportFeeling);
-          // 添加图片（字段名必须与后端一致）
-          this.existingFiles.forEach((file) => {
-            formData.append("reportPicture", file.raw);
-          });
+
 
 
           // 构建文件数据
@@ -841,7 +856,7 @@ export default {
           // 添加数据
           formData.append('previewImages', JSON.stringify(oldFiles))
           newFiles.forEach(file => {
-            formData.append('newFiles', file)
+            formData.append('reportPicture', file)
           })
           console.log('表单数据formData.reportPicture:', this.formData.reportPicture);
           console.log('传递后端数据:', formData);
@@ -850,6 +865,7 @@ export default {
           if (this.isEdit) {
             //修改信息
             updateReport(formData).then(response => {
+              console.log("+++++++++", response);
               this.$message.success('保存成功');
               this.initData();
             })
@@ -860,6 +876,7 @@ export default {
           } else {
             //第一次添加信息
             addReport(formData).then(response => {
+              console.log("+++++++++", response);
               this.$message.success('提交成功');
               this.initData();
             })
@@ -873,8 +890,55 @@ export default {
         }
       });
     },
+
+    // async submitForm() {
+    //   this.$refs.form.validate(async (valid) => {
+    //     if (valid) {
+    //       try {
+    //         const formData = new FormData();
+    //
+    //         // 构建表单数据
+    //         const jsonData = {
+    //           ...this.formData,
+    //           reportPicture: this.fileList
+    //             .filter(file => !file.deleteFlag)
+    //             .map(file => file.isOld ? file.path : "")
+    //         };
+    //
+    //         // 添加JSON数据
+    //         formData.append("data", JSON.stringify(jsonData));
+    //
+    //         // 添加新上传的文件
+    //         this.fileList
+    //           .filter(file => !file.isOld && !file.deleteFlag)
+    //           .forEach(file => {
+    //             formData.append("reportPicture", file.raw);
+    //           });
+    //
+    //         // 添加总结文档
+    //         if (this.reportFeeling) {
+    //           formData.append("summary", this.reportFeeling);
+    //         }
+    //
+    //         // 调用API
+    //         const response = this.isEdit
+    //           ? await updateReport(formData)
+    //           : await addReport(formData);
+    //
+    //         if (response.code === 200) {
+    //           this.$message.success("操作成功");
+    //           this.closeCard();
+    //           await this.listReport();
+    //         }
+    //       } catch (error) {
+    //         this.$message.error(`操作失败: ${error.message}`);
+    //         console.error("完整错误信息:", error.response?.data || error);
+    //       }
+    //     }
+    //   });
+    // },
+
     initData() {
-      console.log(2454645746);
       this.reportFeeling = null;
       this.existingFiles = [];
       this.showDialog = false;
@@ -885,15 +949,13 @@ export default {
         reportDate: '',
         reportContent: '',
         reportLink: '',
+        reportLocation: '',
         lecturePoster: '',
         reportPicture: [],
-        //审核状态
         auditStatus: '',
-        //学期
         semester: this.findSemester(this.activeSemester),
       };
       this.fileList = [];
-      // this.$refs.fileInput.value = '';
       this.listReport();  // 在页面加载时获取数据
     },
   }
