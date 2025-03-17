@@ -52,6 +52,10 @@ public class StuLectureReportVo extends BaseEntity {
      */
     private String reportFeeling;
     /**
+     * 报告地点
+     */
+    private String reportLocation;
+    /**
      * 报告海报
      */
     private String lecturePoster;

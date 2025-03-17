@@ -1,6 +1,6 @@
 package com.ruoyi.system.mapper;
 
-import com.ruoyi.system.domain.StudentLectureReport;
+import com.ruoyi.system.domain.StuLectureReport;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -11,20 +11,20 @@ import java.util.List;
 public interface StuLectureReportMapper {
     /**
      * 插入学生讲座报告信息
-     * @param studentLectureReport
+     * @param stuLectureReport
      * @return
      */
-    public int insertStuLectureInformation(StudentLectureReport studentLectureReport);
+    public int insertStuLectureInformation(StuLectureReport stuLectureReport);
 
     // 查询所有竞赛记录
-    public List<StudentLectureReport> getAllLectureReportRecords(@Param("studentId") String studentId,  @Param("semester") Integer semester);
+    public List<StuLectureReport> getAllLectureReportRecords(@Param("studentId") String studentId, @Param("semester") Integer semester);
 
     /**
      * 更新学生讲座报告信息
-     * @param studentLectureReport
+     * @param stuLectureReport
      * @return
      */
-    public int updateStuLectureInformation(StudentLectureReport studentLectureReport);
+    public int updateStuLectureInformation(StuLectureReport stuLectureReport);
 
     /**
      * 批量删除学生讲座报告记录
@@ -37,10 +37,10 @@ public interface StuLectureReportMapper {
     /**
      * 查询学生参与报告信息列表
      *
-     * @param studentLectureReport 学生参与报告信息
+     * @param stuLectureReport 学生参与报告信息
      * @return 学生参与报告信息集合
      */
-    public List<StudentLectureReport> selectStuLecReportList(StudentLectureReport studentLectureReport);
+    public List<StuLectureReport> selectStuLecReportList(StuLectureReport stuLectureReport);
 
     @Update({
             "update stu_lec_report",
@@ -49,5 +49,5 @@ public interface StuLectureReportMapper {
             "audit_time = #{auditTime}",
             "where report_id = #{reportId}"
     })
-    int updateMentorshipAuditInfo(StudentLectureReport report);
+    int updateMentorshipAuditInfo(StuLectureReport report);
 }

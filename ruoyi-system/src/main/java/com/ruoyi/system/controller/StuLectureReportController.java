@@ -9,11 +9,9 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.poi.ExcelUtil;
-import com.ruoyi.system.domain.StuMentorshipRecord;
-import com.ruoyi.system.domain.StudentLectureReport;
+import com.ruoyi.system.domain.StuLectureReport;
 import com.ruoyi.system.domain.dto.LectureAuditDTO;
-import com.ruoyi.system.domain.dto.MentorshipAuditDTO;
-import com.ruoyi.system.service.IStudentLectureReportService;
+import com.ruoyi.system.service.IStuLectureReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,14 +40,12 @@ import static com.ruoyi.common.core.domain.AjaxResult.MSG_TAG;
  */
 @RestController
 @RequestMapping("/system/lecture")
-public class StudentLectureReportController extends BaseController{
+public class StuLectureReportController extends BaseController{
 
     @Value("${file.upload-dir}") // 注入配置路径
     private String uploadDir;
     @Autowired
-    private IStudentLectureReportService IStudentLectureReportService;
-
-
+    private IStuLectureReportService IStuLectureReportService;
 
     /**
      * 删除学生讲座报告记录
@@ -57,7 +53,7 @@ public class StudentLectureReportController extends BaseController{
     @DeleteMapping("/delete/{reportIds}")
     public AjaxResult remove(@PathVariable Integer[] reportIds)
     {
-        return toAjax(IStudentLectureReportService.deleteStuLectureReportByReportIds(reportIds));
+        return toAjax(IStuLectureReportService.deleteStuLectureReportByReportIds(reportIds));
     }
 
     /**
@@ -67,7 +63,7 @@ public class StudentLectureReportController extends BaseController{
     @GetMapping("/list")
     public TableDataInfo getCompetitionRecords(@RequestParam(value = "semester", required = false) Integer semester,
                                                @RequestParam(value = "studentId", required = false) String studentId) {
-        return IStudentLectureReportService.getAllCompetitionRecords(semester, studentId);
+        return IStuLectureReportService.getAllCompetitionRecords(semester, studentId);
     }
 
     /**
@@ -86,9 +82,9 @@ public class StudentLectureReportController extends BaseController{
         if(ajaxResult.isError()){
             return AjaxResult.error(ajaxResult.get(MSG_TAG).toString());
         }
-        StudentLectureReport report = (StudentLectureReport)ajaxResult.get(DATA_TAG);
+        StuLectureReport report = (StuLectureReport)ajaxResult.get(DATA_TAG);
         //更新信息
-        IStudentLectureReportService.updateStudentLectureReport(report);
+        IStuLectureReportService.updateStudentLectureReport(report);
         return AjaxResult.success();
     }
 
@@ -108,9 +104,9 @@ public class StudentLectureReportController extends BaseController{
         if(ajaxResult.isError()){
             return AjaxResult.error(ajaxResult.get(MSG_TAG).toString());
         }
-        StudentLectureReport report = (StudentLectureReport)ajaxResult.get(DATA_TAG);
+        StuLectureReport report = (StuLectureReport)ajaxResult.get(DATA_TAG);
         //插入信息
-        IStudentLectureReportService.insertStudentLectureReport(report);
+        IStuLectureReportService.insertStudentLectureReport(report);
         return AjaxResult.success();
     }
 
@@ -153,7 +149,7 @@ public class StudentLectureReportController extends BaseController{
         //将要保存的全部现场照片长度
         int pictureLen = haveSubmitLen + willSubmitLen;
 
-        StudentLectureReport report = JSON.parseObject(studentLectureReport, StudentLectureReport.class);
+        StuLectureReport report = JSON.parseObject(studentLectureReport, StuLectureReport.class);
         report.setReportAdmitTime(new Date());
         Integer auditStatus = report.getAuditStatus();
         if(auditStatus != 3){
@@ -248,10 +244,10 @@ public class StudentLectureReportController extends BaseController{
      */
 //    @PreAuthorize("@ss.hasPermi('system:report:auditList')")
     @GetMapping("/auditList")
-    public TableDataInfo list(StudentLectureReport studentLectureReport)
+    public TableDataInfo list(StuLectureReport stuLectureReport)
     {
         startPage();
-        List<StudentLectureReport> list = IStudentLectureReportService.selectStuLecReportList(studentLectureReport);
+        List<StuLectureReport> list = IStuLectureReportService.selectStuLecReportList(stuLectureReport);
         return getDataTable(list);
     }
 
@@ -261,10 +257,10 @@ public class StudentLectureReportController extends BaseController{
     @PreAuthorize("@ss.hasPermi('system:report:export')")
     @Log(title = "学生参与报告信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, StudentLectureReport stuLecReport)
+    public void export(HttpServletResponse response, StuLectureReport stuLecReport)
     {
-        List<StudentLectureReport> list = IStudentLectureReportService.selectStuLecReportList(stuLecReport);
-        ExcelUtil<StudentLectureReport> util = new ExcelUtil<StudentLectureReport>(StudentLectureReport.class);
+        List<StuLectureReport> list = IStuLectureReportService.selectStuLecReportList(stuLecReport);
+        ExcelUtil<StuLectureReport> util = new ExcelUtil<StuLectureReport>(StuLectureReport.class);
         util.exportExcel(response, list, "学生参与报告信息数据");
     }
     /**
@@ -275,12 +271,12 @@ public class StudentLectureReportController extends BaseController{
     @PutMapping("/audit")
     public AjaxResult auditLectureReport(@Validated @RequestBody LectureAuditDTO auditDTO) {
         // 构建更新参数
-        StudentLectureReport report = new StudentLectureReport();
+        StuLectureReport report = new StuLectureReport();
         report.setReportId(auditDTO.getReportId());
         report.setAuditStatus(auditDTO.getAuditStatus());
         report.setAuditRemark(auditDTO.getAuditRemark());
         report.setAuditTime(new Date());
         // 执行更新操作
-        return toAjax(IStudentLectureReportService.updateMentorshipAuditInfo(report));
+        return toAjax(IStuLectureReportService.updateMentorshipAuditInfo(report));
     }
 }

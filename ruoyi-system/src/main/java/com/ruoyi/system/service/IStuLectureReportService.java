@@ -2,16 +2,16 @@ package com.ruoyi.system.service;
 
 
 import com.ruoyi.common.core.page.TableDataInfo;
-import com.ruoyi.system.domain.StudentLectureReport;
+import com.ruoyi.system.domain.StuLectureReport;
 
 import java.util.List;
 
-public interface IStudentLectureReportService {
+public interface IStuLectureReportService {
     /**
      * 插入学生讲座报告信息
-     * @param studentLectureReport
+     * @param stuLectureReport
      */
-    public void insertStudentLectureReport(StudentLectureReport studentLectureReport);
+    public void insertStudentLectureReport(StuLectureReport stuLectureReport);
 
     /**
      * 查询学生讲座报告信息
@@ -21,9 +21,9 @@ public interface IStudentLectureReportService {
 
     /**
      * 更新学生讲座报告信息
-     * @param studentLectureReport
+     * @param stuLectureReport
      */
-    public void updateStudentLectureReport(StudentLectureReport studentLectureReport);
+    public void updateStudentLectureReport(StuLectureReport stuLectureReport);
 
     /**
      * 删除学生讲座报告信息
@@ -33,10 +33,10 @@ public interface IStudentLectureReportService {
     /**
      * 管理员查询学生参与报告信息列表
      *
-     * @param studentLectureReport 学生参与报告信息
+     * @param stuLectureReport 学生参与报告信息
      * @return 学生参与报告信息集合
      */
-    public List<StudentLectureReport> selectStuLecReportList(StudentLectureReport studentLectureReport);
+    public List<StuLectureReport> selectStuLecReportList(StuLectureReport stuLectureReport);
 
-    int updateMentorshipAuditInfo(StudentLectureReport report);
+    int updateMentorshipAuditInfo(StuLectureReport report);
 }

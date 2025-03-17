@@ -8,6 +8,7 @@
             <if test="reporter != null and reporter != ''">reporter,</if>
             <if test="reportDate != null">report_date,</if>
             <if test="reportContent != null and reportContent != ''">report_content,</if>
+            <if test="reportLocation != null and reportLocation != ''">report_location,</if>
             <if test="reportLink != null and reportLink != ''">report_link,</if>
             <if test="reportFeeling != null and reportFeeling != ''">report_feeling,</if>
             <if test="lecturePoster != null and lecturePoster != ''">lecture_poster,</if>
@@ -23,6 +24,7 @@
             <if test="reporter != null and reporter != ''">#{reporter},</if>
             <if test="reportDate != null">#{reportDate},</if>
             <if test="reportContent != null and reportContent != ''">#{reportContent},</if>
+            <if test="reportLocation != null and reportLocation != ''">#{reportLocation},</if>
             <if test="reportLink != null and reportLink != ''">#{reportLink},</if>
             <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling},</if>
             <if test="lecturePoster != null and lecturePoster != ''">#{lecturePoster},</if>
@@ -35,7 +37,7 @@
         </trim>
     </insert>
 
-    <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StudentLectureReport">
+    <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StuLectureReport">
         SELECT * FROM stu_lec_report
         <where>
             <if test="studentId != null and studentId != ''">
@@ -56,7 +58,7 @@
         report_admit_time DESC
     </select>
 
-    <select id="selectStuLecReportList" resultType="com.ruoyi.system.domain.StudentLectureReport">
+    <select id="selectStuLecReportList" resultType="com.ruoyi.system.domain.StuLectureReport">
         SELECT * FROM stu_lec_report
         <where>
             <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
@@ -64,6 +66,7 @@
             <if test="reportTitle != null  and reportTitle != ''"> and report_title = #{reportTitle}</if>
             <if test="reporter != null  and reporter != ''"> and reporter = #{reporter}</if>
             <if test="reportDate != null "> and report_date = #{reportDate}</if>
+            <if test="reportLocation != null  and reportLocation != ''"> and report_location = #{reportLocation}</if>
             <if test="reportContent != null  and reportContent != ''"> and report_content = #{reportContent}</if>
             <if test="reportLink != null  and reportLink != ''"> and report_link = #{reportLink}</if>
             <if test="reportFeeling != null  and reportFeeling != ''"> and report_feeling = #{reportFeeling}</if>
@@ -93,6 +96,7 @@
             <if test="reporter != null and reporter != ''">reporter = #{reporter},</if>
             <if test="reportDate != null">report_date = #{reportDate},</if>
             <if test="reportContent != null and reportContent != ''">report_content = #{reportContent},</if>
+            <if test="reportLocation != null  and reportLocation != ''"> report_location = #{reportLocation},</if>
             <if test="reportLink != null and reportLink != ''">report_link = #{reportLink},</if>
             <if test="reportFeeling != null and reportFeeling != ''">report_feeling = #{reportFeeling},</if>
             <if test="lecturePoster != null and lecturePoster != ''">lecture_poster = #{lecturePoster},</if>

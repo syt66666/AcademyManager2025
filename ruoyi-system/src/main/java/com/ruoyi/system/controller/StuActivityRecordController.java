@@ -14,14 +14,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
-import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ruoyi.common.core.domain.R;
-import com.ruoyi.common.core.domain.model.LoginUser;
-import com.ruoyi.common.utils.SecurityUtils;
-import com.ruoyi.system.domain.StuCompetitionRecord;
-import com.ruoyi.system.domain.StudentLectureReport;
 import com.ruoyi.system.domain.dto.ActivityAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;

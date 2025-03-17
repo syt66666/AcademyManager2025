@@ -5,11 +5,11 @@ import com.github.pagehelper.PageInfo;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.system.domain.StuInfo;
-import com.ruoyi.system.domain.StudentLectureReport;
+import com.ruoyi.system.domain.StuLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
 import com.ruoyi.system.mapper.StuInfoMapper;
 import com.ruoyi.system.mapper.StuLectureReportMapper;
-import com.ruoyi.system.service.IStudentLectureReportService;
+import com.ruoyi.system.service.IStuLectureReportService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,14 +23,14 @@ import java.util.stream.Collectors;
 import static com.ruoyi.common.utils.PageUtils.startPage;
 
 @Service
-public class StudentLectureReportServiceImpl implements IStudentLectureReportService {
+public class StuLectureReportServiceImpl implements IStuLectureReportService {
     @Autowired
     private StuInfoMapper stuInfoMapper;
     @Autowired
     private StuLectureReportMapper stuLectureReportMapper;
 
     @Override
-    public void insertStudentLectureReport(StudentLectureReport studentLectureReport) {
+    public void insertStudentLectureReport(StuLectureReport stuLectureReport) {
         //获取当前登录用户学号
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String studentId = "";
@@ -46,10 +46,10 @@ public class StudentLectureReportServiceImpl implements IStudentLectureReportSer
         if (stuInfo == null) {
             throw new IllegalArgumentException("找不到学生信息");
         }
-        studentLectureReport.setStudentId(studentId);
-        studentLectureReport.setStudentName(stuInfo.getStudentName());
+        stuLectureReport.setStudentId(studentId);
+        stuLectureReport.setStudentName(stuInfo.getStudentName());
         //插入学生讲座信息
-        int result = stuLectureReportMapper.insertStuLectureInformation(studentLectureReport);
+        int result = stuLectureReportMapper.insertStuLectureInformation(stuLectureReport);
         if (result <= 0) {
             throw new IllegalArgumentException("传入失败");
         }
@@ -62,9 +62,9 @@ public class StudentLectureReportServiceImpl implements IStudentLectureReportSer
     @Override
     public TableDataInfo getAllCompetitionRecords(Integer semester, String studentId) {
         startPage();  // 启动分页
-        List<StudentLectureReport> allLectureReportRecords = stuLectureReportMapper.getAllLectureReportRecords(studentId, semester);
+        List<StuLectureReport> allLectureReportRecords = stuLectureReportMapper.getAllLectureReportRecords(studentId, semester);
         // 提取分页信息
-        PageInfo<StudentLectureReport> pageInfo = new PageInfo<>(allLectureReportRecords);
+        PageInfo<StuLectureReport> pageInfo = new PageInfo<>(allLectureReportRecords);
         //拿到总条数
         long total = pageInfo.getTotal();
 
@@ -84,7 +84,7 @@ public class StudentLectureReportServiceImpl implements IStudentLectureReportSer
     }
 
     @Override
-    public void updateStudentLectureReport(StudentLectureReport studentLectureReport) {
+    public void updateStudentLectureReport(StuLectureReport stuLectureReport) {
         //获取当前登录用户学号
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String studentId = "";
@@ -100,7 +100,7 @@ public class StudentLectureReportServiceImpl implements IStudentLectureReportSer
         }
 
         //更新学生讲座信息
-        int result = stuLectureReportMapper.updateStuLectureInformation(studentLectureReport);
+        int result = stuLectureReportMapper.updateStuLectureInformation(stuLectureReport);
         if (result <= 0) {
             throw new IllegalArgumentException("传入失败");
         }
@@ -117,12 +117,12 @@ public class StudentLectureReportServiceImpl implements IStudentLectureReportSer
     }
 
     @Override
-    public List<StudentLectureReport> selectStuLecReportList(StudentLectureReport studentLectureReport) {
-        return stuLectureReportMapper.selectStuLecReportList(studentLectureReport);
+    public List<StuLectureReport> selectStuLecReportList(StuLectureReport stuLectureReport) {
+        return stuLectureReportMapper.selectStuLecReportList(stuLectureReport);
     }
 
     @Override
-    public int updateMentorshipAuditInfo(StudentLectureReport report) {
+    public int updateMentorshipAuditInfo(StuLectureReport report) {
         if (!Arrays.asList(1, 2).contains(report.getAuditStatus())) {
             throw new ServiceException("无效的审核状态");
         }
