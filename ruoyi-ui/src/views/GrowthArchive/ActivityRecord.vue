@@ -221,7 +221,7 @@
     <!-- 活动新增对话框 -->
     <el-dialog
       :visible.sync="showDialog"
-      :title="isEdit ? '编辑活动记录' : '新增活动记录'"
+      title="活动信息填报"
       width="580px"
       class="activity-dialog"
       @close="closeDialog"

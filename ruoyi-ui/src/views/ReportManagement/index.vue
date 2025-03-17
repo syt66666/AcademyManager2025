@@ -46,6 +46,15 @@
             </template>
           </el-table-column>
 
+          <!-- 讲师姓名 -->
+          <el-table-column prop="reporter" label="讲师姓名" width="120" align="center">
+            <template v-slot="scope">
+              <el-tag effect="light" class="location-tag">
+                {{ scope.row.reporter }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
           <!-- 讲座地点 -->
           <el-table-column prop="reportLocation" label="讲座地点" width="120" align="center">
             <template v-slot="scope">
@@ -109,7 +118,7 @@
           </el-table-column>
 
           <!-- 审核状态 -->
-          <el-table-column prop="auditStatus" label="状态" width="140" align="center">
+          <el-table-column prop="auditStatus" label="审核状态" width="140" align="center">
             <template v-slot="scope">
               <el-tag
                 :type="getStatusTagType(scope.row.auditStatus)"
@@ -158,6 +167,8 @@
               </el-tag>
             </template>
           </el-table-column>
+          <el-table-column prop="auditTime" label="审核时间" min-width="100" align="center"></el-table-column>
+          <el-table-column prop="auditRemark" label="审核意见" min-width="150" align="center"></el-table-column>
         </el-table>
 
       <!-- 新增/编辑对话框 -->
@@ -179,7 +190,16 @@
               <i slot="prefix" class="el-icon-notebook-2 input-icon"></i>
             </el-input>
           </el-form-item>
-
+          <!-- 指导主题 -->
+          <el-form-item label="讲师姓名" prop="reporter">
+            <el-input
+              v-model="formData.reporter"
+              placeholder="请输入讲师姓名"
+              class="lecture-input"
+            >
+              <i slot="prefix" class="el-icon-notebook-2 input-icon"></i>
+            </el-input>
+          </el-form-item>
           <!-- 地点 -->
           <el-form-item label="讲座地点" prop="reportLocation">
             <el-input
@@ -304,7 +324,7 @@
 
 <script>
 import axios from "axios";
-import {addReport, listReport, updateReport, delReport} from "@/api/student/letcure";
+import {addReport, listReport, updateReport, delReport} from "@/api/student/lecture";
 import store from "@/store";
 
 export default {
@@ -343,6 +363,12 @@ export default {
         semester: '',
       },
       activeSemester: '', // 当前学期
+      datePickerOptions: {
+        disabledDate(time) {
+          // 禁止选择今天之后的日期
+          return time.getTime() > Date.now();
+        }
+      },
       rules: {
         reportTitle: [{required: true, message: '讲座题目不为空', trigger: 'blur'}],
         reporter: [{required: true, message: '讲师姓名不为空', trigger: 'blur'}],
@@ -358,6 +384,22 @@ export default {
     this.listReport();  // 在页面加载时获取数据
   },
   methods: {
+    // 表头样式方法
+    headerStyle() {
+      return {
+        backgroundColor: '#f8fafc',
+        color: '#2b6cb0',
+        fontWeight: '600'
+      };
+    },
+
+    // 行点击处理
+    handleRowClick(row) {
+      // 根据状态控制可点击性（示例：仅未提交状态可点击）
+      if (this.formatAuditStatus(row.auditStatus) === '未提交') {
+        this.handleEdit(row);
+      }
+    },
     handlePreview(filePath) {
       try {
         const paths = typeof filePath === 'string'
@@ -1029,6 +1071,15 @@ export default {
 }
 
 /* ================= 表格样式 ================= */
+/* 表头样式细化 */
+.optimized-table /deep/ .el-table__header th {
+  background: #f8fafc !important;
+  color: #2b6cb0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
 .report-table-card {
   background: #fff;
   border-radius: 1rem;

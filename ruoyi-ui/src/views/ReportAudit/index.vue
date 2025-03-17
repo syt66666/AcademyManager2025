@@ -212,7 +212,7 @@
 </template>
 
 <script>
-import {listAuditReport, auditReport} from "@/api/student/letcure";
+import {listAuditReport, auditReport} from "@/api/student/lecture";
 import axios from "axios";
 
 export default {

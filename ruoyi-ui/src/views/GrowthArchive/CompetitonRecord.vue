@@ -40,7 +40,7 @@
           </el-table-column>
 
           <!-- 竞赛名称 -->
-          <el-table-column prop="competitionName" label="竞赛名称" min-width="180">
+          <el-table-column prop="competitionName" label="竞赛名称" min-width="180" >
             <template v-slot="scope">
               <div class="competition-name">
                 <i class="el-icon-trophy name-icon"></i>
@@ -235,7 +235,6 @@
       @close="closeDialog"
     >
       <div class="dialog-header">
-        <!--        <span class="form-icon">📝</span>-->
         <h3 class="form-title">{{ isEdit ? '编辑竞赛记录' : '新增竞赛记录' }}</h3>
         <p class="form-tips">请填写本学期参与的竞赛信息（带<span class="required">*</span>为必填项）</p>
       </div>
@@ -913,6 +912,10 @@ export default {
 /* ================= 对话框样式 ================= */
 .competition-dialog {
   border-radius: 12px;
+}
+
+.competition-dialog /deep/ .el-dialog__header {
+  display: none; /* 隐藏原生标题 */
 }
 
 .dialog-header {
