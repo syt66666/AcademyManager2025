@@ -28,7 +28,6 @@
           :header-cell-style="headerStyle"
           v-loading="loading"
           :row-class-name="tableRowClassName"
-          @row-click="handleRowClick"
         >
           <!-- 序号列 -->
           <el-table-column label="序号" width="80" align="center">
@@ -40,7 +39,7 @@
           </el-table-column>
 
           <!-- 竞赛名称 -->
-          <el-table-column prop="competitionName" label="竞赛名称" min-width="180" >
+          <el-table-column prop="competitionName" label="竞赛名称" min-width="120" >
             <template v-slot="scope">
               <div class="competition-name">
                 <i class="el-icon-trophy name-icon"></i>
@@ -87,8 +86,15 @@
           <!-- 证明材料 -->
           <el-table-column label="证明材料" width="140" align="center">
             <template v-slot="scope">
-              <el-dropdown trigger="click" @command="handleFileCommand">
-                <el-button type="primary" size="mini" plain>
+              <el-dropdown trigger="click"
+                           @command="handleFileCommand"
+                           @click.native.stop
+                           :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
+                <el-button type="primary"
+                           size="mini"
+                           plain
+                           @click.stop
+                           :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
                   <i class="el-icon-document"></i> 文件操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
@@ -110,7 +116,7 @@
           </el-table-column>
 
           <!-- 审核状态 -->
-          <el-table-column prop="auditStatus" label="审核状态" width="140" align="center">
+          <el-table-column prop="auditStatus" label="审核状态" width="120" align="center">
             <template v-slot="scope">
               <el-tag
                 :type="getStatusTagType(scope.row.auditStatus)"
@@ -124,7 +130,7 @@
           </el-table-column>
 
           <!-- 操作列 -->
-          <el-table-column label="操作" width="180" align="center">
+          <el-table-column label="操作" width="100" align="center">
             <template v-slot="scope">
               <template v-if="scope.row.auditStatus === '未通过'">
                 <el-button
@@ -171,10 +177,10 @@
           </el-table-column>
 
           <!-- 审核备注 -->
-          <el-table-column prop="auditRemark" label="审核备注" min-width="160">
+          <el-table-column prop="auditRemark" label="审核备注" min-width="160" align="center">
             <template v-slot="scope">
               <div class="remark-text">
-                {{ scope.row.auditRemark || '暂无备注' }}
+                {{ scope.row.auditRemark || '-' }}
               </div>
             </template>
           </el-table-column>
@@ -190,8 +196,6 @@
           class="custom-pagination"
         />
       </div>
-
-
     </div>
 
     <!-- 图片预览对话框 -->
@@ -430,20 +434,20 @@ export default {
     getLevelTagType(level) {
       const typeMap = {
         '院级': 'info',
-        '校级': '',
-        '省级': 'primary',
-        '国家级': 'success',
-        '国际级': 'warning'
+        '校级': 'primary',
+        '省级': 'success',
+        '国家级': 'warning',
+        '国际级': 'danger'
       }
       return typeMap[level] || 'info'
     },
 
     getAwardTagType(award) {
       const typeMap = {
-        '特等奖': 'warning',
-        '一等奖': 'success',
-        '二等奖': 'primary',
-        '三等奖': '',
+        '特等奖': 'danger',
+        '一等奖': 'warning',
+        '二等奖': 'success',
+        '三等奖': 'primary',
         '优秀奖': 'info'
       }
       return typeMap[award] || ''
@@ -486,12 +490,6 @@ export default {
         this.handlePreview(command.files)
       } else if (command.action === 'download') {
         this.downloadFiles(command.files)
-      }
-    },
-
-    handleRowClick(row) {
-      if (['未提交', '未通过'].includes(row.auditStatus)) {
-        this.handleEditDraft(row)
       }
     },
 
@@ -601,7 +599,7 @@ export default {
     async downloadFiles(filePaths) {
       try {
         const paths = typeof filePaths === 'string' ? JSON.parse(filePaths) : filePaths;
-        if (paths.length > 1) {
+        if (paths.length >= 1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -612,10 +610,6 @@ export default {
               this.downloadSingleFile(url);
             });
           });
-        } else if (paths.length === 1) {
-          this.previewImage = this.getFullUrl(paths[0]);
-          this.currentDownloadFile = paths[0];
-          this.previewVisible = true;
         }
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
@@ -706,7 +700,7 @@ export default {
             awardLevel: this.formData.awardLevel,
             semester: this.activeSemester,
             studentId: store.state.user.name,
-            auditStatus: state,
+            auditStatus: status,
             auditTime: null,
             auditRemark: '',
             awardDate: this.formData.awardDate,
@@ -938,14 +932,21 @@ export default {
 }
 
 /* ================= 分页样式 ================= */
+/* 修改分页容器样式 */
 .custom-pagination {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
-  justify-content: flex-end;
+  justify-content: center !important; /* 强制居中 */
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+/* 调整分页组件内部布局 */
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* 页码按钮样式 */
@@ -959,8 +960,6 @@ export default {
   line-height: 32px;
   transition: all 0.2s;
 }
-
-/* 当前页样式 */
 
 /* 悬停效果 */
 .custom-pagination /deep/ .el-pager li:hover {

@@ -14,7 +14,8 @@
             class="add-button"
             @click="openDialog"
             icon="el-icon-plus"
-          >新增记录</el-button>
+          >新增记录
+          </el-button>
         </div>
       </div>
 
@@ -27,7 +28,6 @@
           :header-cell-style="headerStyle"
           v-loading="loading"
           :row-class-name="tableRowClassName"
-          @row-click="handleRowClick"
         >
           <!-- 序号列 -->
           <el-table-column label="序号" width="80" align="center">
@@ -39,7 +39,7 @@
           </el-table-column>
 
           <!-- 活动名称 -->
-          <el-table-column prop="activityName" label="活动名称" min-width="180">
+          <el-table-column prop="activityName" label="活动名称" min-width="120">
             <template v-slot="scope">
               <div class="activity-name">
                 <i class="el-icon-star-on name-icon"></i>
@@ -86,8 +86,8 @@
           <!-- 证明材料 -->
           <el-table-column label="证明材料" width="140" align="center">
             <template v-slot="scope">
-              <el-dropdown trigger="click" @command="handleFileCommand">
-                <el-button type="primary" size="mini" plain>
+              <el-dropdown trigger="click" @command="handleFileCommand" @click.native.stop :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
+                <el-button type="primary" size="mini" plain @click.stop :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
                   <i class="el-icon-document"></i> 文件操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
@@ -109,7 +109,7 @@
           </el-table-column>
 
           <!-- 审核状态 -->
-          <el-table-column prop="auditStatus" label="审核状态" width="140" align="center">
+          <el-table-column prop="auditStatus" label="审核状态" width="120" align="center">
             <template v-slot="scope">
               <el-tag
                 :type="getStatusTagType(scope.row.auditStatus)"
@@ -123,14 +123,15 @@
           </el-table-column>
 
           <!-- 操作列 -->
-          <el-table-column label="操作" width="180" align="center">
+          <el-table-column label="操作" width="100" align="center">
             <template v-slot="scope">
               <template v-if="scope.row.auditStatus === '未通过'">
                 <el-button
                   type="text"
                   size="mini"
                   @click.stop="handleEditDraft(scope.row)"
-                >重新提交</el-button>
+                >重新提交
+                </el-button>
               </template>
 
               <template v-if="scope.row.auditStatus === '未提交'">
@@ -138,13 +139,15 @@
                   type="text"
                   size="mini"
                   @click.stop="handleEditDraft(scope.row)"
-                >编辑</el-button>
+                >编辑
+                </el-button>
                 <el-button
                   type="text"
                   size="mini"
                   style="color: #F56C6C;"
                   @click.stop="handleDelete(scope.row)"
-                >删除</el-button>
+                >删除
+                </el-button>
               </template>
 
               <el-tag
@@ -152,7 +155,8 @@
                 type="info"
                 size="mini"
                 class="no-edit-tag"
-              >不可修改</el-tag>
+              >不可修改
+              </el-tag>
             </template>
           </el-table-column>
 
@@ -166,10 +170,10 @@
           </el-table-column>
 
           <!-- 审核备注 -->
-          <el-table-column prop="auditRemark" label="审核备注" min-width="160">
+          <el-table-column prop="auditRemark" label="审核备注" min-width="160" align="center">
             <template v-slot="scope">
               <div class="remark-text">
-                {{ scope.row.auditRemark || '暂无备注' }}
+                {{ scope.row.auditRemark || '-' }}
               </div>
             </template>
           </el-table-column>
@@ -361,18 +365,18 @@ export default {
   data() {
     return {
       levelOptions: [
-        { value: '院级', label: '院级' },
-        { value: '校级', label: '校级' },
-        { value: '省级', label: '省级' },
-        { value: '国家级', label: '国家级' },
-        { value: '国际级', label: '国际级' }
+        {value: '院级', label: '院级'},
+        {value: '校级', label: '校级'},
+        {value: '省级', label: '省级'},
+        {value: '国家级', label: '国家级'},
+        {value: '国际级', label: '国际级'}
       ],
       awardOptions: [
-        { value: '特等奖', label: '特等奖' },
-        { value: '一等奖', label: '一等奖' },
-        { value: '二等奖', label: '二等奖' },
-        { value: '三等奖', label: '三等奖' },
-        { value: '优秀奖', label: '优秀奖' }
+        {value: '特等奖', label: '特等奖'},
+        {value: '一等奖', label: '一等奖'},
+        {value: '二等奖', label: '二等奖'},
+        {value: '三等奖', label: '三等奖'},
+        {value: '优秀奖', label: '优秀奖'}
       ],
       levelIcons: {
         '院级': '🏛️',
@@ -401,7 +405,7 @@ export default {
       isEdit: false,
       currentActivityId: null,
       baseUrl: process.env.VUE_APP_BASE_API,
-      activeSemester:"",
+      activeSemester: "",
       dialogVisible: false,
       currentImage: '',
       activityRecords: [],
@@ -425,40 +429,48 @@ export default {
       },
       rules: {
         activityName: [
-          { required: true, message: '活动名称不能为空', trigger: 'blur' }
+          {required: true, message: '活动名称不能为空', trigger: 'blur'}
         ],
         activityLevel: [
-          { required: true, message: '请选择活动级别', trigger: 'change' }
+          {required: true, message: '请选择活动级别', trigger: 'change'}
         ],
         awardLevel: [
-          { required: true, message: '请选择奖项', trigger: 'change' }
+          {required: true, message: '请选择奖项', trigger: 'change'}
         ],
         awardDate: [
-          { required: true, message: '请选择获奖日期', trigger: 'change' }
+          {required: true, message: '请选择获奖日期', trigger: 'change'}
         ]
       }
     };
   },
 
   methods: {
+    headerStyle() {
+      return {
+        backgroundColor: '#EBF4FF',
+        color: '#2B6CB0',
+        fontWeight: "600",
+      };
+    },
+
     // 新增表格相关方法
     getLevelTagType(level) {
       const typeMap = {
         '院级': 'info',
-        '校级': '',
-        '省级': 'primary',
-        '国家级': 'success',
-        '国际级': 'warning'
+        '校级': 'primary',
+        '省级': 'success',
+        '国家级': 'warning',
+        '国际级': 'danger'
       }
       return typeMap[level] || 'info'
     },
 
     getAwardTagType(award) {
       const typeMap = {
-        '特等奖': 'warning',
-        '一等奖': 'success',
-        '二等奖': 'primary',
-        '三等奖': '',
+        '特等奖': 'danger',
+        '一等奖': 'warning',
+        '二等奖': 'success',
+        '三等奖': 'primary',
         '优秀奖': 'info'
       }
       return typeMap[award] || ''
@@ -487,7 +499,7 @@ export default {
     formatDate(dateString) {
       if (!dateString) return '-'
       const date = new Date(dateString)
-      return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
     },
 
     formatDateTime(dateString) {
@@ -504,13 +516,7 @@ export default {
       }
     },
 
-    handleRowClick(row) {
-      if (['未提交', '未通过'].includes(row.auditStatus)) {
-        this.handleEditDraft(row)
-      }
-    },
-
-    tableRowClassName({ rowIndex }) {
+    tableRowClassName({rowIndex}) {
       return rowIndex % 2 === 1 ? 'stripe-row' : ''
     },
 
@@ -545,7 +551,7 @@ export default {
           throw new Error("无效的文件路径格式");
         }
         // 处理多个文件下载
-        if (paths.length >=1) {
+        if (paths.length >= 1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -833,36 +839,36 @@ export default {
     async submitData(status) {
       this.$refs.form.validate(async (valid) => {
         if (valid) {
-        // 获取原始记录数据（编辑时）
-        const originalRecord = this.activityRecords.find(
-          item => item.id === this.currentActivityId
-        );
-        console.log("this.currentActivityId:" + this.currentActivityId)
-        // 检测关键字段是否修改
-        const isKeyFieldChanged = !originalRecord ||
-          this.formData.activityName !== originalRecord.activityName ||
-          this.formData.activityLevel !== originalRecord.activityLevel ||
-          this.formData.awardLevel !== originalRecord.awardLevel;
-        console.log("isKeyFieldChanged:" + isKeyFieldChanged)
-        console.log("this.currentActivityId:" + this.currentActivityId)
-        const shouldCheckUnique = !this.currentActivityId || isKeyFieldChanged;
+          // 获取原始记录数据（编辑时）
+          const originalRecord = this.activityRecords.find(
+            item => item.id === this.currentActivityId
+          );
+          console.log("this.currentActivityId:" + this.currentActivityId)
+          // 检测关键字段是否修改
+          const isKeyFieldChanged = !originalRecord ||
+            this.formData.activityName !== originalRecord.activityName ||
+            this.formData.activityLevel !== originalRecord.activityLevel ||
+            this.formData.awardLevel !== originalRecord.awardLevel;
+          console.log("isKeyFieldChanged:" + isKeyFieldChanged)
+          console.log("this.currentActivityId:" + this.currentActivityId)
+          const shouldCheckUnique = !this.currentActivityId || isKeyFieldChanged;
 
-        // 编辑时排除自身
-        if (shouldCheckUnique) {
-          // 唯一性校验参数
-          const checkParams = {
-            studentId: this.$store.state.user.name,
-            activityName: this.formData.activityName,
-            activityLevel: this.formData.activityLevel,
-            awardLevel: this.formData.awardLevel,
-            semester: this.activeSemester
-          };
-          // 执行唯一性校验
-          const checkRes = await checkActivityUnique(checkParams);
-          if (checkRes.code !== 200) {
-            return this.$message.error('已存在相同活动记录，不可重复添加');
+          // 编辑时排除自身
+          if (shouldCheckUnique) {
+            // 唯一性校验参数
+            const checkParams = {
+              studentId: this.$store.state.user.name,
+              activityName: this.formData.activityName,
+              activityLevel: this.formData.activityLevel,
+              awardLevel: this.formData.awardLevel,
+              semester: this.activeSemester
+            };
+            // 执行唯一性校验
+            const checkRes = await checkActivityUnique(checkParams);
+            if (checkRes.code !== 200) {
+              return this.$message.error('已存在相同活动记录，不可重复添加');
+            }
           }
-        }
 
           // 获取保留的旧文件路径
           const existingPaths = this.fileList
@@ -874,56 +880,56 @@ export default {
             .filter(file => !file.isOld)
             .map(file => file.raw);
 
-        const formData = new FormData();
-        // 构建核心数据对象
-        const recordData = {
-          activityId: null,
-          activityName: this.formData.activityName,
-          activityLevel: this.formData.activityLevel,
-          awardLevel: this.formData.awardLevel,
-          semester: this.activeSemester,
-          studentId: store.state.user.name,
-          auditStatus: status,
-          auditTime: null,
-          auditRemark: '',
-          awardDate: this.formData.awardDate,
-          existingProofMaterial: existingPaths, // 旧文件路径
-        };
+          const formData = new FormData();
+          // 构建核心数据对象
+          const recordData = {
+            activityId: null,
+            activityName: this.formData.activityName,
+            activityLevel: this.formData.activityLevel,
+            awardLevel: this.formData.awardLevel,
+            semester: this.activeSemester,
+            studentId: store.state.user.name,
+            auditStatus: status,
+            auditTime: null,
+            auditRemark: '',
+            awardDate: this.formData.awardDate,
+            existingProofMaterial: existingPaths, // 旧文件路径
+          };
 
-        // 如果是编辑操作，添加ID字段
-        if (this.currentActivityId) {
-          recordData.activityId = this.currentActivityId;
-        }
-        // 构建 JSON 部分（指定类型为 application/json）
-        const recordBlob = new Blob(
-          [JSON.stringify(recordData)],
-          {type: "application/json"}
-        );
-        formData.append("stuActivityRecord", recordBlob);
-
-        // 添加文件
-        this.fileList.forEach((file) => {
-          formData.append("proofMaterial", file.raw);
-        });
-
-        // 配置headers
-        const config = {
-          headers: {
-            "Authorization": "Bearer " + localStorage.getItem("token"),
-            "Content-Type": "multipart/form-data"
+          // 如果是编辑操作，添加ID字段
+          if (this.currentActivityId) {
+            recordData.activityId = this.currentActivityId;
           }
-        };
-        // 根据模式选择API方法
-        const apiMethod = this.currentActivityId ? updateActivity : addActivity;
-        apiMethod(formData, config)
-          .then(() => {
-            this.$message.success(this.currentActivityId ? "更新成功！" : "提交成功！");
-            this.fetchActivityRecords();
-            this.closeDialog();
-          })
-          .catch(error => {
-            this.$message.error(`操作失败：${error.message}`);
+          // 构建 JSON 部分（指定类型为 application/json）
+          const recordBlob = new Blob(
+            [JSON.stringify(recordData)],
+            {type: "application/json"}
+          );
+          formData.append("stuActivityRecord", recordBlob);
+
+          // 添加文件
+          this.fileList.forEach((file) => {
+            formData.append("proofMaterial", file.raw);
           });
+
+          // 配置headers
+          const config = {
+            headers: {
+              "Authorization": "Bearer " + localStorage.getItem("token"),
+              "Content-Type": "multipart/form-data"
+            }
+          };
+          // 根据模式选择API方法
+          const apiMethod = this.currentActivityId ? updateActivity : addActivity;
+          apiMethod(formData, config)
+            .then(() => {
+              this.$message.success(this.currentActivityId ? "更新成功！" : "提交成功！");
+              this.fetchActivityRecords();
+              this.closeDialog();
+            })
+            .catch(error => {
+              this.$message.error(`操作失败：${error.message}`);
+            });
         }
       });
     },
@@ -1098,28 +1104,20 @@ export default {
 
 /* ================= 分页样式 ================= */
 .custom-pagination {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
-  justify-content: flex-end;
+  justify-content: center !important; /* 强制居中 */
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
 }
 
-
-/* 页码按钮样式 */
-.custom-pagination /deep/ .el-pager li {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  margin: 0 4px;
-  min-width: 32px;
-  height: 32px;
-  line-height: 32px;
-  transition: all 0.2s;
+/* 调整分页组件内部布局 */
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
-
 /* 悬停效果 */
 .custom-pagination /deep/ .el-pager li:hover {
   border-color: #4299e1;

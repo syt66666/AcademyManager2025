@@ -52,7 +52,7 @@
         WHEN '已通过' THEN 3    -- 已通过最后
         ELSE 4                 -- 其他状态（如果有）
         END,
-        apply_time DESC            -- 按提交时间倒序
+        award_date ASC            -- 按提交时间倒序
     </select>
 
     <select id="selectStuCompetitionRecordByCompetitionId" parameterType="Integer" resultMap="StuCompetitionRecordResult">
@@ -154,7 +154,7 @@
         WHEN '已通过' THEN 2    -- 已通过最后
         ELSE 3                 -- 其他状态（如果有）
         END,
-        apply_time DESC            -- 按提交时间倒序
+        apply_time ASC            -- 按提交时间倒序
     </select>
 
     <select id="existsByUniqueFields" resultType="boolean">
