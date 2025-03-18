@@ -431,13 +431,6 @@ export default {
       };
     },
 
-    // 行点击处理
-    handleRowClick(row) {
-      // 根据状态控制可点击性（示例：仅未提交状态可点击）
-      if (this.formatAuditStatus(row.auditStatus) === '未提交') {
-        this.handleEdit(row);
-      }
-    },
     handlePreview(filePath) {
       try {
         const paths = typeof filePath === 'string'
@@ -523,20 +516,6 @@ export default {
       return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
     },
 
-    // 删除提交信息时的现场图片
-    removeImage(index) {
-      this.fileList.splice(index, 1); // 删除对应的图片
-      console.log((this.fileList));
-    },
-
-    // 获取文件扩展名
-    getFileExtension() {
-      try {
-        return this.currentImage.split('.').pop().split(/[#?]/)[0] || 'jpg';
-      } catch {
-        return 'jpg';
-      }
-    },
     // 在methods中添加以下方法
     handleFileCommand(command) {
       console.log(2415346554657);
@@ -667,8 +646,24 @@ export default {
           reportLink: row.reportLink,
           lecturePoster: row.lecturePoster,
           semester: this.formData.semester,
-          auditStatus: row.auditStatus
+          auditStatus: row.auditStatus,
+          // reportFeeling: row.reportFeeling
         };
+        // 初始化总结文档回显
+        try {
+          // 初始化总结文档（兼容字符串格式）
+          this.reportFeelingList = [];
+          if (row.reportFeeling && row.reportFeeling !== '') {
+            this.reportFeelingList = [{
+              name: this.extractFileName(row.reportFeeling), // 直接使用字符串路径
+              url: this.getFullUrl(row.reportFeeling),
+              status: 'success'
+            }];
+          }
+        } catch (error) {
+          console.error('文档初始化失败:', error);
+          this.$message.error('文档数据加载异常');
+        }
 
         //已有照片列表
         this.existingFiles = row.reportPicture;
@@ -702,7 +697,10 @@ export default {
         this.$message.error('数据加载失败，请检查控制台');
       }
     },
-
+// 新增辅助方法
+    extractFileName(path) {
+      return path.split('/').pop().split(/[?#]/)[0];
+    },
 // 修正后的文件路径方法
     getFullUrl(filePath) {
       // 处理可能存在的重复profile目录
@@ -777,14 +775,17 @@ export default {
       const ext = this.getFeelingFileExtension();
       return `reportFeeling_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
     },
+
     // 获取文件扩展名
     getFeelingFileExtension() {
       if (!this.reportFeeling) return '';
       const match = this.reportFeeling.name.match(/\.([a-zA-Z0-9]+)(\?.*)?$/);
       return match ? match[1].toLowerCase() : '';
     },
-    //心得体会下载
+
+    //总结文档下载
     async downloadReportFeeling(filePaths) {
+      console.log("filePaths:"+filePaths);
       try {
         const link = document.createElement('a');
         link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
@@ -857,11 +858,14 @@ export default {
         reportLink: '',
         reportLocation: '',
         lecturePoster: '',
+        reportFeeling:'',
         reportPicture: [],
         //审核状态
         auditStatus: '',
         //学期
         semester: this.findSemester(this.activeSemester),
+        auditTime: '',
+        auditRemark: '',
       };
     },
     // 修改后的总结文档处理方法
@@ -877,9 +881,11 @@ export default {
       console.log(this.reportFeeling)
     },
 
-    // 文件移除回调
+// 修改文件移除处理
     handleSummaryRemove() {
-      this.reportFeelingList = []
+      this.reportFeeling = null;
+      this.formData.reportFeeling = null;
+      this.reportFeelingList = [];
     },
 
     async listReport() {

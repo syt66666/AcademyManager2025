@@ -55,7 +55,7 @@
         WHEN 2 THEN 3    -- 已通过最后
         ELSE 4                 -- 其他状态（如果有）
         END,
-        report_admit_time DESC
+        report_date ASC
     </select>
 
     <select id="selectStuLecReportList" resultType="com.ruoyi.system.domain.StuLectureReport">
@@ -86,7 +86,7 @@
         WHEN 1 THEN 2    -- 已通过最后
         ELSE 3
         END,
-        report_admit_time DESC
+        report_date ASC
     </select>
 
     <update id="updateStuLectureInformation">
@@ -102,6 +102,8 @@
             <if test="lecturePoster != null and lecturePoster != ''">lecture_poster = #{lecturePoster},</if>
             <if test="reportPicture != null and reportPicture != ''">report_picture = #{reportPicture},</if>
             <if test="auditStatus != null">audit_status = #{auditStatus},</if>
+            audit_time = #{auditTime},
+            audit_remark = #{auditRemark},
             <if test="reportAdmitTime != null">report_admit_time = #{reportAdmitTime},</if>
         </trim>
         where report_id = #{reportId}
