@@ -25,9 +25,8 @@
           :data="records"
           class="optimized-table"
           :header-cell-style="headerStyle"
-          @row-click="handleRowClick"
-          border
-          stripe>
+          highlight-current-row
+        >
           <!-- 序号列 -->
           <el-table-column type="index" label="序号" width="80" align="center">
             <template v-slot="scope">
@@ -38,11 +37,11 @@
           </el-table-column>
 
           <!-- 讲座题目 -->
-          <el-table-column prop="reportTitle" label="讲座题目" width="120" align="center">
+          <el-table-column prop="reportTitle" label="讲座题目" width="120">
             <template v-slot="scope">
               <div class="lecture-title">
                 <i class="el-icon-notebook-2 title-icon"></i>
-                {{ scope.row.reportTitle }}
+                <span class="name-text">{{ scope.row.reportTitle }}</span>
               </div>
             </template>
           </el-table-column>
@@ -50,7 +49,7 @@
           <!-- 讲师姓名 -->
           <el-table-column prop="reporter" label="讲师姓名" width="120" align="center">
             <template v-slot="scope">
-              <el-tag effect="light" class="location-tag">
+              <el-tag effect="light" class="reporter-tag">
                 {{ scope.row.reporter }}
               </el-tag>
             </template>
@@ -59,14 +58,29 @@
           <!-- 讲座地点 -->
           <el-table-column prop="reportLocation" label="讲座地点" width="120" align="center">
             <template v-slot="scope">
-              <el-tag effect="light" class="location-tag">
+              <el-tag effect="light" class="level-tag">
                 {{ scope.row.reportLocation }}
               </el-tag>
             </template>
           </el-table-column>
 
+          <!-- 讲座链接 -->
+          <el-table-column prop="reportLink" label="讲座链接" width="120" align="center">
+            <template v-slot="scope">
+              <el-tag v-if="scope.row.reportLink" effect="light" class="location-tag">
+                <a :href="scope.row.reportLink"
+                   target="_blank"
+                   class="link-style"
+                   rel="noopener noreferrer">
+                  点击查看
+                </a>
+              </el-tag>
+            </template>
+          </el-table-column>
+
+
           <!-- 讲座时间 -->
-          <el-table-column prop="reportDate" label="讲座时间" width="140" align="center">
+          <el-table-column prop="reportDate" label="讲座时间" width="120" align="center">
             <template v-slot="scope">
               <span class="time-display">
                 {{ formatDate(scope.row.reportDate) }}
@@ -74,34 +88,24 @@
             </template>
           </el-table-column>
 
-          <!-- 讲座链接 -->
-          <el-table-column prop="reportLink" label="讲座链接" width="140" align="center">
-            <template v-slot="scope">
-              <el-tag effect="light" class="location-tag">
-                {{ scope.row.reportLink }}
-              </el-tag>
-            </template>
-          </el-table-column>
-
           <!-- 总结文档 -->
-          <el-table-column label="总结文档" width="140" align="center">
+          <el-table-column label="总结文档" width="120" align="center">
             <template v-slot="scope">
               <el-button
-                v-if="scope.row.reportFeeling"
                 type="primary"
                 size="mini"
                 @click.stop="downloadReportFeeling(scope.row.reportFeeling)"
                 class="document-btn"
+                :disabled="!scope.row.reportFeeling || scope.row.reportFeeling === '[]'"
               >下载</el-button>
-              <span v-else>-</span>
             </template>
           </el-table-column>
 
           <!-- 现场图片 -->
-          <el-table-column label="现场图片" width="180" align="center">
+          <el-table-column label="现场图片" width="140" align="center">
             <template v-slot="scope">
-              <el-dropdown trigger="click" @command="handleFileCommand">
-                <el-button type="primary" size="mini" plain>
+              <el-dropdown trigger="click" @command="handleFileCommand" :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
+                <el-button type="primary" size="mini" plain :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
                   <i class="el-icon-picture"></i> 文件操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
@@ -119,7 +123,7 @@
           </el-table-column>
 
           <!-- 审核状态 -->
-          <el-table-column prop="auditStatus" label="审核状态" width="140" align="center">
+          <el-table-column prop="auditStatus" label="审核状态" width="120" align="center">
             <template v-slot="scope">
               <el-tag
                 :type="getStatusTagType(scope.row.auditStatus)"
@@ -132,7 +136,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column label="操作" width="180" align="center">
+          <el-table-column label="操作" width="120" align="center">
             <template v-slot="scope">
               <template v-if="formatAuditStatus(scope.row.auditStatus) === '未通过'">
                 <el-button
@@ -168,20 +172,45 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="auditTime" label="审核时间" min-width="100" align="center"></el-table-column>
-          <el-table-column prop="auditRemark" label="审核意见" min-width="150" align="center"></el-table-column>
+          <!-- 审核时间 -->
+          <el-table-column prop="auditTime" label="审核时间" width="140" align="center">
+            <template v-slot="scope">
+              <span class="time-display">
+                {{ formatDateTime(scope.row.auditTime) }}
+              </span>
+            </template>
+          </el-table-column>
+
+          <!-- 审核意见 -->
+          <el-table-column prop="auditRemark" label="审核意见" min-width="160" align="center">
+            <template v-slot="scope">
+              <div class="remark-text">
+                {{ scope.row.auditRemark || '-' }}
+              </div>
+            </template>
+          </el-table-column>
         </el-table>
 
       <!-- 新增/编辑对话框 -->
       <el-dialog
         :visible.sync="showDialog"
-        title="讲座报告填写"
+        :title="isEdit ? '编辑讲座记录' : '新增讲座记录'"
         class="lecture-dialog"
         width="580px"
         @close="closeCard"
       >
-        <el-form ref="form" :model="formData" :rules="rules" label-width="110px">
-          <!-- 指导主题 -->
+        <div class="dialog-header">
+          <h3 class="form-title">{{ isEdit ? '编辑讲座记录' : '新增讲座记录' }}</h3>
+          <p class="form-tips">请填写本学期讲座指导信息（带<span class="required">*</span>为必填项）</p>
+        </div>
+        <el-form
+          ref="form"
+          :model="formData"
+          :rules="rules"
+          label-width="110px"
+          class="lecture-form"
+        >
+          <!-- 讲座题目 -->
           <el-form-item label="讲座题目" prop="reportTitle">
             <el-input
               v-model="formData.reportTitle"
@@ -191,7 +220,8 @@
               <i slot="prefix" class="el-icon-notebook-2 input-icon"></i>
             </el-input>
           </el-form-item>
-          <!-- 指导主题 -->
+
+          <!-- 讲师姓名 -->
           <el-form-item label="讲师姓名" prop="reporter">
             <el-input
               v-model="formData.reporter"
@@ -201,7 +231,8 @@
               <i slot="prefix" class="el-icon-notebook-2 input-icon"></i>
             </el-input>
           </el-form-item>
-          <!-- 地点 -->
+
+          <!-- 讲座地点 -->
           <el-form-item label="讲座地点" prop="reportLocation">
             <el-input
               v-model="formData.reportLocation"
@@ -242,7 +273,7 @@
             >
               <el-button type="primary" size="mini">选择文件</el-button>
               <template #tip>
-                <div class="upload-tip">支持格式：PDF/DOC/DOCX，≤10MB</div>
+                <div class="el-upload__tip">支持格式：PDF/DOC/DOCX，≤10MB</div>
               </template>
             </el-upload>
           </el-form-item>
@@ -262,27 +293,33 @@
               class="photo-upload"
             >
               <i class="el-icon-plus"></i>
-              <div slot="tip" class="upload-tip">支持JPG/PNG格式，单文件≤10MB</div>
+              <div slot="tip" class="el-upload__tip">支持JPG/PNG格式，单文件≤10MB</div>
             </el-upload>
           </el-form-item>
 
           <!-- 操作按钮 -->
           <el-form-item class="form-actions">
-            <el-button type="info" @click="handleSave">保存草稿</el-button>
-            <el-button type="primary" @click="handleSubmit">正式提交</el-button>
+            <el-button
+              type="info"
+              class="save-btn"
+              @click="handleSave"
+            >保存草稿
+            </el-button>
+            <el-button type="primary"
+                       class="submit-btn"
+                       @click="handleSubmit"
+            >正式提交</el-button>
           </el-form-item>
         </el-form>
       </el-dialog>
 
-        <!-- 分页 -->
-        <el-pagination
-          layout="total, sizes, prev, pager, next, jumper"
-          :current-page="currentPage"
-          :page-size="pageSize"
+        <!-- 分页组件 -->
+        <pagination
+          v-show="totalRecords > 0"
           :total="totalRecords"
-          :page-sizes="[10, 20, 30, 40]"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
+          :page.sync="currentPage"
+          :limit.sync="pageSize"
+          @pagination="listReport"
           class="custom-pagination"
         />
       </div>
@@ -553,10 +590,10 @@ export default {
     // 状态标签样式
     getStatusTagType(status) {
       const typeMap = {
-        '已通过': 'success',
-        '未审核': 'warning',
-        '未通过': 'danger',
-        '未提交': 'info'
+        '1': 'success',
+        '0': 'warning',
+        '2': 'danger',
+        '3': 'info'
       }
       return typeMap[status] || 'info'
     },
@@ -564,10 +601,10 @@ export default {
     // 状态图标
     getStatusIcon(status) {
       const iconMap = {
-        '已通过': 'el-icon-circle-check',
-        '未审核': 'el-icon-time',
-        '未通过': 'el-icon-circle-close',
-        '未提交': 'el-icon-edit'
+        '1': 'el-icon-circle-check',
+        '0': 'el-icon-time',
+        '2': 'el-icon-circle-close',
+        '3': 'el-icon-edit'
       }
       return iconMap[status] || 'el-icon-question'
     },
@@ -576,7 +613,11 @@ export default {
       const date = new Date(dateString)
       return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
     },
-
+    formatDateTime(dateString) {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      return `${this.formatDate(dateString)} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+    },
     async handleSave() {
       this.formData.auditStatus = 3;
       this.submitForm();
@@ -756,18 +797,6 @@ export default {
         this.$message.error(`下载失败: ${error.message}`);
         console.error("下载错误详情:", error);
       }
-    },
-
-    // 分页大小变化
-    handleSizeChange(size) {
-      this.pageSize = size;
-      this.listReport(this.queryParams, this.currentPage, this.pageSize);
-    },
-
-    // 当前页变化
-    handleCurrentChange(page) {
-      this.currentPage = page;
-      this.listReport(this.queryParams, this.currentPage, this.pageSize);
     },
 
     //转化学期
@@ -1019,21 +1048,17 @@ export default {
   margin: 0;
 }
 
+.score-icon {
+  font-size: 1.5em;
+  margin-right: 0.5rem;
+}
+
 .current-semester {
   font-size: 1.2rem;
   opacity: 0.9;
 }
 
 /* ================= 表格样式 ================= */
-/* 表头样式细化 */
-.optimized-table /deep/ .el-table__header th {
-  background: #f8fafc !important;
-  color: #2b6cb0;
-  font-weight: 600;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
-}
-
 .report-table-card {
   background: #fff;
   border-radius: 1rem;
@@ -1052,6 +1077,7 @@ export default {
   overflow: hidden;
 }
 
+/* 表头样式 */
 .optimized-table /deep/ .el-table__header th {
   background: var(--table-header-bg) !important;
   color: #2b6cb0;
@@ -1059,6 +1085,7 @@ export default {
   font-size: 0.95rem;
 }
 
+/* 表格行样式 */
 .optimized-table /deep/ .el-table__body td {
   color: var(--table-text-primary);
   transition: background 0.2s;
@@ -1070,6 +1097,12 @@ export default {
   cursor: pointer;
 }
 
+/* 特殊行样式 */
+.optimized-table /deep/ .stripe-row td {
+  background-color: var(--table-stripe-bg);
+}
+
+/* 表格元素样式 */
 .index-badge {
   display: inline-flex;
   width: 28px;
@@ -1081,35 +1114,133 @@ export default {
   font-weight: 500;
   color: #2b6cb0;
 }
+/* 标签统一样式 */
+.level-tag,
+.status-tag,
+.reporter-tag,
+.location-tag{
+  border-radius: 12px;
+  padding: 0 10px;
+  font-weight: 500;
+}
 
+.level-tag {
+  background: #f0fff4;
+  border-color: #c6f6d5;
+  color: #38a169;
+}
+/* 讲师姓名标签 */
+.reporter-tag {
+  background: #fff9db;
+  border-color: #ffe082;
+  color: #b38f00;
+}
+/* 禁用状态样式 */
+.document-btn.el-button--primary.is-disabled {
+  background-color: #f0f4ff !important;
+  border-color: #c6d9ff !important;
+  color: #a3c3ff !important;
+  cursor: not-allowed;
+}
+/* 悬停状态保持禁用样式 */
+.document-btn.el-button--primary.is-disabled:hover {
+  background-color: #f0f4ff !important;
+  border-color: #c6d9ff !important;
+  color: #a3c3ff !important;
+}
+
+/* 禁用图标样式 */
+.document-btn.is-disabled .el-icon-download {
+  opacity: 0.5;
+}
+
+/* 链接样式 */
+.link-style {
+  color: #409EFF; /* Element主蓝色 */
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.link-style:hover {
+  text-decoration: underline;
+  color: #79bbff;
+}
+
+/* 调整标签内边距 */
+.location-tag .el-tag__content {
+  padding: 2px 6px;
+}
 /* ================= 分页样式 ================= */
 .custom-pagination {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
+  justify-content: center !important; /* 强制居中 */
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+/* 调整分页组件内部布局 */
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 8px;
 }
 
 /* ================= 对话框样式 ================= */
+.lecture-dialog {
+  border-radius: 12px;
+}
+
+.lecture-dialog /deep/ .el-dialog__header {
+  display: none; /* 隐藏原生标题 */
+}
+
 .dialog-header {
   text-align: center;
   padding: 20px 0 15px;
+  background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.form-title {
-  font-size: 1.5rem;
-  color: #2B6CB0;
-  margin: 0;
+/* 表单元素样式 */
+.lecture-form {
+  padding: 0 30px 20px;
 }
 
-.form-tips {
+.input-icon {
+  color: #a0aec0;
+  margin-left: 8px;
+}
+
+
+.el-upload__tip {
   color: #718096;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
+/* 操作按钮 */
+.form-actions {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.save-btn {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  color: #4a5568;
+}
+
+.submit-btn {
+  background: #48bb78;
+  border-color: #48bb78;
+}
+
+.submit-btn:hover {
+  background: #38a169;
+  border-color: #38a169;
+}
 /* ================= 响应式设计 ================= */
 @media (max-width: 768px) {
   .container {

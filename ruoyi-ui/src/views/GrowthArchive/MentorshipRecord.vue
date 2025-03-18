@@ -39,7 +39,7 @@
           <!-- 指导主题 -->
           <el-table-column prop="guidanceTopic" label="指导主题" min-width="120">
             <template v-slot="scope">
-              <div class="competition-name">
+              <div class="mentorship-name">
                 <i class="el-icon-notebook-2 name-icon"></i>
                 <span class="name-text">{{ scope.row.guidanceTopic }}</span>
               </div>
@@ -87,7 +87,7 @@
                 <el-button type="primary"
                            size="mini"
                            plain
-                           :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
+                           :disabled="!scope.row.photoPaths ||                                                                                        scope.row.photoPaths === '[]'">
                   <i class="el-icon-picture"></i> 文件操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
@@ -229,7 +229,7 @@
       <el-dialog
         :visible.sync="showDialog"
         :title="isEdit ? '编辑指导记录' : '新增指导记录'"
-        class="competition-dialog"
+        class="mentorship-dialog"
         width="580px"
         @close="closeCard"
       >
@@ -243,7 +243,7 @@
           :model="formData"
           :rules="rules"
           label-width="110px"
-          class="competition-form"
+          class="mentorship-form"
         >
           <!-- 指导主题 -->
           <el-form-item label="指导主题" prop="guidanceTopic">
@@ -913,6 +913,11 @@ export default {
   margin-right: 0.5rem;
 }
 
+.current-semester {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
 /* ================= 表格相关样式 ================= */
 .score-table-card {
   background: #fff;
@@ -970,7 +975,7 @@ export default {
   color: #2b6cb0;
 }
 
-.competition-name {
+.mentorship-name {
   display: flex;
   align-items: center;
   padding: 8px 0;
@@ -1004,11 +1009,11 @@ export default {
 }
 
 /* ================= 对话框样式 ================= */
-.competition-dialog {
+.mentorship-dialog {
   border-radius: 12px;
 }
 
-.competition-dialog /deep/ .el-dialog__header {
+.mentorship-dialog /deep/ .el-dialog__header {
   display: none; /* 隐藏原生标题 */
 }
 
@@ -1021,7 +1026,7 @@ export default {
 }
 
 /* 表单元素样式 */
-.competition-form {
+.mentorship-form {
   padding: 0 30px 20px;
 }
 
@@ -1111,7 +1116,7 @@ export default {
     font-size: 1.4rem;
   }
 
-  .competition-form {
+  .mentorship-form {
     padding: 0 15px;
   }
 }
