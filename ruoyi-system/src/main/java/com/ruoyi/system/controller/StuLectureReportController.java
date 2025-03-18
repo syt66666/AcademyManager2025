@@ -154,39 +154,18 @@ public class StuLectureReportController extends BaseController{
         Integer auditStatus = report.getAuditStatus();
         if(auditStatus != 3){
             if (report.getReportTitle() == null || report.getReportTitle().isEmpty()) {
-                return AjaxResult.error("题目不能为空");
+                return AjaxResult.error("讲座题目不能为空");
             }
             if (report.getReporter() == null || report.getReporter().isEmpty()) {
-                return AjaxResult.error("报告人不能为空");
+                return AjaxResult.error("讲师姓名不能为空");
             }
             if (report.getReportDate() == null) {
-                return AjaxResult.error("报告时间不能为空");
-            }
-            if (report.getReportContent() == null || report.getReportContent().isEmpty()) {
-                return AjaxResult.error("内容简介不能为空");
-            }
-            if (report.getReportLink() == null || report.getReportLink().isEmpty()) {
-                return AjaxResult.error("链接不能为空");
-            }
-            if (report.getLecturePoster() == null || report.getLecturePoster().isEmpty()) {
-                return AjaxResult.error("报告海报不能为空");
-            }
-            if(reportFeeling == null && reportFeeling.isEmpty()){
-                return AjaxResult.error("心得体会不能为空");
+                return AjaxResult.error("讲座日期不能为空");
             }
             // 判断心得体会大小是否超过500KB
-            if (reportFeeling.getSize() > 500 * 1024) {
-                return AjaxResult.error("心得体会文件大小不能超过500KB");
-            }
-//            if(reportPictures == null || reportPictures.length == 0) {
-//                return AjaxResult.error("现场图片不能为空");
+//            if (reportFeeling.getSize() > 500 * 1024) {
+//                return AjaxResult.error("心得体会文件大小不能超过500KB");
 //            }
-//            if(reportPictures.length < 3){
-//                return AjaxResult.error("现场图片不能少于3张");
-//            }
-            if(pictureLen < 3){
-                return AjaxResult.error("现场图片不能少于3张");
-            }
         }
         try {
             //无论保存还是提交，图片都不能大于5张
@@ -224,13 +203,13 @@ public class StuLectureReportController extends BaseController{
 //            }
 
             //处理心得体会上传
-            if(reportFeeling != null && !reportFeeling.isEmpty()){
-                // 判断文件大小是否超过500KB
-                if (reportFeeling.getSize() > 500 * 1024) {
-                    return AjaxResult.error("报告文件大小不能超过500KB");
-                }
-                report.setReportFeeling(saveFile(reportFeeling));
-            }
+//            if(reportFeeling != null && !reportFeeling.isEmpty()){
+//                // 判断文件大小是否超过500KB
+//                if (reportFeeling.getSize() > 500 * 1024) {
+//                    return AjaxResult.error("报告文件大小不能超过500KB");
+//                }
+//                report.setReportFeeling(saveFile(reportFeeling));
+//            }
 
         } catch (Exception e) {
             logger.error("提交失败", e);

@@ -5,7 +5,7 @@
       <div class="nav">
         <div class="nav-content">
           <h2>
-            <span class="score-icon">👨🏫</span>
+            <span class="score-icon">👥</span>
             导师指导记录
             <span class="current-semester">{{ activeSemester }} 指导成果</span>
           </h2>
@@ -14,18 +14,18 @@
             class="add-button"
             @click="addNewCard"
             icon="el-icon-plus"
-          >新增记录</el-button>
+          >新增记录
+          </el-button>
         </div>
       </div>
 
-      <!-- 数据表格区域 -->
+      <!-- 表格区域 -->
       <div class="score-table-card">
         <el-table
           :data="meetingRecords"
           class="optimized-table"
           :header-cell-style="headerStyle"
           highlight-current-row
-          @row-click="handleRowClick"
         >
           <!-- 序号列 -->
           <el-table-column label="序号" width="80" align="center">
@@ -37,7 +37,7 @@
           </el-table-column>
 
           <!-- 指导主题 -->
-          <el-table-column prop="guidanceTopic" label="指导主题" min-width="180">
+          <el-table-column prop="guidanceTopic" label="指导主题" min-width="120">
             <template v-slot="scope">
               <div class="competition-name">
                 <i class="el-icon-notebook-2 name-icon"></i>
@@ -47,7 +47,7 @@
           </el-table-column>
 
           <!-- 指导地点 -->
-          <el-table-column prop="guidanceLocation" label="地点" width="120" align="center">
+          <el-table-column prop="guidanceLocation" label="指导地点" width="120" align="center">
             <template v-slot="scope">
               <el-tag effect="light" class="level-tag">
                 {{ scope.row.guidanceLocation }}
@@ -55,8 +55,8 @@
             </template>
           </el-table-column>
 
-          <!-- 指导时间 -->
-          <el-table-column prop="guidanceTime" label="时间" width="140" align="center">
+          <!-- 指导日期 -->
+          <el-table-column prop="guidanceTime" label="指导日期" width="120" align="center">
             <template v-slot="scope">
               <span class="time-display">
                 {{ formatDate(scope.row.guidanceTime) }}
@@ -65,42 +65,47 @@
           </el-table-column>
 
           <!-- 总结文档 -->
-          <el-table-column label="总结文档" width="140" align="center">
+          <el-table-column label="总结文档" width="120" align="center">
             <template v-slot="scope">
               <el-button
-                v-if="scope.row.summaryFilePath"
                 type="primary"
                 size="mini"
                 @click.stop="downloadSummaryDocument(scope.row.summaryFilePath)"
                 class="document-btn"
-              >下载</el-button>
-              <span v-else>-</span>
+                :disabled="!scope.row.summaryFilePath || scope.row.summaryFilePath === '[]'"
+              >下载
+              </el-button>
             </template>
           </el-table-column>
 
           <!-- 现场图片 -->
-          <el-table-column label="现场图片" width="180" align="center">
+          <el-table-column label="现场图片" width="140" align="center">
             <template v-slot="scope">
-              <el-dropdown trigger="click" @command="handleFileCommand">
-                <el-button type="primary" size="mini" plain>
+              <el-dropdown trigger="click"
+                           @command="handleFileCommand"
+                           :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
+                <el-button type="primary"
+                           size="mini"
+                           plain
+                           :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
                   <i class="el-icon-picture"></i> 文件操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item
                     :command="{ action: 'preview', files: scope.row.photoPaths }"
-                    :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'"
-                  >预览</el-dropdown-item>
+                  >预览
+                  </el-dropdown-item>
                   <el-dropdown-item
                     :command="{ action: 'download', files: scope.row.photoPaths }"
-                    :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'"
-                  >下载</el-dropdown-item>
+                  >下载
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
           </el-table-column>
 
           <!-- 审核状态 -->
-          <el-table-column prop="auditStatus" label="状态" width="140" align="center">
+          <el-table-column prop="auditStatus" label="审核状态" width="120" align="center">
             <template v-slot="scope">
               <el-tag
                 :type="getStatusTagType(scope.row.auditStatus)"
@@ -114,14 +119,15 @@
           </el-table-column>
 
           <!-- 操作列 -->
-          <el-table-column label="操作" width="180" align="center">
+          <el-table-column label="操作" width="120" align="center">
             <template v-slot="scope">
               <template v-if="scope.row.auditStatus === '未通过'">
                 <el-button
                   type="text"
                   size="mini"
                   @click.stop="handleEditDraft(scope.row)"
-                >重新提交</el-button>
+                >重新提交
+                </el-button>
               </template>
 
               <template v-if="scope.row.auditStatus === '未提交'">
@@ -129,13 +135,15 @@
                   type="text"
                   size="mini"
                   @click.stop="handleEditDraft(scope.row)"
-                >编辑</el-button>
+                >编辑
+                </el-button>
                 <el-button
                   type="text"
                   size="mini"
                   style="color: #F56C6C;"
                   @click.stop="handleDelete(scope.row)"
-                >删除</el-button>
+                >删除
+                </el-button>
               </template>
 
               <el-tag
@@ -143,12 +151,13 @@
                 type="info"
                 size="mini"
                 class="no-edit-tag"
-              >不可修改</el-tag>
+              >不可修改
+              </el-tag>
             </template>
           </el-table-column>
 
           <!-- 审核时间 -->
-          <el-table-column prop="auditTime" label="审核时间" width="160" align="center">
+          <el-table-column prop="auditTime" label="审核时间" width="140" align="center">
             <template v-slot="scope">
               <span class="time-display">
                 {{ formatDateTime(scope.row.auditTime) }}
@@ -157,10 +166,10 @@
           </el-table-column>
 
           <!-- 审核意见 -->
-          <el-table-column prop="auditRemark" label="审核意见" min-width="180">
+          <el-table-column prop="auditRemark" label="审核意见" min-width="160" align="center">
             <template v-slot="scope">
               <div class="remark-text">
-                {{ scope.row.auditRemark || '暂无备注' }}
+                {{ scope.row.auditRemark || '-' }}
               </div>
             </template>
           </el-table-column>
@@ -312,12 +321,14 @@
               type="info"
               class="save-btn"
               @click="handleSave"
-            >保存草稿</el-button>
+            >保存草稿
+            </el-button>
             <el-button
               type="primary"
               class="submit-btn"
               @click="handleSubmit"
-            >正式提交</el-button>
+            >正式提交
+            </el-button>
           </el-form-item>
         </el-form>
       </el-dialog>
@@ -379,7 +390,12 @@ export default {
         guidanceTime: [
           {required: true, message: '请选择指导时间', trigger: 'change'}
         ]
-      }
+      },
+      pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now();
+        }
+      },
     };
   },
   mounted() {
@@ -389,6 +405,36 @@ export default {
     this.fetchMeetingRecords();  // 在页面加载时获取数据
   },
   methods: {
+    handleFileCommand(command) {
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadFiles(command.files)
+      }
+    },
+    async downloadFiles(filePaths) {
+      try {
+        const paths = typeof filePaths === 'string' ? JSON.parse(filePaths) : filePaths;
+        if (paths.length >= 1) {
+          this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
+          });
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
+
+    getFullUrl(filePath) {
+      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
+    },
     formatDate(dateString) {
       if (!dateString) return '-'
       const date = new Date(dateString)
@@ -474,10 +520,14 @@ export default {
       const rawData = JSON.parse(JSON.stringify(row));
       this.formData = {...rawData};
       this.isEdit = true;
-      this.currentRecordId = rawData.id;
+      this.currentRecordId = rawData.recordId;
       this.showDialog = true;
+      console.log(this.currentRecordId);
 
+      // 解析文件路径
       const proofMaterial = this.parseMaterial(rawData.photoPaths);
+
+      // 生成符合el-upload要求的文件列表
       this.fileList = proofMaterial.map((path, index) => ({
         uid: Date.now() + index,
         name: path.split('/').pop(),
@@ -488,6 +538,7 @@ export default {
       })).filter(Boolean);
     },
 
+    // 解析文件路径
     parseMaterial(material) {
       try {
         if (Array.isArray(material)) return [...material];
@@ -591,10 +642,6 @@ export default {
       return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
     },
 
-    // 获取完整URL（带缓存清除）
-    getFullUrl(filePath) {
-      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
-    },
     handlePreview(filePath) {
       try {
         const paths = typeof filePath === 'string'
@@ -633,19 +680,6 @@ export default {
     handleFileRemove(file, fileList) {
       this.fileList = fileList;
     },
-
-    // 分页大小变化
-    handleSizeChange(size) {
-      this.pageSize = size;
-      this.fetchMeetingRecords(this.queryParams, this.currentPage, this.pageSize);
-    },
-
-    // 当前页变化
-    handleCurrentChange(page) {
-      this.currentPage = page;
-      this.fetchMeetingRecords(this.queryParams, this.currentPage, this.pageSize);
-    },
-
 
     addNewCard() {
       this.showDialog = true;
@@ -707,12 +741,20 @@ export default {
           const originalRecord = this.meetingRecords.find(
             item => item.recordId === this.currentRecordId
           );
+          console.log("currentRecordId:" + this.currentRecordId);
+          console.log("originalRecord:" + originalRecord);
+          console.log("this.formData.guidanceTopic:" + this.formData.guidanceTopic);
+          console.log("this.formData.guidanceLocation:" + this.formData.guidanceLocation);
+          console.log("this.formData.guidanceTime:" + this.formData.guidanceTime);
+          console.log("originalRecord.guidanceTopic:" + originalRecord.guidanceTopic);
+          console.log("originalRecord.guidanceLocation:" + originalRecord.guidanceLocation);
+          console.log("originalRecord.guidanceTime:" + originalRecord.guidanceTime);
           // 检测关键字段是否修改
           const isKeyFieldChanged = !originalRecord ||
             this.formData.guidanceTopic !== originalRecord.guidanceTopic ||
             this.formData.guidanceLocation !== originalRecord.guidanceLocation ||
             this.formData.guidanceTime !== originalRecord.guidanceTime;
-
+          console.log("isKeyFieldChanged:" + isKeyFieldChanged);
           // 编辑时排除自身
           if (isKeyFieldChanged) {
             // 唯一性校验参数
@@ -826,7 +868,7 @@ export default {
 
 /* ================= 导航栏样式 ================= */
 .nav {
-  background: linear-gradient(135deg, #4a5568 0%, #718096 100%);
+  background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
   border-radius: 1rem;
   margin: -2rem -2rem 2rem;
   position: relative;
@@ -966,27 +1008,16 @@ export default {
   border-radius: 12px;
 }
 
+.competition-dialog /deep/ .el-dialog__header {
+  display: none; /* 隐藏原生标题 */
+}
+
 .dialog-header {
   text-align: center;
   padding: 20px 0 15px;
-  background: linear-gradient(135deg, #4a5568 0%, #718096 100%);
+  background: linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-.form-title {
-  font-size: 1.5rem;
-  margin: 0;
-}
-
-.form-tips {
-  color: #718096;
-  font-size: 0.9rem;
-  margin: 8px 0 0;
-}
-
-.required {
-  color: #f56565;
 }
 
 /* 表单元素样式 */
@@ -1027,27 +1058,41 @@ export default {
   border-color: #38a169;
 }
 
-/* ================= 分页样式 ================= */
-.custom-pagination {
-  margin-top: 20px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  display: flex;
-  justify-content: flex-end;
+/* 禁用状态样式 */
+.document-btn.el-button--primary.is-disabled {
+  background-color: #f0f4ff !important;
+  border-color: #c6d9ff !important;
+  color: #a3c3ff !important;
+  cursor: not-allowed;
 }
 
-/* 页码按钮样式 */
-.custom-pagination /deep/ .el-pager li {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  margin: 0 4px;
-  min-width: 32px;
-  height: 32px;
-  line-height: 32px;
-  transition: all 0.2s;
+/* 悬停状态保持禁用样式 */
+.document-btn.el-button--primary.is-disabled:hover {
+  background-color: #f0f4ff !important;
+  border-color: #c6d9ff !important;
+  color: #a3c3ff !important;
+}
+
+/* 禁用图标样式 */
+.document-btn.is-disabled .el-icon-download {
+  opacity: 0.5;
+}
+
+/* ================= 分页样式 ================= */
+.custom-pagination {
+  display: flex;
+  justify-content: center !important; /* 强制居中 */
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+/* 调整分页组件内部布局 */
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* 悬停效果 */

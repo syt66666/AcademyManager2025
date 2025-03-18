@@ -169,8 +169,8 @@
             </template>
           </el-table-column>
 
-          <!-- 审核备注 -->
-          <el-table-column prop="auditRemark" label="审核备注" min-width="160" align="center">
+          <!-- 审核意见 -->
+          <el-table-column prop="auditRemark" label="审核意见" min-width="160" align="center">
             <template v-slot="scope">
               <div class="remark-text">
                 {{ scope.row.auditRemark || '-' }}
@@ -787,10 +787,9 @@ export default {
     handleEdit(row) {
       // 创建深拷贝避免响应式数据问题
       const rawData = JSON.parse(JSON.stringify(row));
-
       this.formData = {...rawData};
       this.isEdit = true;
-      this.currentActivityId = rawData.id;
+      this.currentActivityId = rawData.activityId;
       this.showDialog = true;
 
       // 解析文件路径

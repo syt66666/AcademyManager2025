@@ -176,8 +176,8 @@
             </template>
           </el-table-column>
 
-          <!-- 审核备注 -->
-          <el-table-column prop="auditRemark" label="审核备注" min-width="160" align="center">
+          <!-- 审核意见 -->
+          <el-table-column prop="auditRemark" label="审核意见" min-width="160" align="center">
             <template v-slot="scope">
               <div class="remark-text">
                 {{ scope.row.auditRemark || '-' }}
@@ -517,7 +517,7 @@ export default {
       const rawData = JSON.parse(JSON.stringify(row));
       this.formData = {...rawData};
       this.isEdit = true;
-      this.currentCompetitionId = rawData.id;
+      this.currentCompetitionId = rawData.competitionId;
       this.showDialog = true;
 
       const proofMaterial = this.parseMaterial(rawData.proofMaterial);

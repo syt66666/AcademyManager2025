@@ -97,8 +97,8 @@ export default {
         score: { label: '学业成绩', icon: '📊' },
         competition: { label: '科创竞赛', icon: '🏆' },
         activity: { label: '文体活动', icon: '🎭' },
-        report: { label: '学术报告', icon: '📝' },
-        meeting: { label: '导师会议', icon: '👥' }
+        report: { label: '讲座报告', icon: '📝' },
+        meeting: { label: '导师指导', icon: '👥' }
       }
     }
   },

@@ -1,11 +1,11 @@
 <template>
   <div class="container">
     <div class="main-container">
-      <!-- 导航栏 -->
+      <!-- 顶部导航栏 -->
       <div class="nav">
         <div class="nav-content">
           <h2>
-            <span class="score-icon">📚</span>
+            <span class="score-icon">📝</span>
             讲座报告管理
             <span class="current-semester">{{ activeSemester }} 讲座记录</span>
           </h2>
@@ -14,7 +14,8 @@
             class="add-button"
             @click="addNewCard"
             icon="el-icon-plus"
-          >新增报告</el-button>
+          >新增报告
+          </el-button>
         </div>
       </div>
 
@@ -932,53 +933,6 @@ export default {
         }
       });
     },
-
-    // async submitForm() {
-    //   this.$refs.form.validate(async (valid) => {
-    //     if (valid) {
-    //       try {
-    //         const formData = new FormData();
-    //
-    //         // 构建表单数据
-    //         const jsonData = {
-    //           ...this.formData,
-    //           reportPicture: this.fileList
-    //             .filter(file => !file.deleteFlag)
-    //             .map(file => file.isOld ? file.path : "")
-    //         };
-    //
-    //         // 添加JSON数据
-    //         formData.append("data", JSON.stringify(jsonData));
-    //
-    //         // 添加新上传的文件
-    //         this.fileList
-    //           .filter(file => !file.isOld && !file.deleteFlag)
-    //           .forEach(file => {
-    //             formData.append("reportPicture", file.raw);
-    //           });
-    //
-    //         // 添加总结文档
-    //         if (this.reportFeeling) {
-    //           formData.append("summary", this.reportFeeling);
-    //         }
-    //
-    //         // 调用API
-    //         const response = this.isEdit
-    //           ? await updateReport(formData)
-    //           : await addReport(formData);
-    //
-    //         if (response.code === 200) {
-    //           this.$message.success("操作成功");
-    //           this.closeCard();
-    //           await this.listReport();
-    //         }
-    //       } catch (error) {
-    //         this.$message.error(`操作失败: ${error.message}`);
-    //         console.error("完整错误信息:", error.response?.data || error);
-    //       }
-    //     }
-    //   });
-    // },
 
     initData() {
       this.reportFeeling = null;
