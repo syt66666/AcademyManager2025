@@ -11,6 +11,7 @@
             <if test="reportLocation != null and reportLocation != ''">report_location,</if>
             <if test="reportLink != null and reportLink != ''">report_link,</if>
             <if test="reportFeeling != null and reportFeeling != ''">report_feeling,</if>
+            <if test="reportFeelingName != null and reportFeelingName != ''">report_feeling_name,</if>
             <if test="lecturePoster != null and lecturePoster != ''">lecture_poster,</if>
             <if test="reportPicture != null and reportPicture != ''">report_picture,</if>
             <if test="auditStatus != null">audit_status,</if>
@@ -27,6 +28,7 @@
             <if test="reportLocation != null and reportLocation != ''">#{reportLocation},</if>
             <if test="reportLink != null and reportLink != ''">#{reportLink},</if>
             <if test="reportFeeling != null and reportFeeling != ''">#{reportFeeling},</if>
+            <if test="reportFeelingName != null and reportFeelingName != ''">#{reportFeelingName},</if>
             <if test="lecturePoster != null and lecturePoster != ''">#{lecturePoster},</if>
             <if test="reportPicture != null and reportPicture != ''">#{reportPicture},</if>
             <if test="auditStatus != null">#{auditStatus},</if>
@@ -99,6 +101,7 @@
             <if test="reportLocation != null  and reportLocation != ''"> report_location = #{reportLocation},</if>
             <if test="reportLink != null and reportLink != ''">report_link = #{reportLink},</if>
             <if test="reportFeeling != null and reportFeeling != ''">report_feeling = #{reportFeeling},</if>
+            <if test="reportFeelingName != null and reportFeelingName != ''">report_feeling_name = #{reportFeelingName},</if>
             <if test="lecturePoster != null and lecturePoster != ''">lecture_poster = #{lecturePoster},</if>
             <if test="reportPicture != null and reportPicture != ''">report_picture = #{reportPicture},</if>
             <if test="auditStatus != null">audit_status = #{auditStatus},</if>

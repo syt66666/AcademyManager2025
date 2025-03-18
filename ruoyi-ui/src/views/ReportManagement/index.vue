@@ -94,7 +94,7 @@
               <el-button
                 type="primary"
                 size="mini"
-                @click.stop="downloadReportFeeling(scope.row.reportFeeling)"
+                @click.stop="downloadReportFeeling(scope.row)"
                 class="document-btn"
                 :disabled="!scope.row.reportFeeling || scope.row.reportFeeling === '[]'"
               >下载</el-button>
@@ -368,6 +368,7 @@ import store from "@/store";
 export default {
   data() {
     return {
+      originalFeelingName: '', // 保存原始文件名
       reportFeelingList: [], // 总结文档上传列表
       isEdit: false,//判断修改还是插入
       previewVisible: false,
@@ -647,22 +648,20 @@ export default {
           lecturePoster: row.lecturePoster,
           semester: this.formData.semester,
           auditStatus: row.auditStatus,
-          // reportFeeling: row.reportFeeling
+          reportFeeling: row.reportFeeling || ''
         };
-        // 初始化总结文档回显
-        try {
-          // 初始化总结文档（兼容字符串格式）
-          this.reportFeelingList = [];
-          if (row.reportFeeling && row.reportFeeling !== '') {
-            this.reportFeelingList = [{
-              name: this.extractFileName(row.reportFeeling), // 直接使用字符串路径
-              url: this.getFullUrl(row.reportFeeling),
-              status: 'success'
-            }];
-          }
-        } catch (error) {
-          console.error('文档初始化失败:', error);
-          this.$message.error('文档数据加载异常');
+        // 处理总结文档回显
+        this.reportFeelingList = [];
+        if (row.reportFeeling) {
+          // 将数据库中的路径字符串转换为上传组件需要的格式
+          const fileName = row.reportFeelingName || this.getFileName(row.reportFeeling);
+          this.reportFeelingList = [{
+            name: fileName,
+            url: this.getFullUrl(row.reportFeeling)
+          }];
+
+          // 保持原始文件引用
+          this.reportFeeling = row.reportFeeling;
         }
 
         //已有照片列表
@@ -697,9 +696,9 @@ export default {
         this.$message.error('数据加载失败，请检查控制台');
       }
     },
-// 新增辅助方法
-    extractFileName(path) {
-      return path.split('/').pop().split(/[?#]/)[0];
+    // 辅助方法：从路径获取文件名
+    getFileName(path) {
+      return path.split('/').pop().replace(/\?.*/, '');
     },
 // 修正后的文件路径方法
     getFullUrl(filePath) {
@@ -784,13 +783,14 @@ export default {
     },
 
     //总结文档下载
-    async downloadReportFeeling(filePaths) {
-      console.log("filePaths:"+filePaths);
+    async downloadReportFeeling(row) {
       try {
+        const filePaths = row.reportFeeling;
+        const fileName = row.reportFeelingName || this.getFileName(filePaths);
         const link = document.createElement('a');
         link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
-        link.download = this.generateFeelingFileName();
-
+        // link.download = this.generateFeelingFileName();
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -843,6 +843,9 @@ export default {
     addNewCard() {
       this.showDialog = true;
       this.isEdit = false;
+      // 重置文档相关状态
+      this.reportFeelingList = [];
+      this.reportFeeling = null;
     },
     closeCard() {
       this.showDialog = false;
@@ -859,6 +862,7 @@ export default {
         reportLocation: '',
         lecturePoster: '',
         reportFeeling:'',
+        reportFeelingName: '',
         reportPicture: [],
         //审核状态
         auditStatus: '',
@@ -874,18 +878,18 @@ export default {
         this.$message.warning('只能上传一个文件')
         fileList.splice(0, 1)
       }
-
+      // 保存原始文件名（新增）
+      this.originalFeelingName = file.name
       // 关键修改：获取原生文件对象
       this.reportFeelingList = fileList
       this.reportFeeling = file.raw // 使用 raw 属性获取原生 File
       console.log(this.reportFeeling)
     },
 
-// 修改文件移除处理
+    // 文件移除回调
     handleSummaryRemove() {
-      this.reportFeeling = null;
-      this.formData.reportFeeling = null;
-      this.reportFeelingList = [];
+      this.reportFeelingList = []
+      this.originalFeelingName = ''//清空文件名
     },
 
     async listReport() {
@@ -912,15 +916,14 @@ export default {
     submitForm() {
       this.$refs.form.validate((valid) => {
         if (valid) {
-          console.log('表单数据:', this.formData.reportDate);
-          const formData = new FormData();
 
+          this.formData.reportFeelingName = this.originalFeelingName
+          console.log('表单数据:', this.formData)
+          const formData = new FormData();
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
           formData.append('reportFeeling', this.reportFeeling);
           console.log('表单数据formData.reportFeeling:', this.reportFeeling);
-
-
 
           // 构建文件数据
           const keepFiles = this.fileList
@@ -936,6 +939,8 @@ export default {
           newFiles.forEach(file => {
             formData.append('reportPicture', file)
           })
+
+
           console.log('表单数据formData.reportPicture:', this.formData.reportPicture);
           console.log('传递后端数据:', formData);
           // 可以使用 axios 或 fetch 发送请求

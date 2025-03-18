@@ -22,33 +22,37 @@ public class StuLectureReport extends BaseEntity
     @Excel(name = "学生姓名")
     private String studentName;
 
-    /** 题目 */
-    @Excel(name = "题目")
+    /** 讲座题目 */
+    @Excel(name = "讲座题目")
     private String reportTitle;
 
-    /** 报告人 */
-    @Excel(name = "报告人")
+    /** 讲师姓名 */
+    @Excel(name = "讲师姓名")
     private String reporter;
 
-    /** 报告时间 */
+    /** 讲座日期 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "报告时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @Excel(name = "讲座日期", width = 30, dateFormat = "yyyy-MM-dd")
     private Date reportDate;
 
-    /** 报告内容简介 */
-    @Excel(name = "报告内容简介")
+    /** 讲座内容简介 */
+    @Excel(name = "讲座内容简介")
     private String reportContent;
 
-    /** 报告链接 */
-    @Excel(name = "报告链接")
+    /** 讲座链接 */
+    @Excel(name = "讲座链接")
     private String reportLink;
 
     /** 报告心得体会 */
-    @Excel(name = "报告心得体会")
+    @Excel(name = "讲座心得体会")
     private String reportFeeling;
 
-    /** 演讲海报 */
-    @Excel(name = "演讲海报")
+    /** 报告心得体会文件名 */
+    @Excel(name = "报告心得体会文件名")
+    private String reportFeelingName;
+
+    /** 讲座海报 */
+    @Excel(name = "讲座海报")
     private String lecturePoster;
 
     /** 报告现场图片 */

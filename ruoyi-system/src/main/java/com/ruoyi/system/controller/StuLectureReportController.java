@@ -104,6 +104,7 @@ public class StuLectureReportController extends BaseController{
         if(ajaxResult.isError()){
             return AjaxResult.error(ajaxResult.get(MSG_TAG).toString());
         }
+        System.out.println("studentLectureReport:" + studentLectureReport);
         StuLectureReport report = (StuLectureReport)ajaxResult.get(DATA_TAG);
         //插入信息
         IStuLectureReportService.insertStudentLectureReport(report);
@@ -193,23 +194,23 @@ public class StuLectureReportController extends BaseController{
                 report.setReportPicture(new ObjectMapper().writeValueAsString(filePaths));
             }
 //            // 处理文件上传
-//            if (reportPictures != null && reportPictures.length > 0) {
-//                List<String> filePaths = new ArrayList<>();
-//                for (MultipartFile file : reportPictures) {
-//                    String filePath = saveFile(file);
-//                    filePaths.add(filePath);
-//                }
-//                report.setReportPicture(new ObjectMapper().writeValueAsString(filePaths));
-//            }
+            if (reportPictures != null && reportPictures.length > 0) {
+                List<String> filePaths = new ArrayList<>();
+                for (MultipartFile file : reportPictures) {
+                    String filePath = saveFile(file);
+                    filePaths.add(filePath);
+                }
+                report.setReportPicture(new ObjectMapper().writeValueAsString(filePaths));
+            }
 
             //处理心得体会上传
-//            if(reportFeeling != null && !reportFeeling.isEmpty()){
-//                // 判断文件大小是否超过500KB
-//                if (reportFeeling.getSize() > 500 * 1024) {
-//                    return AjaxResult.error("报告文件大小不能超过500KB");
-//                }
-//                report.setReportFeeling(saveFile(reportFeeling));
-//            }
+            if(reportFeeling != null && !reportFeeling.isEmpty()){
+                // 判断文件大小是否超过500KB
+                if (reportFeeling.getSize() > 500 * 1024) {
+                    return AjaxResult.error("报告文件大小不能超过500KB");
+                }
+                report.setReportFeeling(saveFile(reportFeeling));
+            }
 
         } catch (Exception e) {
             logger.error("提交失败", e);
