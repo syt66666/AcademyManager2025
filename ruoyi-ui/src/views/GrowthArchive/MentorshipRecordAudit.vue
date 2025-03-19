@@ -38,70 +38,65 @@
     </el-row>
 
     <el-table v-loading="loading" :data="mentorshipList" @selection-change="handleSelectionChange">
-      <el-table-column label="序号" width="50" align="center">
+      <el-table-column label="序号" width="80" align="center">
         <template slot-scope="scope">
           {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="学号" align="center" prop="studentId" />
-      <el-table-column label="姓名" align="center" prop="studentName" />
-      <el-table-column label="导师工号" align="center" prop="tutorId" />
-      <el-table-column label="导师姓名" align="center" prop="tutorName" />
-      <el-table-column label="指导主题" align="center" prop="guidanceTopic" />
-      <el-table-column label="指导地点" align="center" prop="guidanceLocation" />
-      <el-table-column label="指导时间" align="center" prop="guidanceTime" width="180">
+      <el-table-column label="学生学号" align="center" prop="studentId" min-width="120"/>
+      <el-table-column label="学生姓名" align="center" prop="studentName" min-width="120"/>
+      <el-table-column label="导师工号" align="center" prop="tutorId" min-width="120"/>
+      <el-table-column label="导师姓名" align="center" prop="tutorName" min-width="120"/>
+      <el-table-column label="指导主题" align="center" prop="guidanceTopic" min-width="120"/>
+      <el-table-column label="指导地点" align="center" prop="guidanceLocation" min-width="120"/>
+      <el-table-column label="指导日期" align="center" prop="guidanceTime" min-width="120">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="总结文档" width="120">
-        <template v-slot:default="scope">
-          <div class="proof-material-cell">
-            <el-button
-              type="primary"
-              icon="el-icon-download"
-              size="mini"
-              v-if="scope.row.summaryFilePath"
-              @click="downloadSummaryDocument(scope.row.summaryFilePath)"
-            >下载
-            </el-button>
-            <span v-else> </span>
-          </div>
+      <el-table-column label="总结文档" width="120" align="center">
+        <template v-slot="scope">
+          <el-button
+            type="primary"
+            size="mini"
+            @click.stop="downloadSummaryDocument(scope.row)"
+            class="document-btn"
+            :disabled="!scope.row.summaryFilePath || scope.row.summaryFilePath === '[]'"
+          >下载
+          </el-button>
         </template>
       </el-table-column>
-      <el-table-column label="指导照片" width="120">
-        <template v-slot:default="scope">
-          <div class="proof-material-cell">
-            <el-link
-              v-if="scope.row.photoPaths"
-              type="primary"
-              :underline="false"
-              @click="handlePreview(scope.row.photoPaths)"
-              style="margin-right: 10px;"
-            >
-              <i class="el-icon-view"></i> 预览
-            </el-link>
-            <el-button
-              v-if="scope.row.photoPaths"
-              type="primary"
-              icon="el-icon-download"
-              size="mini"
-              @click="downloadFiles(scope.row.photoPaths)"
-              :disabled="!scope.row.photoPaths"
-            >下载
+      <el-table-column label="指导图片" width="140" align="center">
+        <template v-slot="scope">
+          <el-dropdown trigger="click"
+                       @command="handleFileCommand"
+                       :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
+            <el-button type="primary"
+                       size="mini"
+                       plain
+                       :disabled="!scope.row.photoPaths ||                                                                                        scope.row.photoPaths === '[]'">
+              <i class="el-icon-picture"></i> 文件操作
             </el-button>
-            <span v-else> </span>
-          </div>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ action: 'preview', files: scope.row.photoPaths }"
+              >预览
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="{ action: 'download', files: scope.row.photoPaths }"
+              >下载
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
-
-      <el-table-column label="提交时间" align="center" prop="submitTime" width="180">
+      <el-table-column label="提交时间" align="center" prop="submitTime" width="120">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.submitTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="学生评价" align="center" prop="studentComment" />
-      <el-table-column label="审核状态" align="center" prop="auditStatus">
+      <el-table-column label="学生评价" align="center" prop="studentComment" min-width="120"/>
+      <el-table-column label="审核状态" align="center" prop="auditStatus" min-width="120">
         <template slot-scope="scope">
           <el-tag :type="getStatusTagType(scope.row.auditStatus)">
             {{ scope.row.auditStatus || '未审核' }}
@@ -249,6 +244,13 @@ export default {
     this.getList();
   },
   methods: {
+    handleFileCommand(command) {
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadFiles(command.files)
+      }
+    },
     // 生成带时间戳的文件名
     generateSummaryFileName() {
       const date = new Date().toISOString().slice(0, 10);

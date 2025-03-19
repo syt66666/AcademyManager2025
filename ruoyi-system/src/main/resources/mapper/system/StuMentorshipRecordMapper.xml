@@ -164,8 +164,8 @@
             <if test="guidanceTopic != null and guidanceTopic != ''">#{guidanceTopic},</if>
             <if test="guidanceLocation != null">#{guidanceLocation},</if>
             <if test="guidanceTime != null">#{guidanceTime},</if>
-            <if test="summaryFilePath != null">#{summaryFilePath},</if>
-            <if test="summaryFileName != null">#{summaryFileName},</if>
+            #{summaryFilePath},
+            #{summaryFileName},
             <if test="photoPaths != null">#{photoPaths},</if>
             <if test="semester != null and semester != ''">#{semester},</if>
             <if test="submitTime != null">#{submitTime},</if>

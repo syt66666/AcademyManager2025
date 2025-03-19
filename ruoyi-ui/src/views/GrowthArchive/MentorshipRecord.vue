@@ -78,8 +78,8 @@
             </template>
           </el-table-column>
 
-          <!-- 现场图片 -->
-          <el-table-column label="现场图片" width="140" align="center">
+          <!-- 指导图片 -->
+          <el-table-column label="指导图片" width="140" align="center">
             <template v-slot="scope">
               <el-dropdown trigger="click"
                            @command="handleFileCommand"
@@ -197,7 +197,7 @@
           <img
             :src="previewImages[currentPreviewIndex]"
             style="max-width: 100%; display: block; margin: 0 auto;"
-            alt="现场图片预览"
+            alt="指导图片预览"
           />
           <el-button
             icon="el-icon-arrow-left"
@@ -297,8 +297,8 @@
             </el-upload>
           </el-form-item>
 
-          <!-- 现场图片 -->
-          <el-form-item label="现场图片" prop="photoPaths">
+          <!-- 指导图片 -->
+          <el-form-item label="指导图片" prop="photoPaths">
             <el-upload
               multiple
               :limit="5"
@@ -365,6 +365,7 @@ export default {
       showDialog: false,
       selectedFile: null,
       uploadMessage: null,
+      summaryFile: null,
       summaryFilePath: null,
       summaryFileList: [],
       fileList: [],
@@ -416,18 +417,14 @@ export default {
       this.originalSummaryFileName = file.name
       // 关键修改：获取原生文件对象
       this.summaryFileList = fileList
-      this.summaryFilePath = file.raw // 使用 raw 属性获取原生 File
-      console.log("this.summaryFilePath:")
-      console.log(this.summaryFilePath)
-      console.log("this.summaryFileList:")
-      console.log(this.summaryFileList)
-
+      this.summaryFile=file.raw
     },
 
     // 文件移除回调
     handleSummaryRemove() {
       this.summaryFileList = []
       this.summaryFilePath = ''
+      this.formData.summaryFilePath = ''
       this.originalSummaryFileName = ''//清空文件名
     },
 
@@ -544,11 +541,11 @@ export default {
       this.isEdit = true;
       this.currentRecordId = rawData.recordId;
       this.showDialog = true;
-      console.log(this.currentRecordId);
-      this.formData.summaryFilePath=row.summaryFilePath || ''
-      console.log(this.formData.summaryFilePath)
+      // 正确初始化路径字段
+      this.formData.summaryFilePath = row.summaryFilePath || '';
       // 处理总结文档回显
       this.summaryFileList = [];
+      this.summaryFile=null;
       if (row.summaryFilePath) {
         // 将数据库中的路径字符串转换为上传组件需要的格式
         const fileName = row.summaryFileName || this.getFileName(row.summaryFilePath);
@@ -556,7 +553,8 @@ export default {
           name: fileName,
           url: this.getFullUrl(row.summaryFilePath)
         }];
-
+        console.log("66666666:")
+        console.log(this.summaryFileList)
         // 保持原始文件引用
         this.summaryFilePath = row.summaryFilePath;
       }
@@ -588,20 +586,6 @@ export default {
         console.error('材料解析失败:', e);
         return [];
       }
-    },
-
-    // 生成带时间戳的文件名
-    generateSummaryFileName() {
-      const date = new Date().toISOString().slice(0, 10);
-      const ext = this.getSummaryFileExtension();
-      return `summaryFilePath_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-    },
-
-    // 获取文件扩展名
-    getSummaryFileExtension() {
-      if (!this.selectedFile) return '';
-      const match = this.selectedFile.name.match(/\.([a-zA-Z0-9]+)(\?.*)?$/);
-      return match ? match[1].toLowerCase() : '';
     },
 
     //总结文档下载
@@ -645,9 +629,9 @@ export default {
         this.$message.error(`下载失败: ${error.message}`);
       }
     },
-    // 给现场图片生成带时间戳的文件名
+    // 给指导图片生成带时间戳的文件名
     generateFileName1(filePath) {
-      const originalName = filePath.split('/').pop() || '现场图片';
+      const originalName = filePath.split('/').pop() || '指导图片';
       const timestamp = new Date().getTime();
       const ext = originalName.split('.').pop() || 'jpg';
       return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
@@ -660,7 +644,7 @@ export default {
           : filePath;
 
         if (paths.length === 0) {
-          this.$message.error('预览失败,当前没有添加过现场图片');
+          this.$message.error('预览失败,当前没有添加过指导图片');
         }
         if (paths.length > 0) {
           this.previewImages = paths.map(path => this.getFullUrl(path));
@@ -790,11 +774,11 @@ export default {
             auditStatus: status,
             studentComment: this.formData.studentComment,
             studentId: this.$store.state.user.name,
-            summaryFilePath: this.formData.summaryFilePath,
             photoPaths: JSON.stringify(this.fileList.map(file => file.url)),
             auditTime: null,
             auditRemark: "",
             existingProofMaterial: existingPaths,
+            summaryFilePath: this.formData.summaryFilePath || '',
             summaryFileName:this.originalSummaryFileName,
           };
           console.log("recordData:");
@@ -815,8 +799,8 @@ export default {
           this.fileList.forEach((file) => {
             formData.append("photoPaths", file.raw);
           });
-          console.log("this.summaryFilePath:",this.summaryFilePath)
-          formData.append('summaryFile', this.summaryFilePath);
+          console.log("this.summaryFile:",this.summaryFile)
+          formData.append('summaryFile', this.summaryFile);
 
           // 配置 headers
           const config = {

@@ -19,6 +19,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.system.domain.*;
 import com.ruoyi.system.domain.StuMentorshipRecord;
 import com.ruoyi.system.domain.dto.MentorshipAuditDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,12 +42,14 @@ public class StuMentorshipRecordController extends BaseController {
     @Autowired
     private IStuMentorshipRecordService stuMentorshipRecordService;
 
+    private static final Logger logger = LoggerFactory.getLogger(StuMentorshipRecordController.class);
     /**
      * 查询导师指导记录列表
      */
     //@PreAuthorize("@ss.hasPermi('system:mentorship:list')")
     @GetMapping("/list")
     public TableDataInfo list(StuMentorshipRecord stuMentorshipRecord) {
+        logger.info("查询导师指导记录列表");
         startPage();
         List<StuMentorshipRecord> list = stuMentorshipRecordService.selectStuMentorshipRecordList(stuMentorshipRecord);
         return getDataTable(list);
@@ -87,6 +91,8 @@ public class StuMentorshipRecordController extends BaseController {
                           @RequestPart(value = "summaryFile", required = false) MultipartFile summaryFile,
                           @RequestPart(value = "photoPaths", required = false) MultipartFile[] photoPaths,
                           @RequestHeader(value = "Authorization", required = false) String token) {
+
+        logger.info("接收到的参数: " + stuMentorshipRecord);
         try {
             // 验证 Token
             if (token == null || !validateToken(token)) {
@@ -194,60 +200,59 @@ public class StuMentorshipRecordController extends BaseController {
      * 修改导师指导记录
      */
     //@PreAuthorize("@ss.hasPermi('system:mentorship:edit')")
-    @Log(title = "导师指导记录", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestPart("record") StuMentorshipRecord record,
                            @RequestPart(value = "photoPaths", required = false) MultipartFile[] photoPaths,
-                           @RequestPart(value = "summaryFile", required = false) MultipartFile summaryFile,
-                           @RequestHeader(value = "Authorization", required = false) String token) {
-        try {
-            // 验证 Token
-            if (token == null || !validateToken(token)) {
-                return AjaxResult.error("认证失败");
-            }
-            // 处理总结文档
-            if (summaryFile != null && !summaryFile.isEmpty()) {
-                String summaryPath = saveFile(summaryFile);
-                record.setSummaryFilePath(summaryPath);
-            }else {
-                record.setSummaryFilePath(null);
-            }
-            // 获取旧记录用于清理文件
-            StuMentorshipRecord oldRecord = stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(record.getRecordId());
-            List<String> oldFiles = parseMaterialPaths(oldRecord.getPhotoPaths());
-
-            // 处理文件合并逻辑
-            List<String> finalFilePaths = new ArrayList<>();
-
-            // 1. 添加保留的旧文件
-            if (record.getExistingProofMaterial() != null) {
-                finalFilePaths.addAll(record.getExistingProofMaterial());
-            }
-
-            // 2. 处理新上传文件
-            if (photoPaths != null && photoPaths.length > 0) {
-                for (MultipartFile file : photoPaths) {
-                    String filePath = saveFile(file);
-                    finalFilePaths.add(filePath);
-                }
-            }
-
-            // 3. 更新文件路径到记录
-            record.setPhotoPaths(new ObjectMapper().writeValueAsString(finalFilePaths));
-
-            // 4. 清理被删除的旧文件
-            List<String> filesToDelete = oldFiles.stream()
-                    .filter(oldFile -> !finalFilePaths.contains(oldFile))
-                    .collect(Collectors.toList());
-            deleteOldFiles(filesToDelete);
-
-            // 更新记录
-            return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(record));
-        } catch (Exception e) {
-            logger.error("更新失败", e);
-            return AjaxResult.error("更新失败：" + e.getMessage());
+                           @RequestPart(value = "summaryFile", required = false) MultipartFile summaryFile) throws IOException {
+        // 获取旧记录
+        StuMentorshipRecord oldRecord = stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(record.getRecordId());
+        // ================= 处理总结文档 =================
+        if (summaryFile != null && !summaryFile.isEmpty()) {
+            // 情况1：上传了新文件
+            String newPath = saveFile(summaryFile);
+            record.setSummaryFilePath(newPath);
+//            deleteFile(oldRecord.getSummaryFilePath()); // 删除旧文件
+        } else if (record.getSummaryFilePath().isEmpty() && oldRecord.getSummaryFilePath() != null) {
+            // 情况2：没有上传文件但清空了路径（表示删除）
+//           deleteFile(oldRecord.getSummaryFilePath());
+            record.setSummaryFilePath(null);
+        } else {
+            // 情况3：保持原文件不变
+            record.setSummaryFilePath(oldRecord.getSummaryFilePath());
         }
-    }
+
+        // ================= 处理图片文件 =================
+        List<String> oldFiles = parseMaterialPaths(oldRecord.getPhotoPaths());
+
+        // 处理文件合并逻辑
+        List<String> finalFilePaths = new ArrayList<>();
+
+        // 1. 添加保留的旧文件
+        if (record.getExistingProofMaterial() != null) {
+            finalFilePaths.addAll(record.getExistingProofMaterial());
+        }
+
+        // 2. 处理新上传文件
+        if (photoPaths != null && photoPaths.length > 0) {
+            for (MultipartFile file : photoPaths) {
+                String filePath = saveFile(file);
+                finalFilePaths.add(filePath);
+            }
+        }
+
+        // 3. 更新文件路径到记录
+        record.setPhotoPaths(new ObjectMapper().writeValueAsString(finalFilePaths));
+
+        // 4. 清理被删除的旧文件
+        List<String> filesToDelete = oldFiles.stream()
+                .filter(oldFile -> !finalFilePaths.contains(oldFile))
+                .collect(Collectors.toList());
+        deleteOldFiles(filesToDelete);
+
+        // 更新记录
+        return toAjax(stuMentorshipRecordService.updateStuMentorshipRecord(record));
+
+        }
 
     // 辅助方法：解析材料路径
     private List<String> parseMaterialPaths(String materialJson) throws IOException {
