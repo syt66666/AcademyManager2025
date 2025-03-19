@@ -59,3 +59,11 @@ export function auditReport(data) {
     }
   })
 }
+//唯一性校验
+export function checkLectureUnique(params) {
+  return request({
+    url: '/system/lecture/checkUnique',
+    method: 'post',
+    data: params
+  })
+}

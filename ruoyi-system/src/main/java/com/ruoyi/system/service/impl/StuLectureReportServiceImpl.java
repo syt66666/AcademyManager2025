@@ -2,6 +2,7 @@ package com.ruoyi.system.service.impl;
 
 import com.ruoyi.common.constant.HttpStatus;
 import com.github.pagehelper.PageInfo;
+import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.system.domain.StuInfo;
@@ -129,5 +130,19 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
 
         // 构建更新参数（仅更新审核相关字段）
         return stuLectureReportMapper.updateMentorshipAuditInfo(report);
+    }
+
+    @Override
+    public AjaxResult checkUnique(StuLectureReport stuLectureReport) {
+        boolean exists = stuLectureReportMapper.existsByUniqueFields(
+                stuLectureReport.getStudentId(),
+                stuLectureReport.getReportTitle(),
+                stuLectureReport.getReporter(),
+                stuLectureReport.getReportLocation(),
+                stuLectureReport.getReportDate(),
+                stuLectureReport.getSemester(),
+                stuLectureReport.getAuditStatus()
+        );
+        return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
     }
 }

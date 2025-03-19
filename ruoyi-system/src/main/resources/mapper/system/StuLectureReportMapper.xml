@@ -118,4 +118,16 @@
             #{reportId}
         </foreach>
     </delete>
+    <select id="existsByUniqueFields" resultType="boolean">
+        SELECT COUNT(1)
+        FROM stu_lec_report
+        WHERE
+            student_id = #{studentId} AND
+            report_title = #{reportTitle} AND
+            reporter = #{reporter} AND
+            report_location = #{reportLocation} AND
+            report_date = #{reportDate} AND
+            semester = #{semester}
+            LIMIT 1
+    </select>
 </mapper>

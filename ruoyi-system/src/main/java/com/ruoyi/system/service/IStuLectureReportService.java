@@ -1,6 +1,7 @@
 package com.ruoyi.system.service;
 
 
+import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.StuLectureReport;
 
@@ -39,4 +40,6 @@ public interface IStuLectureReportService {
     public List<StuLectureReport> selectStuLecReportList(StuLectureReport stuLectureReport);
 
     int updateMentorshipAuditInfo(StuLectureReport report);
+
+    AjaxResult checkUnique(StuLectureReport stuLectureReport);
 }

@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
+import java.util.Date;
 import java.util.List;
 
 @Mapper
@@ -50,4 +51,12 @@ public interface StuLectureReportMapper {
             "where report_id = #{reportId}"
     })
     int updateMentorshipAuditInfo(StuLectureReport report);
+
+    boolean existsByUniqueFields(@Param("studentId") String studentId,
+                                 @Param("reportTitle") String reportTitle,
+                                 @Param("reporter") String reporter,
+                                 @Param("reportLocation") String reportLocation,
+                                 @Param("reportDate") Date reportDate,
+                                 @Param("semester") Integer semester,
+                                 @Param("auditStatus") Integer auditStatus);
 }

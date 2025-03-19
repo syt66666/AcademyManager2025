@@ -11,6 +11,7 @@
         <result property="guidanceLocation"    column="guidance_location"    />
         <result property="guidanceTime"    column="guidance_time"    />
         <result property="summaryFilePath"    column="summary_file_path"    />
+        <result property="summaryFileName"    column="summary_file_name"    />
         <result property="photoPaths"    column="photo_paths"    />
         <result property="semester"    column="semester"    />
         <result property="submitTime"    column="submit_time"    />
@@ -29,6 +30,7 @@
         <result property="guidanceLocation"    column="guidance_location"    />
         <result property="guidanceTime"    column="guidance_time"    />
         <result property="summaryFilePath"    column="summary_file_path"    />
+        <result property="summaryFileName"    column="summary_file_name"    />
         <result property="photoPaths"    column="photo_paths"    />
         <result property="semester"    column="semester"    />
         <result property="submitTime"    column="submit_time"    />
@@ -80,7 +82,7 @@
         WHEN '已通过' THEN 3    -- 已通过最后
         ELSE 4                 -- 其他状态（如果有）
         END,
-        submit_time DESC
+        guidance_time ASC
     </select>
 
     <select id="selectAuditMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
@@ -121,7 +123,7 @@
         WHEN '已通过' THEN 2    -- 已通过最后
         ELSE 3                 -- 其他状态（如果有）
         END,
-        submit_time DESC
+        guidance_time ASC
     </select>
 
     <select id="selectStuMentorshipRecordByRecordId" parameterType="Integer" resultMap="StuMentorshipRecordResult">
@@ -147,7 +149,8 @@
             <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic,</if>
             <if test="guidanceLocation != null">guidance_location,</if>
             <if test="guidanceTime != null">guidance_time,</if>
-            <if test="summaryFilePath != null">summary_file_path,</if>
+            summary_file_path,
+            summary_file_name,
             <if test="photoPaths != null">photo_paths,</if>
             <if test="semester != null and semester != ''">semester,</if>
             <if test="submitTime != null">submit_time,</if>
@@ -162,6 +165,7 @@
             <if test="guidanceLocation != null">#{guidanceLocation},</if>
             <if test="guidanceTime != null">#{guidanceTime},</if>
             <if test="summaryFilePath != null">#{summaryFilePath},</if>
+            <if test="summaryFileName != null">#{summaryFileName},</if>
             <if test="photoPaths != null">#{photoPaths},</if>
             <if test="semester != null and semester != ''">#{semester},</if>
             <if test="submitTime != null">#{submitTime},</if>
@@ -179,7 +183,8 @@
             <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic = #{guidanceTopic},</if>
             <if test="guidanceLocation != null">guidance_location = #{guidanceLocation},</if>
             <if test="guidanceTime != null">guidance_time = #{guidanceTime},</if>
-            <if test="summaryFilePath != null">summary_file_path = #{summaryFilePath},</if>
+            summary_file_path = #{summaryFilePath},
+            summary_file_name = #{summaryFileName},
             <if test="photoPaths != null">photo_paths = #{photoPaths},</if>
             <if test="semester != null and semester != ''">semester = #{semester},</if>
             <if test="submitTime != null">submit_time = #{submitTime},</if>

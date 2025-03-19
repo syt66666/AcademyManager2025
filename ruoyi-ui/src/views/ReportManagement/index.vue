@@ -39,8 +39,8 @@
           <!-- 讲座题目 -->
           <el-table-column prop="reportTitle" label="讲座题目" width="120">
             <template v-slot="scope">
-              <div class="lecture-title">
-                <i class="el-icon-notebook-2 title-icon"></i>
+              <div class="lecture-name">
+                <i class="el-icon-notebook-2 name-icon"></i>
                 <span class="name-text">{{ scope.row.reportTitle }}</span>
               </div>
             </template>
@@ -142,7 +142,7 @@
                 <el-button
                   type="text"
                   size="mini"
-                  @click.stop="handleEditDraft(scope.row)"
+                  @click.stop="handleEdit(scope.row)"
                 >重新提交
                 </el-button>
               </template>
@@ -151,7 +151,7 @@
                 <el-button
                   type="text"
                   size="mini"
-                  @click.stop="handleEditDraft(scope.row)"
+                  @click.stop="handleEdit(scope.row)"
                 >编辑
                 </el-button>
                 <el-button
@@ -228,7 +228,7 @@
               placeholder="请输入讲师姓名"
               class="lecture-input"
             >
-              <i slot="prefix" class="el-icon-notebook-2 input-icon"></i>
+              <i slot="prefix" class="el-icon-s-custom input-icon"></i>
             </el-input>
           </el-form-item>
 
@@ -253,7 +253,7 @@
               class="time-picker"
               :picker-options="datePickerOptions"
             >
-              <i slot="suffix" class="el-icon-date date-icon"></i>
+              <i slot="suffix" class="el-icon-date input-icon"></i>
             </el-date-picker>
           </el-form-item>
 
@@ -261,6 +261,7 @@
           <el-form-item label="讲座链接" prop="reportLink">
             <el-input v-model="formData.reportLink" placeholder="请输入讲座链接" style="width: 100%;"></el-input>
           </el-form-item>
+
           <!-- 总结文档 -->
           <el-form-item label="总结文档" prop="reportFeeling">
             <el-upload
@@ -362,8 +363,9 @@
 
 <script>
 import axios from "axios";
-import {addReport, listReport, updateReport, delReport} from "@/api/student/lecture";
+import {addReport, listReport, updateReport, delReport, checkLectureUnique} from "@/api/student/lecture";
 import store from "@/store";
+import {checkCompetitionUnique} from "@/api/student/competition";
 
 export default {
   data() {
@@ -374,6 +376,7 @@ export default {
       previewVisible: false,
       fileList: [],
       existingFiles: [],
+      currentRecordId: null,
       currentPreviewIndex: 0,
       currentDownloadFile: '',
       dialogVisible: false,
@@ -628,11 +631,6 @@ export default {
         }
       }
     },
-    // 处理草稿修改
-    handleEditDraft(row) {
-      this.handleEdit(row);
-      // localStorage.removeItem(this.getDraftKey());
-    },
 // 修改后的handleEdit方法
     handleEdit(row) {
       try {
@@ -650,6 +648,8 @@ export default {
           auditStatus: row.auditStatus,
           reportFeeling: row.reportFeeling || ''
         };
+        this.currentRecordId = row.reportId;
+        console.log("this.currentRecordId:"+this.currentRecordId)
         // 处理总结文档回显
         this.reportFeelingList = [];
         if (row.reportFeeling) {
@@ -843,6 +843,7 @@ export default {
     addNewCard() {
       this.showDialog = true;
       this.isEdit = false;
+      this.currentRecordId = null;
       // 重置文档相关状态
       this.reportFeelingList = [];
       this.reportFeeling = null;
@@ -914,8 +915,37 @@ export default {
 
 
     submitForm() {
-      this.$refs.form.validate((valid) => {
+      this.$refs.form.validate(async (valid) => {
         if (valid) {
+          console.log("this.currentRecordId:"+this.currentRecordId)
+          console.log(this.records)
+          //唯一性检验
+          const originalReport = this.records.find(
+            item => item.reportId === this.currentRecordId
+          );
+          console.log('原始数据:', originalReport);
+          const isKeyFieldChanged = !originalReport ||
+            this.formData.reportTitle !== originalReport.reportTitle ||
+            this.formData.reportDate !== originalReport.reportDate ||
+            this.formData.reporter !== originalReport.reporter ||
+            this.formData.reportLocation !== originalReport.reportLocation;
+
+          if (isKeyFieldChanged) {
+            try {
+              const checkRes = await checkLectureUnique({
+                studentId: this.$store.state.user.name,
+                reportTitle: this.formData.reportTitle,
+                reporter: this.formData.reporter,
+                reportDate: this.formData.reportDate,
+                reportLocation: this.formData.reportLocation,
+                semester: this.findSemester(this.activeSemester)
+              });
+              if (checkRes.code !== 200) return this.$message.error('已存在相同活动记录,不可重复添加');
+            } catch (error) {
+              return this.$message.error(`校验失败: ${error.message}`);
+            }
+          }
+
 
           this.formData.reportFeelingName = this.originalFeelingName
           console.log('表单数据:', this.formData)
@@ -1125,6 +1155,41 @@ export default {
   font-weight: 500;
   color: #2b6cb0;
 }
+/* 讲座题目列 - 整体样式 */
+.lecture-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+/* 图标美化 */
+
+.name-icon {
+  /* 核心样式 */
+  font-size: 18px;
+  background: linear-gradient(45deg, #673AB7 30%, #9C27B0 70%); /* 学术紫渐变 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter:
+    drop-shadow(0 1px 1px rgba(103,58,183,0.1))
+    drop-shadow(0 0 1px rgba(255,255,255,0.5));
+
+  /* 布局调整 */
+  transform: scale(1.05);
+  margin-right: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 悬停互动效果 */
+  .name-icon :hover{
+    filter:
+      drop-shadow(0 1.5px 2px rgba(126,87,194,0.15))
+      drop-shadow(0 0 1.2px rgba(255,255,255,0.8));
+    transform: scale(1.1);
+  }
+
 /* 标签统一样式 */
 .level-tag,
 .status-tag,

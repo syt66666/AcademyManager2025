@@ -5,7 +5,7 @@
       <div class="nav">
         <div class="nav-content">
           <h2>
-            <span class="score-icon">🏆</span>
+            <span class="competition-icon">🏆</span>
             科创竞赛记录
             <span class="current-semester">{{ activeSemester }} 竞赛成果</span>
           </h2>
@@ -20,7 +20,7 @@
       </div>
 
       <!-- 竞赛表格 -->
-      <div class="score-table-card">
+      <div class="competition-table-card">
         <el-table
           :data="competitionRecords"
           style="width: 100%"
@@ -257,7 +257,7 @@
             placeholder="请输入完整竞赛名称"
             class="custom-input"
           >
-            <i slot="prefix" class="el-icon-trophy input-icon"></i>
+            <i slot="prefix" class="el-icon-trophy name-icon"></i>
           </el-input>
         </el-form-item>
 
@@ -831,8 +831,18 @@ export default {
   margin: 0;
 }
 
+.competition-icon {
+  font-size: 1.5em;
+  margin-right: 0.5rem;
+}
+
+.current-semester {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
 /* ================= 表格相关样式 ================= */
-.score-table-card {
+.competition-table-card {
   background: #fff;
   border-radius: 1rem;
   padding: 1.5rem;
@@ -892,6 +902,42 @@ export default {
   display: flex;
   align-items: center;
   padding: 8px 0;
+  gap: 8px; /* 与 notebook 相同的图标-文字间距 */
+}
+
+.name-icon {
+  /* 移除原颜色，替换为渐变 */
+  background: linear-gradient(135deg, #409EFF 20%, #67C23A 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important; /* 重要：覆盖 Element 默认颜色 */
+
+  /* 调整阴影匹配渐变风格 */
+  filter:
+    drop-shadow(0 0.5px 0.5px rgba(64,158,255,0.15)) /* 蓝色投影 */
+    drop-shadow(0 0.5px 0.5px rgba(103,194,58,0.15)) /* 绿色投影 */
+    drop-shadow(0 0 0.5px rgba(255,255,255,0.3)); /* 保留内白边 */
+
+  /* 其他原有属性保持 */
+  font-size: 16px;
+  transform: scale(0.95);
+  transition: all 0.2s;
+  position: relative; /* 为伪元素定位准备 */
+}
+
+.name-icon:hover {
+  /* 悬浮时增强渐变和阴影 */
+  filter:
+    drop-shadow(0 1px 1px rgba(64,158,255,0.2))
+    drop-shadow(0 1px 1px rgba(103,194,58,0.2))
+    drop-shadow(0 0 1px rgba(255,255,255,0.4));
+  transform: scale(1);
+}
+
+/* 调整伪元素边框为渐变色 */
+.name-icon::after {
+  border: 0.5px solid rgba(64,158,255,0.15); /* 与主色协调 */
+  mix-blend-mode: overlay; /* 混合模式增强质感 */
 }
 
 /* 标签统一样式 */

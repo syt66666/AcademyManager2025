@@ -10,6 +10,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.system.domain.StuLectureReport;
+import com.ruoyi.system.domain.StuMentorshipRecord;
 import com.ruoyi.system.domain.dto.LectureAuditDTO;
 import com.ruoyi.system.service.IStuLectureReportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -247,7 +248,7 @@ public class StuLectureReportController extends BaseController{
      * 管理员更新审核信息
      */
     @PreAuthorize("@ss.hasPermi('system:report:audit')")
-    @Log(title = "导师指导审核", businessType = BusinessType.UPDATE)
+    @Log(title = "讲座报告审核", businessType = BusinessType.UPDATE)
     @PutMapping("/audit")
     public AjaxResult auditLectureReport(@Validated @RequestBody LectureAuditDTO auditDTO) {
         // 构建更新参数
@@ -258,5 +259,10 @@ public class StuLectureReportController extends BaseController{
         report.setAuditTime(new Date());
         // 执行更新操作
         return toAjax(IStuLectureReportService.updateMentorshipAuditInfo(report));
+    }
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody StuLectureReport stuLectureReport) {
+
+        return IStuLectureReportService.checkUnique(stuLectureReport);
     }
 }

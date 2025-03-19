@@ -92,7 +92,7 @@ public class StuMentorshipRecordController extends BaseController {
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
             }
-            stuMentorshipRecord.setUpdateTime(new Date()); // 确保新插入的数据有最新的时间戳
+            stuMentorshipRecord.setSubmitTime(new Date()); // 确保新插入的数据有最新的时间戳
             System.out.println("接收到的文件参数: " + summaryFile);
             // 处理总结文档
             if (summaryFile != null && !summaryFile.isEmpty()) {
@@ -198,11 +198,19 @@ public class StuMentorshipRecordController extends BaseController {
     @PutMapping
     public AjaxResult edit(@RequestPart("record") StuMentorshipRecord record,
                            @RequestPart(value = "photoPaths", required = false) MultipartFile[] photoPaths,
+                           @RequestPart(value = "summaryFile", required = false) MultipartFile summaryFile,
                            @RequestHeader(value = "Authorization", required = false) String token) {
         try {
             // 验证 Token
             if (token == null || !validateToken(token)) {
                 return AjaxResult.error("认证失败");
+            }
+            // 处理总结文档
+            if (summaryFile != null && !summaryFile.isEmpty()) {
+                String summaryPath = saveFile(summaryFile);
+                record.setSummaryFilePath(summaryPath);
+            }else {
+                record.setSummaryFilePath(null);
             }
             // 获取旧记录用于清理文件
             StuMentorshipRecord oldRecord = stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(record.getRecordId());

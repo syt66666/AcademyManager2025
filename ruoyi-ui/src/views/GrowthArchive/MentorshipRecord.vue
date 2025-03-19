@@ -5,7 +5,7 @@
       <div class="nav">
         <div class="nav-content">
           <h2>
-            <span class="score-icon">👥</span>
+            <span class="mentorship-icon">👥</span>
             导师指导记录
             <span class="current-semester">{{ activeSemester }} 指导成果</span>
           </h2>
@@ -20,7 +20,7 @@
       </div>
 
       <!-- 表格区域 -->
-      <div class="score-table-card">
+      <div class="mentorship-table-card">
         <el-table
           :data="meetingRecords"
           class="optimized-table"
@@ -40,7 +40,7 @@
           <el-table-column prop="guidanceTopic" label="指导主题" min-width="120">
             <template v-slot="scope">
               <div class="mentorship-name">
-                <i class="el-icon-notebook-2 name-icon"></i>
+                <i class="el-icon-s-opportunity name-icon"></i>
                 <span class="name-text">{{ scope.row.guidanceTopic }}</span>
               </div>
             </template>
@@ -70,7 +70,7 @@
               <el-button
                 type="primary"
                 size="mini"
-                @click.stop="downloadSummaryDocument(scope.row.summaryFilePath)"
+                @click.stop="downloadSummaryDocument(scope.row)"
                 class="document-btn"
                 :disabled="!scope.row.summaryFilePath || scope.row.summaryFilePath === '[]'"
               >下载
@@ -125,7 +125,7 @@
                 <el-button
                   type="text"
                   size="mini"
-                  @click.stop="handleEditDraft(scope.row)"
+                  @click.stop="handleEdit(scope.row)"
                 >重新提交
                 </el-button>
               </template>
@@ -134,7 +134,7 @@
                 <el-button
                   type="text"
                   size="mini"
-                  @click.stop="handleEditDraft(scope.row)"
+                  @click.stop="handleEdit(scope.row)"
                 >编辑
                 </el-button>
                 <el-button
@@ -252,7 +252,7 @@
               placeholder="请输入指导主题"
               class="custom-input"
             >
-              <i slot="prefix" class="el-icon-notebook-2 input-icon"></i>
+              <i slot="prefix" class="el-icon-s-opportunity input-icon"></i>
             </el-input>
           </el-form-item>
 
@@ -350,6 +350,7 @@ import {Properties as $download} from "svg-sprite-loader/examples/custom-runtime
 export default {
   data() {
     return {
+      originalSummaryFileName: '', // 保存原始文件名
       currentRecordId: null, // 新增当前记录ID
       isEdit: false,//判断修改还是插入
       previewVisible: false,
@@ -405,6 +406,31 @@ export default {
     this.fetchMeetingRecords();  // 在页面加载时获取数据
   },
   methods: {
+    // 修改后的总结文档处理方法
+    handleSummaryChange(file, fileList) {
+      if (fileList.length > 1) {
+        this.$message.warning('只能上传一个文件')
+        fileList.splice(0, 1)
+      }
+      // 保存原始文件名（新增）
+      this.originalSummaryFileName = file.name
+      // 关键修改：获取原生文件对象
+      this.summaryFileList = fileList
+      this.summaryFilePath = file.raw // 使用 raw 属性获取原生 File
+      console.log("this.summaryFilePath:")
+      console.log(this.summaryFilePath)
+      console.log("this.summaryFileList:")
+      console.log(this.summaryFileList)
+
+    },
+
+    // 文件移除回调
+    handleSummaryRemove() {
+      this.summaryFileList = []
+      this.summaryFilePath = ''
+      this.originalSummaryFileName = ''//清空文件名
+    },
+
     handleFileCommand(command) {
       if (command.action === 'preview') {
         this.handlePreview(command.files)
@@ -511,11 +537,7 @@ export default {
       }
     },
 
-    // 处理草稿修改
-    handleEditDraft(row) {
-      this.handleEdit(row);
-    },
-
+    //处理草稿修改
     handleEdit(row) {
       const rawData = JSON.parse(JSON.stringify(row));
       this.formData = {...rawData};
@@ -523,6 +545,21 @@ export default {
       this.currentRecordId = rawData.recordId;
       this.showDialog = true;
       console.log(this.currentRecordId);
+      this.formData.summaryFilePath=row.summaryFilePath || ''
+      console.log(this.formData.summaryFilePath)
+      // 处理总结文档回显
+      this.summaryFileList = [];
+      if (row.summaryFilePath) {
+        // 将数据库中的路径字符串转换为上传组件需要的格式
+        const fileName = row.summaryFileName || this.getFileName(row.summaryFilePath);
+        this.summaryFileList = [{
+          name: fileName,
+          url: this.getFullUrl(row.summaryFilePath)
+        }];
+
+        // 保持原始文件引用
+        this.summaryFilePath = row.summaryFilePath;
+      }
 
       // 解析文件路径
       const proofMaterial = this.parseMaterial(rawData.photoPaths);
@@ -568,12 +605,14 @@ export default {
     },
 
     //总结文档下载
-    async downloadSummaryDocument(filePath) {
+    async downloadSummaryDocument(row) {
       try {
+        const filePaths = row.summaryFilePath;
+        const fileName = row.summaryFileName || this.getFileName(filePaths);
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
-        link.download = this.generateSummaryFileName();
-
+        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
+        // link.download = this.generateSummaryFileName();
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -582,35 +621,7 @@ export default {
         console.error("下载错误详情:", error);
       }
     },
-    //现场图片下载
-    async downloadMeetingPictures(filePaths) {
-      try {
-        // 解析文件路径
-        const paths = typeof filePaths === 'string'
-          ? JSON.parse(filePaths)
-          : filePaths;
-        if (!Array.isArray(paths)) {
-          throw new Error("无效的文件路径格式");
-        }
-        // 处理多个文件下载
-        if (paths.length >= 1) {
-          this.$confirm(`本次下载包含${paths.length}个图片，是否继续？`, '批量下载提示', {
-            confirmButtonText: '立即下载',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }).then(() => {
-            paths.forEach(path => {
-              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
-              this.downloadSingleFile(url);
-            });
-          });
-        }
-      } catch (error) {
-        this.$message.error(`下载失败: ${error.message}`);
-        console.error("下载错误详情:", error);
-      }
-    },
-    // 下载单个文件
+// 下载单个文件
     async downloadSingleFile(filePath) {
       try {
         const response = await axios.get(
@@ -684,6 +695,9 @@ export default {
     addNewCard() {
       this.showDialog = true;
       this.isEdit = false;
+      // 重置文档相关状态
+      this.summaryFileList = [];
+      this.summaryFilePath = null;
     },
     closeCard() {
       this.summaryFilePath = null;
@@ -703,12 +717,7 @@ export default {
         semester: this.activeSemester,
       };
     },
-    onFileChange(e) {
-      // 当用户选择文件时，更新file变量
-      this.summaryFilePath = e.target.files[0];
-      this.formData.summaryFilePath = this.summaryFilePath ? this.summaryFilePath.name : '';
-    },
-    // 数据获取方法
+// 数据获取方法
     async fetchMeetingRecords() {
       this.isLoading = true;
       try {
@@ -741,14 +750,6 @@ export default {
           const originalRecord = this.meetingRecords.find(
             item => item.recordId === this.currentRecordId
           );
-          console.log("currentRecordId:" + this.currentRecordId);
-          console.log("originalRecord:" + originalRecord);
-          console.log("this.formData.guidanceTopic:" + this.formData.guidanceTopic);
-          console.log("this.formData.guidanceLocation:" + this.formData.guidanceLocation);
-          console.log("this.formData.guidanceTime:" + this.formData.guidanceTime);
-          console.log("originalRecord.guidanceTopic:" + originalRecord.guidanceTopic);
-          console.log("originalRecord.guidanceLocation:" + originalRecord.guidanceLocation);
-          console.log("originalRecord.guidanceTime:" + originalRecord.guidanceTime);
           // 检测关键字段是否修改
           const isKeyFieldChanged = !originalRecord ||
             this.formData.guidanceTopic !== originalRecord.guidanceTopic ||
@@ -794,8 +795,10 @@ export default {
             auditTime: null,
             auditRemark: "",
             existingProofMaterial: existingPaths,
+            summaryFileName:this.originalSummaryFileName,
           };
-
+          console.log("recordData:");
+          console.log(recordData);
           // 如果是编辑操作，添加ID字段
           if (this.currentRecordId) {
             recordData.recordId = this.currentRecordId;
@@ -812,8 +815,8 @@ export default {
           this.fileList.forEach((file) => {
             formData.append("photoPaths", file.raw);
           });
-
-          formData.append('summaryFile', this.selectedFile);
+          console.log("this.summaryFilePath:",this.summaryFilePath)
+          formData.append('summaryFile', this.summaryFilePath);
 
           // 配置 headers
           const config = {
@@ -908,7 +911,7 @@ export default {
   margin: 0;
 }
 
-.score-icon {
+.mentorship-icon {
   font-size: 1.5em;
   margin-right: 0.5rem;
 }
@@ -919,7 +922,7 @@ export default {
 }
 
 /* ================= 表格相关样式 ================= */
-.score-table-card {
+.mentorship-table-card {
   background: #fff;
   border-radius: 1rem;
   padding: 1.5rem;
@@ -979,12 +982,30 @@ export default {
   display: flex;
   align-items: center;
   padding: 8px 0;
+  gap: 8px;
+}
+.name-icon {
+  /* 核心样式 */
+  font-size: 18px;
+  background: linear-gradient(45deg, #FF9800 20%, #FF5722 80%); /* 活力橙红渐变 */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter:
+    drop-shadow(0 1px 1px rgba(255,152,0,0.15))
+    drop-shadow(0 0 1px rgba(255,255,255,0.6));
+
+  /* 动态效果 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
 }
 
-.name-icon {
-  color: #ecc94b;
-  margin-right: 8px;
-  font-size: 1.2rem;
+/* 悬停互动 */
+.name-icon:hover {
+  filter:
+    drop-shadow(0 1.5px 2px rgba(255,183,77,0.25))
+    drop-shadow(0 0 1.2px rgba(255,255,255,0.8));
+  transform: scale(1.1);
 }
 
 /* 标签统一样式 */

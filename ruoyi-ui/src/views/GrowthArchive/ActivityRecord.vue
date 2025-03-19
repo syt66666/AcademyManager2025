@@ -5,7 +5,7 @@
       <div class="nav">
         <div class="nav-content">
           <h2>
-            <span class="score-icon">🎨</span>
+            <span class="activity-icon">🎨</span>
             文体活动记录
             <span class="current-semester">{{ activeSemester }} 活动成果</span>
           </h2>
@@ -20,7 +20,7 @@
       </div>
 
       <!-- 活动表格 -->
-      <div class="score-table-card">
+      <div class="activity-table-card">
         <el-table
           :data="activityRecords"
           style="width: 100%"
@@ -249,7 +249,7 @@
             placeholder="请输入完整活动名称"
             class="custom-input"
           >
-            <i slot="prefix" class="el-icon-star-on input-icon"></i>
+            <i slot="prefix" class="el-icon-star-on name-icon"></i>
           </el-input>
         </el-form-item>
 
@@ -1001,8 +1001,17 @@ export default {
   margin: 0;
 }
 
+.activity-icon {
+  font-size: 1.5em;
+  margin-right: 0.5rem;
+}
+
+.current-semester {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
 /* ================= 表格相关样式 ================= */
-.score-table-card {
+.activity-table-card {
   background: #fff;
   border-radius: 1rem;
   padding: 1.5rem;
@@ -1062,8 +1071,60 @@ export default {
   display: flex;
   align-items: center;
   padding: 8px 0;
+  gap: 8px;
 }
 
+/* 核心样式 */
+.name-icon {
+  /* 尺寸放大 */
+  font-size: 16px !important;  /* 原始尺寸放大50% */
+  transform: scale(1);         /* 移除缩放补偿 */
+
+  /* 高级渐变色 */
+  background: linear-gradient(45deg, #FFD700 20%, #FFA500 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+
+  /* 光影细节 */
+  filter:
+    drop-shadow(0 1px 1px rgba(255,215,0,0.15))
+    drop-shadow(0 0 2px rgba(255,255,255,0.6));
+
+  /* 动画优化 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 悬浮特效 */
+.name-icon:hover {
+  filter:
+    drop-shadow(0 2px 3px rgba(255,229,92,0.25))
+    drop-shadow(0 0 3px rgba(255,255,255,0.8));
+  transform: scale(1.1);
+}
+
+/* 动态边框 (匹配星星形状) */
+.name-icon::after {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
+  border: 1px solid rgba(255,255,255,0.4);
+  clip-path: polygon(
+    50% 0%,
+    61% 35%,
+    98% 35%,
+    68% 57%,
+    79% 91%,
+    50% 70%,
+    21% 91%,
+    32% 57%,
+    2% 35%,
+    39% 35%
+  ); /* 五角星剪裁路径 */
+}
 /* 标签统一样式 */
 .level-tag,
 .award-tag,
