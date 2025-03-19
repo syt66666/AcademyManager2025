@@ -49,7 +49,6 @@ public class StuCompetitionRecord extends BaseEntity
     private Date awardDate;
 
     /** 证明材料（多个图片路径的JSON数组） */
-    @Excel(name = "证明材料", readConverterExp = "多=个图片路径的JSON数组")
     private String proofMaterial;
 
     /** 旧文件路径 */
@@ -60,7 +59,6 @@ public class StuCompetitionRecord extends BaseEntity
 
     /** 学生提交时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "学生提交时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date applyTime;
 
     /** 审核人姓名 */
@@ -68,13 +66,13 @@ public class StuCompetitionRecord extends BaseEntity
 
     /** 审核时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date auditTime;
 
     /** 审核意见 */
     private String auditRemark;
 
     /** 修读学期 */
+    @Excel(name = "获奖学期")
     private String semester;
 
 }

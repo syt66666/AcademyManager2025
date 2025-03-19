@@ -593,7 +593,6 @@ export default {
       }
     },
 
-
     handlePreview(filePath) {
       try {
         const paths = typeof filePath === 'string'

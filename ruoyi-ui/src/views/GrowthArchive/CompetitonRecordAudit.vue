@@ -98,29 +98,35 @@
           <span>{{ parseTime(scope.row.awardDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="证明材料" width="120">
-        <template v-slot:default="scope">
-          <div class="proof-material-cell">
-            <el-link
-              v-if="scope.row.proofMaterial"
-              type="primary"
-              :underline="false"
-              @click="handlePreview(scope.row.proofMaterial)"
-              style="margin-right: 10px;"
-            >
-              <i class="el-icon-view"></i> 预览
-            </el-link>
-            <el-button
-              v-if="scope.row.proofMaterial"
-              type="primary"
-              icon="el-icon-download"
-              size="mini"
-              @click="downloadFiles(scope.row.proofMaterial)"
-              :disabled="!scope.row.proofMaterial"
-            >下载
+      <!-- 证明材料 -->
+      <el-table-column label="证明材料" width="140" align="center">
+        <template v-slot="scope">
+          <el-dropdown trigger="click"
+                       @command="handleFileCommand"
+                       @click.native.stop
+                       :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
+            <el-button type="primary"
+                       size="mini"
+                       plain
+                       @click.stop
+                       :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
+              <i class="el-icon-document"></i> 文件操作
             </el-button>
-            <span v-else> </span>
-          </div>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ action: 'preview', files: scope.row.proofMaterial }"
+                :disabled="!scope.row.proofMaterial"
+              >
+                <i class="el-icon-view"></i>预览
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="{ action: 'download', files: scope.row.proofMaterial }"
+                :disabled="!scope.row.proofMaterial"
+              >
+                <i class="el-icon-download"></i>下载
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
       <el-table-column label="提交时间" align="center" prop="applyTime" width="150">
@@ -281,6 +287,13 @@ export default {
     this.getList();
   },
   methods: {
+    handleFileCommand(command) {
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadFiles(command.files)
+      }
+    },
     // 日期选择变化事件
     handleDateChange(range) {
       // 处理空值情况

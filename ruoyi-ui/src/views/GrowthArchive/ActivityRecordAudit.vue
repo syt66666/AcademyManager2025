@@ -100,16 +100,27 @@
           <span>{{ parseTime(scope.row.awardDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="证明材料" align="center" prop="proofMaterial">
-        <template slot-scope="scope">
-          <el-button
-            v-if="scope.row.proofMaterial"
-            type="primary"
-            size="mini"
-            @click="handleDownload(scope.row.proofMaterial)">
-            <i class="el-icon-download"></i> 下载
-          </el-button>
-          <span v-else>无材料</span>
+      <el-table-column label="证明材料" width="140" align="center">
+        <template v-slot="scope">
+          <el-dropdown trigger="click" @command="handleFileCommand" @click.native.stop :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
+            <el-button type="primary" size="mini" plain @click.stop :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
+              <i class="el-icon-document"></i> 文件操作
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ action: 'preview', files: scope.row.proofMaterial }"
+                :disabled="!scope.row.proofMaterial"
+              >
+                <i class="el-icon-view"></i>预览
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="{ action: 'download', files: scope.row.proofMaterial }"
+                :disabled="!scope.row.proofMaterial"
+              >
+                <i class="el-icon-download"></i>下载
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
       <el-table-column label="提交时间" align="center" prop="applyTime" width="150">
@@ -160,17 +171,54 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
+
+    <!-- 图片预览对话框 -->
+    <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img
+          :src="previewImages[currentPreviewIndex]"
+          style="max-width: 100%; display: block; margin: 0 auto;"
+          alt="证明材料预览"
+        />
+        <el-button
+          icon="el-icon-arrow-left"
+          :disabled="currentPreviewIndex === 0"
+          @click="currentPreviewIndex--"
+        ></el-button>
+        <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+        <el-button
+          icon="el-icon-arrow-right"
+          :disabled="currentPreviewIndex === previewImages.length - 1"
+          @click="currentPreviewIndex++"
+        ></el-button>
+      </div>
+
+      <div slot="footer">
+        <el-button
+          type="primary"
+          @click="downloadSingleFile(previewImages[currentPreviewIndex])"
+          style="background-color: #42b983; border-color: #42b983;"
+        >
+          <i class="el-icon-download"></i> 下载当前图片
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { listAuditActivity, getActivity, auditActivity  } from "@/api/system/activity";
 import {parseTime} from "@/utils/ruoyi";
+import axios from "axios";
 
 export default {
   name: "Activity",
     data() {
     return {
+      previewVisible: false,
+      currentDownloadFile: '',
+      previewImages: [],
+      currentPreviewIndex: 0,
       dateRange:[],
       auditStatusOptions: [
         { value: '未审核', label: '未审核' },
@@ -254,6 +302,88 @@ export default {
     this.getList();
   },
   methods: {
+    handleFileCommand(command) {
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadFiles(command.files)
+      }
+    },
+    // 预览图片
+    handlePreview(filePath) {
+      try {
+        const paths = typeof filePath === 'string'
+          ? JSON.parse(filePath)
+          : filePath;
+
+        if (paths.length > 0) {
+          this.previewImages = paths.map(path => this.getFullUrl(path));
+          this.currentPreviewIndex = 0;
+          this.currentDownloadFile = paths[0];
+          this.previewVisible = true;
+        }
+      } catch (error) {
+        console.error('预览失败:', error);
+        this.$message.error('预览失败：文件路径格式不正确');
+      }
+    },
+    async downloadFiles(filePaths) {
+      try {
+        const paths = typeof filePaths === 'string' ? JSON.parse(filePaths) : filePaths;
+        if (paths.length >= 1) {
+          this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
+          });
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
+    // 下载单个文件
+    async downloadSingleFile(filePath) {
+      try {
+        const response = await axios.get(filePath, {
+          responseType: 'blob',
+          headers: {Authorization: "Bearer " + localStorage.getItem("token")}
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', this.generateFileName(filePath));
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(url);
+        link.remove();
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+      }
+    },
+    // 生成带时间戳的文件名
+    generateFileName() {
+      const date = new Date().toISOString().slice(0, 10);
+      const ext = this.getFileExtension();
+      return `activity_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
+    },
+
+    // 获取文件扩展名
+    getFileExtension() {
+      try {
+        return this.currentImage.split('.').pop().split(/[#?]/)[0] || 'jpg';
+      } catch {
+        return 'jpg';
+      }
+    },
+    // 新增获取完整URL的方法
+    getFullUrl(filePath) {
+      return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
+    },
     // 日期选择变化事件
     handleDateChange(range) {
       // 处理空值情况
