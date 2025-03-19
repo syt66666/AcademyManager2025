@@ -280,8 +280,21 @@
               <i slot="suffix" class="el-icon-date date-icon"></i>
             </el-date-picker>
           </el-form-item>
-
-          <!-- 总结文档 -->
+          <!-- 学生评价 -->
+          <el-form-item label="学生评价" prop="studentComment">
+            <el-input
+              type="textarea"
+              v-model="formData.studentComment"
+              :rows="3"
+              placeholder="请输入对导师本次指导的评价"
+              class="custom-comment"
+              maxlength="50"
+              show-word-limit
+            >
+              <i slot="prefix" class="el-icon-edit input-icon"></i>
+            </el-input>
+          </el-form-item>
+          <!-- 总结文档上传组件 -->
           <el-form-item label="总结文档" prop="summaryFilePath">
             <el-upload
               :auto-upload="false"
@@ -289,14 +302,47 @@
               :on-change="handleSummaryChange"
               :on-remove="handleSummaryRemove"
               :file-list="summaryFileList"
+              class="enhanced-upload"
             >
-              <el-button type="primary" size="mini">选择文件</el-button>
+              <!-- 自定义上传按钮 -->
+              <el-button
+                type="primary"
+                size="small"
+                class="custom-upload-btn"
+              >
+                <i class="el-icon-upload"></i>
+                选择文件
+              </el-button>
+
+              <!-- 提示信息 -->
               <template #tip>
-                <div class="el-upload__tip">仅支持单个文件上传 (PDF/DOC/DOCX)</div>
+                <div class="custom-upload-tip">
+                  <i class="el-icon-info"></i>
+                  支持格式：PDF/DOC/DOCX，单个文件 ≤10MB
+                </div>
+              </template>
+
+              <!-- 自定义文件列表 -->
+              <template #file="{ file }">
+                <div class="custom-file-item">
+                  <div class="file-icon-wrapper">
+                    <i class="el-icon-document" :class="getFileIcon(file)"></i>
+                  </div>
+                  <div class="file-details">
+                    <span class="file-name">{{ file.name }}</span>
+                    <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                  </div>
+                  <el-button
+                    type="danger"
+                    class="delete-btn"
+                    icon="el-icon-delete"
+                    circle
+                    @click.stop="handleSummaryRemove(file)"
+                  ></el-button>
+                </div>
               </template>
             </el-upload>
           </el-form-item>
-
           <!-- 指导图片 -->
           <el-form-item label="指导图片" prop="photoPaths">
             <el-upload
@@ -407,6 +453,21 @@ export default {
     this.fetchMeetingRecords();  // 在页面加载时获取数据
   },
   methods: {
+    // 获取文件图标类型
+    getFileIcon(file) {
+      const ext = file.name.split('.').pop().toLowerCase()
+      if (ext === 'pdf') return 'pdf'
+      if (['doc', 'docx'].includes(ext)) return 'doc'
+      return 'default'
+    },
+
+    // 格式化文件大小
+    formatFileSize(bytes) {
+      if (!bytes) return '0 B'
+      const units = ['B', 'KB', 'MB', 'GB']
+      const exp = Math.floor(Math.log(bytes) / Math.log(1024))
+      return `${(bytes / Math.pow(1024, exp)).toFixed(1)} ${units[exp]}`
+    },
     // 修改后的总结文档处理方法
     handleSummaryChange(file, fileList) {
       if (fileList.length > 1) {
@@ -1029,7 +1090,110 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+/* 上传组件样式 */
+.enhanced-upload {
+  width: 100%;
+}
 
+/* 上传按钮样式 */
+.custom-upload-btn {
+  background: linear-gradient(135deg, #409EFF, #3375ff);
+  border: none;
+  padding: 10px 20px;
+  transition: all 0.3s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+  }
+
+  i {
+    margin-right: 8px;
+  }
+}
+
+/* 提示信息样式 */
+.custom-upload-tip {
+  color: #909399;
+  font-size: 12px;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+
+  .el-icon-info {
+    margin-right: 6px;
+    font-size: 14px;
+  }
+}
+
+/* 文件项样式 */
+.custom-file-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-top: 10px;
+  background: #f8faff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.file-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  background: #409EFF10;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .el-icon-document {
+    font-size: 20px;
+
+    &.pdf { color: #FF5252; }
+    &.doc, &.docx { color: #2B579A; }
+    &.default { color: #409EFF; }
+  }
+}
+
+.file-details {
+  flex: 1;
+  margin: 0 16px;
+
+  .file-name {
+    display: block;
+    color: #303133;
+    font-weight: 500;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-size {
+    color: #909399;
+    font-size: 12px;
+  }
+}
+
+.delete-btn {
+  opacity: 0.7;
+  transition: all 0.3s;
+
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  /deep/ i {
+    vertical-align: baseline;
+  }
+}
 /* 表单元素样式 */
 .mentorship-form {
   padding: 0 30px 20px;

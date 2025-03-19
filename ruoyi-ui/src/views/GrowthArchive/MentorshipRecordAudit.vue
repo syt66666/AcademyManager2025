@@ -265,11 +265,14 @@ export default {
       return match ? match[1].toLowerCase() : '';
     },
     //总结文档下载
-    async downloadSummaryDocument(filePath) {
+    async downloadSummaryDocument(row) {
       try {
+        const filePaths = row.summaryFilePath;
+        const fileName = row.summaryFileName || this.getFileName(filePaths);
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
-        link.download = this.generateSummaryFileName();
+        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
+        // link.download = this.generateSummaryFileName();
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
