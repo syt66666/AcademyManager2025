@@ -4,12 +4,11 @@ import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
+import lombok.Data;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
-
+@Data
 public class StuCompetitionRecord extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -68,7 +67,7 @@ public class StuCompetitionRecord extends BaseEntity
     private String nickName;
 
     /** 审核时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date auditTime;
 
@@ -78,185 +77,5 @@ public class StuCompetitionRecord extends BaseEntity
     /** 修读学期 */
     private String semester;
 
-    public List<String> getExistingProofMaterial() {
-        return existingProofMaterial;
-    }
-
-    public void setExistingProofMaterial(List<String> existingProofMaterial) {
-        this.existingProofMaterial = existingProofMaterial;
-    }
-
-    public String getAwardDateEnd() {
-        return awardDateEnd;
-    }
-
-    public void setAwardDateEnd(String awardDateEnd) {
-        this.awardDateEnd = awardDateEnd;
-    }
-
-    public String getAwardDateBegin() {
-        return awardDateBegin;
-    }
-
-    public void setAwardDateBegin(String awardDateBegin) {
-        this.awardDateBegin = awardDateBegin;
-    }
-
-    public void setCompetitionId(Integer competitionId)
-    {
-        this.competitionId = competitionId;
-    }
-
-    public Integer getCompetitionId()
-    {
-        return competitionId;
-    }
-    public void setStudentId(String studentId)
-    {
-        this.studentId = studentId;
-    }
-
-    public String getStudentId()
-    {
-        return studentId;
-    }
-    public void setCompetitionName(String competitionName)
-    {
-        this.competitionName = competitionName;
-    }
-
-    public String getCompetitionName()
-    {
-        return competitionName;
-    }
-    public void setCompetitionLevel(String competitionLevel)
-    {
-        this.competitionLevel = competitionLevel;
-    }
-
-    public String getCompetitionLevel()
-    {
-        return competitionLevel;
-    }
-    public void setAwardLevel(String awardLevel)
-    {
-        this.awardLevel = awardLevel;
-    }
-
-    public String getAwardLevel()
-    {
-        return awardLevel;
-    }
-    public void setScholarshipPoints(Long scholarshipPoints)
-    {
-        this.scholarshipPoints = scholarshipPoints;
-    }
-
-    public Long getScholarshipPoints()
-    {
-        return scholarshipPoints;
-    }
-    public void setAwardDate(Date awardDate)
-    {
-        this.awardDate = awardDate;
-    }
-
-    public Date getAwardDate()
-    {
-        return awardDate;
-    }
-    public void setProofMaterial(String proofMaterial)
-    {
-        this.proofMaterial = proofMaterial;
-    }
-
-    public String getProofMaterial()
-    {
-        return proofMaterial;
-    }
-    public void setAuditStatus(String auditStatus)
-    {
-        this.auditStatus = auditStatus;
-    }
-
-    public String getAuditStatus()
-    {
-        return auditStatus;
-    }
-    public void setApplyTime(Date applyTime)
-    {
-        this.applyTime = applyTime;
-    }
-
-    public Date getApplyTime()
-    {
-        return applyTime;
-    }
-    public void setNickName(String nickName)
-    {
-        this.nickName = nickName;
-    }
-
-    public String getNickName()
-    {
-        return nickName;
-    }
-    public void setAuditTime(Date auditTime)
-    {
-        this.auditTime = auditTime;
-    }
-
-    public Date getAuditTime()
-    {
-        return auditTime;
-    }
-    public void setAuditRemark(String auditRemark)
-    {
-        this.auditRemark = auditRemark;
-    }
-
-    public String getAuditRemark()
-    {
-        return auditRemark;
-    }
-    public void setSemester(String semester)
-    {
-        this.semester = semester;
-    }
-
-    public String getSemester()
-    {
-        return semester;
-    }
-    public void setStudentName(String studentName)
-    {
-        this.studentName = studentName;
-    }
-
-    public String getStudentName()
-    {
-        return studentName;
-    }
-
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-                .append("competitionId", getCompetitionId())
-                .append("studentId", getStudentId())
-                .append("competitionName", getCompetitionName())
-                .append("competitionLevel", getCompetitionLevel())
-                .append("awardLevel", getAwardLevel())
-                .append("scholarshipPoints", getScholarshipPoints())
-                .append("awardDate", getAwardDate())
-                .append("proofMaterial", getProofMaterial())
-                .append("auditStatus", getAuditStatus())
-                .append("applyTime", getApplyTime())
-                .append("nickName", getNickName())
-                .append("auditTime", getAuditTime())
-                .append("auditRemark", getAuditRemark())
-                .append("semester", getSemester())
-                .append("studentName", getStudentName())
-                .toString();
-    }
 }
 

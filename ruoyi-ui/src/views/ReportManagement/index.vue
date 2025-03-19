@@ -67,11 +67,18 @@
           <!-- 讲座链接 -->
           <el-table-column prop="reportLink" label="讲座链接" width="120" align="center">
             <template v-slot="scope">
-              <el-tag v-if="scope.row.reportLink" effect="light" class="location-tag">
-                <a :href="scope.row.reportLink"
-                   target="_blank"
-                   class="link-style"
-                   rel="noopener noreferrer">
+              <el-tag
+                :effect="scope.row.reportLink ? 'light' : 'plain'"
+                :class="!scope.row.reportLink ? 'disabled-tag' : ''"
+                class="location-tag"
+              >
+                <a
+                  :href="scope.row.reportLink || 'javascript:void(0)'"
+                  :class="{ 'disabled-link': !scope.row.reportLink }"
+                  class="link-style"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   点击查看
                 </a>
               </el-tag>
@@ -467,7 +474,7 @@ export default {
           throw new Error("无效的文件路径格式");
         }
         // 处理多个文件下载
-        if (paths.length > 1) {
+        if (paths.length >= 1) {
           this.$confirm(`本次下载包含${paths.length}个图片，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -478,10 +485,6 @@ export default {
               this.downloadSingleFile(url);
             });
           });
-        } else if (paths.length === 1) {
-          this.previewImage = this.getFullUrl(paths[0]);
-          this.currentDownloadFile = paths[0];
-          this.previewVisible = true;
         }
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
@@ -1210,6 +1213,32 @@ export default {
   background: #fff9db;
   border-color: #ffe082;
   color: #b38f00;
+}
+/* 禁用状态的链接样式 */
+.disabled-link {
+  color: #c0c4cc !important; /* Element UI 禁用文本色 */
+  cursor: not-allowed !important;
+  text-decoration: none !important;
+  pointer-events: none; /* 彻底禁用交互 */
+  opacity: 0.7; /* 统一降低透明度 */
+}
+
+/* 禁用状态的标签容器 */
+.disabled-tag {
+  background-color: #f5f7fa !important; /* Element 禁用背景色 */
+  border-color: #e4e7ed !important; /* 边框颜色与背景协调 */
+}
+
+/* 正常状态的链接样式 */
+.location-tag .link-style {
+  text-decoration: none;
+  transition: all 0.2s; /* 添加悬流动画 */
+}
+
+/* 悬停状态增强体验 */
+.location-tag .link-style:hover {
+  text-decoration: underline;
+  opacity: 0.8;
 }
 /* 禁用状态样式 */
 .document-btn.el-button--primary.is-disabled {

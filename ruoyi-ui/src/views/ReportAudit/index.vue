@@ -44,76 +44,71 @@
           {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="学号" align="center" prop="studentId"/>
+      <el-table-column label="学号" align="center" prop="studentId" width="120"/>
       <el-table-column label="姓名" align="center" prop="studentName"/>
       <el-table-column label="讲座题目" align="center" prop="reportTitle"/>
       <el-table-column label="讲师姓名" align="center" prop="reporter"/>
-      <el-table-column label="讲座时间" align="center" prop="reportDate" width="180">
+      <el-table-column label="讲座地点" align="center" prop="reportLocation"/>
+      <el-table-column label="讲座日期" align="center" prop="reportDate" width="120">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.reportDate, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="心得体会" width="120">
-        <template v-slot:default="scope">
-          <div class="proof-material-cell">
-            <el-button
-              type="primary"
-              icon="el-icon-download"
-              size="mini"
-              v-if="scope.row.reportFeeling"
-              @click="downloadReportFeeling(scope.row.reportFeeling)"
-            >下载
-            </el-button>
-            <span v-else> </span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="讲座内容简介" align="center" prop="reportContent"/>
-      <el-table-column label="讲座链接" align="center" prop="reportLink"/>
-      <el-table-column label="讲座海报" align="center" prop="lecturePoster"/>
-      <el-table-column label="讲座海报">
-        <template v-slot:default="scope">
-          <img
-            :src="getImageUrl(scope.row.lecturePoster)"
-            alt="讲座海报"
-            style="width: 50px; height: 50px; cursor: pointer;"
-            v-if="scope.row.lecturePoster"
-            @click="handleImageClick(scope.row.lecturePoster)"
-          />
-          <span v-else> </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="讲座现场照片" width="120">
-        <template v-slot:default="scope">
-          <div class="proof-material-cell">
-            <el-link
-              v-if="scope.row.reportPicture"
-              type="primary"
-              :underline="false"
-              @click="handlePreview(scope.row.reportPicture)"
-              style="margin-right: 10px;"
+      <el-table-column prop="reportLink" label="讲座链接" width="120" align="center">
+        <template v-slot="scope">
+          <el-tag
+            :effect="scope.row.reportLink ? 'light' : 'plain'"
+            :class="!scope.row.reportLink ? 'disabled-tag' : ''"
+            class="location-tag"
+          >
+            <a
+              :href="scope.row.reportLink || 'javascript:void(0)'"
+              :class="{ 'disabled-link': !scope.row.reportLink }"
+              class="link-style"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <i class="el-icon-view"></i> 预览
-            </el-link>
-            <el-button
-              v-if="scope.row.reportPicture"
-              type="primary"
-              icon="el-icon-download"
-              size="mini"
-              @click="downloadFiles(scope.row.reportPicture)"
-              :disabled="!scope.row.reportPicture"
-            >下载
-            </el-button>
-            <span v-else> </span>
-          </div>
+              点击查看
+            </a>
+          </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="提交时间" align="center" prop="reportAdmitTime" width="180">
+      <el-table-column label="总结文档" width="120" align="center">
+        <template v-slot="scope">
+          <el-button
+            type="primary"
+            size="mini"
+            @click.stop="downloadReportFeeling(scope.row)"
+            class="document-btn"
+            :disabled="!scope.row.reportFeeling || scope.row.reportFeeling === '[]'"
+          >下载</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="现场图片" width="140" align="center">
+        <template v-slot="scope">
+          <el-dropdown trigger="click" @command="handleFileCommand" :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
+            <el-button type="primary" size="mini" plain :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
+              <i class="el-icon-picture"></i> 文件操作
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ action: 'preview', files: scope.row.reportPicture }"
+                :disabled="!scope.row.reportPicture"
+              >预览</el-dropdown-item>
+              <el-dropdown-item
+                :command="{ action: 'download', files: scope.row.reportPicture }"
+                :disabled="!scope.row.reportPicture"
+              >下载</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
+        </template>
+      </el-table-column>
+      <el-table-column label="提交时间" align="center" prop="reportAdmitTime" width="120">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.reportAdmitTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column prop="auditStatus" label="审核状态" min-width="80">
+      <el-table-column prop="auditStatus" label="审核状态" min-width="100">
         <template slot-scope="scope">
             <span>
               <el-tag v-if="formatAuditStatus(scope.row.auditStatus) === '未审核'"
@@ -126,8 +121,7 @@
             </span>
         </template>
       </el-table-column>
-
-      <el-table-column label="审核时间" align="center" prop="auditTime" width="180">
+      <el-table-column label="审核时间" align="center" prop="auditTime" width="140">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
         </template>
@@ -274,12 +268,43 @@ export default {
     this.getList();
   },
   methods: {
-    //展开报告海报大图
-    handleImageClick(imageUrl) {
-      this.currentLecturePoster = imageUrl;
-      this.dialogVisible = true;
+    // 在methods中添加以下方法
+    handleFileCommand(command) {
+      console.log(command.files);
+      if (command.action === 'preview') {
+        this.handlePreview(command.files)
+      } else if (command.action === 'download') {
+        this.downloadReportPicture(command.files)
+      }
     },
-    // 获取完整图片路径
+    async downloadReportPicture(filePaths) {
+      try {
+        // 解析文件路径
+        const paths = typeof filePaths === 'string'
+          ? JSON.parse(filePaths)
+          : filePaths;
+        if (!Array.isArray(paths)) {
+          throw new Error("无效的文件路径格式");
+        }
+        // 处理多个文件下载
+        if (paths.length >= 1) {
+          this.$confirm(`本次下载包含${paths.length}个图片，是否继续？`, '批量下载提示', {
+            confirmButtonText: '立即下载',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }).then(() => {
+            paths.forEach(path => {
+              const url = `${process.env.VUE_APP_BASE_API}/profile/${path}`;
+              this.downloadSingleFile(url);
+            });
+          });
+        }
+      } catch (error) {
+        this.$message.error(`下载失败: ${error.message}`);
+        console.error("下载错误详情:", error);
+      }
+    },
+// 获取完整图片路径
     getImageUrl(path) {
       return `${process.env.VUE_APP_BASE_API}/${path}`;
     },
@@ -297,11 +322,14 @@ export default {
       return match ? match[1].toLowerCase() : '';
     },
     //总结文档下载
-    async downloadReportFeeling(filePath) {
+    async downloadReportFeeling(row) {
       try {
+        const filePaths = row.reportFeeling;
+        const fileName = row.reportFeelingName || this.getFileName(filePaths);
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
-        link.download = this.generateReportFeeling();
+        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
+        // link.download = this.generateFeelingFileName();
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -376,7 +404,10 @@ export default {
       const ext = originalName.split('.').pop() || 'jpg';
       return `${originalName.split('.')[0]}_${timestamp}.${ext}`;
     },
-
+    // 辅助方法：从路径获取文件名
+    getFileName(path) {
+      return path.split('/').pop().replace(/\?.*/, '');
+    },
     // 获取完整URL（带缓存清除）
     getFullUrl(filePath) {
       return `${process.env.VUE_APP_BASE_API}/profile/${filePath}`;
@@ -519,3 +550,33 @@ export default {
   }
 };
 </script>
+<style lang="scss" scoped>
+/* 禁用状态的链接样式 */
+.disabled-link {
+  color: #c0c4cc !important; /* Element UI 禁用文本色 */
+  cursor: not-allowed !important;
+  text-decoration: none !important;
+  pointer-events: none; /* 彻底禁用交互 */
+  opacity: 0.7; /* 统一降低透明度 */
+}
+
+/* 禁用状态的标签容器 */
+.disabled-tag {
+  background-color: #f5f7fa !important; /* Element 禁用背景色 */
+  border-color: #e4e7ed !important; /* 边框颜色与背景协调 */
+}
+
+/* 正常状态的链接样式 */
+.location-tag .link-style {
+  color: var(--el-color-primary); /* 使用 Element 主题色 */
+  text-decoration: none;
+  transition: all 0.2s; /* 添加悬流动画 */
+}
+
+/* 悬停状态增强体验 */
+.location-tag .link-style:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+</style>

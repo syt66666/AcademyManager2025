@@ -3,8 +3,6 @@ package com.ruoyi.system.domain.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.Data;
-
-import java.time.LocalDateTime;
 import java.util.Date;
 
 @Data
@@ -74,7 +72,7 @@ public class StuLectureReportVo extends BaseEntity {
     /**
      *审核时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date auditTime;
     /**
      * 审核意见

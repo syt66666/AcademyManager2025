@@ -5,8 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
@@ -64,17 +62,14 @@ public class StuMentorshipRecord extends BaseEntity {
     /**
      * 总结文档路径
      */
-    @Excel(name = "总结文档路径")
     private String summaryFilePath;
     /**
      * 总结文档名称
      */
-    @Excel(name = "总结文档名称")
     private String summaryFileName;
     /**
      * 照片路径数组
      */
-    @Excel(name = "照片路径数组")
     private String photoPaths;
 
     /** 旧文件路径 */
@@ -90,7 +85,6 @@ public class StuMentorshipRecord extends BaseEntity {
      * 提交时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "提交时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date submitTime;
 
     /**
@@ -102,20 +96,17 @@ public class StuMentorshipRecord extends BaseEntity {
     /**
      * 审核状态
      */
-    @Excel(name = "审核状态")
     private String auditStatus;
 
     /**
      * 审核时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date auditTime;
 
     /**
      * 审核意见
      */
-    @Excel(name = "审核意见")
     private String auditRemark;
 
 }
