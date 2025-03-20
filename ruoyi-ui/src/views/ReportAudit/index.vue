@@ -73,32 +73,53 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="总结文档" width="120" align="center">
+      <el-table-column label="总结文档" width="140" align="center">
         <template v-slot="scope">
-          <el-button
-            type="primary"
-            size="mini"
-            @click.stop="downloadReportFeeling(scope.row)"
-            class="document-btn"
-            :disabled="!scope.row.reportFeeling || scope.row.reportFeeling === '[]'"
-          >下载</el-button>
+          <el-dropdown
+            trigger="click"
+            @command="handleDocCommand"
+            :disabled="!scope.row.reportFeeling"
+          >
+            <el-button
+              type="primary"
+              size="mini"
+              plain
+              :disabled="!scope.row.reportFeeling"
+            >
+              <i class="el-icon-document"></i> 文档操作
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ action: 'preview', row: scope.row }"
+              >预览
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="{ action: 'download', row: scope.row }"
+              >下载
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
       <el-table-column label="现场图片" width="140" align="center">
         <template v-slot="scope">
-          <el-dropdown trigger="click" @command="handleFileCommand" :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
-            <el-button type="primary" size="mini" plain :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
-              <i class="el-icon-picture"></i> 文件操作
+          <el-dropdown trigger="click" @command="handleFileCommand"
+                       :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
+            <el-button type="primary" size="mini" plain
+                       :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
+              <i class="el-icon-picture"></i> 图片操作
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
                 :command="{ action: 'preview', files: scope.row.reportPicture }"
                 :disabled="!scope.row.reportPicture"
-              >预览</el-dropdown-item>
+              >预览
+              </el-dropdown-item>
               <el-dropdown-item
                 :command="{ action: 'download', files: scope.row.reportPicture }"
                 :disabled="!scope.row.reportPicture"
-              >下载</el-dropdown-item>
+              >下载
+              </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -156,7 +177,25 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
-
+    <!-- 文档预览对话框 -->
+    <el-dialog
+      :visible.sync="docPreviewVisible"
+      title="文档预览"
+      width="80%"
+      class="native-pdf-preview"
+    >
+      <div v-if="currentDocument.type === 'pdf'" class="preview-container">
+        <iframe
+          :src="`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=0`"
+          style="width: 100%; height: 75vh; border: none;"
+          @load="disablePdfInteractions"
+        ></iframe>
+      </div>
+      <div v-else-if="currentDocument.type === 'docx'" class="preview-container docx-preview">
+        <div v-html="docxContent" class="docx-content"></div>
+      </div>
+    </el-dialog>
+    <!-- 图片预览对话框 -->
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
       <div style="text-align: center; margin-bottom: 20px;">
         <img
@@ -185,21 +224,6 @@
         >
           <i class="el-icon-download"></i> 下载当前图片
         </el-button>
-      </div>
-    </el-dialog>
-    <!-- 讲座海报图片预览对话框 -->
-    <el-dialog :visible.sync="dialogVisible" title="图片预览" width="50%">
-      <div style="position: relative;">
-        <img :src="getImageUrl(currentLecturePoster)" alt="报告海报大图" style="width: 100%; height: auto;"/>
-        <div style="position: absolute; bottom: 20px; right: 20px;">
-          <el-button
-            type="primary"
-            icon="el-icon-download"
-            @click="downloadLecturePoster(currentLecturePoster)"
-            style="background-color: #42b983; border-color: #42b983;">
-            下载图片
-          </el-button>
-        </div>
       </div>
     </el-dialog>
   </div>
@@ -237,6 +261,14 @@ export default {
       currentDownloadFile: '',
       dialogVisible: false,
       currentLecturePoster: '',
+      // ...其他变量保持不变
+      docPreviewVisible: false,
+      currentDocument: {
+        url: '',
+        type: '',
+        name: ''
+      },
+      docxContent: '',
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -268,6 +300,122 @@ export default {
     this.getList();
   },
   methods: {
+    disablePdfInteractions(event) {
+      try {
+        const iframeDoc = event.target.contentDocument || event.target.contentWindow.document;
+        // 禁用右键菜单
+        iframeDoc.addEventListener('contextmenu', e => e.preventDefault());
+        // 禁用文本选择
+        iframeDoc.body.style.userSelect = 'none';
+      } catch (error) {
+        console.log('安全策略限制，部分交互禁用失败');
+      }
+    },
+    // 处理文档操作命令
+    handleDocCommand(command) {
+      console.log(command.action)
+      try {
+        const filePath = command.row.reportFeeling;
+        if (!filePath) {
+          this.$message.warning('无可用文档');
+          return;
+        }
+        console.log("我进来了0" + command.row.reportFeeling)
+        const fileData = {
+          url: `${process.env.VUE_APP_BASE_API}/profile/${filePath}`,
+          type: this.getFileType(filePath),
+          name: filePath.split('/').pop()
+        };
+        console.log(fileData)
+        if (command.action === 'preview') {
+          this.handleDocumentPreview(fileData);
+          console.log("我进来了1")
+        } else if (command.action === 'download') {
+          console.log("我进来了2")
+          this.downloadReportFeeling(command.row);
+        }
+      } catch (error) {
+        this.$message.error(`操作失败: ${error.message}`);
+      }
+    },
+
+    // 处理文档预览
+    async handleDocumentPreview(file) {
+      const loading = this.$loading({
+        lock: true,
+        text: '正在加载文档...',
+        spinner: 'el-icon-loading',
+      });
+
+      try {
+        this.currentDocument = file;
+        if (file.type === 'pdf') {
+          this.docPreviewVisible = true; // 直接显示iframe
+        } else if (file.type === 'docx') {
+          const response = await axios.get(file.url, {
+            responseType: 'arraybuffer',
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const result = await this.parseDocx(response.data);
+          this.docxContent = result.html;
+        }
+        this.docPreviewVisible = true;
+      } catch (error) {
+        this.$message.error(`预览失败: ${error.message}`);
+      } finally {
+        loading.close();
+      }
+    },
+
+    // 解析DOCX文件
+    async parseDocx(arrayBuffer) {
+      try {
+        const mammoth = await import('mammoth');
+        const result = await mammoth.convertToHtml({arrayBuffer});
+        return {html: result.value};
+      } catch (error) {
+        console.error('DOCX解析失败:', error);
+        return {html: '<p>文档解析失败，请下载后查看</p>'};
+      }
+    },
+
+    // 文件类型判断
+    getFileType(filePath) {
+      const extension = filePath.split('.').pop().toLowerCase();
+      return {
+        pdf: 'pdf',
+        docx: 'docx',
+        doc: 'doc'
+      }[extension] || 'other';
+    },
+
+    // 下载当前文档
+    downloadCurrentDocument() {
+      this.downloadDocument(this.currentDocument);
+    },
+
+    // 下载文档
+    downloadDocument(file) {
+      axios.get(file.url, {
+        responseType: 'blob',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }).then(response => {
+        const blob = new Blob([response.data]);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        document.body.removeChild(link);
+      }).catch(error => {
+        this.$message.error('下载失败: ' + error.message);
+      });
+    },
     // 在methods中添加以下方法
     handleFileCommand(command) {
       console.log(command.files);
@@ -279,12 +427,12 @@ export default {
     },
     async downloadReportPicture(filePaths) {
       try {
-        // 解析文件路径
+        // 解析图片路径
         const paths = typeof filePaths === 'string'
           ? JSON.parse(filePaths)
           : filePaths;
         if (!Array.isArray(paths)) {
-          throw new Error("无效的文件路径格式");
+          throw new Error("无效的图片路径格式");
         }
         // 处理多个文件下载
         if (paths.length >= 1) {
@@ -308,19 +456,6 @@ export default {
     getImageUrl(path) {
       return `${process.env.VUE_APP_BASE_API}/${path}`;
     },
-    // 生成带时间戳的文件名
-    generateReportFeeling() {
-      const date = new Date().toISOString().slice(0, 10);
-      const ext = this.getReportFeelingExtension();
-      return `reportFeeling_${date}_${Math.random().toString(36).substr(2, 5)}.${ext}`;
-    },
-
-    // 获取文件扩展名
-    getReportFeelingExtension() {
-      if (!this.selectedFile) return '';
-      const match = this.selectedFile.name.match(/\.([a-zA-Z0-9]+)(\?.*)?$/);
-      return match ? match[1].toLowerCase() : '';
-    },
     //总结文档下载
     async downloadReportFeeling(row) {
       try {
@@ -328,7 +463,6 @@ export default {
         const fileName = row.reportFeelingName || this.getFileName(filePaths);
         const link = document.createElement('a');
         link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
-        // link.download = this.generateFeelingFileName();
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
@@ -550,7 +684,178 @@ export default {
   }
 };
 </script>
+
+
 <style lang="scss" scoped>
+.docx-preview {
+  /* 容器样式 */
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  max-height: 70vh;
+  overflow-y: auto;
+
+  /* 滚动条美化 */
+  &::-webkit-scrollbar {
+    width: 8px;
+    background: #f5f5f5;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  .docx-content {
+    /* 基础排版 */
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    line-height: 1.8;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+
+    /* 标题层级 */
+    h1, h2, h3, h4, h5, h6 {
+      color: #2c3e50;
+      margin: 1.5em 0 1em;
+      font-weight: 600;
+      position: relative;
+      padding-left: 1rem;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 60%;
+        width: 4px;
+        background: #42b983;
+      }
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 22px;
+    }
+
+    h3 {
+      font-size: 20px;
+    }
+
+    h4 {
+      font-size: 18px;
+    }
+
+    /* 段落样式 */
+    p {
+      margin: 1em 0;
+      text-indent: 2em;
+    }
+
+    /* 列表增强 */
+    ul, ol {
+      padding-left: 2em;
+      margin: 1em 0;
+
+      li {
+        margin: 0.5em 0;
+        padding-left: 0.5em;
+
+        &::marker {
+          color: #42b983;
+        }
+      }
+    }
+
+    /* 表格美化 */
+    table {
+      width: 100%;
+      margin: 1.5em 0;
+      border-collapse: collapse;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      th {
+        background: #f8f9fa;
+        padding: 12px;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+    }
+
+    /* 代码块样式 */
+    pre {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1.5em 0;
+      overflow-x: auto;
+
+      code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        color: #e83e8c;
+      }
+    }
+
+    /* 引用样式 */
+    blockquote {
+      border-left: 4px solid #42b983;
+      background: #f8f9fa;
+      margin: 1.5em 0;
+      padding: 1em 1.5em;
+      color: #6c757d;
+
+      p {
+        margin: 0;
+        text-indent: 0;
+      }
+    }
+
+    /* 图片适配 */
+    img {
+      max-width: 80%;
+      height: auto;
+      display: block;
+      margin: 1.5em auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 页眉页脚隐藏 */
+    .Header, .Footer {
+      display: none;
+    }
+  }
+}
+
+/* 对话框过渡动画 */
+.el-dialog__wrapper {
+  ::v-deep .el-dialog {
+    transition: all 0.3s ease;
+
+    &__header {
+      border-bottom: 1px solid #eee;
+      padding: 20px;
+    }
+
+    &__body {
+      padding: 0;
+    }
+  }
+}
+
 /* 禁用状态的链接样式 */
 .disabled-link {
   color: #c0c4cc !important; /* Element UI 禁用文本色 */
