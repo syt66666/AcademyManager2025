@@ -1,15 +1,15 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学号" prop="studentId">
+    <el-form class="query-form" :model="queryParams" ref="queryForm" size="small" :inline="true">
+      <el-form-item label="学生学号" prop="studentId">
         <el-input
           v-model="queryParams.studentId"
-          placeholder="请输入学号"
+          placeholder="请输入学生学号"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="姓名" prop="studentName">
+      <el-form-item label="学生姓名" prop="studentName">
         <el-input
           v-model="queryParams.studentName"
           placeholder="请输入学生姓名"
@@ -25,7 +25,6 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-
       <el-form-item label="修读学年" prop="academicYear">
         <el-date-picker
           v-model="queryParams.academicYear"
@@ -38,8 +37,6 @@
           @keyup.enter.native="handleQuery">
         </el-date-picker>
       </el-form-item>
-
-
       <el-form-item label="修读学期" prop="semester">
         <el-select
           v-model="queryParams.semester"
@@ -55,7 +52,6 @@
           </el-option>
         </el-select>
       </el-form-item>
-
       <el-form-item label="成绩类型" prop="scoreType">
         <el-select
           v-model="queryParams.scoreType"
@@ -72,110 +68,86 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        <el-button-group>
+          <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+        </el-button-group>
       </el-form-item>
     </el-form>
-
-    <el-row :gutter="10" class="mb8">
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--          type="primary"-->
-<!--          plain-->
-<!--          icon="el-icon-plus"-->
-<!--          size="mini"-->
-<!--          @click="handleAdd"-->
-<!--          v-hasPermi="['system:score:add']"-->
-<!--        >新增</el-button>-->
-<!--      </el-col>-->
-      <el-col :span="1.5">
-        <el-button
-          type="info"
-          icon="el-icon-upload2"
-          size="mini"
-          @click="handleImport"
-          v-hasPermi="['system:score:import']"
-        >导入</el-button>
-      </el-col>
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--          type="success"-->
-<!--          plain-->
-<!--          icon="el-icon-edit"-->
-<!--          size="mini"-->
-<!--          :disabled="single"-->
-<!--          @click="handleUpdate"-->
-<!--          v-hasPermi="['system:score:edit']"-->
-<!--        >修改</el-button>-->
-<!--      </el-col>-->
-<!--      <el-col :span="1.5">-->
-<!--        <el-button-->
-<!--          type="danger"-->
-<!--          plain-->
-<!--          icon="el-icon-delete"-->
-<!--          size="mini"-->
-<!--          :disabled="multiple"-->
-<!--          @click="handleDelete"-->
-<!--          v-hasPermi="['system:score:remove']"-->
-<!--        >删除</el-button>-->
-<!--      </el-col>-->
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="el-icon-download"
-          size="mini"
-          @click="handleExport"
-          v-hasPermi="['system:score:export']"
-        >导出</el-button>
-      </el-col>
-
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
-    <el-table v-loading="loading" :data="scoreList" @selection-change="handleSelectionChange">
-
+    <!-- 数据操作区域 -->
+    <el-card class="table-container">
+      <!-- 操作工具栏 -->
+      <div slot="header" class="table-header">
+        <span class="table-title">成绩数据列表</span>
+        <div class="action-bar">
+          <el-button
+            type="primary"
+            icon="el-icon-upload2"
+            class="action-btn import-btn"
+            @click="handleImport"
+            v-hasPermi="['system:score:import']"
+          >
+            成绩导入
+          </el-button>
+          <el-button
+            type="success"
+            icon="el-icon-download"
+            class="action-btn export-btn"
+            @click="handleExport"
+            v-hasPermi="['system:score:export']"
+          >
+            数据导出
+          </el-button>
+        </div>
+      </div>
+    <el-table
+      :data="scoreList"
+      style="width: 100%"
+      class="enhanced-table"
+      :header-cell-style="headerStyle"
+      :row-class-name="tableRowClassName"
+      @row-click="handleRowClick"
+    >
       <el-table-column label="序号" width="80" align="center">
         <template slot-scope="scope">
           {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="学号" align="center" prop="studentId" width="150"/>
-      <el-table-column label="姓名" align="center" prop="studentName" />
-      <el-table-column label="课程代码" align="center" prop="courseCode" width="180"/>
-      <el-table-column label="课程名称" align="center" prop="courseName" />
+      <el-table-column label="学生学号" align="center" prop="studentId" width="150"/>
+      <el-table-column label="学生姓名" align="center" prop="studentName" />
+      <el-table-column label="课程代码" align="center" prop="courseCode" />
+      <el-table-column label="课程名称" align="center" prop="courseName" width="150"/>
       <el-table-column label="修读学年" align="center" prop="academicYear" />
       <el-table-column label="修读学期" align="center" prop="semester" />
-<!--      <el-table-column label="学分" align="center" prop="credit" />-->
-      <el-table-column label="课程类型" align="center" prop="courseCategory" />
-<!--      <el-table-column label="课程绩点" align="center" prop="gpa" />-->
-      <el-table-column label="成绩" align="center" prop="scoreValue" />
-      <el-table-column label="成绩类型" align="center" prop="scoreType" />
-<!--      <el-table-column label="录入人姓名" align="center" prop="nickName" />-->
-<!--      <el-table-column label="成绩上传时间" align="center" prop="uploadTime" width="180">-->
-<!--        <template slot-scope="scope">-->
-<!--          <span>{{ parseTime(scope.row.uploadTime, '{y}-{m}-{d}') }}</span>-->
-<!--        </template>-->
-<!--      </el-table-column>-->
-<!--      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">-->
-<!--        <template slot-scope="scope">-->
-<!--          <el-button-->
-<!--            size="mini"-->
-<!--            type="text"-->
-<!--            icon="el-icon-edit"-->
-<!--            @click="handleUpdate(scope.row)"-->
-<!--            v-hasPermi="['system:score:edit']"-->
-<!--          >修改</el-button>-->
-<!--          <el-button-->
-<!--            size="mini"-->
-<!--            type="text"-->
-<!--            icon="el-icon-delete"-->
-<!--            @click="handleDelete(scope.row)"-->
-<!--            v-hasPermi="['system:score:remove']"-->
-<!--          >删除</el-button>-->
-
-<!--        </template>-->
-<!--      </el-table-column>-->
+      <el-table-column
+        label="学生成绩"
+        align="center"
+        prop="scoreValue"
+        width="150"
+      >
+        <template slot-scope="{row}">
+        <span :class="['score-value', scoreClass(row.scoreValue)]">
+          {{ row.scoreValue }}
+          <i v-if="row.scoreValue >= 90" class="el-icon-star-on"></i>
+        </span>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="课程类型"
+        align="center"
+        width="150"
+      >
+        <template slot-scope="{row}">
+          <el-tag
+            :type="scoreTypeTag(row.scoreType)"
+            size="small"
+            effect="light"
+            :class="['type-tag', row.scoreType]"
+          >
+            {{ row.scoreType }}
+          </el-tag>
+        </template>
+      </el-table-column>
     </el-table>
 
     <pagination
@@ -184,6 +156,7 @@
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
+      class="custom-pagination"
     />
     <!-- 用户导入对话框 -->
     <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px">
@@ -262,13 +235,13 @@
             </el-option>
           </el-select>
         </el-form-item>
-
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+    </el-card>
   </div>
 </template>
 
@@ -476,7 +449,22 @@ export default {
       this.upload.title = "用户导入";
       this.upload.open = true;
     },
+    scoreClass(score) {
+      if (score >= 90) return 'excellent'
+      if (score >= 80) return 'good'
+      if (score >= 60) return 'pass'
+      return 'fail'
+    },
 
+    scoreTypeTag(type) {
+      const map = {
+        '正考': 'success',
+        '补考': 'warning',
+        '重修': 'danger',
+        '免修': 'info'
+      }
+      return map[type] || 'info'
+    },
 // 文件上传中处理
     handleFileUploadProgress(event, file, fileList) {
       this.upload.isUploading = true;
@@ -489,10 +477,388 @@ export default {
       this.$alert(response.msg, "导入结果", { dangerouslyUseHTMLString: true });
       this.getList();
     },
-// 提交上传文件
     submitFileForm() {
       this.$refs.upload.submit();
+    },
+    tableRowClassName({ rowIndex }) {
+      return rowIndex % 2 === 0 ? 'striped-row' : '';
+    },
+
+    // 自定义表头样式
+    headerStyle() {
+      return {
+        color: '#2d3540',
+        fontWeight: 600,
+        fontSize: '14px'
+      }
+    },
+    // 行点击处理
+    handleRowClick(row) {
+      this.$emit('row-click', row)
     }
   }
 };
 </script>
+<style scoped>
+/* ================= 全局变量 ================= */
+.app-container {
+  --primary-color: #409eff;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --info-color: #909399;
+  --border-radius: 8px;
+  --box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* ================= 查询表单区域 ================= */
+.query-form {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 表单项通用样式 */
+.query-form .el-form-item {
+  margin-bottom: 16px;
+  margin-right: 20px;
+}
+
+.query-form .el-form-item__label {
+  font-size: 14px;
+  color: #2d3540;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* 输入控件 */
+.query-form .el-input__inner,
+.query-form .el-select .el-input__inner {
+  height: 40px;
+  width: 220px;
+  border-radius: 8px;
+  border: 1px solid rgba(228, 231, 237, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.query-form .el-input__inner:focus,
+.query-form .el-select .el-input__inner:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color), 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+/* 按钮组 */
+.query-form .el-button-group {
+  gap: 12px; /* 按钮之间的间距 */
+  margin-left: 8px;
+}
+.query-form .el-button-group .el-button:not(:last-child) {
+  margin-right: 12px; /* 除最后一个按钮外添加右边距 */
+}
+.query-form .el-button {
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.query-form .el-button--primary {
+  background: linear-gradient(145deg, #409eff, #3375ff);
+  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* ================= 数据表格容器 ================= */
+.table-container {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.table-container:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* 表格标题栏 */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(145deg, #f8fafc, #f0f4f8);
+}
+
+.table-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3540;
+  letter-spacing: 0.5px;
+}
+
+/* ================= 增强表格样式 ================= */
+.enhanced-table {
+  --table-border-color: rgba(228, 231, 237, 0.6);
+  --header-bg: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 100%);
+  --hover-bg: rgba(241, 245, 249, 0.6);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+/* 表头样式 */
+.enhanced-table ::v-deep .el-table__header th {
+  background: var(--header-bg) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--table-border-color) !important;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
+  position: relative;
+}
+
+.enhanced-table ::v-deep .el-table__header th::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg,
+  rgba(255,255,255,0) 0%,
+  rgba(224, 232, 255, 0.6) 50%,
+  rgba(255,255,255,0) 100%
+  );
+}
+
+/* 表体样式 */
+.enhanced-table ::v-deep .el-table__body td {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(228, 231, 237, 0.5) !important;
+}
+
+/* 行交互效果 */
+.enhanced-table ::v-deep .el-table__body tr:hover td {
+  background: var(--hover-bg) !important;
+  transform: perspective(100px) translateZ(2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 斑马纹效果 */
+.enhanced-table ::v-deep .el-table__row.striped-row td {
+  background: linear-gradient(
+    to right,
+    rgba(251, 253, 255, 0.6),
+    rgba(245, 247, 250, 0.6)
+  );
+}
+
+/* ================= 特殊元素样式 ================= */
+/* 成绩显示 */
+.score-value {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 600;
+  position: relative;
+  padding-right: 20px;
+}
+
+.score-value.excellent { color: #16a34a; }
+.score-value.good { color: #2563eb; }
+.score-value.pass { color: #ca8a04; }
+.score-value.fail { color: #dc2626; }
+
+.score-value i {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #f59e0b;
+  filter: drop-shadow(0 2px 4px rgba(245, 158, 11, 0.3));
+}
+
+/* 类型标签 */
+.type-tag {
+  border-radius: 6px;
+  padding: 4px 10px;
+  border-width: 1px;
+  font-weight: 500;
+}
+
+.type-tag.正考 {
+  background: rgba(101, 163, 13, 0.1);
+  border-color: rgba(101, 163, 13, 0.3);
+  color: #3f6212;
+}
+
+.type-tag.补考 {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #854d0e;
+}
+
+.type-tag.重修 {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #991b1b;
+}
+
+.type-tag.免修 {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #3730a3;
+}
+
+/* ================= 对话框样式 ================= */
+.el-dialog {
+  border-radius: var(--border-radius) !important;
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(12px);
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid rgba(228, 231, 237, 0.5);
+}
+
+/* ================= 响应式布局 ================= */
+@media (max-width: 768px) {
+  /* 查询表单适配 */
+  .query-form {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .query-form .el-form-item {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .query-form .el-input__inner,
+  .query-form .el-select {
+    width: 100%;
+  }
+
+  .query-form .el-button-group {
+    width: 100%;
+    display: flex;
+  }
+
+  .query-form .el-button {
+    flex: 1;
+  }
+
+  /* 表格适配 */
+  .table-container .table-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .enhanced-table ::v-deep .el-table__body td {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .enhanced-table .course-code,
+  .enhanced-table .academic-year {
+    display: none;
+  }
+
+  .type-tag {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+}
+
+/* ================= 工具类样式 ================= */
+.striped-row td {
+  background: linear-gradient(to right,
+  rgba(251, 253, 255, 0.6),
+  rgba(245, 247, 250, 0.6)
+  );
+}
+/* ================= 查询/重置按钮美化 ================= */
+.query-form .el-button-group {
+  gap: 12px; /* 增加按钮间距 */
+  margin-left: 16px;
+}
+
+.query-form .el-button {
+  /* 基础样式 */
+  min-width: 100px;
+  height: 40px;
+  border-radius: 10px;
+  font-weight: 500;
+  letter-spacing: 0.8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 图标间距 */
+  .el-icon {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+}
+
+/* 查询按钮-主样式 */
+.query-form .el-button--primary {
+  background: linear-gradient(135deg, #409EFF 0%, #3375ff 100%);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
+
+  /* 悬停效果 */
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 6px 16px rgba(64, 158, 255, 0.35),
+      inset 0 -2px 0 rgba(255,255,255,0.2);
+  }
+
+  /* 点击效果 */
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
+  }
+}
+
+/* 重置按钮-次样式 */
+.query-form .el-button:not(.el-button--primary) {
+  background: linear-gradient(135deg, #f0f2f5 0%, #e5e9ef 100%);
+  border: 1px solid rgba(228, 231, 237, 0.8);
+  color: #606266;
+
+  /* 悬停效果 */
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 12px rgba(144, 147, 153, 0.15),
+      inset 0 -1px 0 rgba(255,255,255,0.2);
+    color: var(--primary-color);
+    border-color: rgba(64, 158, 255, 0.3);
+  }
+
+  /* 图标颜色 */
+  .el-icon-refresh {
+    color: #909399;
+    transition: color 0.3s;
+  }
+
+  &:hover .el-icon-refresh {
+    color: var(--primary-color);
+  }
+
+  /* 点击效果 */
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(144, 147, 153, 0.1);
+  }
+}
+</style>

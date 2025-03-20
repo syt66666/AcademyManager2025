@@ -140,8 +140,6 @@ public class StuActivityRecordController extends BaseController
         return fileName; // 返回带时间戳的文件名
     }
 
-
-
     private boolean validateToken(String token) {
         // TODO: 实现 Token 验证逻辑
         return true; // 暂时返回 true
