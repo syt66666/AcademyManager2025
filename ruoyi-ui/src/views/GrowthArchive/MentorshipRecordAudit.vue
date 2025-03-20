@@ -54,16 +54,32 @@
           <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="总结文档" width="120" align="center">
+      <el-table-column label="总结文档" width="140" align="center">
         <template v-slot="scope">
-          <el-button
-            type="primary"
-            size="mini"
-            @click.stop="downloadSummaryDocument(scope.row)"
-            class="document-btn"
-            :disabled="!scope.row.summaryFilePath || scope.row.summaryFilePath === '[]'"
-          >下载
-          </el-button>
+          <el-dropdown
+            trigger="click"
+            @command="handleDocCommand"
+            :disabled="!scope.row.summaryFilePath"
+          >
+            <el-button
+              type="primary"
+              size="mini"
+              plain
+              :disabled="!scope.row.summaryFilePath"
+            >
+              <i class="el-icon-document"></i> 文档操作
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                :command="{ action: 'preview', row: scope.row }"
+              >预览
+              </el-dropdown-item>
+              <el-dropdown-item
+                :command="{ action: 'download', row: scope.row }"
+              >下载
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
       <el-table-column label="指导图片" width="140" align="center">
@@ -75,7 +91,7 @@
                        size="mini"
                        plain
                        :disabled="!scope.row.photoPaths ||                                                                                        scope.row.photoPaths === '[]'">
-              <i class="el-icon-picture"></i> 文件操作
+              <i class="el-icon-picture"></i> 图片操作
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item
@@ -128,7 +144,24 @@
         </template>
       </el-table-column>
     </el-table>
-
+    <!-- 文档预览对话框 -->
+    <el-dialog
+      :visible.sync="docPreviewVisible"
+      title="文档预览"
+      width="80%"
+      class="native-pdf-preview"
+    >
+      <div v-if="currentDocument.type === 'pdf'" class="preview-container">
+        <iframe
+          :src="`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=0`"
+          style="width: 100%; height: 75vh; border: none;"
+          @load="disablePdfInteractions"
+        ></iframe>
+      </div>
+      <div v-else-if="currentDocument.type === 'docx'" class="preview-container docx-preview">
+        <div v-html="docxContent" class="docx-content"></div>
+      </div>
+    </el-dialog>
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
       <div style="text-align: center; margin-bottom: 20px;">
         <img
@@ -200,6 +233,13 @@ export default {
       previewImages: [],
       currentPreviewIndex: 0,
       currentDownloadFile: '',
+      docPreviewVisible: false,
+      currentDocument: {
+        url: '',
+        type: '',
+        name: ''
+      },
+      docxContent: '',
       // 查询参数
       queryParams: {
         pageNum: 1,
@@ -244,6 +284,102 @@ export default {
     this.getList();
   },
   methods: {
+    disablePdfInteractions(event) {
+      try {
+        const iframeDoc = event.target.contentDocument || event.target.contentWindow.document;
+        // 禁用右键菜单
+        iframeDoc.addEventListener('contextmenu', e => e.preventDefault());
+        // 禁用文本选择
+        iframeDoc.body.style.userSelect = 'none';
+      } catch (error) {
+        console.log('安全策略限制，部分交互禁用失败');
+      }
+    },
+    // 处理文档操作命令
+    handleDocCommand(command) {
+      console.log(command.action)
+      try {
+        const filePath = command.row.summaryFilePath;
+        if (!filePath) {
+          this.$message.warning('无可用文档');
+          return;
+        }
+        console.log("我进来了0" + command.row.summaryFilePath)
+        const fileData = {
+          url: `${process.env.VUE_APP_BASE_API}/profile/${filePath}`,
+          type: this.getFileType(filePath),
+          name: filePath.split('/').pop()
+        };
+        console.log(fileData)
+        if (command.action === 'preview') {
+          this.handleDocumentPreview(fileData);
+          console.log("我进来了1")
+        } else if (command.action === 'download') {
+          console.log("我进来了2")
+          this.downloadSummaryDocument(command.row);
+        }
+      } catch (error) {
+        this.$message.error(`操作失败: ${error.message}`);
+      }
+    },
+
+    // 处理文档预览
+    async handleDocumentPreview(file) {
+      const loading = this.$loading({
+        lock: true,
+        text: '正在加载文档...',
+        spinner: 'el-icon-loading',
+      });
+
+      try {
+        this.currentDocument = file;
+        console.log("文件类型："+file.type)
+        if (file.type === 'pdf') {
+          this.docPreviewVisible = true; // 直接显示iframe
+        } else if (file.type === 'docx') {
+          const response = await axios.get(file.url, {
+            responseType: 'arraybuffer',
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          const result = await this.parseDocx(response.data);
+          this.docxContent = result.html;
+        }
+        this.docPreviewVisible = true;
+      } catch (error) {
+        this.$message.error(`预览失败: ${error.message}`);
+      } finally {
+        loading.close();
+      }
+    },
+
+    // 解析DOCX文件
+    async parseDocx(arrayBuffer) {
+      try {
+        const mammoth = await import('mammoth');
+        const result = await mammoth.convertToHtml({arrayBuffer});
+        return {html: result.value};
+      } catch (error) {
+        console.error('DOCX解析失败:', error);
+        return {html: '<p>文档解析失败，请下载后查看</p>'};
+      }
+    },
+
+    // 文件类型判断
+    getFileType(filePath) {
+      const extension = filePath.split('.').pop().toLowerCase();
+      return {
+        pdf: 'pdf',
+        docx: 'docx',
+        doc: 'doc'
+      }[extension] || 'other';
+    },
+
+    // 下载当前文档
+    downloadCurrentDocument() {
+      this.downloadDocument(this.currentDocument);
+    },
     handleFileCommand(command) {
       if (command.action === 'preview') {
         this.handlePreview(command.files)
@@ -466,3 +602,173 @@ export default {
   }
 };
 </script>
+<style lang="scss" scoped>
+.docx-preview {
+  /* 容器样式 */
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  max-height: 70vh;
+  overflow-y: auto;
+
+  /* 滚动条美化 */
+  &::-webkit-scrollbar {
+    width: 8px;
+    background: #f5f5f5;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  .docx-content {
+    /* 基础排版 */
+    font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+    line-height: 1.8;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+
+    /* 标题层级 */
+    h1, h2, h3, h4, h5, h6 {
+      color: #2c3e50;
+      margin: 1.5em 0 1em;
+      font-weight: 600;
+      position: relative;
+      padding-left: 1rem;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 60%;
+        width: 4px;
+        background: #42b983;
+      }
+    }
+
+    h1 {
+      font-size: 24px;
+    }
+
+    h2 {
+      font-size: 22px;
+    }
+
+    h3 {
+      font-size: 20px;
+    }
+
+    h4 {
+      font-size: 18px;
+    }
+
+    /* 段落样式 */
+    p {
+      margin: 1em 0;
+      text-indent: 2em;
+    }
+
+    /* 列表增强 */
+    ul, ol {
+      padding-left: 2em;
+      margin: 1em 0;
+
+      li {
+        margin: 0.5em 0;
+        padding-left: 0.5em;
+
+        &::marker {
+          color: #42b983;
+        }
+      }
+    }
+
+    /* 表格美化 */
+    table {
+      width: 100%;
+      margin: 1.5em 0;
+      border-collapse: collapse;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      th {
+        background: #f8f9fa;
+        padding: 12px;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+    }
+
+    /* 代码块样式 */
+    pre {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1.5em 0;
+      overflow-x: auto;
+
+      code {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        color: #e83e8c;
+      }
+    }
+
+    /* 引用样式 */
+    blockquote {
+      border-left: 4px solid #42b983;
+      background: #f8f9fa;
+      margin: 1.5em 0;
+      padding: 1em 1.5em;
+      color: #6c757d;
+
+      p {
+        margin: 0;
+        text-indent: 0;
+      }
+    }
+
+    /* 图片适配 */
+    img {
+      max-width: 80%;
+      height: auto;
+      display: block;
+      margin: 1.5em auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 页眉页脚隐藏 */
+    .Header, .Footer {
+      display: none;
+    }
+  }
+}
+
+/* 对话框过渡动画 */
+.el-dialog__wrapper {
+  ::v-deep .el-dialog {
+    transition: all 0.3s ease;
+
+    &__header {
+      border-bottom: 1px solid #eee;
+      padding: 20px;
+    }
+
+    &__body {
+      padding: 0;
+    }
+  }
+}
+</style>

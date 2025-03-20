@@ -343,6 +343,7 @@
               </template>
             </el-upload>
           </el-form-item>
+
           <!-- 指导图片 -->
           <el-form-item label="指导图片" prop="photoPaths">
             <el-upload
