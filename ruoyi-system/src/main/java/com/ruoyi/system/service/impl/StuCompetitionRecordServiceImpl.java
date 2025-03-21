@@ -1,8 +1,6 @@
 package com.ruoyi.system.service.impl;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.domain.entity.SysUser;
@@ -187,5 +185,18 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
                 competition.getSemester()
         );
         return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
+    }
+
+    @Override
+    public Map<String, Integer> countAuditStatus() {
+        try {
+            return stuCompetitionRecordMapper.countAuditStatus();
+        } catch (Exception e) {
+            return new HashMap<String, Integer>(){{
+                put("pending", 0);
+                put("approved", 0);
+                put("rejected", 0);
+            }};
+        }
     }
 }

@@ -1,6 +1,8 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import java.util.Map;
+
 import com.ruoyi.system.domain.StuActivityRecord;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -73,4 +75,6 @@ public interface StuActivityRecordMapper
                                  @Param("activityLevel") String activityLevel,
                                  @Param("awardLevel") String awardLevel,
                                  @Param("semester") String semester);
+
+    Map<String, Integer> countAuditStatus();
 }

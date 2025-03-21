@@ -7,10 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -290,5 +287,10 @@ public class StuCompetitionRecordController extends BaseController
     @PostMapping("/checkUnique")
     public AjaxResult checkUnique(@RequestBody StuCompetitionRecord competition) {
         return stuCompetitionRecordService.checkUnique(competition);
+    }
+    @GetMapping("/auditCount")
+    public AjaxResult getAuditStatusCount() {
+        Map<String, Integer> countMap = stuCompetitionRecordService.countAuditStatus();
+        return AjaxResult.success(countMap);
     }
 }

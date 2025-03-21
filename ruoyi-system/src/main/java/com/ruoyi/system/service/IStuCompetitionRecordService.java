@@ -1,6 +1,7 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.system.domain.StuCompetitionRecord;
@@ -61,4 +62,6 @@ public interface IStuCompetitionRecordService
     List<StuCompetitionRecord> selectCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord);
 
     AjaxResult checkUnique(StuCompetitionRecord competition);
+
+    Map<String, Integer> countAuditStatus();
 }

@@ -1,17 +1,13 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ruoyi.system.domain.StuCompetitionRecord;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
-/**
- * 学生科创竞赛记录Mapper接口
- *
- * @author ruoyi
- * @date 2025-03-07
- */
+
 public interface StuCompetitionRecordMapper
 {
     /**
@@ -78,4 +74,6 @@ public interface StuCompetitionRecordMapper
                                  @Param("competitionLevel") String competitionLevel,
                                  @Param("awardLevel") String awardLevel,
                                  @Param("semester") String semester);
+
+    Map<String, Integer> countAuditStatus();
 }

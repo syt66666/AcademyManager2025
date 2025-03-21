@@ -7,10 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 
@@ -289,4 +286,9 @@ public class StuActivityRecordController extends BaseController
         return stuActivityRecordService.checkUnique(activity);
     }
 
+    @GetMapping("/auditCount")
+    public AjaxResult getAuditStatusCount() {
+        Map<String, Integer> countMap = stuActivityRecordService.countAuditStatus();
+        return AjaxResult.success(countMap);
+    }
 }

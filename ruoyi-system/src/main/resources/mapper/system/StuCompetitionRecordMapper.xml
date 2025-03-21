@@ -168,4 +168,12 @@
             semester = #{semester}
             LIMIT 1
     </select>
+
+    <select id="countAuditStatus" resultType="map">
+        SELECT
+            SUM(CASE WHEN audit_status = '未审核' THEN 1 ELSE 0 END) AS pending,
+            SUM(CASE WHEN audit_status = '已通过' THEN 1 ELSE 0 END) AS approved,
+            SUM(CASE WHEN audit_status = '未通过' THEN 1 ELSE 0 END) AS rejected
+        FROM stu_competition_record
+    </select>
 </mapper>
