@@ -25,9 +25,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ruoyi.common.utils.PageUtils.startPage;
@@ -227,5 +225,18 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
                 stuLectureReport.getAuditStatus()
         );
         return exists ? AjaxResult.error("已存在相同记录") : AjaxResult.success();
+    }
+
+    @Override
+    public Map<String, Integer> countAuditStatus() {
+        try {
+            return stuLectureReportMapper.countAuditStatus();
+        } catch (Exception e) {
+            return new HashMap<String, Integer>(){{
+                put("pending", 0);
+                put("approved", 0);
+                put("rejected", 0);
+            }};
+        }
     }
 }

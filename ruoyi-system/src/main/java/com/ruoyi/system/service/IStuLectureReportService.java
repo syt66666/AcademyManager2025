@@ -6,6 +6,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.StuLectureReport;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IStuLectureReportService {
     /**
@@ -49,4 +50,6 @@ public interface IStuLectureReportService {
     int updateMentorshipAuditInfo(StuLectureReport report);
 
     AjaxResult checkUnique(StuLectureReport stuLectureReport);
+
+    Map<String, Integer> countAuditStatus();
 }

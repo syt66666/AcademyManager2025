@@ -26,10 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ruoyi.common.core.domain.AjaxResult.DATA_TAG;
@@ -264,5 +261,10 @@ public class StuLectureReportController extends BaseController{
     public AjaxResult checkUnique(@RequestBody StuLectureReport stuLectureReport) {
 
         return IStuLectureReportService.checkUnique(stuLectureReport);
+    }
+    @GetMapping("/auditCount")
+    public AjaxResult getAuditStatusCount() {
+        Map<String, Integer> countMap = IStuLectureReportService.countAuditStatus();
+        return AjaxResult.success(countMap);
     }
 }

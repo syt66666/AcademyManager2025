@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface StuLectureReportMapper {
@@ -66,4 +67,6 @@ public interface StuLectureReportMapper {
                                  @Param("reportDate") Date reportDate,
                                  @Param("semester") Integer semester,
                                  @Param("auditStatus") Integer auditStatus);
+
+    Map<String, Integer> countAuditStatus();
 }

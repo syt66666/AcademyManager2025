@@ -2,6 +2,8 @@ package com.ruoyi.system.mapper;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
 import com.ruoyi.system.domain.StuMentorshipRecord;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -81,4 +83,6 @@ public interface StuMentorshipRecordMapper
             "where record_id = #{recordId}"
     })
     int updateMentorshipAuditInfo(StuMentorshipRecord mentorship);
+
+    Map<String, Integer> countAuditStatus();
 }
