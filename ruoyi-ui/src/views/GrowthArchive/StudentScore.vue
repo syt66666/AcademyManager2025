@@ -312,10 +312,10 @@ export default {
           {required: true, message: "课程编码不能为空", trigger: "blur"}
         ],
         academicYear: [
-          {required: true, message: "修读学年不能为空", trigger: "blur"}
+          {required: true, message: "请选择修读学年", trigger: "change"}
         ],
         semester: [
-          {required: true, message: "修读学期不能为空", trigger: "blur"}
+          {required: true, message: "请选择修读学期", trigger: "change"}
         ],
         scoreValue: [
           {required: true, message: "成绩值不能为空", trigger: "blur"}
@@ -717,14 +717,69 @@ export default {
 }
 
 /* ================= 对话框样式 ================= */
-.el-dialog {
-  border-radius: var(--border-radius) !important;
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(12px);
+/* 对话框基础美化 */
+::v-deep .el-dialog {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.el-dialog__header {
-  border-bottom: 1px solid rgba(228, 231, 237, 0.5);
+/* 标题栏样式 */
+::v-deep .el-dialog__header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e4e7ed;
+  padding: 16px 24px;
+}
+
+::v-deep .el-dialog__title {
+  font-size: 16px;
+  color: #2d3540;
+  font-weight: 600;
+}
+
+/* 表单内容区域 */
+::v-deep .el-dialog__body {
+  padding: 20px 24px;
+}
+
+/* 表单项优化 */
+::v-deep .el-form-item {
+  margin-bottom: 18px;
+}
+
+::v-deep .el-form-item__label {
+  color: #5a6376;
+  font-weight: 500;
+}
+
+/* 输入控件样式 */
+::v-deep .el-input__inner,
+::v-deep .el-select {
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+}
+
+::v-deep .el-input__inner:focus {
+  border-color: #409EFF;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+}
+
+/* 底部按钮区域 */
+::v-deep .el-dialog__footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e4e7ed;
+}
+
+::v-deep .el-button {
+  border-radius: 8px;
+  padding: 10px 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  ::v-deep .el-dialog {
+    width: 90% !important;
+  }
 }
 
 /* ================= 响应式布局 ================= */
@@ -783,83 +838,81 @@ export default {
   rgba(245, 247, 250, 0.6)
   );
 }
-/* ================= 查询/重置按钮美化 ================= */
-.query-form .el-button-group {
-  gap: 12px; /* 增加按钮间距 */
-  margin-left: 16px;
-}
 
+/* 统一按钮基础样式 */
+.action-btn,
 .query-form .el-button {
-  /* 基础样式 */
   min-width: 100px;
-  height: 40px;
-  border-radius: 10px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: none;
   font-weight: 500;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
-  /* 图标间距 */
-  .el-icon {
-    margin-right: 8px;
-    font-size: 16px;
-  }
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 查询按钮-主样式 */
-.query-form .el-button--primary {
+/* 图标间距统一 */
+.action-btn i,
+.query-form .el-button i {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* 查询/导出按钮 - 主色调 */
+.el-button--primary,
+.export-btn {
   background: linear-gradient(135deg, #409EFF 0%, #3375ff 100%);
-  border: none;
-  color: white;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
-
-  /* 悬停效果 */
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 6px 16px rgba(64, 158, 255, 0.35),
-      inset 0 -2px 0 rgba(255,255,255,0.2);
-  }
-
-  /* 点击效果 */
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
-  }
+  color: white !important;
 }
 
-/* 重置按钮-次样式 */
+/* 导入按钮 - 辅助色 */
+.import-btn {
+  background: linear-gradient(135deg, #67C23A 0%, #5BAF2D 100%);
+  color: white !important;
+}
+
+/* 重置按钮 - 中性色 */
 .query-form .el-button:not(.el-button--primary) {
   background: linear-gradient(135deg, #f0f2f5 0%, #e5e9ef 100%);
-  border: 1px solid rgba(228, 231, 237, 0.8);
   color: #606266;
-
-  /* 悬停效果 */
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow:
-      0 4px 12px rgba(144, 147, 153, 0.15),
-      inset 0 -1px 0 rgba(255,255,255,0.2);
-    color: var(--primary-color);
-    border-color: rgba(64, 158, 255, 0.3);
-  }
-
-  /* 图标颜色 */
-  .el-icon-refresh {
-    color: #909399;
-    transition: color 0.3s;
-  }
-
-  &:hover .el-icon-refresh {
-    color: var(--primary-color);
-  }
-
-  /* 点击效果 */
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(144, 147, 153, 0.1);
-  }
+  border: 1px solid #e4e7ed;
 }
+
+/* 悬停效果 */
+.action-btn:hover,
+.query-form .el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 点击效果 */
+.action-btn:active,
+.query-form .el-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 禁用状态 */
+.action-btn.is-disabled,
+.query-form .el-button.is-disabled {
+  opacity: 0.7;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 按钮组间距调整 */
+.el-button-group {
+  gap: 12px;
+}
+
+/* 导入导出按钮特殊间距 */
+.action-bar {
+  gap: 12px;
+}
+
 </style>

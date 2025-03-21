@@ -41,14 +41,14 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="学分值" prop="credit">
-        <el-input
-          v-model="queryParams.credit"
-          placeholder="请输入学分值"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+<!--      <el-form-item label="学分值" prop="credit">-->
+<!--        <el-input-->
+<!--          v-model="queryParams.credit"-->
+<!--          placeholder="请输入学分值"-->
+<!--          clearable-->
+<!--          @keyup.enter.native="handleQuery"-->
+<!--        />-->
+<!--      </el-form-item>-->
       <el-form-item label="课程类型" prop="courseCategory">
         <el-select
           v-model="queryParams.courseCategory"
@@ -91,14 +91,14 @@
           >
             数据导出
           </el-button>
-          <el-button
-            type="primary"
-            plain
-            icon="el-icon-plus"
-            class="action-btn"
-            @click="handleAdd"
-            v-hasPermi="['system:course:add']"
-          >新增</el-button>
+<!--          <el-button-->
+<!--            type="primary"-->
+<!--            plain-->
+<!--            icon="el-icon-plus"-->
+<!--            class="action-btn"-->
+<!--            @click="handleAdd"-->
+<!--            v-hasPermi="['system:course:add']"-->
+<!--          >新增</el-button>-->
         </div>
       </div>
 
@@ -109,24 +109,28 @@
         :header-cell-style="headerStyle"
         :row-class-name="tableRowClassName"
         @selection-change="handleSelectionChange"
+        style="width: 100%"
       >
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="序号" width="80" align="center">
+        <el-table-column label="序号" width="80" align="center" class-name="index-column">
           <template slot-scope="scope">
             {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
           </template>
         </el-table-column>
-        <el-table-column label="课程代码" align="center" prop="courseCode" width="150" />
-        <el-table-column label="课程名称" align="center" prop="courseName" width="180" />
-        <el-table-column label="开课院系" align="center" prop="academy" />
-        <el-table-column label="授课教师" align="center" prop="teacherName" width="120" />
-        <el-table-column label="学分值" align="center" prop="credit" width="100">
+        <el-table-column label="课程代码" align="center" prop="courseCode" min-width="160" />
+        <el-table-column label="课程名称" align="center" prop="courseName" min-width="200" />
+        <el-table-column label="开课院系" align="center" prop="academy" min-width="120"/>
+        <el-table-column label="授课教师" align="center" prop="teacherName" min-width="140" />
+        <el-table-column label="学分值" align="center" prop="credit" min-width="100">
           <template slot-scope="{row}">
             <span class="credit-badge">{{ row.credit }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="总课时数" align="center" prop="courseHours" width="120" />
-        <el-table-column label="课程类型" align="center" width="120">
+        <el-table-column label="总课时数" align="center" prop="courseHours" min-width="120">
+          <template slot-scope="{row}">
+            <span class="credit-badge">{{ row.courseHours }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="课程类型" align="center" min-width="120">
           <template slot-scope="{row}">
             <el-tag
               :type="row.courseCategory === '必修' ? 'success' : 'warning'"
@@ -334,7 +338,10 @@ export default {
           { required: true, message: "学分值不能为空", trigger: "blur" }
         ],
         courseCategory: [
-          { required: true, message: "课程类型不能为空", trigger: "blur" }
+          { required: true, message: "请选择课程类型", trigger: "change" }
+        ],
+        academy: [
+          { required: true, message: "请选择开课书院", trigger: "change" }
         ],
         teacherName: [
           { required: true, message: "授课教师不能为空", trigger: "blur" }
@@ -489,8 +496,23 @@ export default {
 // 提交上传文件
     submitFileForm() {
       this.$refs.upload.submit();
-    }
+    },
+    tableRowClassName({ rowIndex }) {
+      return rowIndex % 2 === 0 ? 'striped-row' : '';
+    },
 
+    // 自定义表头样式
+    headerStyle() {
+      return {
+        color: '#2d3540',
+        fontWeight: 600,
+        fontSize: '14px'
+      }
+    },
+    // 行点击处理
+    handleRowClick(row) {
+      this.$emit('row-click', row)
+    }
   }
 };
 </script>
@@ -505,7 +527,6 @@ export default {
   --info-color: #909399;
   --border-radius: 8px;
   --box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
-  --table-header-bg: #f8fafc;
 }
 
 /* ================= 查询表单区域 ================= */
@@ -518,6 +539,7 @@ export default {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 表单项通用样式 */
 .query-form .el-form-item {
   margin-bottom: 16px;
   margin-right: 20px;
@@ -530,6 +552,7 @@ export default {
   letter-spacing: 0.3px;
 }
 
+/* 输入控件 */
 .query-form .el-input__inner,
 .query-form .el-select .el-input__inner {
   height: 40px;
@@ -538,17 +561,44 @@ export default {
   border: 1px solid rgba(228, 231, 237, 0.6);
   background: rgba(255, 255, 255, 0.8);
   transition: all 0.3s ease;
-  box-shadow:
-    inset 0 1px 2px rgba(255, 255, 255, 0.3),
-    0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.query-form .el-input__inner:focus,
+.query-form .el-select .el-input__inner:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-color), 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+}
+
+/* 按钮组 */
+.query-form .el-button-group {
+  gap: 12px; /* 按钮之间的间距 */
+  margin-left: 8px;
+}
+.query-form .el-button-group .el-button:not(:last-child) {
+  margin-right: 12px; /* 除最后一个按钮外添加右边距 */
+}
+.query-form .el-button {
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.query-form .el-button--primary {
+  background: linear-gradient(145deg, #409eff, #3375ff);
+  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.3);
 }
 
 /* ================= 表格容器样式 ================= */
 .table-container {
   border-radius: 12px;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
   transition: all 0.3s ease;
+}
+
+.table-container:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .table-header {
@@ -569,18 +619,41 @@ export default {
 /* ================= 增强表格样式 ================= */
 .enhanced-table {
   --table-border-color: rgba(228, 231, 237, 0.6);
+  --header-bg: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 100%);
   --hover-bg: rgba(241, 245, 249, 0.6);
   font-family: 'Segoe UI', system-ui, sans-serif;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
 }
 
-.enhanced-table::v-deep .el-table__header th {
-  background: var(--table-header-bg) !important;
+/* 表头样式 */
+.enhanced-table ::v-deep .el-table__header th {
+  background: var(--header-bg) !important;
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--table-border-color) !important;
   font-weight: 600;
   letter-spacing: 0.3px;
+  text-transform: capitalize;
+  position: relative;
 }
 
-.enhanced-table::v-deep .el-table__body td {
+.enhanced-table ::v-deep .el-table__header th::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg,
+  rgba(255,255,255,0) 0%,
+  rgba(224, 232, 255, 0.6) 50%,
+  rgba(255,255,255,0) 100%
+  );
+}
+
+/* 表体样式 */
+.enhanced-table ::v-deep .el-table__body td {
   transition:
     transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.3s ease;
@@ -588,10 +661,20 @@ export default {
   border-bottom: 1px solid rgba(228, 231, 237, 0.5) !important;
 }
 
-.enhanced-table::v-deep .el-table__body tr:hover td {
+/* 行交互效果 */
+.enhanced-table ::v-deep .el-table__body tr:hover td {
   background: var(--hover-bg) !important;
   transform: perspective(100px) translateZ(2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 斑马纹效果 */
+.enhanced-table ::v-deep .el-table__row.striped-row td {
+  background: linear-gradient(
+    to right,
+    rgba(251, 253, 255, 0.6),
+    rgba(245, 247, 250, 0.6)
+  );
 }
 
 /* ================= 特殊元素样式 ================= */
@@ -623,58 +706,6 @@ export default {
   background: rgba(245, 158, 11, 0.1);
   border-color: rgba(245, 158, 11, 0.3);
   color: #854d0e;
-}
-
-/* ================= 操作按钮样式 ================= */
-.action-bar {
-  display: flex;
-  gap: 12px;
-}
-
-.action-btn {
-  padding: 8px 16px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.action-btn.export-btn {
-  background: linear-gradient(145deg, #e6a23c, #cf9234);
-  color: white;
-}
-
-.action-btn.import-btn {
-  background: linear-gradient(145deg, #909399, #7a7d85);
-  color: white;
-}
-
-.action-icon {
-  font-size: 16px;
-  padding: 6px;
-  transition: all 0.3s ease;
-}
-
-.action-icon.edit-icon {
-  color: var(--primary-color);
-}
-
-.action-icon.edit-icon:hover {
-  color: lighten(var(--primary-color), 10%);
-}
-
-.action-icon.delete-icon {
-  color: var(--danger-color);
-}
-
-.action-icon.delete-icon:hover {
-  color: lighten(var(--danger-color), 10%);
-}
-
-/* ================= 分页样式 ================= */
-.custom-pagination {
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border-top: 1px solid rgba(228, 231, 237, 0.6);
 }
 
 /* ================= 响应式布局 ================= */
@@ -712,14 +743,69 @@ export default {
 }
 
 /* ================= 对话框样式 ================= */
-.el-dialog {
-  border-radius: var(--border-radius) !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(12px);
+/* 对话框基础美化 */
+::v-deep .el-dialog {
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-.el-dialog__header {
-  border-bottom: 1px solid rgba(228, 231, 237, 0.5);
+/* 标题栏样式 */
+::v-deep .el-dialog__header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e4e7ed;
+  padding: 16px 24px;
+}
+
+::v-deep .el-dialog__title {
+  font-size: 16px;
+  color: #2d3540;
+  font-weight: 600;
+}
+
+/* 表单内容区域 */
+::v-deep .el-dialog__body {
+  padding: 20px 24px;
+}
+
+/* 表单项优化 */
+::v-deep .el-form-item {
+  margin-bottom: 18px;
+}
+
+::v-deep .el-form-item__label {
+  color: #5a6376;
+  font-weight: 500;
+}
+
+/* 输入控件样式 */
+::v-deep .el-input__inner,
+::v-deep .el-select {
+  border-radius: 8px;
+  transition: border-color 0.3s ease;
+}
+
+::v-deep .el-input__inner:focus {
+  border-color: #409EFF;
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+}
+
+/* 底部按钮区域 */
+::v-deep .el-dialog__footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e4e7ed;
+}
+
+::v-deep .el-button {
+  border-radius: 8px;
+  padding: 10px 20px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  ::v-deep .el-dialog {
+    width: 90% !important;
+  }
 }
 
 /* ================= 行交互效果 ================= */
@@ -746,5 +832,82 @@ export default {
 .import-template-link {
   font-size: 12px;
   margin-left: 8px;
+}
+
+
+/* 统一按钮基础样式 */
+.action-btn,
+.query-form .el-button {
+  min-width: 100px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 图标间距统一 */
+.action-btn i,
+.query-form .el-button i {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+/* 查询/导出按钮 - 主色调 */
+.el-button--primary,
+.export-btn {
+  background: linear-gradient(135deg, #409EFF 0%, #3375ff 100%);
+  color: white !important;
+}
+
+/* 导入按钮 - 辅助色 */
+.import-btn {
+  background: linear-gradient(135deg, #67C23A 0%, #5BAF2D 100%);
+  color: white !important;
+}
+
+/* 重置按钮 - 中性色 */
+.query-form .el-button:not(.el-button--primary) {
+  background: linear-gradient(135deg, #f0f2f5 0%, #e5e9ef 100%);
+  color: #606266;
+  border: 1px solid #e4e7ed;
+}
+
+/* 悬停效果 */
+.action-btn:hover,
+.query-form .el-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 点击效果 */
+.action-btn:active,
+.query-form .el-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 禁用状态 */
+.action-btn.is-disabled,
+.query-form .el-button.is-disabled {
+  opacity: 0.7;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 按钮组间距调整 */
+.el-button-group {
+  gap: 12px;
+}
+
+/* 导入导出按钮特殊间距 */
+.action-bar {
+  gap: 12px;
 }
 </style>
