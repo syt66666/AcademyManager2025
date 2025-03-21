@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+    <el-form class="query-form" :model="queryParams" ref="queryForm" size="small" :inline="true">
       <el-form-item label="课程代码" prop="courseCode">
         <el-input
           v-model="queryParams.courseCode"
@@ -17,13 +17,13 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-
       <el-form-item label="开课院系" prop="academy">
         <el-select
           v-model="queryParams.academy"
           placeholder="请选择开课院系"
           clearable
-          style="width: 100%"
+          filterable
+          style="width: 160px"
         >
           <el-option
             v-for="item in 7"
@@ -33,8 +33,6 @@
           />
         </el-select>
       </el-form-item>
-
-
       <el-form-item label="授课教师" prop="teacherName">
         <el-input
           v-model="queryParams.teacherName"
@@ -43,7 +41,6 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-
       <el-form-item label="学分值" prop="credit">
         <el-input
           v-model="queryParams.credit"
@@ -52,124 +49,127 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-
       <el-form-item label="课程类型" prop="courseCategory">
         <el-select
           v-model="queryParams.courseCategory"
           placeholder="请选择课程类型"
           clearable
-          style="width: 100%"
+          filterable
+          style="width: 140px"
         >
-          <el-option
-            label="必修"
-            value="必修"
-          />
-          <el-option
-            label="选修"
-            value="选修"
-          />
+          <el-option label="必修" value="必修" />
+          <el-option label="选修" value="选修" />
         </el-select>
       </el-form-item>
-
       <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        <el-button-group>
+          <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+        </el-button-group>
       </el-form-item>
     </el-form>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['system:course:add']"
-        >新增</el-button>
-      </el-col>
-
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['system:course:edit']"
-        >修改</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-          v-hasPermi="['system:course:remove']"
-        >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="el-icon-download"
-          size="mini"
-          @click="handleExport"
-          v-hasPermi="['system:course:export']"
-        >导出</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="info"
-          icon="el-icon-upload2"
-          size="mini"
-          @click="handleImport"
-          v-hasPermi="['system:course:import']"
-        >导入</el-button>
-      </el-col>
-
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
-
-    <el-table v-loading="loading" :data="courseList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="课程代码" align="center" prop="courseCode" />
-      <el-table-column label="课程名称" align="center" prop="courseName" />
-      <el-table-column label="开课院系" align="center" prop="academy" />
-      <el-table-column label="授课教师" align="center" prop="teacherName" />
-      <el-table-column label="学分值" align="center" prop="credit" />
-      <el-table-column label="总课时数" align="center" prop="courseHours" />
-      <el-table-column label="课程类型" align="center" prop="courseCategory" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
+    <el-card class="table-container">
+      <div slot="header" class="table-header">
+        <span class="table-title">课程数据列表</span>
+        <div class="action-bar">
           <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:course:edit']"
-          >修改</el-button>
+            type="info"
+            icon="el-icon-upload2"
+            class="action-btn import-btn"
+            @click="handleImport"
+            v-hasPermi="['system:course:import']"
+          >
+            课程导入
+          </el-button>
           <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-            v-hasPermi="['system:course:remove']"
-          >删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+            type="warning"
+            icon="el-icon-download"
+            class="action-btn export-btn"
+            @click="handleExport"
+            v-hasPermi="['system:course:export']"
+          >
+            数据导出
+          </el-button>
+          <el-button
+            type="primary"
+            plain
+            icon="el-icon-plus"
+            class="action-btn"
+            @click="handleAdd"
+            v-hasPermi="['system:course:add']"
+          >新增</el-button>
+        </div>
+      </div>
 
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+      <el-table
+        v-loading="loading"
+        :data="courseList"
+        class="enhanced-table"
+        :header-cell-style="headerStyle"
+        :row-class-name="tableRowClassName"
+        @selection-change="handleSelectionChange"
+      >
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="序号" width="80" align="center">
+          <template slot-scope="scope">
+            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
+        <el-table-column label="课程代码" align="center" prop="courseCode" width="150" />
+        <el-table-column label="课程名称" align="center" prop="courseName" width="180" />
+        <el-table-column label="开课院系" align="center" prop="academy" />
+        <el-table-column label="授课教师" align="center" prop="teacherName" width="120" />
+        <el-table-column label="学分值" align="center" prop="credit" width="100">
+          <template slot-scope="{row}">
+            <span class="credit-badge">{{ row.credit }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="总课时数" align="center" prop="courseHours" width="120" />
+        <el-table-column label="课程类型" align="center" width="120">
+          <template slot-scope="{row}">
+            <el-tag
+              :type="row.courseCategory === '必修' ? 'success' : 'warning'"
+              size="small"
+              effect="light"
+              class="type-tag"
+            >
+              {{ row.courseCategory }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
+          <template slot-scope="scope">
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-edit"
+              class="action-icon edit-icon"
+              @click="handleUpdate(scope.row)"
+              v-hasPermi="['system:course:edit']"
+            />
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-delete"
+              class="action-icon delete-icon"
+              @click="handleDelete(scope.row)"
+              v-hasPermi="['system:course:remove']"
+            />
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+        class="custom-pagination"
+      />
+    </el-card>
+
     <!-- 用户导入对话框 -->
     <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px">
       <el-upload
@@ -227,8 +227,6 @@
         <el-form-item label="授课教师" prop="teacherName">
           <el-input v-model="form.teacherName" placeholder="请输入授课教师" />
         </el-form-item>
-
-        <!-- 移除总课时表单项，保留学分输入 -->
         <el-form-item label="学分值" prop="credit">
           <el-input-number
             v-model="form.credit"
@@ -241,7 +239,6 @@
             style="width: 30%"
           />
         </el-form-item>
-
         <el-form-item label="课程类型" prop="courseCategory">
           <el-select
             v-model="form.courseCategory"
@@ -258,8 +255,6 @@
             />
           </el-select>
         </el-form-item>
-
-        <!-- 隐藏存储字段（如果需要保存数据） -->
         <input type="hidden" v-model="form.courseHours">
 
       </el-form>
@@ -499,3 +494,257 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+/* ================= 全局样式变量 ================= */
+.app-container {
+  --primary-color: #409eff;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --info-color: #909399;
+  --border-radius: 8px;
+  --box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  --table-header-bg: #f8fafc;
+}
+
+/* ================= 查询表单区域 ================= */
+.query-form {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.query-form .el-form-item {
+  margin-bottom: 16px;
+  margin-right: 20px;
+}
+
+.query-form .el-form-item__label {
+  font-size: 14px;
+  color: #2d3540;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.query-form .el-input__inner,
+.query-form .el-select .el-input__inner {
+  height: 40px;
+  width: 220px;
+  border-radius: 8px;
+  border: 1px solid rgba(228, 231, 237, 0.6);
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* ================= 表格容器样式 ================= */
+.table-container {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(145deg, #f8fafc, #f0f4f8);
+}
+
+.table-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3540;
+  letter-spacing: 0.5px;
+}
+
+/* ================= 增强表格样式 ================= */
+.enhanced-table {
+  --table-border-color: rgba(228, 231, 237, 0.6);
+  --hover-bg: rgba(241, 245, 249, 0.6);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.enhanced-table::v-deep .el-table__header th {
+  background: var(--table-header-bg) !important;
+  border-bottom: 1px solid var(--table-border-color) !important;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.enhanced-table::v-deep .el-table__body td {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s ease;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(228, 231, 237, 0.5) !important;
+}
+
+.enhanced-table::v-deep .el-table__body tr:hover td {
+  background: var(--hover-bg) !important;
+  transform: perspective(100px) translateZ(2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= 特殊元素样式 ================= */
+.credit-badge {
+  display: inline-block;
+  min-width: 28px;
+  padding: 4px 8px;
+  border-radius: 14px;
+  background: rgba(var(--primary-color), 0.1);
+  color: var(--primary-color);
+  font-weight: 600;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.type-tag {
+  border-radius: 6px;
+  padding: 4px 10px;
+  border-width: 1px;
+  font-weight: 500;
+}
+
+.type-tag.必修 {
+  background: rgba(101, 163, 13, 0.1);
+  border-color: rgba(101, 163, 13, 0.3);
+  color: #3f6212;
+}
+
+.type-tag.选修 {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #854d0e;
+}
+
+/* ================= 操作按钮样式 ================= */
+.action-bar {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.action-btn.export-btn {
+  background: linear-gradient(145deg, #e6a23c, #cf9234);
+  color: white;
+}
+
+.action-btn.import-btn {
+  background: linear-gradient(145deg, #909399, #7a7d85);
+  color: white;
+}
+
+.action-icon {
+  font-size: 16px;
+  padding: 6px;
+  transition: all 0.3s ease;
+}
+
+.action-icon.edit-icon {
+  color: var(--primary-color);
+}
+
+.action-icon.edit-icon:hover {
+  color: lighten(var(--primary-color), 10%);
+}
+
+.action-icon.delete-icon {
+  color: var(--danger-color);
+}
+
+.action-icon.delete-icon:hover {
+  color: lighten(var(--danger-color), 10%);
+}
+
+/* ================= 分页样式 ================= */
+.custom-pagination {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid rgba(228, 231, 237, 0.6);
+}
+
+/* ================= 响应式布局 ================= */
+@media (max-width: 1200px) {
+  .query-form .el-form-item {
+    width: calc(50% - 12px);
+  }
+
+  .query-form .el-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .query-form .el-form-item {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .action-bar {
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    flex: 1 1 45%;
+    margin-bottom: 8px;
+  }
+
+  .enhanced-table {
+    .course-code,
+    .academy {
+      display: none;
+    }
+  }
+}
+
+/* ================= 对话框样式 ================= */
+.el-dialog {
+  border-radius: var(--border-radius) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px);
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid rgba(228, 231, 237, 0.5);
+}
+
+/* ================= 行交互效果 ================= */
+.enhanced-table::v-deep .el-table__row {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.enhanced-table::v-deep .el-table__row--striped {
+  background: linear-gradient(
+    to right,
+    rgba(251, 253, 255, 0.6),
+    rgba(245, 247, 250, 0.6)
+  );
+}
+
+/* ================= 导入导出相关 ================= */
+.upload-tip {
+  font-size: 12px;
+  color: var(--info-color);
+  margin-top: 8px;
+}
+
+.import-template-link {
+  font-size: 12px;
+  margin-left: 8px;
+}
+</style>
