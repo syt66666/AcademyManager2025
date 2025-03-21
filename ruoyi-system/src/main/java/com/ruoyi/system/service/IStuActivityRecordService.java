@@ -5,12 +5,6 @@ import java.util.List;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.system.domain.StuActivityRecord;
 
-/**
- * 学生文体活动记录Service接口
- *
- * @author ruoyi
- * @date 2025-03-02
- */
 public interface IStuActivityRecordService
 {
     /**

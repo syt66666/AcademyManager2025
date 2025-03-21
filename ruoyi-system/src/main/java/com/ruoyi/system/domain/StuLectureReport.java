@@ -12,7 +12,7 @@ public class StuLectureReport extends BaseEntity
     private static final long serialVersionUID = 1L;
 
     /** 报告唯一编号 */
-    private Long reportId;
+    private Integer reportId;
 
     /** 学生学号 */
     @Excel(name = "学生学号")
@@ -82,18 +82,34 @@ public class StuLectureReport extends BaseEntity
     @Excel(name = "学期")
     private String semesterStr;
 
+    private String auditStatusStr;
 
+    public Integer getAuditStatus() {
+        return auditStatus;
+    }
+
+    public void setAuditStatus(Integer auditStatus) {
+        this.auditStatus = auditStatus;
+        this.auditStatusStr=convertAuditStatus(auditStatus);
+    }
 
     public Integer getSemester() {
         return semester;
     }
+
     public String getSemesterStr() {
         return semesterStr;
     }
+
+    public String getAuditStatusStr() {
+        return auditStatusStr;
+    }
+
     public void setSemester(Integer semester) {
         this.semester = semester;
         this.semesterStr = convertSemester(semester);
     }
+
     /** JDK 8 兼容的转换方法 */
     private static String convertSemester(Integer semester) {
         if (semester == null) return "未知学期";
@@ -110,12 +126,23 @@ public class StuLectureReport extends BaseEntity
             default: return "未知学期";
         }
     }
+    private static String convertAuditStatus(Integer auditStatus) {
+        if (auditStatus == null) return "未知状态";
 
-    public Long getReportId() {
+        switch (auditStatus) {
+            case 0: return "未审核";
+            case 1: return "已通过";
+            case 2: return "未通过";
+            case 3: return "未提交";
+            default: return "未知状态";
+        }
+    }
+
+    public Integer getReportId() {
         return reportId;
     }
 
-    public void setReportId(Long reportId) {
+    public void setReportId(Integer reportId) {
         this.reportId = reportId;
     }
 
@@ -215,13 +242,6 @@ public class StuLectureReport extends BaseEntity
         this.reportAdmitTime = reportAdmitTime;
     }
 
-    public Integer getAuditStatus() {
-        return auditStatus;
-    }
-
-    public void setAuditStatus(Integer auditStatus) {
-        this.auditStatus = auditStatus;
-    }
 
     public String getReportLocation() {
         return reportLocation;

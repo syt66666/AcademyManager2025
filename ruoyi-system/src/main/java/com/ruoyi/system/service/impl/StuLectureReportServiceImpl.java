@@ -3,14 +3,22 @@ package com.ruoyi.system.service.impl;
 import com.ruoyi.common.constant.HttpStatus;
 import com.github.pagehelper.PageInfo;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.ServletUtils;
+import com.ruoyi.common.utils.ip.IpUtils;
+import com.ruoyi.system.domain.AuditHistory;
+import com.ruoyi.system.domain.StuCompetitionRecord;
 import com.ruoyi.system.domain.StuInfo;
 import com.ruoyi.system.domain.StuLectureReport;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
+import com.ruoyi.system.mapper.AuditHistoryMapper;
 import com.ruoyi.system.mapper.StuInfoMapper;
 import com.ruoyi.system.mapper.StuLectureReportMapper;
 import com.ruoyi.system.service.IStuLectureReportService;
+import com.ruoyi.system.service.ISysUserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +38,22 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
     private StuInfoMapper stuInfoMapper;
     @Autowired
     private StuLectureReportMapper stuLectureReportMapper;
+    @Autowired
+    private AuditHistoryMapper auditHistoryMapper;
+    @Autowired
+    private ISysUserService userService;
+
+    /**
+     * 查询学生参与报告信息
+     *
+     * @param reportId 学生参与报告信息主键
+     * @return 学生参与报告信息
+     */
+    @Override
+    public StuLectureReport selectStuLecReportByReportId(Integer reportId)
+    {
+        return stuLectureReportMapper.selectStuLecReportByReportId(reportId);
+    }
 
     @Override
     public void insertStudentLectureReport(StuLectureReport stuLectureReport) {
@@ -124,12 +149,70 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
 
     @Override
     public int updateMentorshipAuditInfo(StuLectureReport report) {
-        if (!Arrays.asList(1, 2).contains(report.getAuditStatus())) {
-            throw new ServiceException("无效的审核状态");
+        // 1. 获取原始状态
+        StuLectureReport originalRecord = stuLectureReportMapper
+                .selectStuLecReportByReportId(report.getReportId());
+        String beforeStatus = originalRecord.getAuditStatusStr();
+
+        // 2. 执行审核状态更新
+        int updateResult = stuLectureReportMapper.updateMentorshipAuditInfo(report);
+        if (updateResult <= 0) {
+            throw new ServiceException("审核状态更新失败");
         }
 
-        // 构建更新参数（仅更新审核相关字段）
-        return stuLectureReportMapper.updateMentorshipAuditInfo(report);
+        // 3. 保存审核记录
+        saveAuditHistory(
+                report.getReportId(),
+                beforeStatus,
+                report.getAuditStatusStr(),
+                report.getAuditRemark()
+        );
+
+        return updateResult;
+    }
+
+    // 新增方法：保存审核历史
+    private void saveAuditHistory(Integer reportId, String beforeStatus,
+                                  String afterStatus, String remark) {
+        AuditHistory history = new AuditHistory();
+
+        // 填充模块信息
+        history.setModuleType(3);  // 3代表讲座报告模块
+        history.setModuleId(reportId.longValue());
+
+        // 状态信息
+        history.setAuditStatusBefore(beforeStatus);
+        history.setAuditStatusAfter(afterStatus);
+
+        // 操作信息
+        history.setAuditAction(getAuditAction(beforeStatus, afterStatus));
+        history.setAuditRemark(remark);
+
+        // 用户信息
+        SysUser currentUser = userService.selectUserById(SecurityUtils.getUserId());
+        history.setAuditorId(currentUser.getUserName());
+
+        // 系统信息
+        history.setAuditTime(new Date());
+        history.setIpAddress(IpUtils.getIpAddr());
+        history.setDeviceInfo(ServletUtils.getRequest().getHeader("User-Agent"));
+
+        // 插入记录
+        if (auditHistoryMapper.insertAuditHistory(history) <= 0) {
+            throw new ServiceException("审核记录保存失败");
+        }
+    }
+
+    // 辅助方法：判断审核动作
+    private String getAuditAction(String beforeStatus, String afterStatus) {
+        if ("已通过".equals(afterStatus)) {
+            return "审核通过";
+        } else if ("未通过".equals(afterStatus)) {
+            return "审核拒绝";
+        } else if ("未审核".equals(afterStatus)) {
+            return "撤回审核";
+        }
+        return "状态变更";
     }
 
     @Override

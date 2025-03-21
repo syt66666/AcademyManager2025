@@ -1,6 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuLectureReportMapper">
+    <resultMap type="StuLectureReport" id="StuLectureReportResult">
+        <result property="reportId"    column="report_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="studentName"    column="student_name"    />
+        <result property="reportTitle"    column="report_title"    />
+        <result property="reporter"    column="reporter"    />
+        <result property="reportDate"    column="report_date"    />
+        <result property="reportContent"    column="report_content"    />
+        <result property="reportLink"    column="report_link"    />
+        <result property="reportFeeling"    column="report_feeling"    />
+        <result property="lecturePoster"    column="lecture_poster"    />
+        <result property="reportPicture"    column="report_picture"    />
+        <result property="reportAdmitTime"    column="report_admit_time"    />
+        <result property="auditStatus"    column="audit_status"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="auditRemark"    column="audit_remark"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="semester"    column="semester"    />
+    </resultMap>
+
+    <sql id="selectStuLectureReportVo">
+        select report_id, student_id, student_name, report_title, reporter, report_date, report_content, report_link, report_feeling, lecture_poster, report_picture, report_admit_time, audit_status, audit_time, audit_remark, nick_name, semester from stu_lec_report
+    </sql>
+
+    <select id="selectStuLecReportByReportId" parameterType="Integer" resultMap="StuLectureReportResult">
+        <include refid="selectStuLectureReportVo"/>
+        where report_id = #{reportId}
+    </select>
+
     <insert id="insertStuLectureInformation">
         INSERT INTO stu_lec_report
         <trim prefix="(" suffix=")" suffixOverrides=",">

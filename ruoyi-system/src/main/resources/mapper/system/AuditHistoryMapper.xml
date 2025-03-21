@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.AuditHistoryMapper">
+
+    <resultMap type="AuditHistory" id="AuditHistoryResult">
+        <result property="id"    column="id"    />
+        <result property="moduleType"    column="module_type"    />
+        <result property="moduleId"    column="module_id"    />
+        <result property="auditAction"    column="audit_action"    />
+        <result property="auditStatusBefore"    column="audit_status_before"    />
+        <result property="auditStatusAfter"    column="audit_status_after"    />
+        <result property="auditorId"    column="auditor_id"    />
+        <result property="auditTime"    column="audit_time"    />
+        <result property="auditRemark"    column="audit_remark"    />
+        <result property="ipAddress"    column="ip_address"    />
+        <result property="deviceInfo"    column="device_info"    />
+    </resultMap>
+
+    <sql id="selectAuditHistoryVo">
+        select id, module_type, module_id, audit_action, audit_status_before, audit_status_after, auditor_id, audit_time, audit_remark, ip_address, device_info from audit_history
+    </sql>
+
+    <select id="selectAuditHistoryList" parameterType="AuditHistory" resultMap="AuditHistoryResult">
+        <include refid="selectAuditHistoryVo"/>
+        <where>
+            <if test="moduleType != null "> and module_type = #{moduleType}</if>
+            <if test="moduleId != null "> and module_id = #{moduleId}</if>
+            <if test="auditAction != null  and auditAction != ''"> and audit_action = #{auditAction}</if>
+            <if test="auditStatusBefore != null  and auditStatusBefore != ''"> and audit_status_before = #{auditStatusBefore}</if>
+            <if test="auditStatusAfter != null  and auditStatusAfter != ''"> and audit_status_after = #{auditStatusAfter}</if>
+            <if test="auditorId != null  and auditorId != ''"> and auditor_id = #{auditorId}</if>
+            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="ipAddress != null  and ipAddress != ''"> and ip_address = #{ipAddress}</if>
+            <if test="deviceInfo != null  and deviceInfo != ''"> and device_info = #{deviceInfo}</if>
+        </where>
+    </select>
+
+    <select id="selectAuditHistoryById" parameterType="Long" resultMap="AuditHistoryResult">
+        <include refid="selectAuditHistoryVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertAuditHistory" parameterType="AuditHistory" useGeneratedKeys="true" keyProperty="id">
+        insert into audit_history
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="moduleType != null">module_type,</if>
+            <if test="moduleId != null">module_id,</if>
+            <if test="auditAction != null and auditAction != ''">audit_action,</if>
+            <if test="auditStatusBefore != null">audit_status_before,</if>
+            <if test="auditStatusAfter != null and auditStatusAfter != ''">audit_status_after,</if>
+            <if test="auditorId != null and auditorId != ''">auditor_id,</if>
+            <if test="auditTime != null">audit_time,</if>
+            <if test="auditRemark != null">audit_remark,</if>
+            <if test="ipAddress != null">ip_address,</if>
+            <if test="deviceInfo != null">device_info,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="moduleType != null">#{moduleType},</if>
+            <if test="moduleId != null">#{moduleId},</if>
+            <if test="auditAction != null and auditAction != ''">#{auditAction},</if>
+            <if test="auditStatusBefore != null">#{auditStatusBefore},</if>
+            <if test="auditStatusAfter != null and auditStatusAfter != ''">#{auditStatusAfter},</if>
+            <if test="auditorId != null and auditorId != ''">#{auditorId},</if>
+            <if test="auditTime != null">#{auditTime},</if>
+            <if test="auditRemark != null">#{auditRemark},</if>
+            <if test="ipAddress != null">#{ipAddress},</if>
+            <if test="deviceInfo != null">#{deviceInfo},</if>
+        </trim>
+    </insert>
+
+    <update id="updateAuditHistory" parameterType="AuditHistory">
+        update audit_history
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="moduleType != null">module_type = #{moduleType},</if>
+            <if test="moduleId != null">module_id = #{moduleId},</if>
+            <if test="auditAction != null and auditAction != ''">audit_action = #{auditAction},</if>
+            <if test="auditStatusBefore != null">audit_status_before = #{auditStatusBefore},</if>
+            <if test="auditStatusAfter != null and auditStatusAfter != ''">audit_status_after = #{auditStatusAfter},</if>
+            <if test="auditorId != null and auditorId != ''">auditor_id = #{auditorId},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
+            <if test="ipAddress != null">ip_address = #{ipAddress},</if>
+            <if test="deviceInfo != null">device_info = #{deviceInfo},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteAuditHistoryById" parameterType="Long">
+        delete from audit_history where id = #{id}
+    </delete>
+
+    <delete id="deleteAuditHistoryByIds" parameterType="String">
+        delete from audit_history where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

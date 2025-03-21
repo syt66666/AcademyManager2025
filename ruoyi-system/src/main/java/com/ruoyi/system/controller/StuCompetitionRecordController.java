@@ -14,9 +14,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.CompetitionAuditDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;

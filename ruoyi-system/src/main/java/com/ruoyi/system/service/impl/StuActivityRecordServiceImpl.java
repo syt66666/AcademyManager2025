@@ -1,15 +1,21 @@
 package com.ruoyi.system.service.impl;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.ServletUtils;
+import com.ruoyi.common.utils.ip.IpUtils;
+import com.ruoyi.system.domain.AuditHistory;
+import com.ruoyi.system.domain.StuActivityRecord;
+import com.ruoyi.system.mapper.AuditHistoryMapper;
+import com.ruoyi.system.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.StuActivityRecordMapper;
-import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.service.IStuActivityRecordService;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +25,10 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
 {
     @Autowired
     private StuActivityRecordMapper stuActivityRecordMapper;
-
+    @Autowired
+    private AuditHistoryMapper auditHistoryMapper;
+    @Autowired
+    private ISysUserService userService;
     /**
      * 查询学生文体活动记录
      *
@@ -95,19 +104,70 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
     @Override
     @Transactional
     public int updateActivityAuditInfo(StuActivityRecord activity) {
-//        // 校验活动是否存在
-//        StuActivityRecord existActivity = stuActivityRecordMapper.selectActivityById(activity.getActivityId());
-//        if (existActivity == null) {
-//            throw new ServiceException("活动不存在");
-//        }
+        // 1. 获取原始状态
+        StuActivityRecord originalRecord = stuActivityRecordMapper
+                .selectStuActivityRecordByActivityId(activity.getActivityId());
+        String beforeStatus = originalRecord.getAuditStatus();
 
-        // 校验审核状态是否合法
-        if (!Arrays.asList("已通过", "未通过").contains(activity.getAuditStatus())) {
-            throw new ServiceException("无效的审核状态");
+        // 2. 执行审核状态更新
+        int updateResult = stuActivityRecordMapper.updateActivityAuditInfo(activity);
+        if (updateResult <= 0) {
+            throw new ServiceException("审核状态更新失败");
         }
 
-        // 构建更新参数（仅更新审核相关字段）
-        return stuActivityRecordMapper.updateActivityAuditInfo(activity);
+        // 3. 保存审核记录
+        saveAuditHistory(
+                activity.getActivityId(),
+                beforeStatus,
+                activity.getAuditStatus(),
+                activity.getAuditRemark()
+        );
+
+        return updateResult;
+    }
+
+    // 新增方法：保存审核历史
+    private void saveAuditHistory(Integer activityId, String beforeStatus,
+                                  String afterStatus, String remark) {
+        AuditHistory history = new AuditHistory();
+
+        // 填充模块信息
+        history.setModuleType(2);  // 1代表文体活动模块
+        history.setModuleId(activityId.longValue());
+
+        // 状态信息
+        history.setAuditStatusBefore(beforeStatus);
+        history.setAuditStatusAfter(afterStatus);
+
+        // 操作信息
+        history.setAuditAction(getAuditAction(beforeStatus, afterStatus));
+        history.setAuditRemark(remark);
+
+        // 用户信息
+        SysUser currentUser = userService.selectUserById(SecurityUtils.getUserId());
+        history.setAuditorId(currentUser.getUserName());
+
+        // 系统信息
+        history.setAuditTime(new Date());
+        history.setIpAddress(IpUtils.getIpAddr());
+        history.setDeviceInfo(ServletUtils.getRequest().getHeader("User-Agent"));
+
+        // 插入记录
+        if (auditHistoryMapper.insertAuditHistory(history) <= 0) {
+            throw new ServiceException("审核记录保存失败");
+        }
+    }
+
+    // 辅助方法：判断审核动作
+    private String getAuditAction(String beforeStatus, String afterStatus) {
+        if ("已通过".equals(afterStatus)) {
+            return "审核通过";
+        } else if ("未通过".equals(afterStatus)) {
+            return "审核拒绝";
+        } else if ("未审核".equals(afterStatus)) {
+            return "撤回审核";
+        }
+        return "状态变更";
     }
 
     @Override

@@ -1,27 +1,35 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.SecurityUtils;
+import com.ruoyi.common.utils.ServletUtils;
+import com.ruoyi.common.utils.ip.IpUtils;
+import com.ruoyi.system.domain.AuditHistory;
+import com.ruoyi.system.mapper.AuditHistoryMapper;
+import com.ruoyi.system.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.StuCompetitionRecordMapper;
 import com.ruoyi.system.domain.StuCompetitionRecord;
 import com.ruoyi.system.service.IStuCompetitionRecordService;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * 学生科创竞赛记录Service业务层处理
- *
- * @author ruoyi
- * @date 2025-03-07
- */
+
 @Service
 public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordService
 {
     @Autowired
     private StuCompetitionRecordMapper stuCompetitionRecordMapper;
+    @Autowired
+    private AuditHistoryMapper auditHistoryMapper;
+    @Autowired
+    private ISysUserService userService;
 
     /**
      * 查询学生科创竞赛记录
@@ -96,14 +104,72 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class) // 添加事务管理
     public int updateCompetitionAuditInfo(StuCompetitionRecord competition) {
-        // 校验审核状态是否合法
-        if (!Arrays.asList("已通过", "未通过").contains(competition.getAuditStatus())) {
-            throw new ServiceException("无效的审核状态");
+        // 1. 获取原始状态
+        StuCompetitionRecord originalRecord = stuCompetitionRecordMapper
+                .selectStuCompetitionRecordByCompetitionId(competition.getCompetitionId());
+        String beforeStatus = originalRecord.getAuditStatus();
+
+        // 2. 执行审核状态更新
+        int updateResult = stuCompetitionRecordMapper.updateCompetitionAuditInfo(competition);
+        if (updateResult <= 0) {
+            throw new ServiceException("审核状态更新失败");
         }
 
-        // 构建更新参数（仅更新审核相关字段）
-        return stuCompetitionRecordMapper.updateCompetitionAuditInfo(competition);
+        // 3. 保存审核记录
+        saveAuditHistory(
+                competition.getCompetitionId(),
+                beforeStatus,
+                competition.getAuditStatus(),
+                competition.getAuditRemark()
+        );
+
+        return updateResult;
+    }
+
+    // 新增方法：保存审核历史
+    private void saveAuditHistory(Integer competitionId, String beforeStatus,
+                                  String afterStatus, String remark) {
+        AuditHistory history = new AuditHistory();
+
+        // 填充模块信息
+        history.setModuleType(1);  // 1代表科创竞赛模块
+        history.setModuleId(competitionId.longValue());
+
+        // 状态信息
+        history.setAuditStatusBefore(beforeStatus);
+        history.setAuditStatusAfter(afterStatus);
+
+        // 操作信息
+        history.setAuditAction(getAuditAction(beforeStatus, afterStatus));
+        history.setAuditRemark(remark);
+
+        // 用户信息
+        SysUser currentUser = userService.selectUserById(SecurityUtils.getUserId());
+        history.setAuditorId(currentUser.getUserName());
+
+        // 系统信息
+        history.setAuditTime(new Date());
+        history.setIpAddress(IpUtils.getIpAddr());
+        history.setDeviceInfo(ServletUtils.getRequest().getHeader("User-Agent"));
+
+        // 插入记录
+        if (auditHistoryMapper.insertAuditHistory(history) <= 0) {
+            throw new ServiceException("审核记录保存失败");
+        }
+    }
+
+    // 辅助方法：判断审核动作
+    private String getAuditAction(String beforeStatus, String afterStatus) {
+        if ("已通过".equals(afterStatus)) {
+            return "审核通过";
+        } else if ("未通过".equals(afterStatus)) {
+            return "审核拒绝";
+        } else if ("未审核".equals(afterStatus)) {
+            return "撤回审核";
+        }
+        return "状态变更";
     }
 
     @Override

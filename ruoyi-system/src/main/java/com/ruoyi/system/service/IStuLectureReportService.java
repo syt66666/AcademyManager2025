@@ -9,6 +9,13 @@ import java.util.List;
 
 public interface IStuLectureReportService {
     /**
+     * 查询学生参与报告信息
+     *
+     * @param reportId 学生参与报告信息主键
+     * @return 学生参与报告信息
+     */
+    public StuLectureReport selectStuLecReportByReportId(Integer reportId);
+    /**
      * 插入学生讲座报告信息
      * @param stuLectureReport
      */
