@@ -1,5 +1,61 @@
 <template>
   <div class="app-container">
+    <!-- 统计看板 -->
+    <el-row :gutter="12" class="mb-4">
+      <el-col :span="8">
+        <el-card
+          class="status-card pending"
+          shadow="hover"
+          @click.native="handleStatusClick('pending')"
+        >
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="el-icon-warning-outline"></i>
+            </div>
+            <div class="card-info">
+              <div class="title">未审核</div>
+              <div class="count">{{ auditStats.pending }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="8">
+        <el-card
+          class="status-card approved"
+          shadow="hover"
+          @click.native="handleStatusClick('approved')"
+        >
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="el-icon-success"></i>
+            </div>
+            <div class="card-info">
+              <div class="title">已通过</div>
+              <div class="count">{{ auditStats.approved }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :span="8">
+        <el-card
+          class="status-card rejected"
+          shadow="hover"
+          @click.native="handleStatusClick('rejected')"
+        >
+          <div class="card-content">
+            <div class="card-icon">
+              <i class="el-icon-error"></i>
+            </div>
+            <div class="card-info">
+              <div class="title">未通过</div>
+              <div class="count">{{ auditStats.rejected }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
       <el-form-item label="学号" prop="studentId">
         <el-input
@@ -90,7 +146,7 @@
             <el-button type="primary"
                        size="mini"
                        plain
-                       :disabled="!scope.row.photoPaths ||                                                                                        scope.row.photoPaths === '[]'">
+                       :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
               <i class="el-icon-picture"></i> 图片操作
             </el-button>
             <el-dropdown-menu slot="dropdown">
@@ -204,7 +260,7 @@
 </template>
 
 <script>
-import { listAuditMentorship, auditMentorship } from "@/api/system/mentorship";
+import { listAuditMentorship, auditMentorship,getAuditCount } from "@/api/system/mentorship";
 import axios from "axios";
 
 export default {
@@ -229,6 +285,12 @@ export default {
       title: "",
       // 是否显示弹出层
       open: false,
+      // 统计数字
+      auditStats: {
+        approved: 0,
+        rejected: 0,
+        pending: 0
+      },
       previewVisible: false,
       previewImages: [],
       currentPreviewIndex: 0,
@@ -282,8 +344,32 @@ export default {
   },
   created() {
     this.getList();
+    this.fetchAuditCount();
   },
   methods: {
+    // 获取统计数据
+    async fetchAuditCount() {
+      try {
+        const { code, data } = await getAuditCount();
+        if (code === 200) {
+          this.auditStats = data;
+        }
+      } catch (error) {
+        console.error("获取统计数据失败:", error);
+      }
+    },
+
+    // 点击统计卡片筛选数据
+    handleStatusClick(type) {
+      const statusMap = {
+        pending: '未审核',
+        approved: '已通过',
+        rejected: '未通过'
+      };
+
+      this.queryParams.auditStatus = statusMap[type];
+      this.handleQuery(); // 调用现有的查询方法
+    },
     disablePdfInteractions(event) {
       try {
         const iframeDoc = event.target.contentDocument || event.target.contentWindow.document;
