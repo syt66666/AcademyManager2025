@@ -67,3 +67,11 @@ export function checkLectureUnique(params) {
     data: params
   })
 }
+//查询不同审核状态数量
+export function getAuditCount(query) {
+  return request({
+    url: '/system/lecture/auditCount',
+    method: 'get',
+    params: query
+  })
+}

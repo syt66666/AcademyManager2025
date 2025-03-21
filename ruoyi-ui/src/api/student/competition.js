@@ -78,3 +78,12 @@ export function checkCompetitionUnique(params) {
     data: params
   })
 }
+
+//查询不同审核状态数量
+export function getAuditCount(query) {
+  return request({
+    url: '/system/record/auditCount',
+    method: 'get',
+    params: query
+  })
+}
