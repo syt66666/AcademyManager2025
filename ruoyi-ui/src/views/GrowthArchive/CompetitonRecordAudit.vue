@@ -1,10 +1,10 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学号" prop="studentId">
+      <el-form-item label="学生学号" prop="studentId">
         <el-input
           v-model="queryParams.studentId"
-          placeholder="请输入学号"
+          placeholder="请输入学生学号"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -20,7 +20,7 @@
       <el-form-item label="获奖级别" prop="competitionLevel">
         <el-select
           v-model="queryParams.competitionLevel"
-          placeholder="请选择活动级别"
+          placeholder="请选择获奖级别"
           clearable
           @keyup.enter.native="handleQuery"
           style="width: 100%"
