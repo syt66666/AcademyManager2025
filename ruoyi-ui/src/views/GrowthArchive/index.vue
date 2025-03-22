@@ -264,7 +264,7 @@ export default {
         score: '/GrowthArchive/StudentScoreShow',
         competition: '/GrowthArchive/CompetitonRecord',
         activity: '/GrowthArchive/ActivityRecord',
-        report: '/ReportManagement/index',
+        report: '/GrowthArchive/ReportManagement',
         meeting: '/GrowthArchive/MentorshipRecord'
       }
       if (routes[key]) {

@@ -479,7 +479,7 @@ export default {
       this.originalSummaryFileName = file.name
       // 关键修改：获取原生文件对象
       this.summaryFileList = fileList
-      this.summaryFile=file.raw
+      this.summaryFile = file.raw
     },
 
     // 文件移除回调
@@ -607,7 +607,7 @@ export default {
       this.formData.summaryFilePath = row.summaryFilePath || '';
       // 处理总结文档回显
       this.summaryFileList = [];
-      this.summaryFile=null;
+      this.summaryFile = null;
       if (row.summaryFilePath) {
         // 将数据库中的路径字符串转换为上传组件需要的格式
         const fileName = row.summaryFileName || this.getFileName(row.summaryFilePath);
@@ -841,7 +841,7 @@ export default {
             auditRemark: "",
             existingProofMaterial: existingPaths,
             summaryFilePath: this.formData.summaryFilePath || '',
-            summaryFileName:this.originalSummaryFileName,
+            summaryFileName: this.originalSummaryFileName,
           };
           console.log("recordData:");
           console.log(recordData);
@@ -861,7 +861,7 @@ export default {
           this.fileList.forEach((file) => {
             formData.append("photoPaths", file.raw);
           });
-          console.log("this.summaryFile:",this.summaryFile)
+          console.log("this.summaryFile:", this.summaryFile)
           formData.append('summaryFile', this.summaryFile);
 
           // 配置 headers
@@ -1030,6 +1030,7 @@ export default {
   padding: 8px 0;
   gap: 8px;
 }
+
 .name-icon {
   /* 核心样式 */
   font-size: 18px;
@@ -1037,9 +1038,7 @@ export default {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent !important;
-  filter:
-    drop-shadow(0 1px 1px rgba(255,152,0,0.15))
-    drop-shadow(0 0 1px rgba(255,255,255,0.6));
+  filter: drop-shadow(0 1px 1px rgba(255, 152, 0, 0.15)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.6));
 
   /* 动态效果 */
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1048,9 +1047,7 @@ export default {
 
 /* 悬停互动 */
 .name-icon:hover {
-  filter:
-    drop-shadow(0 1.5px 2px rgba(255,183,77,0.25))
-    drop-shadow(0 0 1.2px rgba(255,255,255,0.8));
+  filter: drop-shadow(0 1.5px 2px rgba(255, 183, 77, 0.25)) drop-shadow(0 0 1.2px rgba(255, 255, 255, 0.8));
   transform: scale(1.1);
 }
 
@@ -1091,6 +1088,7 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
 /* 上传组件样式 */
 .enhanced-upload {
   width: 100%;
@@ -1156,9 +1154,17 @@ export default {
   .el-icon-document {
     font-size: 20px;
 
-    &.pdf { color: #FF5252; }
-    &.doc, &.docx { color: #2B579A; }
-    &.default { color: #409EFF; }
+    &.pdf {
+      color: #FF5252;
+    }
+
+    &.doc, &.docx {
+      color: #2B579A;
+    }
+
+    &.default {
+      color: #409EFF;
+    }
   }
 }
 
@@ -1195,6 +1201,7 @@ export default {
     vertical-align: baseline;
   }
 }
+
 /* 表单元素样式 */
 .mentorship-form {
   padding: 0 30px 20px;
