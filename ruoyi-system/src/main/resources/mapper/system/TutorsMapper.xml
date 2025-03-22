@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.TutorsMapper">
+
+    <resultMap type="Tutors" id="TutorsResult">
+        <result property="tutorId"    column="tutor_id"    />
+        <result property="tutorName"    column="tutor_name"    />
+        <result property="tutorGender"    column="tutor_gender"    />
+        <result property="tutorTitle"    column="tutor_title"    />
+        <result property="tutorDepartment"    column="tutor_department"    />
+    </resultMap>
+
+    <sql id="selectTutorsVo">
+        select tutor_id, tutor_name, tutor_gender, tutor_title, tutor_department from tutors
+    </sql>
+
+    <select id="selectTutorsList" parameterType="Tutors" resultMap="TutorsResult">
+        <include refid="selectTutorsVo"/>
+        <where>
+            <if test="tutorName != null  and tutorName != ''"> and tutor_name like concat('%', #{tutorName}, '%')</if>
+            <if test="tutorGender != null  and tutorGender != ''"> and tutor_gender = #{tutorGender}</if>
+            <if test="tutorTitle != null  and tutorTitle != ''"> and tutor_title = #{tutorTitle}</if>
+            <if test="tutorDepartment != null  and tutorDepartment != ''"> and tutor_department = #{tutorDepartment}</if>
+        </where>
+    </select>
+
+    <select id="selectTutorsByTutorId" parameterType="String" resultMap="TutorsResult">
+        <include refid="selectTutorsVo"/>
+        where tutor_id = #{tutorId}
+    </select>
+
+    <insert id="insertTutors" parameterType="Tutors">
+        insert into tutors
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tutorId != null">tutor_id,</if>
+            <if test="tutorName != null and tutorName != ''">tutor_name,</if>
+            <if test="tutorGender != null">tutor_gender,</if>
+            <if test="tutorTitle != null">tutor_title,</if>
+            <if test="tutorDepartment != null">tutor_department,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tutorId != null">#{tutorId},</if>
+            <if test="tutorName != null and tutorName != ''">#{tutorName},</if>
+            <if test="tutorGender != null">#{tutorGender},</if>
+            <if test="tutorTitle != null">#{tutorTitle},</if>
+            <if test="tutorDepartment != null">#{tutorDepartment},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTutors" parameterType="Tutors">
+        update tutors
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tutorName != null and tutorName != ''">tutor_name = #{tutorName},</if>
+            <if test="tutorGender != null">tutor_gender = #{tutorGender},</if>
+            <if test="tutorTitle != null">tutor_title = #{tutorTitle},</if>
+            <if test="tutorDepartment != null">tutor_department = #{tutorDepartment},</if>
+        </trim>
+        where tutor_id = #{tutorId}
+    </update>
+
+    <delete id="deleteTutorsByTutorId" parameterType="String">
+        delete from tutors where tutor_id = #{tutorId}
+    </delete>
+
+    <delete id="deleteTutorsByTutorIds" parameterType="String">
+        delete from tutors where tutor_id in
+        <foreach item="tutorId" collection="array" open="(" separator="," close=")">
+            #{tutorId}
+        </foreach>
+    </delete>
+</mapper>
