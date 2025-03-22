@@ -151,65 +151,264 @@ export default {
 };
 </script>
 
-<style rel="stylesheet/scss" lang="scss">
+<style lang="scss">
+// 动画定义
+@keyframes formEnter {
+  0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes gradientGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// 主容器样式
 .login {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
-  background-image: url("../assets/images/login-background.jpg");
-  background-size: cover;
-}
-.title {
-  margin: 0px auto 30px auto;
-  text-align: center;
-  color: #707070;
+  position: relative;
+  min-height: 100vh;
+  background: url("../assets/images/login-background.jpg") center/cover;
+  background-blend-mode: multiply;
+  background-color: rgba(255,255,255,0.92);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(227, 242, 253, 0.04) 100%);
+    z-index: 0;
+  }
 }
 
+// 登录表单容器
 .login-form {
-  border-radius: 6px;
-  background: #ffffff;
+  animation: formEnter 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  z-index: 1;
   width: 400px;
-  padding: 25px 25px 5px 25px;
-  .el-input {
+  padding: 25px 25px 5px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(33, 150, 243, 0.15);
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  // 渐变边框效果
+  &::before, &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 8px;
+    z-index: -1;
+  }
+
+  &::before {
+    opacity: 0.2;
+  }
+
+  &::after {
+    background-size: 300% 300%;
+    animation: gradientGlow 6s ease infinite;
+  }
+}
+
+// 标题样式
+.title {
+  margin: 0 auto 30px;
+  text-align: center;
+  color: #1976D2 !important;
+  font-size: 24px;
+
+  &::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: #90CAF9;
+    margin: 20px auto;
+  }
+}
+
+// 输入框组
+.el-input {
+  height: 38px;
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateX(5px);
+  }
+
+  .el-input__inner {
     height: 38px;
-    input {
-      height: 38px;
+    padding-left: 40px;
+    border: 1px solid #e0e4e9;
+    border-radius: 4px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover { border-color: #64B5F6; }
+    &:focus {
+      border-color: #1976D2;
+      box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
     }
   }
+
   .input-icon {
-    height: 39px;
-    width: 14px;
-    margin-left: 2px;
+    width: 20px;
+    height: 20px;
+    margin-left: 10px;
+    color: #90CAF9;
+    transition: color 0.3s;
+
+    &:hover { color: #42A5F5; }
   }
 }
-.login-tip {
-  font-size: 13px;
-  text-align: center;
-  color: #bfbfbf;
-}
+
+// 验证码区域
 .login-code {
   width: 33%;
   height: 38px;
   float: right;
-  img {
-    cursor: pointer;
-    vertical-align: middle;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.03) rotate(1deg);
+
+    .login-code-img {
+      filter: brightness(1.1);
+    }
+  }
+
+  &-img {
+    height: 40px;
+    border: 1px solid #BBDEFB;
+    transition: all 0.3s ease;
   }
 }
+
+// 按钮样式
+.el-button--primary {
+  width: 100%;
+  height: 44px;
+  font-size: 16px;
+  letter-spacing: 2px;
+  background: linear-gradient(45deg, #1976D2, #2196F3);
+  border: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.2);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active { transform: translateY(1px); }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(255,255,255,0.3),
+      transparent
+    );
+    transition: left 0.6s;
+  }
+
+  // 加载状态
+  &.is-loading {
+    &::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+// 其他组件
+.el-checkbox {
+  .el-checkbox__inner {
+    transition: all 0.3s ease;
+    border-color: #e0e4e9;
+  }
+
+  &.is-checked {
+    .el-checkbox__inner {
+      background: #2196F3;
+      border-color: #2196F3;
+      transform: scale(1.1);
+    }
+  }
+}
+
+.link-type {
+  color: #1976D2 !important;
+  position: relative;
+  text-decoration: none;
+  transition: color 0.3s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: #42A5F5;
+    transition: width 0.3s;
+  }
+
+  &:hover {
+    color: #42A5F5 !important;
+
+    &::after {
+      width: 100%;
+    }
+  }
+}
+
+// 辅助样式调整
 .el-login-footer {
-  height: 40px;
-  line-height: 40px;
   position: fixed;
   bottom: 0;
   width: 100%;
+  height: 40px;
+  line-height: 40px;
   text-align: center;
   color: #fff;
-  font-family: Arial;
-  font-size: 12px;
+  font: 12px Arial;
   letter-spacing: 1px;
 }
-.login-code-img {
-  height: 38px;
-}
+
 </style>
