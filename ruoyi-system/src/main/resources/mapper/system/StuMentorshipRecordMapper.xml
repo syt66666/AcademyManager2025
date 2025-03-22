@@ -7,6 +7,7 @@
     <resultMap type="StuMentorshipRecord" id="StuMentorshipRecordResult">
         <result property="recordId"    column="record_id"    />
         <result property="studentId"    column="student_id"    />
+        <result property="tutorId"    column="tutor_id"    />
         <result property="guidanceTopic"    column="guidance_topic"    />
         <result property="guidanceLocation"    column="guidance_location"    />
         <result property="guidanceTime"    column="guidance_time"    />
@@ -26,6 +27,7 @@
         <result property="studentId"    column="student_id"    />
         <result property="tutorId"    column="tutor_id"    />
         <result property="tutorName"    column="tutor_name"    />
+        <result property="academy"    column="academy"    />
         <result property="guidanceTopic"    column="guidance_topic"    />
         <result property="guidanceLocation"    column="guidance_location"    />
         <result property="guidanceTime"    column="guidance_time"    />
@@ -41,27 +43,27 @@
     </resultMap>
 
     <sql id="selectStuMentorshipRecordVo">
-        select record_id, student_id, guidance_topic, guidance_location, guidance_time, summary_file_path, photo_paths, semester, submit_time, student_comment, audit_status, audit_time, audit_remark from stu_mentorship_record
+        select record_id, student_id, tutor_id, guidance_topic, guidance_location, guidance_time, summary_file_path, photo_paths, semester, submit_time, student_comment, audit_status, audit_time, audit_remark from stu_mentorship_record
     </sql>
 
     <select id="selectStuMentorshipRecordList" parameterType="StuMentorshipRecord" resultMap="StuMentorshipRecordResult2">
         SELECT
         smr.*,
         si.student_name,
-        t.tutor_name,
-        t.tutor_id
+        si.academy,
+        t.tutor_name
         FROM
         stu_mentorship_record smr
         LEFT JOIN
         stu_info si ON smr.student_id = si.student_id
         LEFT JOIN
-        stu_mentor_info smi ON smr.student_id = smi.student_id
-        LEFT JOIN
-        tutors t ON smi.tutor_id = t.tutor_id
+        tutors t ON smr.tutor_id = t.tutor_id
         <where>
             <if test="studentId != null and studentId != ''">AND si.student_id = #{studentId}</if>
-            <if test="studentName != null and studentName != ''">AND si.student_Name = #{studentName}</if>
+            <if test="studentName != null and studentName != ''">AND si.student_name = #{studentName}</if>
+            <if test="academy != null and academy != ''">AND si.academy = #{academy}</if>
             <if test="tutorId != null and tutorId != ''">AND t.tutor_id = #{tutorId}</if>
+            <if test="tutorName != null and tutorName != ''">AND t.tutor_name = #{tutorName}</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">AND smr.guidance_topic = #{guidanceTopic}</if>
             <if test="guidanceLocation != null and guidanceLocation != ''">AND smr.guidance_location = #{guidanceLocation}</if>
             <if test="guidanceTime != null ">AND smr.guidance_time = #{guidanceTime}</if>
@@ -89,20 +91,20 @@
         SELECT
         smr.*,
         si.student_name,
-        t.tutor_name,
-        t.tutor_id
+        si.academy,
+        t.tutor_name
         FROM
         stu_mentorship_record smr
         LEFT JOIN
         stu_info si ON smr.student_id = si.student_id
         LEFT JOIN
-        stu_mentor_info smi ON smr.student_id = smi.student_id
-        LEFT JOIN
-        tutors t ON smi.tutor_id = t.tutor_id
+        tutors t ON smr.tutor_id = t.tutor_id
         <where>
             <if test="studentId != null and studentId != ''">AND si.student_id = #{studentId}</if>
-            <if test="studentName != null and studentName != ''">AND si.student_Name = #{studentName}</if>
+            <if test="studentName != null and studentName != ''">AND si.student_name = #{studentName}</if>
+            <if test="academy != null and academy != ''">AND si.academy = #{academy}</if>
             <if test="tutorId != null and tutorId != ''">AND t.tutor_id = #{tutorId}</if>
+            <if test="tutorName != null and tutorName != ''">AND t.tutor_name = #{tutorName}</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">AND smr.guidance_topic = #{guidanceTopic}</if>
             <if test="guidanceLocation != null and guidanceLocation != ''">AND smr.guidance_location = #{guidanceLocation}</if>
             <if test="guidanceTime != null ">AND smr.guidance_time = #{guidanceTime}</if>
@@ -123,7 +125,7 @@
         WHEN '已通过' THEN 2    -- 已通过最后
         ELSE 3                 -- 其他状态（如果有）
         END,
-        guidance_time ASC
+        submit_time DESC
     </select>
 
     <select id="selectStuMentorshipRecordByRecordId" parameterType="Integer" resultMap="StuMentorshipRecordResult">
@@ -131,21 +133,22 @@
         where record_id = #{recordId}
     </select>
 
-    <select id="searchTutorId" resultType="java.lang.String">
-        SELECT
-            smi.tutor_id
-        FROM
-            stu_mentorship_record smr
-                LEFT JOIN
-            stu_mentor_info smi ON smr.student_id = smi.student_id
-        WHERE smr.student_id = #{studentId}
-        limit 1
-    </select>
+<!--    <select id="searchTutorId" resultType="java.lang.String">-->
+<!--        SELECT-->
+<!--            smi.tutor_id-->
+<!--        FROM-->
+<!--            stu_mentorship_record smr-->
+<!--                LEFT JOIN-->
+<!--            stu_mentor_info smi ON smr.student_id = smi.student_id-->
+<!--        WHERE smr.student_id = #{studentId}-->
+<!--        limit 1-->
+<!--    </select>-->
 
     <insert id="insertStuMentorshipRecord" parameterType="StuMentorshipRecord" useGeneratedKeys="true" keyProperty="recordId">
         insert into stu_mentorship_record
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="tutorId != null and tutorId != ''">tutor_id,</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic,</if>
             <if test="guidanceLocation != null">guidance_location,</if>
             <if test="guidanceTime != null">guidance_time,</if>
@@ -161,6 +164,7 @@
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="tutorId != null and tutorId != ''">#{tutorId},</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">#{guidanceTopic},</if>
             <if test="guidanceLocation != null">#{guidanceLocation},</if>
             <if test="guidanceTime != null">#{guidanceTime},</if>
@@ -180,6 +184,7 @@
         update stu_mentorship_record
         <trim prefix="SET" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="tutorId != null and tutorId != ''">tutor_id = #{tutorId},</if>
             <if test="guidanceTopic != null and guidanceTopic != ''">guidance_topic = #{guidanceTopic},</if>
             <if test="guidanceLocation != null">guidance_location = #{guidanceLocation},</if>
             <if test="guidanceTime != null">guidance_time = #{guidanceTime},</if>

@@ -3,6 +3,7 @@ package com.ruoyi.system.domain.vo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.Data;
+
 import java.util.Date;
 
 public class StuLectureReportVo extends BaseEntity {
@@ -18,6 +19,10 @@ public class StuLectureReportVo extends BaseEntity {
      * 学生姓名
      */
     private String studentName;
+    /**
+     * 书院
+     */
+    private String academy;
     /**
      * 题目
      */
@@ -45,11 +50,11 @@ public class StuLectureReportVo extends BaseEntity {
      */
     private String reportLink;
     /**
-     *报告心得体会
+     * 报告心得体会
      */
     private String reportFeeling;
     /**
-     *报告心得体会文件名
+     * 报告心得体会文件名
      */
     private String reportFeelingName;
     /**
@@ -67,9 +72,9 @@ public class StuLectureReportVo extends BaseEntity {
     /**
      * 审核状态
      */
-    private Integer auditStatus ;
+    private Integer auditStatus;
     /**
-     *审核时间
+     * 审核时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date auditTime;
@@ -81,6 +86,14 @@ public class StuLectureReportVo extends BaseEntity {
      * 审核人姓名
      */
     private String nickName;
+
+    public String getAcademy() {
+        return academy;
+    }
+
+    public void setAcademy(String academy) {
+        this.academy = academy;
+    }
 
     public Integer getReportId() {
         return reportId;

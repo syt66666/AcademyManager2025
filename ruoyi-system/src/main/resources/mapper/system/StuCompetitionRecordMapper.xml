@@ -7,6 +7,8 @@
     <resultMap type="StuCompetitionRecord" id="StuCompetitionRecordResult">
         <result property="competitionId"    column="competition_id"    />
         <result property="studentId"    column="student_id"    />
+        <result property="studentName"    column="student_name"    />
+        <result property="academy"    column="academy"    />
         <result property="competitionName"    column="competition_name"    />
         <result property="competitionLevel"    column="competition_level"    />
         <result property="awardLevel"    column="award_level"    />
@@ -23,14 +25,15 @@
     </resultMap>
 
     <sql id="selectStuCompetitionRecordVo">
-        select competition_id, stu_info.student_id, competition_name, competition_level, award_level, scholarship_points, award_date, proof_material, audit_status, apply_time, nick_name, audit_time, audit_remark, semester, stu_info.student_name from stu_competition_record left join stu_info on stu_competition_record.student_id = stu_info.student_id
+        select competition_id, stu_info.student_id, stu_info.student_name, stu_info.academy, competition_name, competition_level, award_level, scholarship_points, award_date, proof_material, audit_status, apply_time, nick_name, audit_time, audit_remark, semester from stu_competition_record left join stu_info on stu_competition_record.student_id = stu_info.student_id
     </sql>
 
     <select id="selectStuCompetitionRecordList" parameterType="StuCompetitionRecord" resultMap="StuCompetitionRecordResult">
         <include refid="selectStuCompetitionRecordVo"/>
         <where>
             <if test="studentId != null  and studentId != ''"> and stu_info.student_id = #{studentId}</if>
-            <if test="competitionName != null  and competitionName != ''"> and competition_name like concat('%', #{competitionName}, '%')</if>
+            <if test="studentName != null  and studentName != ''"> and stu_info.student_name = #{studentName}</if>
+            <if test="academy != null  and academy != ''"> and stu_info.academy = #{academy}</if><if test="competitionName != null  and competitionName != ''"> and competition_name like concat('%', #{competitionName}, '%')</if>
             <if test="competitionLevel != null  and competitionLevel != ''"> and competition_level = #{competitionLevel}</if>
             <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
             <if test="scholarshipPoints != null "> and scholarship_points = #{scholarshipPoints}</if>
@@ -127,7 +130,8 @@
         <where>
             and audit_status != '未提交'
             <if test="studentId != null  and studentId != ''"> and stu_info.student_id = #{studentId}</if>
-            <if test="studentName != null  and studentName != ''"> and stu_info.student_Name = #{studentName}</if>
+            <if test="studentName != null  and studentName != ''"> and stu_info.student_name = #{studentName}</if>
+            <if test="academy != null  and academy != ''"> and stu_info.academy = #{academy}</if>
             <if test="competitionName != null  and competitionName != ''"> and competition_name like concat('%', #{competitionName}, '%')</if>
             <if test="competitionLevel != null  and competitionLevel != ''"> and competition_level = #{competitionLevel}</if>
             <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
@@ -160,13 +164,11 @@
     <select id="existsByUniqueFields" resultType="boolean">
         SELECT COUNT(1)
         FROM stu_competition_record
-        WHERE
-            student_id = #{studentId} AND
-            competition_name = #{competitionName} AND
-            competition_level = #{competitionLevel} AND
-            award_level = #{awardLevel} AND
-            semester = #{semester}
-            LIMIT 1
+        WHERE student_id = #{studentId}
+          AND competition_name = #{competitionName}
+          AND competition_level = #{competitionLevel}
+          AND award_level = #{awardLevel}
+          AND semester = #{semester} LIMIT 1
     </select>
 
     <select id="countAuditStatus" resultType="map">

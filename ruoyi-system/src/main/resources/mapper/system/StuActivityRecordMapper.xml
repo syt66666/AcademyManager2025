@@ -5,44 +5,66 @@
 <mapper namespace="com.ruoyi.system.mapper.StuActivityRecordMapper">
 
     <resultMap type="StuActivityRecord" id="StuActivityRecordResult">
-        <result property="activityId"    column="activity_id"    />
-        <result property="studentId"    column="student_id"    />
-        <result property="activityName"    column="activity_name"    />
-        <result property="activityLevel"    column="activity_level"    />
-        <result property="awardLevel"    column="award_level"    />
-        <result property="scholarshipPoints"    column="scholarship_points"    />
-        <result property="awardDate"    column="award_date"    />
-        <result property="proofMaterial"    column="proof_material"    />
-        <result property="semester"    column="semester"    />
-        <result property="applyTime"    column="apply_time"    />
-        <result property="nickName"    column="nick_name"    />
-        <result property="auditStatus"    column="audit_status"    />
-        <result property="auditTime"    column="audit_time"    />
-        <result property="auditRemark"    column="audit_remark"    />
-        <result property="studentName"    column="student_name"    />
+        <result property="activityId" column="activity_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="studentName" column="student_name"/>
+        <result property="academy" column="academy"/>
+        <result property="activityName" column="activity_name"/>
+        <result property="activityLevel" column="activity_level"/>
+        <result property="awardLevel" column="award_level"/>
+        <result property="scholarshipPoints" column="scholarship_points"/>
+        <result property="awardDate" column="award_date"/>
+        <result property="proofMaterial" column="proof_material"/>
+        <result property="semester" column="semester"/>
+        <result property="applyTime" column="apply_time"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="auditStatus" column="audit_status"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="auditRemark" column="audit_remark"/>
+        <result property="studentName" column="student_name"/>
     </resultMap>
 
     <sql id="selectStuActivityRecordVo">
-        select activity_id, stu_info.student_id, activity_name, activity_level, award_level, scholarship_points, award_date, proof_material, semester, apply_time, nick_name, audit_status, audit_time, audit_remark ,stu_info.student_name from stu_activity_record left join stu_info on stu_activity_record.student_id = stu_info.student_id
+        select activity_id,
+               stu_info.student_id,
+               stu_info.student_name,
+               stu_info.academy,
+               activity_name,
+               activity_level,
+               award_level,
+               scholarship_points,
+               award_date,
+               proof_material,
+               semester,
+               apply_time,
+               nick_name,
+               audit_status,
+               audit_time,
+               audit_remark
+        from stu_activity_record
+                 left join stu_info on stu_activity_record.student_id = stu_info.student_id
     </sql>
 
     <select id="selectStuActivityRecordList" parameterType="StuActivityRecord" resultMap="StuActivityRecordResult">
         <include refid="selectStuActivityRecordVo"/>
         <where>
-            <if test="studentId != null  and studentId != ''"> and stu_info.student_id = #{studentId}</if>
-            <if test="studentName != null  and studentName != ''"> and stu_info.student_name = #{studentName}</if>
-            <if test="activityName != null  and activityName != ''"> and activity_name like concat('%', #{activityName}, '%')</if>
-            <if test="activityLevel != null  and activityLevel != ''"> and activity_level = #{activityLevel}</if>
-            <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
-            <if test="scholarshipPoints != null "> and scholarship_points = #{scholarshipPoints}</if>
-            <if test="awardDate != null "> and award_date = #{awardDate}</if>
-            <if test="proofMaterial != null  and proofMaterial != ''"> and proof_material = #{proofMaterial}</if>
-            <if test="semester != null "> and semester = #{semester}</if>
-            <if test="applyTime != null "> and apply_time = #{applyTime}</if>
-            <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
-            <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
-            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
-            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="studentId != null  and studentId != ''">and stu_info.student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''">and stu_info.student_name = #{studentName}</if>
+            <if test="academy != null  and academy != ''">and stu_info.academy = #{academy}</if>
+            <if test="activityName != null  and activityName != ''">and activity_name like concat('%', #{activityName},
+                '%')
+            </if>
+            <if test="activityLevel != null  and activityLevel != ''">and activity_level = #{activityLevel}</if>
+            <if test="awardLevel != null  and awardLevel != ''">and award_level = #{awardLevel}</if>
+            <if test="scholarshipPoints != null ">and scholarship_points = #{scholarshipPoints}</if>
+            <if test="awardDate != null ">and award_date = #{awardDate}</if>
+            <if test="proofMaterial != null  and proofMaterial != ''">and proof_material = #{proofMaterial}</if>
+            <if test="semester != null ">and semester = #{semester}</if>
+            <if test="applyTime != null ">and apply_time = #{applyTime}</if>
+            <if test="nickName != null  and nickName != ''">and nick_name like concat('%', #{nickName}, '%')</if>
+            <if test="auditStatus != null  and auditStatus != ''">and audit_status = #{auditStatus}</if>
+            <if test="auditTime != null ">and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''">and audit_remark = #{auditRemark}</if>
             <if test="awardDateBegin != null and awardDateBegin != ''">
                 AND award_date &gt;= #{awardDateBegin}
             </if>
@@ -52,11 +74,11 @@
         </where>
         ORDER BY
         CASE audit_status
-            WHEN '未提交' THEN 0
-            WHEN '未通过' THEN 1
-            WHEN '未审核' THEN 2
-            WHEN '已通过' THEN 3
-            ELSE 4
+        WHEN '未提交' THEN 0
+        WHEN '未通过' THEN 1
+        WHEN '未审核' THEN 2
+        WHEN '已通过' THEN 3
+        ELSE 4
         END,
         award_date ASC
     </select>
@@ -65,19 +87,23 @@
         <include refid="selectStuActivityRecordVo"/>
         <where>
             and audit_status != '未提交'
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
-            <if test="activityName != null  and activityName != ''"> and activity_name like concat('%', #{activityName}, '%')</if>
-            <if test="activityLevel != null  and activityLevel != ''"> and activity_level = #{activityLevel}</if>
-            <if test="awardLevel != null  and awardLevel != ''"> and award_level = #{awardLevel}</if>
-            <if test="scholarshipPoints != null "> and scholarship_points = #{scholarshipPoints}</if>
-            <if test="awardDate != null "> and award_date = #{awardDate}</if>
-            <if test="proofMaterial != null  and proofMaterial != ''"> and proof_material = #{proofMaterial}</if>
-            <if test="semester != null "> and semester = #{semester}</if>
-            <if test="applyTime != null "> and apply_time = #{applyTime}</if>
-            <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
-            <if test="auditStatus != null  and auditStatus != ''"> and audit_status = #{auditStatus}</if>
-            <if test="auditTime != null "> and audit_time = #{auditTime}</if>
-            <if test="auditRemark != null  and auditRemark != ''"> and audit_remark = #{auditRemark}</if>
+            <if test="studentId != null  and studentId != ''">and student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''">and stu_info.student_name = #{studentName}</if>
+            <if test="academy != null  and academy != ''">and stu_info.academy = #{academy}</if>
+            <if test="activityName != null  and activityName != ''">and activity_name like concat('%', #{activityName},
+                '%')
+            </if>
+            <if test="activityLevel != null  and activityLevel != ''">and activity_level = #{activityLevel}</if>
+            <if test="awardLevel != null  and awardLevel != ''">and award_level = #{awardLevel}</if>
+            <if test="scholarshipPoints != null ">and scholarship_points = #{scholarshipPoints}</if>
+            <if test="awardDate != null ">and award_date = #{awardDate}</if>
+            <if test="proofMaterial != null  and proofMaterial != ''">and proof_material = #{proofMaterial}</if>
+            <if test="semester != null ">and semester = #{semester}</if>
+            <if test="applyTime != null ">and apply_time = #{applyTime}</if>
+            <if test="nickName != null  and nickName != ''">and nick_name like concat('%', #{nickName}, '%')</if>
+            <if test="auditStatus != null  and auditStatus != ''">and audit_status = #{auditStatus}</if>
+            <if test="auditTime != null ">and audit_time = #{auditTime}</if>
+            <if test="auditRemark != null  and auditRemark != ''">and audit_remark = #{auditRemark}</if>
             <if test="awardDateBegin != null and awardDateBegin != ''">
                 AND award_date &gt;= #{awardDateBegin}
             </if>
@@ -100,7 +126,8 @@
         where activity_id = #{activityId}
     </select>
 
-    <insert id="insertStuActivityRecord" parameterType="StuActivityRecord" useGeneratedKeys="true" keyProperty="activityId">
+    <insert id="insertStuActivityRecord" parameterType="StuActivityRecord" useGeneratedKeys="true"
+            keyProperty="activityId">
         insert into stu_activity_record
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id,</if>
@@ -149,14 +176,16 @@
             <if test="nickName != null">nick_name = #{nickName},</if>
             <if test="auditStatus != null">audit_status = #{auditStatus},</if>
             audit_time = #{auditTime},
-<!--            <if test="auditTime != null">audit_time = #{auditTime},</if>-->
+            <!--            <if test="auditTime != null">audit_time = #{auditTime},</if>-->
             <if test="auditRemark != null">audit_remark = #{auditRemark},</if>
         </trim>
         where activity_id = #{activityId}
     </update>
 
     <delete id="deleteStuActivityRecordByActivityId" parameterType="Integer">
-        delete from stu_activity_record where activity_id = #{activityId}
+        delete
+        from stu_activity_record
+        where activity_id = #{activityId}
     </delete>
 
     <delete id="deleteStuActivityRecordByActivityIds" parameterType="String">
@@ -169,20 +198,17 @@
     <select id="existsByUniqueFields" resultType="boolean">
         SELECT COUNT(1)
         FROM stu_activity_record
-        WHERE
-            student_id = #{studentId} AND
-            activity_name = #{activityName} AND
-            activity_level = #{activityLevel} AND
-            award_level = #{awardLevel} AND
-            semester = #{semester}
-            LIMIT 1
+        WHERE student_id = #{studentId}
+          AND activity_name = #{activityName}
+          AND activity_level = #{activityLevel}
+          AND award_level = #{awardLevel}
+          AND semester = #{semester} LIMIT 1
     </select>
 
     <select id="countAuditStatus" resultType="map">
-        SELECT
-            SUM(CASE WHEN audit_status = '未审核' THEN 1 ELSE 0 END) AS pending,
-            SUM(CASE WHEN audit_status = '已通过' THEN 1 ELSE 0 END) AS approved,
-            SUM(CASE WHEN audit_status = '未通过' THEN 1 ELSE 0 END) AS rejected
+        SELECT SUM(CASE WHEN audit_status = '未审核' THEN 1 ELSE 0 END) AS pending,
+               SUM(CASE WHEN audit_status = '已通过' THEN 1 ELSE 0 END) AS approved,
+               SUM(CASE WHEN audit_status = '未通过' THEN 1 ELSE 0 END) AS rejected
         FROM stu_activity_record
     </select>
 

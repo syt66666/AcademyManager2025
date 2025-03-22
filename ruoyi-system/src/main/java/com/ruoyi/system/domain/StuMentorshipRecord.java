@@ -28,6 +28,11 @@ public class StuMentorshipRecord extends BaseEntity {
      */
     @Excel(name = "学生姓名")
     private String studentName;
+
+    /**
+     * 学生所在书院
+     */
+    private String academy;
     /**
      * 导师工号
      */

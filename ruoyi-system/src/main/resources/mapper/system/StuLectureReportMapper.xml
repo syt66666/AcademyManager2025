@@ -5,6 +5,7 @@
         <result property="reportId"    column="report_id"    />
         <result property="studentId"    column="student_id"    />
         <result property="studentName"    column="student_name"    />
+        <result property="academy"    column="academy"    />
         <result property="reportTitle"    column="report_title"    />
         <result property="reporter"    column="reporter"    />
         <result property="reportDate"    column="report_date"    />
@@ -22,7 +23,8 @@
     </resultMap>
 
     <sql id="selectStuLectureReportVo">
-        select report_id, student_id, student_name, report_title, reporter, report_date, report_content, report_link, report_feeling, lecture_poster, report_picture, report_admit_time, audit_status, audit_time, audit_remark, nick_name, semester from stu_lec_report
+        select report_id, s1.student_id, s1.student_name,s2.academy, report_title, reporter, report_date, report_content, report_link, report_feeling, lecture_poster, report_picture, report_admit_time, audit_status, audit_time, audit_remark, nick_name, semester
+        from stu_lec_report s1 left join stu_info s2 on s1.student_id = s2.student_id
     </sql>
 
     <select id="selectStuLecReportByReportId" parameterType="Integer" resultMap="StuLectureReportResult">
@@ -69,13 +71,13 @@
     </insert>
 
     <select id="getAllLectureReportRecords" resultType="com.ruoyi.system.domain.StuLectureReport">
-        SELECT * FROM stu_lec_report
+        SELECT s1.*, s2.academy FROM stu_lec_report s1 left join stu_info s2 on s1.student_id = s2.student_id
         <where>
             <if test="studentId != null and studentId != ''">
-                AND student_id = #{studentId}
+                AND s1.student_id = #{studentId}
             </if>
             <if test="semester != null and semester != ''">
-                AND semester = #{semester}
+                AND s1.semester = #{semester}
             </if>
         </where>
         ORDER BY
@@ -90,10 +92,11 @@
     </select>
 
     <select id="selectStuLecReportList" resultType="com.ruoyi.system.domain.StuLectureReport">
-        SELECT * FROM stu_lec_report
+        SELECT s1.*, s2.academy FROM stu_lec_report s1 left join stu_info s2 on s1.student_id = s2.student_id
         <where>
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
-            <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
+            <if test="studentId != null  and studentId != ''"> and s1.student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''"> and s1.student_name like concat('%', #{studentName}, '%')</if>
+            <if test="academy != null  and academy != ''"> and s2.academy = #{academy}</if>
             <if test="reportTitle != null  and reportTitle != ''"> and report_title = #{reportTitle}</if>
             <if test="reporter != null  and reporter != ''"> and reporter = #{reporter}</if>
             <if test="reportDate != null "> and report_date = #{reportDate}</if>
@@ -117,7 +120,7 @@
         WHEN 1 THEN 2    -- 已通过最后
         ELSE 3
         END,
-        report_date ASC
+        report_admit_time DESC
     </select>
 
     <update id="updateStuLectureInformation">
@@ -147,6 +150,7 @@
             #{reportId}
         </foreach>
     </delete>
+
     <select id="existsByUniqueFields" resultType="boolean">
         SELECT COUNT(1)
         FROM stu_lec_report

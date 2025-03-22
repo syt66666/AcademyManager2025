@@ -22,6 +22,9 @@ public class StuLectureReport extends BaseEntity
     @Excel(name = "学生姓名")
     private String studentName;
 
+    /** 书院 */
+    private String academy;
+
     /** 讲座题目 */
     @Excel(name = "讲座题目")
     private String reportTitle;
@@ -83,6 +86,14 @@ public class StuLectureReport extends BaseEntity
     private String semesterStr;
 
     private String auditStatusStr;
+
+    public String getAcademy() {
+        return academy;
+    }
+
+    public void setAcademy(String academy) {
+        this.academy = academy;
+    }
 
     public Integer getAuditStatus() {
         return auditStatus;
