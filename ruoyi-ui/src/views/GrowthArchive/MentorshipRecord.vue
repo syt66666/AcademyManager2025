@@ -35,7 +35,6 @@
               </span>
             </template>
           </el-table-column>
-
           <!-- 指导主题 -->
           <el-table-column prop="guidanceTopic" label="指导主题" min-width="120">
             <template v-slot="scope">
@@ -45,7 +44,15 @@
               </div>
             </template>
           </el-table-column>
-
+          <!-- 导师姓名 -->
+          <el-table-column prop="tutorName" label="导师姓名" min-width="120">
+            <template v-slot="scope">
+              <div class="mentorship-name">
+                <i class="el-icon-s-custom mentor-icon"></i>
+                <span class="name-text">{{ scope.row.tutorName }}</span>
+              </div>
+            </template>
+          </el-table-column>
           <!-- 指导地点 -->
           <el-table-column prop="guidanceLocation" label="指导地点" width="120" align="center">
             <template v-slot="scope">
@@ -272,7 +279,16 @@
               <i slot="prefix" class="el-icon-s-opportunity input-icon"></i>
             </el-input>
           </el-form-item>
-
+          <!-- 指导导师 -->
+          <el-form-item label="导师工号" prop="tutorId">
+            <el-input
+              v-model="formData.tutorId"
+              placeholder="请输入导师工号"
+              class="custom-input"
+            >
+              <i slot="prefix" class="el-icon-s-opportunity input-icon"></i>
+            </el-input>
+          </el-form-item>
           <!-- 指导地点 -->
           <el-form-item label="指导地点" prop="guidanceLocation">
             <el-input
@@ -954,6 +970,7 @@ export default {
           // 构建核心数据对象
           const recordData = {
             recordId: this.currentRecordId,
+            tutorId: this.formData.tutorId,
             guidanceTopic: this.formData.guidanceTopic,
             guidanceLocation: this.formData.guidanceLocation,
             guidanceTime: this.formData.guidanceTime,
