@@ -56,150 +56,209 @@
         </el-card>
       </el-col>
     </el-row>
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学号" prop="studentId">
-        <el-input
-          v-model="queryParams.studentId"
-          placeholder="请输入学生学号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="导师工号" prop="tutorId">
-        <el-input
-          v-model="queryParams.tutorId"
-          placeholder="请输入导师工号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <!-- 查询表单 -->
+    <el-card class="query-form">
+      <el-form
+        :model="queryParams"
+        ref="queryForm"
+        size="small"
+        :inline="true"
+        v-show="showSearch"
+        label-width="100px"
+      >
+        <el-form-item label="学生学号" prop="studentId">
+          <el-input
+            v-model="queryParams.studentId"
+            placeholder="请输入学生学号"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="学生姓名" prop="studentName">
+          <el-input
+            v-model="queryParams.studentName"
+            placeholder="请输入学生姓名"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="导师工号" prop="tutorId">
+          <el-input
+            v-model="queryParams.tutorId"
+            placeholder="请输入导师工号"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="导师姓名" prop="tutorName">
+          <el-input
+            v-model="queryParams.tutorName"
+            placeholder="请输入导师姓名"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
 
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="warning"
-          plain
-          icon="el-icon-download"
-          size="mini"
-          @click="handleExport"
-          v-hasPermi="['system:mentorship:export']"
-        >导出</el-button>
-      </el-col>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    <!-- 表格 -->
+    <el-card class="table-container">
+      <div slot="header" class="table-header">
+        <span class="table-title">导师指导审核</span>
+        <div class="action-bar">
+          <el-button
+            type="success"
+            icon="el-icon-download"
+            class="action-btn export-btn"
+            @click="handleExport"
+            v-hasPermi="['system:mentorship:export']"
+          >数据导出
+          </el-button>
+        </div>
+      </div>
 
-    <el-table v-loading="loading" :data="mentorshipList" @selection-change="handleSelectionChange">
-      <el-table-column label="序号" width="80" align="center">
-        <template slot-scope="scope">
-          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-        </template>
-      </el-table-column>
-      <el-table-column label="学生学号" align="center" prop="studentId" min-width="120"/>
-      <el-table-column label="学生姓名" align="center" prop="studentName" min-width="120"/>
-      <el-table-column label="导师工号" align="center" prop="tutorId" min-width="120"/>
-      <el-table-column label="导师姓名" align="center" prop="tutorName" min-width="120"/>
-      <el-table-column label="指导主题" align="center" prop="guidanceTopic" min-width="120"/>
-      <el-table-column label="指导地点" align="center" prop="guidanceLocation" min-width="120"/>
-      <el-table-column label="指导日期" align="center" prop="guidanceTime" min-width="120">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="总结文档" width="140" align="center">
-        <template v-slot="scope">
-          <el-dropdown
-            trigger="click"
-            @command="handleDocCommand"
-            :disabled="!scope.row.summaryFilePath"
-          >
-            <el-button
-              type="primary"
-              size="mini"
-              plain
+      <el-table
+        v-loading="loading"
+        :data="mentorshipList"
+        class="enhanced-table"
+        :header-cell-style="headerStyle"
+        :row-class-name="tableRowClassName"
+      >
+        <!-- 展开行 -->
+        <el-table-column type="expand" width="60">
+          <template #default="{row}">
+            <div class="expanded-content">
+              <el-descriptions :column="2" border>
+                <el-descriptions-item label="导师工号">{{ row.tutorId }}</el-descriptions-item>
+                <el-descriptions-item label="导师姓名">{{ row.tutorName }}</el-descriptions-item>
+                <el-descriptions-item label="指导地点">{{ row.guidanceLocation }}</el-descriptions-item>
+                <el-descriptions-item label="学生评价">{{ row.studentComment }}</el-descriptions-item>
+                <el-descriptions-item label="提交时间" :span="2">
+                  {{ parseTime(row.submitTime, '{y}-{m}-{d}') }}
+                </el-descriptions-item>
+              </el-descriptions>
+            </div>
+          </template>
+        </el-table-column>
+        <!-- 默认显示的列 -->
+        <el-table-column label="序号" width="80" align="center">
+          <template slot-scope="scope">
+            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
+        <el-table-column label="学生学号" align="center" prop="studentId" min-width="120"/>
+        <el-table-column label="学生姓名" align="center" prop="studentName" width="120"/>
+        <el-table-column label="指导主题" align="center" prop="guidanceTopic" width="180"/>
+        <el-table-column label="指导日期" align="center" prop="guidanceTime" width="150">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="总结文档" width="150" align="center">
+          <template v-slot="scope">
+            <el-dropdown
+              trigger="click"
+              @command="handleDocCommand"
               :disabled="!scope.row.summaryFilePath"
             >
-              <i class="el-icon-document"></i> 文档操作
+              <el-button
+                type="primary"
+                size="mini"
+                plain
+                class="file-btn"
+                :disabled="!scope.row.summaryFilePath"
+              >
+                <i class="el-icon-document"></i> 文档操作
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item
+                  :command="{ action: 'preview', row: scope.row }"
+                >预览
+                </el-dropdown-item>
+                <el-dropdown-item
+                  :command="{ action: 'download', row: scope.row }"
+                >下载
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </template>
+        </el-table-column>
+        <el-table-column label="指导图片" width="150" align="center">
+          <template v-slot="scope">
+            <el-dropdown trigger="click"
+                         @command="handleFileCommand"
+                         :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
+              <el-button type="primary"
+                         size="mini"
+                         plain
+                         class="file-btn"
+                         :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
+                <i class="el-icon-picture"></i> 图片操作
+              </el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item
+                  :command="{ action: 'preview', files: scope.row.photoPaths }"
+                >预览
+                </el-dropdown-item>
+                <el-dropdown-item
+                  :command="{ action: 'download', files: scope.row.photoPaths }"
+                >下载
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </template>
+        </el-table-column>
+        <el-table-column label="审核状态" align="center" prop="auditStatus" width="100">
+          <template slot-scope="scope">
+            <el-tag :type="getStatusTagType(scope.row.auditStatus)">
+              {{ scope.row.auditStatus || '未审核' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width op-column">
+          <template slot-scope="scope">
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-check"
+              @click="handleAudit(scope.row,'通过')"
+              v-hasPermi="['system:mentorship:audit']"
+              v-if="scope.row.auditStatus !== '已通过'"
+            >通过
             </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item
-                :command="{ action: 'preview', row: scope.row }"
-              >预览
-              </el-dropdown-item>
-              <el-dropdown-item
-                :command="{ action: 'download', row: scope.row }"
-              >下载
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-        </template>
-      </el-table-column>
-      <el-table-column label="指导图片" width="140" align="center">
-        <template v-slot="scope">
-          <el-dropdown trigger="click"
-                       @command="handleFileCommand"
-                       :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
-            <el-button type="primary"
-                       size="mini"
-                       plain
-                       :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
-              <i class="el-icon-picture"></i> 图片操作
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-close"
+              @click="handleAudit(scope.row,'拒绝')"
+              v-hasPermi="['system:mentorship:audit']"
+              v-if="scope.row.auditStatus !== '未通过'"
+            >拒绝
             </el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item
-                :command="{ action: 'preview', files: scope.row.photoPaths }"
-              >预览
-              </el-dropdown-item>
-              <el-dropdown-item
-                :command="{ action: 'download', files: scope.row.photoPaths }"
-              >下载
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
-        </template>
-      </el-table-column>
-      <el-table-column label="提交时间" align="center" prop="submitTime" width="120">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.submitTime, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="学生评价" align="center" prop="studentComment" min-width="120"/>
-      <el-table-column label="审核状态" align="center" prop="auditStatus" min-width="120">
-        <template slot-scope="scope">
-          <el-tag :type="getStatusTagType(scope.row.auditStatus)">
-            {{ scope.row.auditStatus || '未审核' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="审核时间" align="center" prop="auditTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.auditTime, '{y}-{m}-{d}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="审核意见" align="center" prop="auditRemark" />
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-check"
-            @click="handleAudit(scope.row,'通过')"
-            v-hasPermi="['system:mentorship:audit']"
-          >通过</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-close"
-            @click="handleAudit(scope.row,'拒绝')"
-            v-hasPermi="['system:mentorship:audit']"
-          >拒绝</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-notebook-2"
+              @click="showAuditHistory(scope.row)"
+              v-hasPermi="['system:history:list']"
+            >日志
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <!-- 分页 -->
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+      />
+    </el-card>
     <!-- 文档预览对话框 -->
     <el-dialog
       :visible.sync="docPreviewVisible"
@@ -218,6 +277,7 @@
         <div v-html="docxContent" class="docx-content"></div>
       </div>
     </el-dialog>
+    <!-- 图片预览对话框 -->
     <el-dialog :visible.sync="previewVisible" title="图片预览" width="60%">
       <div style="text-align: center; margin-bottom: 20px;">
         <img
@@ -248,19 +308,67 @@
         </el-button>
       </div>
     </el-dialog>
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+    <!-- 审核历史对话框-->
+    <el-dialog
+      title="审核历史"
+      :visible.sync="historyVisible"
+      width="70%"
+      append-to-body
+    >
+      <el-table
+        v-loading="historyLoading"
+        :data="auditHistoryList"
+        border
+        style="margin-top: 15px;"
+      >
+        <el-table-column label="操作类型" align="center" prop="auditAction" width="120"/>
+        <el-table-column label="审核前状态" align="center" prop="auditStatusBefore">
+          <template slot-scope="{row}">
+            <el-tag :type="getStatusTagType(row.auditStatusBefore)" size="mini">
+              {{ row.auditStatusBefore || '-' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="审核后状态" align="center" prop="auditStatusAfter">
+          <template slot-scope="{row}">
+            <el-tag :type="getStatusTagType(row.auditStatusAfter)" size="mini">
+              {{ row.auditStatusAfter }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="审核人" align="center" prop="auditorId" width="120"/>
+        <el-table-column label="审核时间" align="center" prop="auditTime" width="160">
+          <template slot-scope="{row}">
+            {{ parseTime(row.auditTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="审核意见" align="center" prop="auditRemark" show-overflow-tooltip/>
+        <el-table-column label="操作信息" align="center" width="200">
+          <template slot-scope="{row}">
+            <div v-if="row.ipAddress" class="operation-info">
+              <span>IP: {{ row.ipAddress }}</span><br>
+              <span>设备: {{ row.deviceInfo || '未知' }}</span>
+            </div>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+      </el-table>
 
+      <!-- 分页 -->
+      <pagination
+        v-show="historyTotal > 0"
+        :total="historyTotal"
+        :page.sync="historyQueryParams.pageNum"
+        :limit.sync="historyQueryParams.pageSize"
+        @pagination="getAuditHistory"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { listAuditMentorship, auditMentorship,getAuditCount } from "@/api/system/mentorship";
+import {listAuditMentorship, auditMentorship, getAuditCount} from "@/api/system/mentorship";
+import {listAuditHistory} from "@/api/student/audit";
 import axios from "axios";
 
 export default {
@@ -290,6 +398,17 @@ export default {
         approved: 0,
         rejected: 0,
         pending: 0
+      },
+      // 审核历史相关
+      historyVisible: false,
+      historyLoading: false,
+      auditHistoryList: [],
+      historyTotal: 0,
+      historyQueryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        moduleType: 4, // 固定查询导师指导类型
+        moduleId: null
       },
       previewVisible: false,
       previewImages: [],
@@ -325,19 +444,19 @@ export default {
       // 表单校验
       rules: {
         studentId: [
-          { required: true, message: "学生学号不能为空", trigger: "blur" }
+          {required: true, message: "学生学号不能为空", trigger: "blur"}
         ],
         tutorId: [
-          { required: true, message: "导师工号不能为空", trigger: "blur" }
+          {required: true, message: "导师工号不能为空", trigger: "blur"}
         ],
         guidanceTopic: [
-          { required: true, message: "指导主题不能为空", trigger: "blur" }
+          {required: true, message: "指导主题不能为空", trigger: "blur"}
         ],
         guidanceTime: [
-          { required: true, message: "指导时间不能为空", trigger: "blur" }
+          {required: true, message: "指导时间不能为空", trigger: "blur"}
         ],
         semester: [
-          { required: true, message: "学期不能为空", trigger: "blur" }
+          {required: true, message: "学期不能为空", trigger: "blur"}
         ],
       }
     };
@@ -347,10 +466,30 @@ export default {
     this.fetchAuditCount();
   },
   methods: {
+    // 显示审核历史
+    async showAuditHistory(row) {
+      console.log(row.recordId)
+      this.historyQueryParams.moduleId = row.recordId
+      this.historyVisible = true
+      await this.getAuditHistory()
+    },
+
+    // 获取审核历史记录
+    async getAuditHistory() {
+      this.historyLoading = true
+      try {
+        const response = await listAuditHistory(this.historyQueryParams)
+        this.auditHistoryList = response.rows
+        this.historyTotal = response.total
+        console.log(response)
+      } finally {
+        this.historyLoading = false
+      }
+    },
     // 获取统计数据
     async fetchAuditCount() {
       try {
-        const { code, data } = await getAuditCount();
+        const {code, data} = await getAuditCount();
         if (code === 200) {
           this.auditStats = data;
         }
@@ -419,7 +558,7 @@ export default {
 
       try {
         this.currentDocument = file;
-        console.log("文件类型："+file.type)
+        console.log("文件类型：" + file.type)
         if (file.type === 'pdf') {
           this.docPreviewVisible = true; // 直接显示iframe
         } else if (file.type === 'docx') {
@@ -513,7 +652,7 @@ export default {
           throw new Error("无效的文件路径格式");
         }
         // 处理多个文件下载
-        if (paths.length > 1|| paths.length === 1) {
+        if (paths.length > 1 || paths.length === 1) {
           this.$confirm(`本次下载包含${paths.length}个文件，是否继续？`, '批量下载提示', {
             confirmButtonText: '立即下载',
             cancelButtonText: '取消',
@@ -639,6 +778,7 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
+      this.queryParams.auditStatus = null,
       this.handleQuery();
     },
     /** 导出按钮操作 */
@@ -664,7 +804,7 @@ export default {
           inputPattern: isApproved ? null : /.+/,
           inputErrorMessage: '拒绝原因不能为空'
         }
-      ).then(({ value }) => {
+      ).then(({value}) => {
         // 构建符合API要求的参数
         console.log('审核操作:', row.recordId, status, value);
         const auditData = {
@@ -684,11 +824,30 @@ export default {
       }).catch(() => {
         this.$message.info('已取消操作');
       });
-    }
+    },
+    submitFileForm() {
+      this.$refs.upload.submit();
+    },
+    tableRowClassName({rowIndex}) {
+      return rowIndex % 2 === 0 ? 'striped-row' : '';
+    },
+    // 自定义表头样式
+    headerStyle() {
+      return {
+        color: '#2d3540',
+        fontWeight: 600,
+        fontSize: '14px'
+      }
+    },
+    // 行点击处理
+    handleRowClick(row) {
+      this.$emit('row-click', row)
+    },
   }
 };
 </script>
-<style lang="scss" scoped>
+<style scoped>
+/* ================= 文档样式美化 ================= */
 .docx-preview {
   /* 容器样式 */
   background: #fff;
@@ -699,6 +858,7 @@ export default {
   overflow-y: auto;
 
   /* 滚动条美化 */
+
   &::-webkit-scrollbar {
     width: 8px;
     background: #f5f5f5;
@@ -718,6 +878,7 @@ export default {
     margin: 0 auto;
 
     /* 标题层级 */
+
     h1, h2, h3, h4, h5, h6 {
       color: #2c3e50;
       margin: 1.5em 0 1em;
@@ -754,12 +915,14 @@ export default {
     }
 
     /* 段落样式 */
+
     p {
       margin: 1em 0;
       text-indent: 2em;
     }
 
     /* 列表增强 */
+
     ul, ol {
       padding-left: 2em;
       margin: 1em 0;
@@ -775,6 +938,7 @@ export default {
     }
 
     /* 表格美化 */
+
     table {
       width: 100%;
       margin: 1.5em 0;
@@ -799,6 +963,7 @@ export default {
     }
 
     /* 代码块样式 */
+
     pre {
       background: #f8f9fa;
       border-radius: 6px;
@@ -813,6 +978,7 @@ export default {
     }
 
     /* 引用样式 */
+
     blockquote {
       border-left: 4px solid #42b983;
       background: #f8f9fa;
@@ -827,6 +993,7 @@ export default {
     }
 
     /* 图片适配 */
+
     img {
       max-width: 80%;
       height: auto;
@@ -836,6 +1003,7 @@ export default {
     }
 
     /* 页眉页脚隐藏 */
+
     .Header, .Footer {
       display: none;
     }
@@ -857,4 +1025,521 @@ export default {
     }
   }
 }
+
+/* ================= 全局样式变量 ================= */
+.app-container {
+  --primary-color: #409eff;
+  --success-color: #67c23a;
+  --warning-color: #e6a23c;
+  --danger-color: #f56c6c;
+  --info-color: #909399;
+  --border-radius: 8px;
+  --box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* ================= 统计卡片 ================= */
+.status-card {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      rgba(200, 200, 200, 0.3),
+      rgba(250, 250, 250, 0.2) 50%,
+      rgba(200, 200, 200, 0.3)
+    );
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+
+    &::before {
+      opacity: 0.8;
+      background: linear-gradient(
+        135deg,
+        rgba(180, 180, 180, 0.4),
+        rgba(220, 220, 220, 0.3) 50%,
+        rgba(180, 180, 180, 0.4)
+      );
+    }
+
+    .card-icon {
+      transform: rotate(8deg) scale(1.05);
+    }
+
+    .wave-effect {
+      transform: translateX(100%);
+    }
+  }
+}
+
+.wave-effect {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 80%
+  );
+  transform: translateX(-30%);
+  transition: transform 1.2s ease-in-out;
+  mix-blend-mode: overlay;
+}
+
+.card-content {
+  position: relative;
+  padding: 20px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+}
+
+.card-icon {
+  width: 64px;
+  height: 64px;
+  margin-right: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+  i {
+    font-size: 28px;
+  }
+}
+
+.card-info {
+  .title {
+    color: #666;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .count {
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #666, #444);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    transition: all 0.4s ease;
+  }
+}
+
+.pending {
+  .card-icon {
+    background: rgba(255, 193, 7, 0.12);
+
+    i {
+      color: #ffc107;
+    }
+  }
+
+  .wave-effect {
+    background: linear-gradient(to right,
+    rgba(255, 193, 7, 0.05),
+    rgba(255, 193, 7, 0.1)
+    );
+  }
+}
+
+.approved {
+  .card-icon {
+    background: rgba(76, 175, 80, 0.12);
+
+    i {
+      color: #4caf50;
+    }
+  }
+
+  .wave-effect {
+    background: linear-gradient(to right,
+    rgba(76, 175, 80, 0.05),
+    rgba(76, 175, 80, 0.1)
+    );
+  }
+}
+
+.rejected {
+  .card-icon {
+    background: rgba(244, 67, 54, 0.12);
+
+    i {
+      color: #f44336;
+    }
+  }
+
+  .wave-effect {
+    background: linear-gradient(to right,
+    rgba(244, 67, 54, 0.05),
+    rgba(244, 67, 54, 0.1)
+    );
+  }
+}
+
+/* ================= 查询表单 ================= */
+.query-form {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top: 20px;
+
+  .el-form-item {
+    margin-bottom: 16px;
+    margin-right: 20px;
+
+    &__label {
+      font-size: 14px;
+      color: #2d3540;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+  }
+
+  .el-input__inner,
+  .el-select .el-input__inner {
+    height: 40px;
+    width: 220px;
+    border-radius: 8px;
+    border: 1px solid rgba(228, 231, 237, 0.6);
+    background: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3), 0 2px 4px rgba(0, 0, 0, 0.05);
+
+    &:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-color), 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+  }
+
+  .el-button-group {
+    gap: 12px;
+    margin-left: 8px;
+
+    .el-button:not(:last-child) {
+      margin-right: 12px;
+    }
+  }
+}
+
+/* ================= 数据表格 ================= */
+.table-container {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.table-container:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* 表格标题栏 */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(145deg, #f8fafc, #f0f4f8);
+}
+
+.table-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3540;
+  letter-spacing: 0.5px;
+}
+
+/* ================= 增强表格样式 ================= */
+.enhanced-table {
+  --table-border-color: rgba(228, 231, 237, 0.6);
+  --header-bg: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 100%);
+  --hover-bg: rgba(241, 245, 249, 0.6);
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  overflow: hidden;
+}
+
+/* 表头样式 */
+.enhanced-table ::v-deep .el-table__header th {
+  background: var(--header-bg) !important;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--table-border-color) !important;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: capitalize;
+  position: relative;
+}
+
+.enhanced-table ::v-deep .el-table__header th::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg,
+  rgba(255, 255, 255, 0) 0%,
+  rgba(224, 232, 255, 0.6) 50%,
+  rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* 表体样式 */
+.enhanced-table ::v-deep .el-table__body td {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  box-shadow 0.3s ease;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(228, 231, 237, 0.5) !important;
+}
+
+/* 行交互效果 */
+.enhanced-table ::v-deep .el-table__body tr:hover td {
+  background: var(--hover-bg) !important;
+  transform: perspective(100px) translateZ(2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 斑马纹效果 */
+.enhanced-table ::v-deep .el-table__row.striped-row td {
+  background: linear-gradient(
+    to right,
+    rgba(251, 253, 255, 0.6),
+    rgba(245, 247, 250, 0.6)
+  );
+}
+
+/* ================= 操作列 ================= */
+.op-column {
+  min-width: 240px;
+}
+
+.op-btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.op-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+
+  &__icon {
+    margin-right: 6px;
+    font-size: 15px;
+    transition: transform 0.2s ease;
+  }
+
+  &__text {
+    position: relative;
+    top: 1px;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+    .op-btn__icon {
+      transform: scale(1.15);
+    }
+  }
+
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.op-btn--approve {
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.2);
+
+  &:hover {
+    background: rgba(34, 197, 94, 0.06);
+    border-color: rgba(34, 197, 94, 0.3);
+  }
+}
+
+.op-btn--reject {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.06);
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+.op-btn--log {
+  color: #6366f1;
+  border-color: rgba(99, 102, 241, 0.2);
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.06);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+}
+
+/* ================= 通用按钮 ================= */
+.action-btn,
+.query-form .el-button {
+  min-width: 100px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+
+  i {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+}
+
+.el-button--primary,
+.export-btn {
+  background: linear-gradient(135deg, #409EFF 0%, #3375ff 100%);
+  color: white !important;
+}
+
+.query-form .el-button:not(.el-button--primary) {
+  background: linear-gradient(135deg, #f0f2f5 0%, #e5e9ef 100%);
+  color: #606266;
+  border: 1px solid #e4e7ed;
+}
+
+/* 文件操作按钮 - 禁用状态美化 */
+.file-btn[disabled] {
+  /* 颜色 */
+  background-color: #f5f7fa !important;
+  border-color: #e4e7ed !important;
+  color: #c0c4cc !important;
+
+  /* 视觉效果 */
+  opacity: 0.8;
+  cursor: not-allowed;
+
+  /* 禁用悬停效果 */
+
+  &:hover, &:focus {
+    background-color: #f5f7fa !important;
+    border-color: #e4e7ed !important;
+    color: #c0c4cc !important;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* 图标颜色 */
+
+  i {
+    color: inherit !important;
+  }
+}
+
+/* 正常状态保持原有样式 */
+.file-btn:not([disabled]) {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  }
+}
+
+/* ================= 响应式调整 ================= */
+@media (max-width: 768px) {
+  /* 统计卡片 */
+  .status-card {
+    margin-bottom: 8px;
+
+    .card-content {
+      padding: 12px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      margin-right: 16px;
+
+      i {
+        font-size: 20px;
+      }
+    }
+
+    .count {
+      font-size: 24px;
+    }
+  }
+
+  /* 查询表单 */
+  .query-form {
+    padding: 16px;
+
+    .el-form-item {
+      margin-bottom: 8px !important;
+    }
+
+    .el-date-editor {
+      width: 100% !important;
+    }
+  }
+
+  /* 操作按钮 */
+  .op-btn-group {
+    gap: 6px;
+  }
+
+  .op-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+
+    &__icon {
+      font-size: 14px;
+      margin-right: 4px;
+    }
+
+    &__text {
+      display: none;
+    }
+  }
+}
+
 </style>
