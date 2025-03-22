@@ -136,10 +136,10 @@
                 <el-descriptions-item label="导师工号">{{ row.tutorId }}</el-descriptions-item>
                 <el-descriptions-item label="导师姓名">{{ row.tutorName }}</el-descriptions-item>
                 <el-descriptions-item label="指导地点">{{ row.guidanceLocation }}</el-descriptions-item>
-                <el-descriptions-item label="学生评价">{{ row.studentComment }}</el-descriptions-item>
                 <el-descriptions-item label="提交时间" :span="2">
                   {{ parseTime(row.submitTime, '{y}-{m}-{d}') }}
                 </el-descriptions-item>
+                <el-descriptions-item label="学生评价">{{ row.studentComment }}</el-descriptions-item>
               </el-descriptions>
             </div>
           </template>
@@ -158,7 +158,7 @@
             <span>{{ parseTime(scope.row.guidanceTime, '{y}-{m}-{d}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="总结文档" width="150" align="center">
+        <el-table-column label="总结文档" width="160" align="center">
           <template v-slot="scope">
             <el-dropdown
               trigger="click"
@@ -187,7 +187,7 @@
             </el-dropdown>
           </template>
         </el-table-column>
-        <el-table-column label="指导图片" width="150" align="center">
+        <el-table-column label="指导图片" width="160" align="center">
           <template v-slot="scope">
             <el-dropdown trigger="click"
                          @command="handleFileCommand"
@@ -778,7 +778,7 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
-      this.queryParams.auditStatus = null,
+      this.queryParams.auditStatus = null;
       this.handleQuery();
     },
     /** 导出按钮操作 */
@@ -1483,7 +1483,131 @@ export default {
     box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
   }
 }
+/* 展开行样式优化 */
+/* 展开箭头 */
+.el-table__expand-icon {
+  color: #409EFF;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 16px;
+  position: relative;
+}
 
+.el-table__expand-icon:hover {
+  color: #3375ff;
+}
+
+.el-table__expand-icon--expanded {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* 内容容器 */
+.expanded-content {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin: 8px 12px;
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.02),
+    0 3px 6px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 渐变装饰线 */
+.expanded-content::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(
+    180deg,
+    #409EFF 0%,
+    rgba(64, 158, 255, 0.4) 100%
+  );
+}
+
+/* 描述列表优化 */
+.expanded-content ::v-deep .el-descriptions {
+  margin: 8px 0;
+}
+
+.expanded-content ::v-deep .el-descriptions__label {
+  width: 100px;
+  color: #5a5e66;
+  font-weight: 500;
+  position: relative;
+  padding-left: 8px;
+}
+
+.expanded-content ::v-deep .el-descriptions__label::after {
+  content: ':';
+  position: absolute;
+  right: -12px;
+  color: #909399;
+}
+
+.expanded-content ::v-deep .el-descriptions__content {
+  color: #303133;
+  padding-left: 12px;
+}
+
+/* 响应式处理 */
+@media (max-width: 768px) {
+  .expanded-content {
+    padding: 12px;
+    margin: 6px 8px;
+  }
+
+  .expanded-content ::v-deep .el-descriptions {
+    --el-descriptions-table-border: 0;
+  }
+
+  .expanded-content ::v-deep .el-descriptions-item {
+    display: flex;
+    flex-direction: column;
+    padding: 6px 0;
+  }
+
+  .expanded-content ::v-deep .el-descriptions__label {
+    width: auto;
+    font-size: 13px;
+    padding-left: 0;
+    margin-bottom: 4px;
+  }
+
+  .expanded-content ::v-deep .el-descriptions__label::after {
+    content: none;
+  }
+
+  .expanded-content ::v-deep .el-descriptions__content {
+    padding-left: 0;
+    font-size: 14px;
+  }
+}
+
+/* 入场动画 */
+.el-table__expanded-cell {
+  transition:
+    background-color 0.3s ease,
+    opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.el-table__expanded-cell-enter-active {
+  animation: expandSlide 0.3s ease-out;
+}
+
+@keyframes expandSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 /* ================= 响应式调整 ================= */
 @media (max-width: 768px) {
   /* 统计卡片 */
