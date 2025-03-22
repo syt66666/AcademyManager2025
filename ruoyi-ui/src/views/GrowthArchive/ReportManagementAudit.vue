@@ -238,6 +238,7 @@
               icon="el-icon-check"
               @click="handleAudit(scope.row,'通过')"
               v-hasPermi="['system:report:audit']"
+              v-if="scope.row.auditStatus !== 1"
             >通过
             </el-button>
             <el-button
@@ -246,6 +247,7 @@
               icon="el-icon-close"
               @click="handleAudit(scope.row,'拒绝')"
               v-hasPermi="['system:report:audit']"
+              v-if="scope.row.auditStatus !== 2"
             >拒绝
             </el-button>
             <el-button
@@ -866,7 +868,6 @@ export default {
         '通过': 1,
         '拒绝': 2,
       };
-
       this.$prompt(
         isApproved ? '确认通过审核吗？' : '请输入拒绝原因',
         '审核确认',

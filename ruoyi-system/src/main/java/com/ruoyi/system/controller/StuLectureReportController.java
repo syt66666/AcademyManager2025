@@ -74,13 +74,15 @@ public class StuLectureReportController extends BaseController{
     public AjaxResult updateExcel(@RequestParam(value = "studentLectureReport", required = false) String studentLectureReport,
                                   @RequestParam(value = "reportFeeling", required = false) MultipartFile reportFeeling,
                                   @RequestParam(value = "reportPicture", required = false) MultipartFile[] reportPictures,
-                                  @RequestParam(value = "previewImages", required = false) String previewImages) {
-        //拿到需要更新的报告信息并做校验
+                                  @RequestParam(value = "previewImages", required = false) String previewImages) throws IOException {
         AjaxResult ajaxResult = judgeAndSetReportInformation(studentLectureReport, reportFeeling, reportPictures, previewImages);
+        StuLectureReport report = (StuLectureReport)ajaxResult.get(DATA_TAG);
+        // 获取旧记录
+
+
         if(ajaxResult.isError()){
             return AjaxResult.error(ajaxResult.get(MSG_TAG).toString());
         }
-        StuLectureReport report = (StuLectureReport)ajaxResult.get(DATA_TAG);
         //更新信息
         IStuLectureReportService.updateStudentLectureReport(report);
         return AjaxResult.success();
@@ -200,14 +202,20 @@ public class StuLectureReportController extends BaseController{
                 }
                 report.setReportPicture(new ObjectMapper().writeValueAsString(filePaths));
             }
-
-            //处理心得体会上传
-            if(reportFeeling != null && !reportFeeling.isEmpty()){
-                // 判断文件大小是否超过500KB
-                if (reportFeeling.getSize() > 500 * 1024) {
-                    return AjaxResult.error("报告文件大小不能超过500KB");
-                }
-                report.setReportFeeling(saveFile(reportFeeling));
+            StuLectureReport oldRecord = IStuLectureReportService.selectStuLecReportByReportId(report.getReportId());
+            // ================= 处理总结文档 =================
+            if (reportFeeling != null && !reportFeeling.isEmpty()) {
+                // 情况1：上传了新文件
+                String newPath = saveFile(reportFeeling);
+                report.setReportFeeling(newPath);
+//            deleteFile(oldRecord.getSummaryFilePath()); // 删除旧文件
+            } else if (report.getReportFeeling().isEmpty() && oldRecord.getReportFeeling() != null) {
+                // 情况2：没有上传文件但清空了路径（表示删除）
+//           deleteFile(oldRecord.getSummaryFilePath());
+                report.setReportFeeling(null);
+            } else {
+                // 情况3：保持原文件不变
+                report.setReportFeeling(oldRecord.getReportFeeling());
             }
 
         } catch (Exception e) {

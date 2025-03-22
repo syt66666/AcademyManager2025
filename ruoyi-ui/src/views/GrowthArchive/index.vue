@@ -302,9 +302,11 @@ export default {
 .container {
   background: var(--bg-gradient);
   margin: 0 auto;
-  max-width: 100%;
+  width: 100%;
   min-height: 100vh;
-  padding: 1rem;
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  padding: 2rem;
 }
 
 .main-container {
@@ -316,6 +318,7 @@ export default {
   overflow: hidden;
   padding: 2rem;
   position: relative;
+  width: 100%;
 }
 
 /* 导航栏样式 */
@@ -531,21 +534,36 @@ export default {
 
 /* 模块面板 */
 .module-panel {
+  /* 定位相关样式 */
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-40%, -30%); /* 同时修正X/Y轴偏移 */
+
+  /* 其他保持原有样式 */
   backdrop-filter: blur(10px);
   background: rgba(255,255,255,0.98);
   border: 1px solid rgba(255,255,255,0.3);
   border-radius: 1.5rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  left: 50%;
   max-width: 1000px;
   padding: 2rem;
-  position: fixed;
-  top: 50%;
-  transform: translate(-50%, -30%);
   width: 80%;
   z-index: 1000;
 }
+.panel-enter-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
+.panel-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.panel-enter,
+.panel-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -40%); /* 与居中位置保持相同X轴偏移 */
+}
 .panel-header {
   align-items: center;
   border-bottom: 1px solid rgba(0,0,0,0.1);

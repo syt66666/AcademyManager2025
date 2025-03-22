@@ -113,7 +113,7 @@
             <template v-slot="scope">
               <el-dropdown trigger="click" @command="handleFileCommand" :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
                 <el-button type="primary" size="mini" plain :disabled="!scope.row.reportPicture || scope.row.reportPicture === '[]'">
-                  <i class="el-icon-picture"></i> 文件操作
+                  <i class="el-icon-picture"></i> 图片操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item
@@ -142,7 +142,6 @@
               </el-tag>
             </template>
           </el-table-column>
-
           <el-table-column label="操作" width="120" align="center">
             <template v-slot="scope">
               <template v-if="formatAuditStatus(scope.row.auditStatus) === '未通过'">
@@ -276,7 +275,7 @@
                 :limit="1"
                 :on-change="handleSummaryChange"
                 :on-remove="handleSummaryRemove"
-                :file-list="summaryFileList"
+                :file-list="reportFeelingList"
                 class="enhanced-upload"
               >
                 <!-- 自定义上传按钮 -->
@@ -411,6 +410,7 @@ export default {
     return {
       originalFeelingName: '', // 保存原始文件名
       reportFeelingList: [], // 总结文档上传列表
+      reportFile:'',
       isEdit: false,//判断修改还是插入
       previewVisible: false,
       fileList: [],
@@ -580,19 +580,6 @@ export default {
         this.downloadReportPicture(command.files)
       }
     },
-    // // 修正后的文件处理方法
-    // async handlePreview(files) {
-    //   try {
-    //     const filePaths = Array.isArray(files) ? files : JSON.parse(files)
-    //     this.fileList = filePaths.map(path => ({
-    //       url: `${process.env.VUE_APP_BASE_API}/profile/${path}`,
-    //       name: path.split('/').pop()
-    //     }))
-    //     this.previewVisible = true
-    //   } catch (error) {
-    //     this.$message.error('预览失败：' + error.message)
-    //   }
-    // },
 
 // 修正后的文件上传处理
     handleFileChange(file, fileList) {
@@ -702,6 +689,7 @@ export default {
         console.log("this.currentRecordId:"+this.currentRecordId)
         // 处理总结文档回显
         this.reportFeelingList = [];
+        this.reportFile=null;
         if (row.reportFeeling) {
           // 将数据库中的路径字符串转换为上传组件需要的格式
           const fileName = row.reportFeelingName || this.getFileName(row.reportFeeling);
@@ -933,13 +921,15 @@ export default {
       this.originalFeelingName = file.name
       // 关键修改：获取原生文件对象
       this.reportFeelingList = fileList
-      this.reportFeeling = file.raw // 使用 raw 属性获取原生 File
-      console.log(this.reportFeeling)
+      this.reportFile=file.raw
+      console.log("this.reportFile"+this.reportFile)
     },
 
     // 文件移除回调
     handleSummaryRemove() {
       this.reportFeelingList = []
+      this.reportFeeling = ''
+      this.formData.reportFeeling = ''
       this.originalFeelingName = ''//清空文件名
     },
 
@@ -998,12 +988,13 @@ export default {
 
 
           this.formData.reportFeelingName = this.originalFeelingName
+          this.formData.reportFeeling = this.reportFeeling
           console.log('表单数据:', this.formData)
           const formData = new FormData();
           const json = JSON.stringify(this.formData);
           formData.append('studentLectureReport', json);
-          formData.append('reportFeeling', this.reportFeeling);
-          console.log('表单数据formData.reportFeeling:', this.reportFeeling);
+          formData.append('reportFeeling', this.reportFile);
+          console.log('表单数据formData.reportFeeling:', this.reportFile);
 
           // 构建文件数据
           const keepFiles = this.fileList
@@ -1081,11 +1072,13 @@ export default {
 <style scoped>
 /* ================= 全局容器样式 ================= */
 .container {
-  max-width: 1440px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   background: linear-gradient(160deg, #EBF4FF 0%, #EBF8FF 100%);
   min-height: 100vh;
+  display: flex;
+  justify-content: center; /* 水平居中 */
 }
 
 .main-container {
@@ -1095,6 +1088,9 @@ export default {
   padding: 2rem;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 1400px; /* 添加最大宽度限制 */
+  margin: 0 auto;     /* 自动水平居中 */
 }
 
 /* ================= 导航栏样式 ================= */

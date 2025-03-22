@@ -129,7 +129,7 @@
             <if test="reportContent != null and reportContent != ''">report_content = #{reportContent},</if>
             <if test="reportLocation != null  and reportLocation != ''"> report_location = #{reportLocation},</if>
             <if test="reportLink != null and reportLink != ''">report_link = #{reportLink},</if>
-            <if test="reportFeeling != null and reportFeeling != ''">report_feeling = #{reportFeeling},</if>
+            <if test="reportFeeling != ''">report_feeling = #{reportFeeling},</if>
             <if test="reportFeelingName != null and reportFeelingName != ''">report_feeling_name = #{reportFeelingName},</if>
             <if test="lecturePoster != null and lecturePoster != ''">lecture_poster = #{lecturePoster},</if>
             <if test="reportPicture != null and reportPicture != ''">report_picture = #{reportPicture},</if>

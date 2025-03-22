@@ -773,11 +773,13 @@ export default {
 <style scoped>
 /* ================= 全局容器样式 ================= */
 .container {
-  max-width: 1440px;
+  width: 100%;
   margin: 0 auto;
   padding: 2rem;
   background: linear-gradient(160deg, #EBF4FF 0%, #EBF8FF 100%);
   min-height: 100vh;
+  display: flex;
+  justify-content: center; /* 水平居中 */
 }
 
 .main-container {
@@ -787,6 +789,9 @@ export default {
   padding: 2rem;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  max-width: 1400px; /* 添加最大宽度限制 */
+  margin: 0 auto;     /* 自动水平居中 */
 }
 
 /* ================= 导航栏样式 ================= */
