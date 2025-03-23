@@ -244,7 +244,6 @@ export default {
     margin: 20px auto;
   }
 }
-
 // 输入框组
 .el-input {
   height: 38px;
@@ -271,7 +270,7 @@ export default {
   .input-icon {
     width: 20px;
     height: 20px;
-    margin-left: 10px;
+    margin-left: 3px;
     color: #90CAF9;
     transition: color 0.3s;
 
