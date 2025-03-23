@@ -111,7 +111,7 @@
                 <el-button type="primary"
                            size="mini"
                            plain
-                           :disabled="!scope.row.photoPaths ||                                                                                        scope.row.photoPaths === '[]'">
+                           :disabled="!scope.row.photoPaths || scope.row.photoPaths === '[]'">
                   <i class="el-icon-picture"></i> 图片操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
@@ -285,9 +285,19 @@
               v-model="formData.tutorId"
               placeholder="请输入导师工号"
               class="custom-input"
+              @blur="fetchTutorName"
             >
-              <i slot="prefix" class="el-icon-s-opportunity input-icon"></i>
+              <i slot="prefix" class="el-icon-user input-icon"></i>
             </el-input>
+            <div class="tutor-name-info">
+    <span v-if="formData.tutorName" class="tutor-name">
+      <i class="el-icon-user"></i>
+      {{ formData.tutorName }}
+    </span>
+              <span v-else class="tutor-tip">
+      （输入工号后自动显示导师姓名）
+    </span>
+            </div>
           </el-form-item>
           <!-- 指导地点 -->
           <el-form-item label="指导地点" prop="guidanceLocation">
@@ -351,7 +361,7 @@
               <template #tip>
                 <div class="custom-upload-tip">
                   <i class="el-icon-info"></i>
-                  支持格式：PDF/DOC/DOCX，单个文件 ≤10MB
+                  仅支持单个文件上传（格式：PDF/DOCX，≤5MB）
                 </div>
               </template>
 
@@ -391,7 +401,7 @@
               class="custom-upload"
             >
               <i class="el-icon-plus"></i>
-              <div slot="tip" class="el-upload__tip">支持格式：JPG/PNG 单文件≤10MB 最多5张</div>
+              <div slot="tip" class="el-upload__tip">支持最多5张图片上传（格式：JPG/PNG，≤5MB）</div>
             </el-upload>
           </el-form-item>
 
@@ -419,6 +429,7 @@
         title="文档预览"
         width="80%"
         class="native-pdf-preview"
+        @closed="handlePdfDialogClose"
       >
         <div v-if="currentDocument.type === 'pdf'" class="preview-container">
           <iframe
@@ -444,11 +455,13 @@ import {
   updateMentorship,
   checkMentorshipUnique,
 } from "@/api/system/mentorship";
-import {Properties as $download} from "svg-sprite-loader/examples/custom-runtime-generator/build/main";
+import {getTutors} from "@/api/student/tutor";
 
 export default {
   data() {
     return {
+      allowedImageTypes: ['image/jpg', 'image/png','image/jpeg'], // 允许的文件类型
+      maxImageSize: 5 * 1024 * 1024, // 5MB限制
       currentPreviewIndex: 0,
       currentDownloadFile: '',
       docPreviewVisible: false,
@@ -477,6 +490,8 @@ export default {
       fileList: [],
       activeSemester: '', // 当前学期
       formData: {
+        tutorId: '',
+        tutorName: '',
         guidanceTopic: '',
         guidanceLocation: '',
         guidanceTime: '',
@@ -495,6 +510,12 @@ export default {
         guidanceLocation: [
           {required: true, message: '指导地点不能为空', trigger: 'blur'}
         ],
+        tutorId: [
+          {required: true, message: '导师工号不能为空', trigger: 'blur'}
+        ],
+        // tutorName: [
+        //   {required: true, message: '导师姓名不能为空', trigger: 'blur'}
+        // ],
         guidanceTime: [
           {required: true, message: '请选择指导时间', trigger: 'change'}
         ]
@@ -513,6 +534,50 @@ export default {
     this.fetchMeetingRecords();  // 在页面加载时获取数据
   },
   methods: {
+    handlePdfDialogClose() {
+      // 强制释放资源
+      this.$refs.pdfIframe.src = '';
+      this.currentDocument = null;
+    },
+
+    disablePdfInteractions() {
+      const iframe = this.$refs.pdfIframe;
+      if (!iframe) return;
+
+      try {
+        const iframeDoc = iframe.contentDocument;
+        // 禁用文本选择
+        iframeDoc.body.style.userSelect = 'none';
+        // 移除所有点击处理器
+        iframeDoc.querySelectorAll('*').forEach(el => {
+          el.onclick = null;
+        });
+      } catch (e) {
+        console.warn('PDF安全策略限制:', e);
+      }
+    },
+    async fetchTutorName() {
+      if (!this.formData.tutorId) {
+        this.formData.tutorName = '';
+        return;
+      }
+
+      try {
+        const response = await getTutors(this.formData.tutorId);
+        if (response.code === 200 && response.data) {
+          this.formData.tutorName = response.data.tutorName || '未知导师';
+          // 自动填充导师姓名到表格显示字段（如果需要）
+          this.formData.tutorName = response.data.tutorName;
+        } else {
+          this.$message.warning('未找到该导师信息');
+          this.formData.tutorName = '';
+        }
+      } catch (error) {
+        console.error('获取导师信息失败:', error);
+        this.$message.error('导师信息查询失败');
+        this.formData.tutorName = '';
+      }
+    },
     // 处理文档操作命令
     handleDocCommand(command) {
       console.log(command.action)
@@ -614,6 +679,28 @@ export default {
         this.$message.warning('只能上传一个文件')
         fileList.splice(0, 1)
       }
+      // 格式验证
+      const allowedTypes = ['application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+
+      if (!allowedTypes.includes(file.raw.type)) {
+        this.$message.error('仅支持PDF和DOCX格式');
+        this.summaryFileList = []
+        this.summaryFile = null
+        this.formData.summaryFilePath = ''
+        return false;
+      }
+
+      // 大小验证（5MB）
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        this.$message.error('文件大小不能超过5MB');
+        this.summaryFileList = []
+        this.summaryFile = null
+        this.formData.summaryFilePath = ''
+        return false;
+      }
+
       // 保存原始文件名（新增）
       this.originalSummaryFileName = file.name
       // 关键修改：获取原生文件对象
@@ -702,9 +789,6 @@ export default {
       };
     },
 
-    $download() {
-      return $download
-    },
     //保存草稿
     async handleSave() {
       await this.submitData("未提交");
@@ -870,8 +954,43 @@ export default {
       }
     },
     handleFileChange(file, fileList) {
-      this.fileList = fileList.slice(-5); // 保持最多5个文件
+      // 额外参数用于显示错误提示
+      const done = (condition, message) => {
+        if (!condition) {
+          this.$message.error(message)
+          // 移除非法的最后一个文件
+          const newFiles = fileList.slice(0, fileList.length - 1)
+          this.fileList = newFiles.slice(-5)
+          return false
+        }
+        // 保留合法文件并限制最多5个
+        this.fileList = fileList.slice(-5)
+        return true
+      }
+      console.log("file.raw.type:", file.raw.type)
+      // 类型验证
+      const isValidType = this.allowedImageTypes.includes(file.raw.type)
+      if (!isValidType) {
+        return done(
+          false,
+          `不支持 ${file.name} 的文件类型，请上传 PNG/JPG 格式的图片`
+        )
+      }
+
+      // 大小验证
+      const isValidSize = file.size <= this.maxImageSize
+      if (!isValidSize) {
+        return done(false, `文件 ${file.name} 超过5MB大小限制`)
+      }
+
+      // 扩展名二次验证（防止伪装扩展名）
+      const fileExt = file.name.split('.').pop().toLowerCase()
+      const isValidExt = ['jpg', 'png'].includes(fileExt)
+      if (!isValidExt) {
+        return done(false, `文件 ${file.name} 的扩展名不合法`)
+      }
     },
+
 
     handleFileRemove(file, fileList) {
       this.fileList = fileList;
@@ -1037,6 +1156,23 @@ export default {
 </script>
 
 <style scoped>
+.tutor-name-info {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.tutor-name {
+  color: #67C23A;
+  display: inline-flex;
+  align-items: center;
+  .el-icon-user {
+    margin-right: 5px;
+  }
+}
+.tutor-tip {
+  color: #909399;
+  font-style: italic;
+}
+
 /* ================= 全局容器样式 ================= */
 .container {
   width: 100%;

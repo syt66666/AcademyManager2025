@@ -285,7 +285,6 @@ export default {
 }
 </script>
 
-
 <style scoped>
 /* 设计系统变量 */
 :root {
@@ -300,13 +299,12 @@ export default {
 
 /* 基础容器 */
 .container {
-  background: var(--bg-gradient);
-  margin: 0 auto;
-  width: 100%;
-  min-height: 100vh;
   display: flex;
-  justify-content: center; /* 水平居中 */
-  padding: 2rem;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* 柔和的渐变背景 */
+  padding: 20px;
 }
 
 .main-container {
@@ -385,7 +383,7 @@ export default {
 .semester-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   margin-top: 1.5rem;
   min-width: auto;
   padding: 0 1rem;

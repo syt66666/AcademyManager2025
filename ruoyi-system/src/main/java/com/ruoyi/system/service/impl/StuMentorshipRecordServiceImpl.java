@@ -64,14 +64,6 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
     @Override
     public int insertStuMentorshipRecord(StuMentorshipRecord stuMentorshipRecord)
     {
-        log.info("学生ID：{}",stuMentorshipRecord.getStudentId());
-        String tutorId = stuMentorshipRecordMapper.searchTutorId(stuMentorshipRecord.getStudentId());
-        log.info("导师ID：{}",tutorId);
-        log.info("指导主题：{}",stuMentorshipRecord.getGuidanceTopic());
-        log.info("指导时间：{}",stuMentorshipRecord.getGuidanceTime());
-        log.info("指导地点：{}",stuMentorshipRecord.getGuidanceLocation());
-
-        stuMentorshipRecord.setTutorId(tutorId);
         return stuMentorshipRecordMapper.insertStuMentorshipRecord(stuMentorshipRecord);
     }
 

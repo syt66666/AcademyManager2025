@@ -177,8 +177,9 @@ export default {
 ::v-deep .el-menu-item [class^="el-icon-"],
 ::v-deep .el-submenu [class^="el-icon-"] {
   font-size: 18px !important;
-  margin-right: 12px !important;
-  transition: transform 0.3s ease;
+  margin-left: 10px !important;  /* 新增左移调整 */
+  margin-right: 6px !important;  /* 原12px改为8px */
+  transform: translateX(-4px);   /* 微调像素级对齐 */
 }
 
 /* 菜单项悬停时图标动画 */

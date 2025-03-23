@@ -88,7 +88,7 @@
             <template v-slot="scope">
               <el-dropdown trigger="click" @command="handleFileCommand" @click.native.stop :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
                 <el-button type="primary" size="mini" plain @click.stop :disabled="!scope.row.proofMaterial || scope.row.proofMaterial.length === 0">
-                  <i class="el-icon-document"></i> 文件操作
+                  <i class="el-icon-document"></i> 图片操作
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item
@@ -365,6 +365,8 @@ export default {
   },
   data() {
     return {
+      allowedImageTypes: ['image/jpg', 'image/png','image/jpeg'], // 允许的文件类型
+      maxImageSize: 5 * 1024 * 1024, // 5MB限制
       levelOptions: [
         {value: '院级', label: '院级'},
         {value: '校级', label: '校级'},
@@ -540,7 +542,41 @@ export default {
       this.fileList = fileList;
     },
     handleFileChange(file, fileList) {
-      this.fileList = fileList.slice(-5); // 保持最多5个文件
+      // 额外参数用于显示错误提示
+      const done = (condition, message) => {
+        if (!condition) {
+          this.$message.error(message)
+          // 移除非法的最后一个文件
+          const newFiles = fileList.slice(0, fileList.length - 1)
+          this.fileList = newFiles.slice(-5)
+          return false
+        }
+        // 保留合法文件并限制最多5个
+        this.fileList = fileList.slice(-5)
+        return true
+      }
+      console.log("file.raw.type:", file.raw.type)
+      // 类型验证
+      const isValidType = this.allowedImageTypes.includes(file.raw.type)
+      if (!isValidType) {
+        return done(
+          false,
+          `不支持 ${file.name} 的文件类型，请上传 PNG/JPG 格式的图片`
+        )
+      }
+
+      // 大小验证
+      const isValidSize = file.size <= this.maxImageSize
+      if (!isValidSize) {
+        return done(false, `文件 ${file.name} 超过5MB大小限制`)
+      }
+
+      // 扩展名二次验证（防止伪装扩展名）
+      const fileExt = file.name.split('.').pop().toLowerCase()
+      const isValidExt = ['jpg', 'png'].includes(fileExt)
+      if (!isValidExt) {
+        return done(false, `文件 ${file.name} 的扩展名不合法`)
+      }
     },
     async downloadFiles(filePaths) {
       try {

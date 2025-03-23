@@ -309,7 +309,7 @@
                 <template #tip>
                   <div class="custom-upload-tip">
                     <i class="el-icon-info"></i>
-                    支持格式：PDF/DOC/DOCX，单个文件 ≤10MB
+                    仅支持单个文件上传（格式：PDF/DOCX，≤5MB）
                   </div>
                 </template>
 
@@ -334,6 +334,7 @@
                 </template>
               </el-upload>
             </el-form-item>
+
             <!-- 现场图片 -->
             <el-form-item label="现场图片" prop="reportPicture">
 
@@ -349,7 +350,7 @@
                 class="photo-upload"
               >
                 <i class="el-icon-plus"></i>
-                <div slot="tip" class="el-upload__tip">支持JPG/PNG格式，单文件≤10MB</div>
+                <div slot="tip" class="el-upload__tip">支持最多5张图片上传（格式：JPG/PNG，≤5MB）</div>
               </el-upload>
             </el-form-item>
 
@@ -441,6 +442,8 @@ import store from "@/store";
 export default {
   data() {
     return {
+      allowedImageTypes: ['image/jpg', 'image/png','image/jpeg'], // 允许的文件类型
+      maxImageSize: 5 * 1024 * 1024, // 5MB限制
       originalFeelingName: '', // 保存原始文件名
       reportFeelingList: [], // 总结文档上传列表
       reportFile:'',
@@ -696,30 +699,41 @@ export default {
       }
     },
 
-// 修正后的文件上传处理
     handleFileChange(file, fileList) {
-      // 限制图片类型和大小
-      const isImage = ['image/jpeg', 'image/png'].includes(file.raw.type)
-      const isLt10M = file.raw.size / 1024 / 1024 < 10
-
-      if (!isImage) {
-        this.$message.error('只能上传JPG/PNG格式图片!')
-        return false
+      // 额外参数用于显示错误提示
+      const done = (condition, message) => {
+        if (!condition) {
+          this.$message.error(message)
+          // 移除非法的最后一个文件
+          const newFiles = fileList.slice(0, fileList.length - 1)
+          this.fileList = newFiles.slice(-5)
+          return false
+        }
+        // 保留合法文件并限制最多5个
+        this.fileList = fileList.slice(-5)
+        return true
+      }
+      console.log("file.raw.type:", file.raw.type)
+      // 类型验证
+      const isValidType = this.allowedImageTypes.includes(file.raw.type)
+      if (!isValidType) {
+        return done(
+          false,
+          `不支持 ${file.name} 的文件类型，请上传 PNG/JPG 格式的图片`
+        )
       }
 
-      if (!isLt10M) {
-        this.$message.error('图片大小不能超过10MB!')
-        return false
+      // 大小验证
+      const isValidSize = file.size <= this.maxImageSize
+      if (!isValidSize) {
+        return done(false, `文件 ${file.name} 超过5MB大小限制`)
       }
 
-      // 压缩大图片
-      if (file.raw.size > 2 * 1024 * 1024) {
-        this.compressImage(file.raw).then(compressed => {
-          file.raw = compressed
-          this.fileList = [...fileList.slice(-5)]
-        })
-      } else {
-        this.fileList = [...fileList.slice(-5)]
+      // 扩展名二次验证（防止伪装扩展名）
+      const fileExt = file.name.split('.').pop().toLowerCase()
+      const isValidExt = ['jpg', 'png'].includes(fileExt)
+      if (!isValidExt) {
+        return done(false, `文件 ${file.name} 的扩展名不合法`)
       }
     },
     // 状态标签样式
@@ -1031,6 +1045,27 @@ export default {
       if (fileList.length > 1) {
         this.$message.warning('只能上传一个文件')
         fileList.splice(0, 1)
+      }
+      // 格式验证
+      const allowedTypes = ['application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+
+      if (!allowedTypes.includes(file.raw.type)) {
+        this.$message.error('仅支持PDF和DOCX格式');
+        this.reportFeelingList = []
+        this.reportFeeling = null
+        this.formData.reportFeeling = ''
+        return false;
+      }
+
+      // 大小验证（5MB）
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        this.$message.error('文件大小不能超过5MB');
+        this.reportFeelingList = []
+        this.reportFeeling = null
+        this.formData.reportFeeling = ''
+        return false;
       }
       // 保存原始文件名（新增）
       this.originalFeelingName = file.name

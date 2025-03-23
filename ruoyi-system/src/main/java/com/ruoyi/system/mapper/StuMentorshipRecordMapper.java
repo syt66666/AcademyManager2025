@@ -64,7 +64,6 @@ public interface StuMentorshipRecordMapper
      * @param studentId
      * @return 结果
      */
-    public String searchTutorId(String studentId);
 
     public boolean existsByUniqueFields(@Param("studentId") String studentId,
                                         @Param("guidanceTopic") String guidanceTopic,
