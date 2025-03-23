@@ -463,8 +463,6 @@ export default {
       isEdit: false,//判断修改还是插入
       previewVisible: false,
       previewImages: [],
-      currentPreviewIndex: 0,
-      currentDownloadFile: '',
       meetingRecords: [],// 存储后端返回的导师会议记录数据
       queryParams: {}, // 查询条件
       currentPage: 1, // 当前页

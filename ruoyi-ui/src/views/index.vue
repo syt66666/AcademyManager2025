@@ -10,7 +10,7 @@
       <h1 class="welcome-message"
           v-if="this.userName === '10001'||this.userName === '10002'||this.userName === '10003'||this.userName === '10004'||this.userName === '10005'||this.userName === '10006'||this.userName === '10007'">
         您好，{{ studentName }}管理员！</h1>
-      <p class="user-info" v-if="this.userName !== 'admin'&&this.userName!== '10001'">
+      <p class="user-info" v-if="this.userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'">
         书院：{{ department }}<br/>
         系统内专业：{{ specialty }}
         <span v-if="this.splitFlow !== '不可变更专业'">

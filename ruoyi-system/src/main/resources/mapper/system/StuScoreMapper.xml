@@ -23,16 +23,7 @@
 
     <sql id="selectStuScoreVo">
         select
-            s.score_id,
-            s.student_id,
-            s.course_code,
-            s.academic_year,
-            s.semester,
-            s.score_value,
-            s.gpa,
-            s.score_type,
-            s.nick_name,
-            s.upload_time,
+            s.*,
             c.course_name,
             c.credit,
             c.course_category,

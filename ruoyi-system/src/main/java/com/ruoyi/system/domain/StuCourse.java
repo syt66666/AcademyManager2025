@@ -14,7 +14,7 @@ public class StuCourse extends BaseEntity
     private Long courseId;
 
     /** 课程唯一编号（如CS101） */
-
+    @Excel(name = "课程代码")
     private String courseCode;
 
     /** 课程全称 */
@@ -34,7 +34,6 @@ public class StuCourse extends BaseEntity
     private Long credit;
 
     /** 总课时数 */
-    @Excel(name = "学时")
     private Integer courseHours;
 
     /** 课程类型 */
@@ -71,6 +70,7 @@ public class StuCourse extends BaseEntity
     public void setCredit(Long credit)
     {
         this.credit = credit;
+        setCourseHours((int) (credit * 12));
     }
 
     public Long getCredit()

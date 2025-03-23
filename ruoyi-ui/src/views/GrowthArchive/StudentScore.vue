@@ -278,6 +278,7 @@ export default {
         pageSize: 10,
         studentId: null,
         courseCode: null,
+        courseName: null,
         academicYear: null,
         semester: null,
         scoreValue: null,

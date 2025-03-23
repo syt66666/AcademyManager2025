@@ -151,7 +151,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 // 动画定义
 @keyframes formEnter {
   0% { opacity: 0; transform: translateY(30px) scale(0.95); }
