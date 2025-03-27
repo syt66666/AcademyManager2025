@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 
-// 查询学生管理列表
+// 查询学生信息列表
 export function listStudent(query) {
   return request({
     url: '/system/student/list',
@@ -9,7 +9,7 @@ export function listStudent(query) {
   })
 }
 
-// 查询学生管理详细
+// 查询学生信息详细
 export function getStudent(id) {
   return request({
     url: '/system/student/' + id,
@@ -17,16 +17,16 @@ export function getStudent(id) {
   })
 }
 
-// 新增学生管理
+// 新增学生信息
 export function addStudent(data) {
   return request({
-    url: '/system/insert',
+    url: '/system/student',
     method: 'post',
     data: data
   })
 }
 
-// 修改学生管理
+// 修改学生信息
 export function updateStudent(data) {
   return request({
     url: '/system/student',
@@ -35,10 +35,11 @@ export function updateStudent(data) {
   })
 }
 
-// 删除学生管理
+// 删除学生信息
 export function delStudent(id) {
   return request({
     url: '/system/student/' + id,
     method: 'delete'
   })
 }
+

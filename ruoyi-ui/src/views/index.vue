@@ -37,12 +37,15 @@
 <script>
 import axios from "axios";
 import store from "@/store";
-import {getNickName} from "@/api/system/student";
+import {getNickName, getStudent} from "@/api/system/student";
+import $store from "@/store/modules/user";
 
 export default {
   name: "WelcomePage",
   data() {
     return {
+      // 表单参数
+      form: {},
       list: {},
       studentName: '',
       department: '',
@@ -76,18 +79,20 @@ export default {
         this.studentName = response.msg;
       }
       else{
-        const response = await axios.get(process.env.VUE_APP_BASE_API + `/system/student/${this.userName}`);
-        const studentInfo = response.data.studentInfo;
-        this.studentName = studentInfo.studentName;
-        this.department = studentInfo.academy;
-        this.splitFlow = studentInfo.divertForm;
-        this.major = studentInfo.major;
-        this.specialty = studentInfo.systemMajor;
-        if (studentInfo.innovationClass === 1) {
-          this.specialClass = '是';
-        } else {
-          this.specialClass = '否';
-        }
+
+        getStudent(this.userName).then(response => {
+          const studentInfo = response.studentInfo;
+          this.studentName = studentInfo.studentName;
+          this.department = studentInfo.academy;
+          this.splitFlow = studentInfo.divertForm;
+          this.major = studentInfo.major;
+          this.specialty = studentInfo.systemMajor;
+          if (studentInfo.innovationClass === 1) {
+            this.specialClass = '是';
+          } else {
+            this.specialClass = '否';
+          }
+        });
       }
     }
   }

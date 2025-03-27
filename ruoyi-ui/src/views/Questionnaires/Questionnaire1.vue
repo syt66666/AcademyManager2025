@@ -47,6 +47,7 @@
 import axios from "axios";
 import store from "@/store";
 import {submitQuestionnaireData} from "@/api/system/questionnaire";
+import {getStudent} from "@/api/system/student";
 
 export default {
   name: "Questionnaire",
@@ -198,14 +199,15 @@ export default {
     },
     // 初始化问卷
     async initializeQuestionnaire() {
-      const response = await axios.get(process.env.VUE_APP_BASE_API+`/system/student/${this.userName}`);
-      const studentInfo = response.data.studentInfo;
+      getStudent(this.userName).then(response => {
+      const studentInfo = response.studentInfo;
       this.studentName = studentInfo.studentName;
       this.academy = studentInfo.academy;
       this.major = studentInfo.major;
       this.splitFlow = studentInfo.divertForm;
       this.systemMajor = studentInfo.systemMajor;
       this.specialClass = studentInfo.innovationClass;
+      });
       this.setNumBasedOnAcademy(this.academy);//得到书院对应num,用于问卷选项加载
       this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
       this.setNumBasedOnSpecialty(this.systemMajor);//得到专业类别对应num3,用于问卷选项加载

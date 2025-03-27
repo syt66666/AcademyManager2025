@@ -66,7 +66,7 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
             studentId = (String) principal;
         }
         //根据学号查找对应学生信息
-        StuInfo stuInfo = stuInfoMapper.selectByStudentId(studentId);
+        StuInfo stuInfo = stuInfoMapper.selectStuInfoById(studentId);
         if (stuInfo == null) {
             throw new IllegalArgumentException("找不到学生信息");
         }

@@ -1,9 +1,107 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuInfoMapper">
-    <select id="selectByStudentId" resultType="com.ruoyi.system.domain.StuInfo">
-        SELECT id, student_id, student_name, academy, system_major, major, student_class, divert_form, innovation_class, student_sex
-        FROM stu_info
-        WHERE student_id = #{studentId}
+
+    <resultMap type="StuInfo" id="StuInfoResult">
+        <result property="id"    column="id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="studentName"    column="student_name"    />
+        <result property="academy"    column="academy"    />
+        <result property="originalSystemMajor"    column="original_system_major"    />
+        <result property="major"    column="major"    />
+        <result property="systemMajor"    column="system_major"    />
+        <result property="studentClass"    column="student_class"    />
+        <result property="divertForm"    column="divert_form"    />
+        <result property="innovationClass"    column="innovation_class"    />
+        <result property="policyStatus"    column="policy_status"    />
+        <result property="studentSex"    column="student_sex"    />
+    </resultMap>
+
+    <sql id="selectStuInfoVo">
+        select id, student_id, student_name, academy, original_system_major, major, system_major, student_class, divert_form, innovation_class, policy_status, student_sex from stu_info
+    </sql>
+
+    <select id="selectStuInfoList" parameterType="StuInfo" resultMap="StuInfoResult">
+        <include refid="selectStuInfoVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
+            <if test="academy != null  and academy != ''"> and academy = #{academy}</if>
+            <if test="originalSystemMajor != null  and originalSystemMajor != ''"> and original_system_major = #{originalSystemMajor}</if>
+            <if test="major != null  and major != ''"> and major = #{major}</if>
+            <if test="systemMajor != null  and systemMajor != ''"> and system_major = #{systemMajor}</if>
+            <if test="studentClass != null  and studentClass != ''"> and student_class = #{studentClass}</if>
+            <if test="divertForm != null  and divertForm != ''"> and divert_form = #{divertForm}</if>
+            <if test="innovationClass != null "> and innovation_class = #{innovationClass}</if>
+            <if test="policyStatus != null "> and policy_status = #{policyStatus}</if>
+            <if test="studentSex != null  and studentSex != ''"> and student_sex = #{studentSex}</if>
+        </where>
     </select>
+
+    <select id="selectStuInfoById" parameterType="String" resultMap="StuInfoResult">
+        <include refid="selectStuInfoVo"/>
+        where student_id = #{studentId}
+    </select>
+
+    <insert id="insertStuInfo" parameterType="StuInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into stu_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="studentName != null and studentName != ''">student_name,</if>
+            <if test="academy != null and academy != ''">academy,</if>
+            <if test="originalSystemMajor != null">original_system_major,</if>
+            <if test="major != null">major,</if>
+            <if test="systemMajor != null">system_major,</if>
+            <if test="studentClass != null">student_class,</if>
+            <if test="divertForm != null">divert_form,</if>
+            <if test="innovationClass != null">innovation_class,</if>
+            <if test="policyStatus != null">policy_status,</if>
+            <if test="studentSex != null">student_sex,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="studentName != null and studentName != ''">#{studentName},</if>
+            <if test="academy != null and academy != ''">#{academy},</if>
+            <if test="originalSystemMajor != null">#{originalSystemMajor},</if>
+            <if test="major != null">#{major},</if>
+            <if test="systemMajor != null">#{systemMajor},</if>
+            <if test="studentClass != null">#{studentClass},</if>
+            <if test="divertForm != null">#{divertForm},</if>
+            <if test="innovationClass != null">#{innovationClass},</if>
+            <if test="policyStatus != null">#{policyStatus},</if>
+            <if test="studentSex != null">#{studentSex},</if>
+        </trim>
+    </insert>
+
+    <update id="updateStuInfo" parameterType="StuInfo">
+        update stu_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="studentName != null and studentName != ''">student_name = #{studentName},</if>
+            <if test="academy != null and academy != ''">academy = #{academy},</if>
+            <if test="originalSystemMajor != null">original_system_major = #{originalSystemMajor},</if>
+            <if test="major != null">major = #{major},</if>
+            <if test="systemMajor != null">system_major = #{systemMajor},</if>
+            <if test="studentClass != null">student_class = #{studentClass},</if>
+            <if test="divertForm != null">divert_form = #{divertForm},</if>
+            <if test="innovationClass != null">innovation_class = #{innovationClass},</if>
+            <if test="policyStatus != null">policy_status = #{policyStatus},</if>
+            <if test="studentSex != null">student_sex = #{studentSex},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteStuInfoById" parameterType="Long">
+        delete from stu_info where id = #{id}
+    </delete>
+
+    <delete id="deleteStuInfoByIds" parameterType="String">
+        delete from stu_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
 </mapper>

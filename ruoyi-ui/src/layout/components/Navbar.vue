@@ -49,6 +49,7 @@ import TopNav from '@/components/TopNav'
 import Hamburger from '@/components/Hamburger'
 import Screenfull from '@/components/Screenfull'
 import axios from "axios";
+import {getStudent} from "@/api/system/student";
 
 
 export default {
@@ -103,18 +104,19 @@ export default {
       if (this.userName === 'admin') {
         this.studentName = '管理员'
       } else {
-        const response = await axios.get(process.env.VUE_APP_BASE_API+`/system/student/${this.userName}`);
-        const studentInfo = response.data.studentInfo;
-        this.studentName = studentInfo.studentName;
-        this.department = studentInfo.academy;
-        this.major = studentInfo.major;
-        this.splitFlow=studentInfo.divertForm;
-        this.specialty = studentInfo.systemMajor;
-        if (studentInfo.innovationClass === 1) {
-          this.specialClass = '是';
-        } else {
-          this.specialClass = '否';
-        }
+        getStudent(this.userName).then(response => {
+          const studentInfo = response.studentInfo;
+          this.studentName = studentInfo.studentName;
+          this.department = studentInfo.academy;
+          this.major = studentInfo.major;
+          this.splitFlow = studentInfo.divertForm;
+          this.specialty = studentInfo.systemMajor;
+          if (studentInfo.innovationClass === 1) {
+            this.specialClass = '是';
+          } else {
+            this.specialClass = '否';
+          }
+        });
       }
     },
     toggleSideBar() {
