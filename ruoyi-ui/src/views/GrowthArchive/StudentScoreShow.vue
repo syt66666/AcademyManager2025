@@ -321,25 +321,23 @@ export default {
 }
 
 .container {
-  width: 100%;
-  margin: 0 auto;
-  padding: 2rem;
-  background: linear-gradient(160deg, #EBF4FF 0%, #EBF8FF 100%);
-  min-height: 100vh;
   display: flex;
-  justify-content: center; /* 水平居中 */
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* 柔和的渐变背景 */
+  padding: 20px;
 }
 
 .main-container {
   background: #ffffff;
   border-radius: 1.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 1440px;
+  overflow: hidden;
   padding: 2rem;
   position: relative;
-  overflow: hidden;
   width: 100%;
-  max-width: 1400px; /* 添加最大宽度限制 */
-  margin: 0 auto;     /* 自动水平居中 */
+  margin-left: 100px;
 }
 
 .nav {
