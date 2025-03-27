@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.StuMajorMapper">
+    <resultMap type="StuMajor" id="StuMajorResult">
+        <id     property="majorId"     column="major_id" />
+        <result property="academy"     column="academy" />
+        <result property="type"        column="type" />
+        <result property="parentId"    column="parent_id" />
+    </resultMap>
+
+    <select id="selectByAcademyAndType" resultMap="StuMajorResult">
+        SELECT *
+        FROM stu_major
+        WHERE major_id IN (
+            SELECT major_id
+            FROM stu_major
+            WHERE major_name = #{major}
+              AND academy = #{academy}
+              AND type = #{type}
+        )
+           OR parent_id IN (
+            SELECT major_id
+            FROM stu_major
+            WHERE major_name = #{major}
+              AND academy = #{academy}
+              AND type = #{type}
+        );
+    </select>
+
+    <select id="selectChildrenByParentId" resultMap="StuMajorResult">
+        SELECT * FROM stu_major
+        WHERE parent_id = #{parentId}
+    </select>
+</mapper>
