@@ -31,7 +31,7 @@ public class StrategyFactory {
             System.out.println("Innovation status is 0, use regular strategy");
             return strategies.get("regular");
         } else {
-            System.out.println("Innovation status is 1, use keep or drop strategy"+innovationStatus+policyStatus);
+            System.out.println("Innovation status is 1, use keep or drop strategy"+strategies.get("keep"));
             return policyStatus == 0 ? strategies.get("keep") : strategies.get("drop");
         }
     }

@@ -16,8 +16,9 @@ public class InnovationKeepStrategy implements MajorStrategy {
     private StuMajorMapper majorMapper;
 
     @Override
-    @Cacheable(value = "majors", key = "#academy + '_keep'")
+    @Cacheable(value = "majors", key = "#major + '_' + #academy + '_keep'")
     public List<StuMajor> getAvailableMajors(String major, String academy) {
+        System.out.println("InnovationKeepStrategy.getAvailableMajors called");
         return MajorTreeUtils.buildTree(
                 majorMapper.selectByAcademyAndType(major, academy, 3)
         );

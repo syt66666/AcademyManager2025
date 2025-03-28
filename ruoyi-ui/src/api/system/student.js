@@ -58,3 +58,22 @@ export function getNickName() {
     method: 'get'
   })
 }
+
+/**
+ * 获取专业树数据
+ * @param {Object} params - 查询参数
+ * @param {string} params.major - 专业名称
+ * @param {string} params.academy - 所属学院
+ * @param {int} params.innovationStatus - 专业类型
+ * @param {int} params.policyStatus - 专业类型
+ * @returns {Promise} 包含树结构数据的 Promise
+ */
+export function getMajorTree(params) {
+  return request({
+    url: '/system/major/tree',
+    method: 'get',
+    params: {
+      ...params,
+    }
+  })
+}

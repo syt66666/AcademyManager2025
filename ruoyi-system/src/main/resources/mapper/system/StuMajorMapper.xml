@@ -12,7 +12,7 @@
     <select id="selectByAcademyAndType" resultMap="StuMajorResult">
         SELECT *
         FROM stu_major
-        WHERE major_id IN (
+        WHERE type= #{type} AND major_id IN (
             SELECT major_id
             FROM stu_major
             WHERE major_name = #{major}

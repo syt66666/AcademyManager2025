@@ -52,13 +52,13 @@
                 popper-class="beautiful-select"
               >
                 <el-option
-                  v-for="major in majors"
-                  :key="major.name"
-                  :label="major.name"
-                  :value="major.name"
+                  v-for="major in childMajors"
+                  :key="major.majorId"
+                  :label="major.majorName"
+                  :value="major"
                 >
-                  <span class="option-text">{{ major.name }}</span>
-                  <span class="option-count">{{ major.current }}人已选</span>
+                  <span class="option-text">{{ major.majorName }}</span>
+                  <span class="option-count">{{ major.total || 0 }}人已选</span>
                 </el-option>
               </el-select>
               <el-button
@@ -80,7 +80,7 @@
               实时人数统计
             </h3>
             <el-table
-              :data="majors"
+              :data="childMajors"
               style="width: 100%"
               :row-class-name="tableRowClassName"
               v-loading="loading"
@@ -101,17 +101,17 @@
                 <template #default="{row}">
                   <span class="major-name">
                     <i class="el-icon-notebook-2"></i>
-                    {{ row.name }}
+                    {{ row.majorName }}
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column label="已选人数" align="right" header-align="right">
+              <el-table-column label="总人数" align="right" header-align="right">
                 <template #default="{row}">
                   <el-tag
-                    :type="getCountType(row.current)"
+                    :type="getCountType(row.total)"
                     class="count-tag"
                   >
-                    {{ row.current }} 人
+                    {{ row.total || 0 }} 人
                   </el-tag>
                 </template>
               </el-table-column>
@@ -137,6 +137,7 @@
 <script>
 import * as echarts from 'echarts'
 import { debounce } from 'lodash'
+import { getMajorTree } from "@/api/system/student";
 
 const COLOR_SCHEME = [
   { start: '#6A81E0', end: '#8E37D7' },
@@ -147,24 +148,22 @@ const COLOR_SCHEME = [
 export default {
   data() {
     return {
+      form: {
+        major: '化工与制药类',
+        academy: '大煜书院',
+        innovationStatus: null,
+        policyStatus: null
+      },
+      childMajors: [], // 处理后的子专业数据
+      responseData: null,
+      errorMsg: '',
+      requestUrl: '',
       selectedMajor: '',
       loading: false,
       gradeCharts: [
-        { title: 'A级成绩分布', type: 'A' },
-        { title: 'B级成绩分布', type: 'B' },
-        { title: 'C级成绩分布', type: 'C' }
-      ],
-      majors: [
-        {
-          name: '计算机科学',
-          current: 45,
-          grades: { A: 20, B: 50, C: 30 }
-        },
-        {
-          name: '电子信息工程',
-          current: 33,
-          grades: { A: 15, B: 60, C: 25 }
-        }
+        { title: 'A级人数分布', type: 'A' },
+        { title: 'B级人数分布', type: 'B' },
+        { title: 'C级人数分布', type: 'C' }
       ],
       charts: {
         main: null,
@@ -173,27 +172,94 @@ export default {
       }
     }
   },
-
+  computed: {
+    formattedResponse() {
+      return JSON.stringify(this.responseData, null, 2)
+    }
+  },
   mounted() {
     this.$nextTick(() => {
       this.initCharts()
       this.startSimulation()
+      this.handleSubmit()
     })
     window.addEventListener('resize', debounce(this.handleResize, 300))
   },
-
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
     this.disposeCharts()
   },
-
   methods: {
+    async handleSubmit() {
+      this.loading = true
+      this.errorMsg = ''
+      this.responseData = null
+
+      try {
+        const params = Object.fromEntries(
+          Object.entries(this.form).filter(([_, v]) => v !== '' && v !== null)
+        )
+        this.requestUrl = `/system/major/tree?${new URLSearchParams(params)}`
+        const { data } = await getMajorTree(params)
+
+        if (data && Array.isArray(data)) {
+          // 临时添加模拟数据（实际开发中应删除）
+          this.addMockData(data)
+          this.childMajors = this.extractChildMajors(data)
+        } else {
+          throw new Error('返回数据格式异常')
+        }
+      } catch (error) {
+        this.errorMsg = `请求失败：${error.message}`
+        console.error(error)
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // 数据提取方法
+    extractChildMajors(data) {
+      return data.flatMap(item => {
+        const current = item.children?.length === 0 ? [{
+          majorId: item.majorId,
+          majorName: item.majorName,
+          total: item.studentNum || 0,
+          grades: {
+            A: item.gradeA || 0,
+            B: item.gradeB || 0,
+            C: item.gradeC || 0
+          }
+        }] : []
+
+        const children = item.children?.flatMap(child =>
+          this.extractChildMajors([child])
+        ) || []
+
+        return [...current, ...children]
+      })
+    },
+
+    // 临时模拟数据方法（实际接口有数据后应删除）
+    addMockData(data) {
+      const mock = (node) => {
+        if (node.children) {
+          node.children.forEach(mock)
+        } else {
+          node.studentNum = Math.floor(Math.random() * 100) + 50
+          node.gradeA = Math.floor(node.studentNum * 0.2)
+          node.gradeB = Math.floor(node.studentNum * 0.5)
+          node.gradeC = node.studentNum - node.gradeA - node.gradeB
+        }
+      }
+      data.forEach(mock)
+    },
+
+    // 图表初始化
     initCharts() {
       this.charts.main = echarts.init(this.$refs.mainChart)
       this.charts.pie = echarts.init(this.$refs.pieChart)
       this.gradeCharts.forEach((_, index) => {
-        const refName = 'gradeChart' + index
-        this.charts.grade[index] = echarts.init(this.$refs[refName][0])
+        this.charts.grade[index] = echarts.init(this.$refs[`gradeChart${index}`][0])
       })
       this.updateAllCharts()
     },
@@ -209,33 +275,23 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255,255,255,0.95)',
-          formatter: params => `
-            <b>${params[0].name}</b><br>
-            ${params.map(p => `
+          formatter: params => {
+            const total = this.childMajors.find(m => m.majorName === params[0].name)?.total || 1
+            return params.map(p => `
               <span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background:${p.color}"></span>
-              ${p.seriesName}: ${Math.round(p.value)}人 (${this.majors.find(m => m.name === p.name).grades[p.seriesName[0]]}%)
-            `).join('<br>')}`
+              ${p.seriesName}: ${p.value}人 (${((p.value/total)*100).toFixed(1)}%)
+            `).join('<br>')
+          }
         },
-        legend: {
-          data: ['A级成绩', 'B级成绩', 'C级成绩'],
-          bottom: 20
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '15%',
-          containLabel: true
-        },
-        yAxis: {
-          type: 'category',
-          data: this.majors.map(m => m.name)
-        },
+        legend: { data: ['A级人数', 'B级人数', 'C级人数'], bottom: 20 },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        yAxis: { type: 'category', data: this.childMajors.map(m => m.majorName) },
         xAxis: { type: 'value' },
         series: ['A', 'B', 'C'].map((type, index) => ({
-          name: `${type}级成绩`,
+          name: `${type}级人数`,
           type: 'bar',
           stack: 'total',
-          data: this.majors.map(m => m.current * (m.grades[type] / 100)),
+          data: this.childMajors.map(m => m.grades[type]),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
               { offset: 0, color: COLOR_SCHEME[index].start },
@@ -254,19 +310,13 @@ export default {
         const option = {
           xAxis: {
             type: 'category',
-            data: this.majors.map(m => m.name),
-            axisLabel: {
-              rotate: 30,
-              color: '#666'
-            }
+            data: this.childMajors.map(m => m.majorName),
+            axisLabel: { rotate: 30, color: '#666' }
           },
-          yAxis: {
-            type: 'value',
-            axisLabel: { color: '#666' }
-          },
+          yAxis: { type: 'value', axisLabel: { color: '#666' } },
           series: [{
             type: 'bar',
-            data: this.majors.map(m => m.current * (m.grades[chart.type] / 100)),
+            data: this.childMajors.map(m => m.grades[chart.type]),
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: COLOR_SCHEME[index].start },
@@ -284,17 +334,13 @@ export default {
     updatePieChart() {
       const option = {
         tooltip: { trigger: 'item' },
-        legend: {
-          orient: 'vertical',
-          left: 20,
-          top: 'middle'
-        },
+        legend: { orient: 'vertical', left: 20, top: 'middle' },
         series: [{
           type: 'pie',
           radius: ['40%', '70%'],
-          data: this.majors.map((m, i) => ({
-            name: m.name,
-            value: m.current,
+          data: this.childMajors.map((m, i) => ({
+            name: m.majorName,
+            value: m.total,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
                 { offset: 0, color: COLOR_SCHEME[i % 3].start },
@@ -309,35 +355,42 @@ export default {
 
     handleConfirm() {
       if (this.selectedMajor) {
-        const major = this.majors.find(m => m.name === this.selectedMajor)
+        const major = this.childMajors.find(m => m.majorId === this.selectedMajor.majorId)
         if (major) {
-          major.current++
-          this.selectedMajor = ''
+          major.total++
+          this.selectedMajor = null
           this.updateAllCharts()
         }
       }
     },
 
-    tableRowClassName({ row }) {
-      return row.current > 50 ? 'warning-row' : ''
-    },
-
-    getCountType(count) {
-      return count > 60 ? 'danger' : count > 40 ? 'warning' : 'success'
-    },
-
     startSimulation() {
       setInterval(() => {
-        this.majors.forEach(major => {
-          major.current = Math.max(0, major.current + Math.floor(Math.random() * 3 - 1))
-          major.grades = {
-            A: Math.min(100, major.grades.A + Math.random() * 2 - 1),
-            B: Math.min(100, major.grades.B + Math.random() * 2 - 1),
-            C: Math.min(100, major.grades.C + Math.random() * 2 - 1)
+        this.childMajors.forEach(major => {
+          const delta = Math.floor(Math.random() * 3) - 1
+          major.total = Math.max(0, major.total + delta)
+
+          const ratios = {
+            A: major.grades.A / (major.total - delta || 1),
+            B: major.grades.B / (major.total - delta || 1),
+            C: major.grades.C / (major.total - delta || 1)
           }
+
+          major.grades.A = Math.round(major.total * ratios.A)
+          major.grades.B = Math.round(major.total * ratios.B)
+          major.grades.C = major.total - major.grades.A - major.grades.B
         })
         this.updateAllCharts()
       }, 2000)
+    },
+
+    tableRowClassName({ row }) {
+      return row.total > 50 ? 'warning-row' : ''
+    },
+
+    getCountType(count) {
+      count = count || 0
+      return count > 60 ? 'danger' : count > 40 ? 'warning' : 'success'
     },
 
     handleResize() {
