@@ -19,6 +19,8 @@
         <result property="studentName"    column="student_name"    />
         <result property="credit"     column="credit" />
         <result property="courseCategory" column="course_category" />
+        <result property="courseRank"     column="courseRank" />
+        <result property="totalStudents" column="totalStudents" />
     </resultMap>
 
     <sql id="selectStuScoreVo">
@@ -69,6 +71,8 @@
             <if test="scoreType != null">score_type,</if>
             <if test="nickName != null">nick_name,</if>
             <if test="uploadTime != null">upload_time,</if>
+            <if test="courseRank != null">course_rank,</if>
+            <if test="totalStudents != null">total_students,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
@@ -80,6 +84,8 @@
             <if test="scoreType != null and scoreType != ''">#{scoreType},</if>
             <if test="nickName != null and nickName != ''">#{nickName},</if>
             <if test="uploadTime != null and uploadTime != ''">#{uploadTime},</if>
+            <if test="courseRank != null and courseRank != ''">#{courseRank},</if>
+            <if test="totalStudents != null and totalStudents != ''">#{totalStudents},</if>
         </trim>
     </insert>
 
@@ -110,4 +116,30 @@
             #{scoreId}
         </foreach>
     </delete>
+
+    <select id="selectByCourseCode" resultType="com.ruoyi.system.domain.StuScore">
+        SELECT
+            student_id, course_code, score_value
+        FROM stu_score
+        WHERE course_code = #{courseCode}
+    </select>
+    <update id="batchUpdateRank">
+        UPDATE stu_score
+        SET
+        course_rank = CASE
+        <foreach collection="list" item="item">
+            WHEN course_code = #{item.courseCode} AND student_id = #{item.studentId} THEN #{item.courseRank}
+        </foreach>
+        END,
+        total_students = CASE
+        <foreach collection="list" item="item">
+            WHEN course_code = #{item.courseCode} AND student_id = #{item.studentId} THEN #{item.totalStudents}
+        </foreach>
+        END
+        WHERE
+        (course_code, student_id) IN
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            (#{item.courseCode}, #{item.studentId})
+        </foreach>
+    </update>
 </mapper>

@@ -198,6 +198,7 @@ export default {
       courseCategorys: [
         { value: "必修", label: "必修" },
         { value: "选修", label: "选修" },
+        { value: "通识", label: "通识" },
       ],
     };
   },

@@ -1,11 +1,13 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
-import com.ruoyi.system.domain.StuCourse;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.StuScoreMapper;
@@ -15,7 +17,7 @@ import com.ruoyi.system.service.IStuScoreService;
 import javax.validation.Validator;
 
 /**
- * 【请填写功能名称】Service业务层处理
+ * 成绩Service业务层处理
  *
  * @author ruoyi
  * @date 2025-03-01
@@ -28,10 +30,10 @@ public class StuScoreServiceImpl implements IStuScoreService
     @Autowired
     private Validator validator;
     /**
-     * 查询【请填写功能名称】
+     * 查询成绩
      *
-     * @param scoreId 【请填写功能名称】主键
-     * @return 【请填写功能名称】
+     * @param scoreId 成绩主键
+     * @return 成绩
      */
     @Override
     public StuScore selectStuScoreByScoreId(Long scoreId)
@@ -40,21 +42,28 @@ public class StuScoreServiceImpl implements IStuScoreService
     }
 
     /**
-     * 查询【请填写功能名称】列表
-     *
-     * @param stuScore 【请填写功能名称】
-     * @return 【请填写功能名称】
+     * 查询成绩列表（增强版：动态计算百分比）
      */
     @Override
-    public List<StuScore> selectStuScoreList(StuScore stuScore)
-    {
-        return stuScoreMapper.selectStuScoreList(stuScore);
+    public List<StuScore> selectStuScoreList(StuScore stuScore) {
+        // 1. 获取基础数据
+        List<StuScore> list = stuScoreMapper.selectStuScoreList(stuScore);
+
+        // 2. 动态计算百分比
+        list.forEach(score -> {
+            if (score.getTotalStudents() != null && score.getCourseRank() != null) {
+                double percent = (score.getTotalStudents() - score.getCourseRank()) * 100.0 / score.getTotalStudents();
+                score.setPercentRank(Math.round(percent * 100.0) / 100.0); // 保留两位小数
+            }
+        });
+
+        return list;
     }
 
     /**
-     * 新增【请填写功能名称】
+     * 新增成绩
      *
-     * @param stuScore 【请填写功能名称】
+     * @param stuScore 成绩
      * @return 结果
      */
     @Override
@@ -64,9 +73,9 @@ public class StuScoreServiceImpl implements IStuScoreService
     }
 
     /**
-     * 修改【请填写功能名称】
+     * 修改成绩
      *
-     * @param stuScore 【请填写功能名称】
+     * @param stuScore 成绩
      * @return 结果
      */
     @Override
@@ -76,9 +85,9 @@ public class StuScoreServiceImpl implements IStuScoreService
     }
 
     /**
-     * 批量删除【请填写功能名称】
+     * 批量删除成绩
      *
-     * @param scoreIds 需要删除的【请填写功能名称】主键
+     * @param scoreIds 需要删除的成绩主键
      * @return 结果
      */
     @Override
@@ -88,9 +97,9 @@ public class StuScoreServiceImpl implements IStuScoreService
     }
 
     /**
-     * 删除【请填写功能名称】信息
+     * 删除成绩信息
      *
-     * @param scoreId 【请填写功能名称】主键
+     * @param scoreId 成绩主键
      * @return 结果
      */
     @Override
@@ -102,49 +111,68 @@ public class StuScoreServiceImpl implements IStuScoreService
     /**
      * 导入用户数据
      *
-     * @param userList 用户数据列表
-     * @param isUpdateSupport 是否更新支持，如果已存在，则进行更新数据
+     * @param importList 用户数据列表
+     * @param updateSupport 是否更新支持，如果已存在，则进行更新数据
      * @param operName 操作用户
      * @return 结果
      */
     @Override
-    public String importScore(List<StuScore> userList, boolean updateSupport, String operName)
-    {
-        if (StringUtils.isNull(userList) || userList.size() == 0)
-        {
-            throw new ServiceException("导入用户数据不能为空！");
+    public String importScore(List<StuScore> importList, boolean updateSupport, String operName) {
+        if (CollectionUtils.isEmpty(importList)) {
+            throw new ServiceException("导入数据不能为空");
         }
-        int successNum = 0;
-        int failureNum = 0;
-        StringBuilder successMsg = new StringBuilder();
-        StringBuilder failureMsg = new StringBuilder();
-        for (StuScore user : userList)
-        {
-            try
-            {
-                BeanValidators.validateWithException(validator, user);
-                user.setCreateBy(operName);
-                this.insertStuScore(user);
-                successNum++;
-                successMsg.append("<br/>" + successNum + "、成绩id " + user.getScoreId() + " 导入成功");
 
-            }
-            catch (Exception e)
-            {
-                failureNum++;
-                String msg = "<br/>" + failureNum + "、成绩id " + user.getScoreId() + " 导入失败：";
-                failureMsg.append(msg + e.getMessage());
-            }
-        }
-        if (failureNum > 0)
-        {
-            failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
-            throw new ServiceException(failureMsg.toString());
-        }
-        else
-        {
-            successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
-        }
-        return successMsg.toString();
+        // 1. 按课程分组处理
+        Map<String, List<StuScore>> courseMap = importList.stream()
+                .collect(Collectors.groupingBy(StuScore::getCourseCode));
+
+        courseMap.forEach((courseCode, scores) -> {
+            // 2. 保存/更新原始数据
+            scores.forEach(score -> {
+                if (updateSupport) {
+                    stuScoreMapper.updateStuScore(score);
+                } else {
+                    stuScoreMapper.insertStuScore(score);
+                }
+            });
+
+            // 3. 获取课程所有成绩（包含新导入的）
+            List<StuScore> allScores = stuScoreMapper.selectByCourseCode(courseCode);
+
+            // 4. 计算排名和总人数
+            calculateRank(allScores); // 只计算排名和总人数
+
+            // 5. 批量更新排名和总人数到数据库
+            stuScoreMapper.batchUpdateRank(allScores);
+        });
+
+        return "成功导入" + importList.size() + "条，影响课程：" + courseMap.keySet();
     }
+
+    // 仅计算排名和总人数
+    private void calculateRank(List<StuScore> scores) {
+        // 按成绩降序排序
+        scores.sort((s1, s2) -> Integer.compare(
+                Integer.parseInt(s2.getScoreValue()),
+                Integer.parseInt(s1.getScoreValue())
+        ));
+
+        int rank = 1;
+        int prevScore = -1;
+        for (int i = 0; i < scores.size(); i++) {
+            StuScore score = scores.get(i);
+            int currentScore = Integer.parseInt(score.getScoreValue());
+
+            if (currentScore != prevScore) {
+                rank = i + 1;
+            }
+            score.setCourseRank(rank);
+            prevScore = currentScore;
+        }
+
+        // 设置总人数（不设置百分比）
+        int total = scores.size();
+        scores.forEach(score -> score.setTotalStudents(total));
+    }
+
 }

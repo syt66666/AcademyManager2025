@@ -62,6 +62,36 @@ public class StuScore extends BaseEntity
     @JsonFormat(pattern = "yyyy-MM-dd")
     private Date uploadTime;
 
+    private Integer courseRank;
+
+    private Integer totalStudents;
+
+    private Double percentRank;
+
+    public Double getPercentRank() {
+        return percentRank;
+    }
+
+    public void setPercentRank(Double percentRank) {
+        this.percentRank = percentRank;
+    }
+
+    public Integer getCourseRank() {
+        return courseRank;
+    }
+
+    public void setCourseRank(Integer courseRank) {
+        this.courseRank = courseRank;
+    }
+
+    public Integer getTotalStudents() {
+        return totalStudents;
+    }
+
+    public void setTotalStudents(Integer totalStudents) {
+        this.totalStudents = totalStudents;
+    }
+
     public String getCourseName() {
         return courseName;
     }

@@ -137,7 +137,6 @@
 
 <script>
 import * as echarts from 'echarts'
-import { debounce } from 'lodash'
 import {getMajorTree, getStudent, updateStudent} from "@/api/system/student";
 import store from "@/store";
 
