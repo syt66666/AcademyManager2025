@@ -75,7 +75,7 @@ public class StuInfoController extends BaseController
     /**
      * 修改学生信息
      */
-    @PreAuthorize("@ss.hasPermi('system:info:edit')")
+//    @PreAuthorize("@ss.hasPermi('system:info:edit')")
     @Log(title = "学生信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody StuInfo stuInfo)

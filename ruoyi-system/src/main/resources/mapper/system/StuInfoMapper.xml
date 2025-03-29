@@ -90,17 +90,17 @@
             <if test="policyStatus != null">policy_status = #{policyStatus},</if>
             <if test="studentSex != null">student_sex = #{studentSex},</if>
         </trim>
-        where id = #{id}
+        where student_id = #{studentId}
     </update>
 
     <delete id="deleteStuInfoById" parameterType="Long">
-        delete from stu_info where id = #{id}
+        delete from stu_info where student_id = #{studentId}
     </delete>
 
     <delete id="deleteStuInfoByIds" parameterType="String">
-        delete from stu_info where id in
-        <foreach item="id" collection="array" open="(" separator="," close=")">
-            #{id}
+        delete from stu_info where student_id in
+        <foreach item="studentId" collection="array" open="(" separator="," close=")">
+            #{studentId}
         </foreach>
     </delete>
 

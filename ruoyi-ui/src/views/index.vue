@@ -86,7 +86,7 @@ export default {
           this.department = studentInfo.academy;
           this.splitFlow = studentInfo.divertForm;
           this.major = studentInfo.major;
-          this.specialty = studentInfo.systemMajor;
+          this.specialty = studentInfo.originalSystemMajor;
           if (studentInfo.innovationClass === 1) {
             this.specialClass = '是';
           } else {

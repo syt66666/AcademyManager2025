@@ -44,7 +44,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import store from "@/store";
 import {submitQuestionnaireData} from "@/api/system/questionnaire";
 import {getStudent} from "@/api/system/student";
@@ -205,7 +204,7 @@ export default {
       this.academy = studentInfo.academy;
       this.major = studentInfo.major;
       this.splitFlow = studentInfo.divertForm;
-      this.systemMajor = studentInfo.systemMajor;
+      this.systemMajor = studentInfo.originalSystemMajor;
       this.specialClass = studentInfo.innovationClass;
       });
       this.setNumBasedOnAcademy(this.academy);//得到书院对应num,用于问卷选项加载

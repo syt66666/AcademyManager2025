@@ -49,13 +49,14 @@
                 placeholder="请选择你的专业"
                 class="major-select"
                 filterable
+                @change="handleMajorChange"
                 popper-class="beautiful-select"
               >
                 <el-option
                   v-for="major in childMajors"
                   :key="major.majorId"
                   :label="major.majorName"
-                  :value="major"
+                  :value="major.majorId"
                 >
                   <span class="option-text">{{ major.majorName }}</span>
                   <span class="option-count">{{ major.total || 0 }}人已选</span>
@@ -137,7 +138,8 @@
 <script>
 import * as echarts from 'echarts'
 import { debounce } from 'lodash'
-import { getMajorTree } from "@/api/system/student";
+import {getMajorTree, getStudent, updateStudent} from "@/api/system/student";
+import store from "@/store";
 
 const COLOR_SCHEME = [
   { start: '#6A81E0', end: '#8E37D7' },
@@ -148,12 +150,15 @@ const COLOR_SCHEME = [
 export default {
   data() {
     return {
+      selectKey: 0, // 新增
       form: {
-        major: '化工与制药类',
-        academy: '大煜书院',
+        major: '',
+        academy: '',
         innovationStatus: null,
         policyStatus: null
       },
+      //学生信息
+      userName: store.state.user.name,
       childMajors: [], // 处理后的子专业数据
       responseData: null,
       errorMsg: '',
@@ -172,39 +177,83 @@ export default {
       }
     }
   },
-  computed: {
-    formattedResponse() {
-      return JSON.stringify(this.responseData, null, 2)
-    }
+  async mounted() {
+    await this.handleSubmit()   // 先获取数据
+    this.initCharts()           // 再初始化图表
+    // this.startSimulation()  // 已注释
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.initCharts()
-      this.startSimulation()
-      this.handleSubmit()
-    })
-    window.addEventListener('resize', debounce(this.handleResize, 300))
+  watch: {
+    childMajors: {
+      deep: true,
+      handler() {
+        if (this.charts.main) {
+          this.updateAllCharts()
+        }
+      }
+    }
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
     this.disposeCharts()
   },
   methods: {
+    handleMajorChange(majorId) {
+      this.selectedMajor = majorId
+      console.log('选择的专业ID:', majorId)
+    },
+    async handleConfirm() {
+      if (!this.selectedMajor) return
+
+      try {
+        const selectedMajor = this.childMajors.find(
+          m => m.majorId === this.selectedMajor
+        )
+
+        await updateStudent({
+          studentId: this.userName,
+          systemMajor: selectedMajor.majorName
+        })
+
+        await this.handleSubmit()
+        this.selectKey++
+      } catch (error) {
+        this.$message.error('操作失败')
+      }
+    },
     async handleSubmit() {
       this.loading = true
       this.errorMsg = ''
       this.responseData = null
-
       try {
-        const params = Object.fromEntries(
-          Object.entries(this.form).filter(([_, v]) => v !== '' && v !== null)
-        )
-        this.requestUrl = `/system/major/tree?${new URLSearchParams(params)}`
+        // 1. 先获取学生信息
+        const studentResponse = await getStudent(this.userName)
+        const studentInfo = studentResponse.studentInfo
+
+        // 2. 正确映射字段
+        this.form = {
+          major: studentInfo.divertForm.includes("类内任选") ? studentInfo.major : studentInfo.originalSystemMajor, // 关键字段映射
+          academy: studentInfo.academy,
+          innovationStatus: studentInfo.innovationClass,
+          policyStatus: studentInfo.policyStatus
+        }
+
+        // 3. 确保参数有效性
+        const params = {
+          major: this.form.major,
+          academy: this.form.academy,
+          ...(this.form.innovationStatus && { innovationStatus: this.form.innovationStatus }),
+          ...(this.form.policyStatus && { policyStatus: this.form.policyStatus })
+        }
+
+        // 4. 打印验证参数
+        console.log('Request params:', params)
+
+        // 5. 调用接口
         const { data } = await getMajorTree(params)
 
         if (data && Array.isArray(data)) {
           // 临时添加模拟数据（实际开发中应删除）
-          this.addMockData(data)
+          // this.addMockData(data)
           this.childMajors = this.extractChildMajors(data)
         } else {
           throw new Error('返回数据格式异常')
@@ -334,7 +383,7 @@ export default {
     updatePieChart() {
       const option = {
         tooltip: { trigger: 'item' },
-        legend: { orient: 'vertical', left: 20, top: 'middle' },
+        legend: { show: false },
         series: [{
           type: 'pie',
           radius: ['40%', '70%'],
@@ -353,16 +402,7 @@ export default {
       this.charts.pie.setOption(option)
     },
 
-    handleConfirm() {
-      if (this.selectedMajor) {
-        const major = this.childMajors.find(m => m.majorId === this.selectedMajor.majorId)
-        if (major) {
-          major.total++
-          this.selectedMajor = null
-          this.updateAllCharts()
-        }
-      }
-    },
+
 
     startSimulation() {
       setInterval(() => {
