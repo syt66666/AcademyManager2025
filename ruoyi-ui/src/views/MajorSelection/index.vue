@@ -84,7 +84,6 @@
               :data="childMajors"
               style="width: 100%"
               :row-class-name="tableRowClassName"
-              v-loading="loading"
               class="beautiful-table"
             >
               <el-table-column
@@ -137,7 +136,7 @@
 
 <script>
 import * as echarts from 'echarts'
-import {getMajorTree, getStudent, updateStudent} from "@/api/system/student";
+import {getMajorCount, getMajorTree, getStudent, updateStudent} from "@/api/system/student";
 import store from "@/store";
 
 const COLOR_SCHEME = [
@@ -177,28 +176,46 @@ export default {
     }
   },
   async mounted() {
-    await this.handleSubmit()   // 先获取数据
+    await this.getData()   // 先获取数据
     this.initCharts()           // 再初始化图表
-    // this.startSimulation()  // 已注释
+    this.startSimulation()  // 已注释
   },
   watch: {
     childMajors: {
       deep: true,
-      handler() {
-        if (this.charts.main) {
-          this.updateAllCharts()
+      handler(newVal) {
+        if (newVal.length > 0) {
+          this.$nextTick(() => {
+            if (!this.charts.main || this.charts.main.isDisposed()) {
+              this.initCharts()
+            } else {
+              this.updateAllCharts()
+            }
+          })
         }
       }
     }
   },
   beforeDestroy() {
+    if (this.refreshTimer) clearInterval(this.refreshTimer)
     window.removeEventListener('resize', this.handleResize)
     this.disposeCharts()
   },
   methods: {
+    async fetchMajorCounts(topLevelMajorId) {
+      try {
+        const { data: countData } = await getMajorCount({
+          majorId: topLevelMajorId,
+          divertFrom: this.divertForm
+        })
+        return countData
+      } catch (error) {
+        console.error('获取人数失败:', error)
+        return []
+      }
+    },
     handleMajorChange(majorId) {
       this.selectedMajor = majorId
-      console.log('选择的专业ID:', majorId)
     },
     async handleConfirm() {
       if (!this.selectedMajor) return
@@ -207,19 +224,21 @@ export default {
         const selectedMajor = this.childMajors.find(
           m => m.majorId === this.selectedMajor
         )
-
+        //调用接口更新学生信息
         await updateStudent({
           studentId: this.userName,
           systemMajor: selectedMajor.majorName
         })
-
-        await this.handleSubmit()
-        this.selectKey++
+        // 3. 重新获取最新专业数据（关键步骤）
+        await this.getData()
+        // 4. 清空已选专业并提示成功
+        this.selectedMajor = ''
+        this.$message.success('专业选择成功')
       } catch (error) {
         this.$message.error('操作失败')
       }
     },
-    async handleSubmit() {
+    async getData() {
       this.loading = true
       this.errorMsg = ''
       this.responseData = null
@@ -227,7 +246,7 @@ export default {
         // 1. 先获取学生信息
         const studentResponse = await getStudent(this.userName)
         const studentInfo = studentResponse.studentInfo
-
+        this.divertForm = studentInfo.divertForm
         // 2. 正确映射字段
         this.form = {
           major: studentInfo.divertForm.includes("类内任选") ? studentInfo.major : studentInfo.originalSystemMajor, // 关键字段映射
@@ -244,19 +263,21 @@ export default {
           ...(this.form.policyStatus && { policyStatus: this.form.policyStatus })
         }
 
-        // 4. 打印验证参数
-        console.log('Request params:', params)
-
-        // 5. 调用接口
+        // 调用接口得到专业数据
         const { data } = await getMajorTree(params)
 
-        if (data && Array.isArray(data)) {
-          // 临时添加模拟数据（实际开发中应删除）
-          // this.addMockData(data)
-          this.childMajors = this.extractChildMajors(data)
-        } else {
-          throw new Error('返回数据格式异常')
-        }
+        // 获取顶层专业ID（新增）
+        const topLevelMajorIds = data
+          .filter(item => item.parentId === null)
+          .map(item => item.majorId)
+        const topMajorId = topLevelMajorIds[0] || 0
+
+        // 获取人数统计数据（新增关键步骤）
+        const countsData = await this.fetchMajorCounts(topMajorId)
+
+        // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
+        this.childMajors = this.extractChildMajors(data, countsData)
+
       } catch (error) {
         this.errorMsg = `请求失败：${error.message}`
         console.error(error)
@@ -264,14 +285,24 @@ export default {
         this.loading = false
       }
     },
+    async getNum(topLevelMajorIds) {
+      const response = await getMajorCount({
 
+        majorId: parseInt(topLevelMajorIds, 10) || 0,      // 专业ID（字符串类型）
+        divertFrom: this.divertForm // 分流类型
+      })
+    },
     // 数据提取方法
-    extractChildMajors(data) {
+// 修改后的 extractChildMajors 方法（需要接收 countsData）
+    extractChildMajors(data, countsData) {
       return data.flatMap(item => {
+        // 查找当前专业的人数数据（新增匹配逻辑）
+        const majorCounts = countsData.find(c => c.majorName === item.majorName) || {}
+
         const current = item.children?.length === 0 ? [{
           majorId: item.majorId,
           majorName: item.majorName,
-          total: item.studentNum || 0,
+          total: majorCounts.count || 0,  // 使用接口返回的数据
           grades: {
             A: item.gradeA || 0,
             B: item.gradeB || 0,
@@ -279,8 +310,9 @@ export default {
           }
         }] : []
 
+        // 递归处理子级时传递 countsData（重要修改）
         const children = item.children?.flatMap(child =>
-          this.extractChildMajors([child])
+          this.extractChildMajors([child], countsData)
         ) || []
 
         return [...current, ...children]
@@ -304,18 +336,37 @@ export default {
 
     // 图表初始化
     initCharts() {
+      // 销毁已存在的实例
+      this.disposeCharts()
+
+      // 重新初始化
       this.charts.main = echarts.init(this.$refs.mainChart)
       this.charts.pie = echarts.init(this.$refs.pieChart)
       this.gradeCharts.forEach((_, index) => {
         this.charts.grade[index] = echarts.init(this.$refs[`gradeChart${index}`][0])
       })
+
       this.updateAllCharts()
+
+      // 添加窗口resize监听
+      window.addEventListener('resize', this.handleResize)
     },
 
     updateAllCharts() {
-      this.updateMainChart()
-      this.updateGradeCharts()
-      this.updatePieChart()
+      if (!this.charts.main || this.charts.main.isDisposed()) return
+
+      try {
+        this.updateMainChart()
+        this.updateGradeCharts()
+        this.updatePieChart()
+
+        // 添加重绘逻辑
+        this.charts.main.resize()
+        this.charts.pie.resize()
+        this.charts.grade.forEach(chart => chart.resize())
+      } catch (e) {
+        console.error('图表更新失败:', e)
+      }
     },
 
     updateMainChart() {
@@ -403,24 +454,18 @@ export default {
 
 
 
+// 修改 startSimulation 方法
     startSimulation() {
-      setInterval(() => {
-        this.childMajors.forEach(major => {
-          const delta = Math.floor(Math.random() * 3) - 1
-          major.total = Math.max(0, major.total + delta)
-
-          const ratios = {
-            A: major.grades.A / (major.total - delta || 1),
-            B: major.grades.B / (major.total - delta || 1),
-            C: major.grades.C / (major.total - delta || 1)
-          }
-
-          major.grades.A = Math.round(major.total * ratios.A)
-          major.grades.B = Math.round(major.total * ratios.B)
-          major.grades.C = major.total - major.grades.A - major.grades.B
-        })
-        this.updateAllCharts()
-      }, 2000)
+      this.refreshTimer = setInterval(async () => {
+        try {
+          // 重新获取最新数据
+          await this.getData()
+          // 更新图表
+          this.updateAllCharts()
+        } catch (error) {
+          console.error('定时刷新失败:', error)
+        }
+      }, 5000) // 建议5秒间隔
     },
 
     tableRowClassName({ row }) {
@@ -439,9 +484,17 @@ export default {
     },
 
     disposeCharts() {
-      this.charts.main.dispose()
-      this.charts.pie.dispose()
-      this.charts.grade.forEach(chart => chart.dispose())
+      // 增加实例状态判断
+      const safeDispose = (instance) => {
+        if (instance && !instance.isDisposed()) {
+          instance.dispose()
+        }
+      }
+
+      safeDispose(this.charts.main)
+      safeDispose(this.charts.pie)
+      this.charts.grade.forEach(safeDispose)
+      this.charts.grade = []
     }
   }
 }

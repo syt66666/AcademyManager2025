@@ -77,3 +77,15 @@ export function getMajorTree(params) {
     }
   })
 }
+// 专业人数统计接口
+export function getMajorCount(params) {
+  return request({
+    url: '/system/major/count',
+    method: 'get',
+    params: {
+      major_id: params.majorId,     // 前端使用驼峰参数名
+      divert_from: params.divertFrom,
+      // 可扩展其他参数...
+    }
+  })
+}
