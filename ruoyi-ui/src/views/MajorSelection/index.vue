@@ -285,15 +285,7 @@ export default {
         this.loading = false
       }
     },
-    async getNum(topLevelMajorIds) {
-      const response = await getMajorCount({
-
-        majorId: parseInt(topLevelMajorIds, 10) || 0,      // 专业ID（字符串类型）
-        divertFrom: this.divertForm // 分流类型
-      })
-    },
-    // 数据提取方法
-// 修改后的 extractChildMajors 方法（需要接收 countsData）
+    // extractChildMajors 方法（需要接收 countsData）
     extractChildMajors(data, countsData) {
       return data.flatMap(item => {
         // 查找当前专业的人数数据（新增匹配逻辑）
@@ -318,22 +310,6 @@ export default {
         return [...current, ...children]
       })
     },
-
-    // 临时模拟数据方法（实际接口有数据后应删除）
-    addMockData(data) {
-      const mock = (node) => {
-        if (node.children) {
-          node.children.forEach(mock)
-        } else {
-          node.studentNum = Math.floor(Math.random() * 100) + 50
-          node.gradeA = Math.floor(node.studentNum * 0.2)
-          node.gradeB = Math.floor(node.studentNum * 0.5)
-          node.gradeC = node.studentNum - node.gradeA - node.gradeB
-        }
-      }
-      data.forEach(mock)
-    },
-
     // 图表初始化
     initCharts() {
       // 销毁已存在的实例
@@ -465,7 +441,7 @@ export default {
         } catch (error) {
           console.error('定时刷新失败:', error)
         }
-      }, 5000) // 建议5秒间隔
+      }, 10000) // 建议5秒间隔
     },
 
     tableRowClassName({ row }) {

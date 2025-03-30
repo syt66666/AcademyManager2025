@@ -144,4 +144,57 @@
             (#{item.courseCode}, #{item.studentId})
         </foreach>
     </update>
+
+    <!-- 必修课加权平均GPA计算 -->
+    <select id="selectRequiredGPA" resultType="GpaResultDTO">
+        SELECT
+            student_id,
+            ROUND(
+                    COALESCE(SUM(gpa * credit) / NULLIF(SUM(credit), 0), 0),
+                    2
+            ) AS raw_gpa
+        FROM (
+                 SELECT
+                     s.student_id,
+                     s.gpa,
+                     COALESCE(c.credit, 0) AS credit, -- 处理credit为NULL
+                     ROW_NUMBER() OVER (
+                PARTITION BY s.student_id, s.course_code
+                ORDER BY
+                    CASE s.score_type
+                        WHEN '正考' THEN 1
+                        WHEN '重修' THEN 2
+                        WHEN '补考' THEN 3
+                        ELSE 4
+                    END,
+                    s.upload_time DESC
+            ) AS rn
+                 FROM stu_score s
+                          INNER JOIN stu_course c
+                                     ON s.course_code = c.course_code
+                                         AND c.course_category = '必修' -- JOIN条件优化
+                 WHERE s.gpa IS NOT NULL
+             ) t
+        WHERE rn = 1
+        GROUP BY student_id
+</select>
+    <!-- 批量更新雷达图学业成绩 -->
+    <update id="batchUpdateAcademicScores">
+        UPDATE stu_ability_score
+        SET academic_score = CASE student_id
+        <foreach collection="list" item="item">
+            WHEN #{item.studentId} THEN #{item.academicScore}
+        </foreach>
+        ELSE academic_score
+        END
+        WHERE student_id IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.studentId}
+        </foreach>
+    </update>
+
+    <resultMap id="gpaResultMap" type="GpaResultDTO">
+        <result property="studentId" column="student_id"/>
+        <result property="rawGpa" column="raw_gpa"/>
+    </resultMap>
 </mapper>

@@ -1,7 +1,12 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import java.util.Map;
+
 import com.ruoyi.system.domain.StuScore;
+import com.ruoyi.system.domain.StudentAbilityScore;
+import com.ruoyi.system.domain.dto.GpaResultDTO;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * 成绩Mapper接口
@@ -62,4 +67,8 @@ public interface StuScoreMapper
     public List<StuScore> selectByCourseCode(String courseCode);
 
     void batchUpdateRank(List<StuScore> allScores);
+
+    List<GpaResultDTO> selectRequiredGPA();
+    void batchUpdateAcademicScores(@Param("list") List<StudentAbilityScore> scores);
+
 }
