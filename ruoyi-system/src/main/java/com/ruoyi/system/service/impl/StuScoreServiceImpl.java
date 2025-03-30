@@ -56,6 +56,15 @@ public class StuScoreServiceImpl implements IStuScoreService
                 score.setPercentRank(Math.round(percent * 100.0) / 100.0); // 保留两位小数
             }
         });
+        // 新公式：排名百分比 = (当前排名 / 总人数) × 100%
+//        list.forEach(score -> {
+//            if (score.getTotalStudents() != null && score.getCourseRank() != null && score.getTotalStudents() > 0) {
+//                double percent = (score.getCourseRank() * 100.0) / score.getTotalStudents();
+//                // 保留两位小数（四舍五入）
+//                percent = Math.round(percent * 100.0) / 100.0;
+//                score.setPercentRank(percent);
+//            }
+//        });
 
         return list;
     }

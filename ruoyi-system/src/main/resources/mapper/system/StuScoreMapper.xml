@@ -19,8 +19,8 @@
         <result property="studentName"    column="student_name"    />
         <result property="credit"     column="credit" />
         <result property="courseCategory" column="course_category" />
-        <result property="courseRank"     column="courseRank" />
-        <result property="totalStudents" column="totalStudents" />
+        <result property="courseRank"     column="course_rank" />
+        <result property="totalStudents" column="total_students" />
     </resultMap>
 
     <sql id="selectStuScoreVo">
@@ -51,6 +51,8 @@
             <if test="scoreType != null  and scoreType != ''"> and score_type = #{scoreType}</if>
             <if test="nickName != null  and nickName != ''"> and nick_name like concat('%', #{nickName}, '%')</if>
             <if test="uploadTime != null "> and upload_time = #{uploadTime}</if>
+            <if test="courseRank != null  and courseRank != ''"> and course_rank = #{courseRank}</if>
+            <if test="totalStudents != null and totalStudents != ''"> and total_students = #{totalStudents}</if>
         </where>
     </select>
 
