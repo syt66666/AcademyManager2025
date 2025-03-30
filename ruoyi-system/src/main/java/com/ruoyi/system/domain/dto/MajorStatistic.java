@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MajorStatistic {
-    private Long subMajorId;
+    private Integer subMajorId;
     private String subMajorName;
     private Integer intraClassCount; // 类内任选数量
     private Integer intraDomainCount; // 域内任选数量

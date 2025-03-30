@@ -16,4 +16,6 @@ public interface StuMajorMapper {
     List<MajorStatistic> selectMajorStatistics(
             @Param("parentId") Integer parentId
     );
+    public int updateStuMajor(@Param("majorId") Integer majorId,
+            @Param("studentNum") Integer studentNum);
 }

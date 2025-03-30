@@ -44,22 +44,30 @@
         SELECT
             sm.major_id AS sub_major_id,
             sm.major_name AS sub_major_name,
-            COUNT(
-                    CASE WHEN si.divert_form = '可类内任选，并转专业'
-                        AND sm.major_name = si.system_major  -- 明确关联条件
-                             THEN 1 END
+            SUM(
+                    CASE WHEN si_intra_class.student_id IS NOT NULL THEN 1 ELSE 0 END
             ) AS intra_class_count,
-            COUNT(
-                    CASE WHEN si.divert_form = '可域内任选，并转专业'
-                        AND sm.major_name = si.original_system_major  -- 明确关联条件
-                             THEN 1 END
+            SUM(
+                    CASE WHEN si_intra_domain.student_id IS NOT NULL THEN 1 ELSE 0 END
             ) AS intra_domain_count
         FROM stu_major sm
-                 LEFT JOIN stu_info si
-                           ON (sm.major_name = si.system_major AND si.divert_form = '可类内任选，并转专业')
-                               OR (sm.major_name = si.original_system_major AND si.divert_form = '可域内任选，并转专业')
+                 LEFT JOIN stu_info si_intra_class
+                           ON sm.major_name = si_intra_class.system_major
+                               AND si_intra_class.divert_form IN ('可类内任选，并转专业', '可类内任选，不能转专业')
+                 LEFT JOIN stu_info si_intra_domain
+                           ON sm.major_name = si_intra_domain.original_system_major
+                               AND si_intra_domain.divert_form = '可域内任选，并转专业'
         WHERE sm.parent_id = #{parentId}
         GROUP BY sm.major_id, sm.major_name
     </select>
-
+    <update id="updateStuMajor" parameterType="StuMajor">
+        update stu_major
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentNum != null">student_num = #{studentNum},</if>
+<!--            <if test="gradeA != null">grade_A = #{gradeA},</if>-->
+<!--            <if test="gradeB != null">grade_B = #{gradeB},</if>-->
+<!--            <if test="gradeC != null">grade_C = #{gradeC},</if>-->
+        </trim>
+        where major_id = #{majorId}
+    </update>
 </mapper>

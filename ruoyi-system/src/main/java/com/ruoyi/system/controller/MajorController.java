@@ -2,10 +2,14 @@ package com.ruoyi.system.controller;
 
 
 import com.alibaba.fastjson2.JSONObject;
+import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.system.domain.StuMajor;
 import com.ruoyi.system.service.impl.MajorSelectionServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -49,4 +53,5 @@ public class MajorController extends BaseController {
             throw new IllegalArgumentException("专业ID必须为数字");
         }
     }
+
 }

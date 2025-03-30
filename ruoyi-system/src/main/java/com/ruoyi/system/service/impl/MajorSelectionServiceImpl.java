@@ -45,21 +45,29 @@ public class MajorSelectionServiceImpl {
         //子专业
         List<MajorStatistic> majorStatistics = majorMapper.selectMajorStatistics(majorId);
         List<JSONObject> result = new ArrayList<>();
-        final String intraClass = "可类内任选，并转专业";
+        final String intraClassA = "可类内任选，并转专业";
+        final String intraClassB = "可类内任选，不能转专业";
         final String intraDomain = "可域内任选，并转专业";
+        Integer fatherCount = 0;
         for(MajorStatistic majorStatistic : majorStatistics) {
             JSONObject majorStatisticJson = new JSONObject();
             majorStatisticJson.put("majorName", majorStatistic.getSubMajorName());
-            if(divertForm.equals(intraClass)){
+            if(divertForm.equals(intraClassA)||divertForm.equals(intraClassB)){
+                fatherCount += majorStatistic.getIntraClassCount();
+                majorMapper.updateStuMajor(majorStatistic.getSubMajorId(),majorStatistic.getIntraClassCount());
                 majorStatisticJson.put("count", majorStatistic.getIntraClassCount());
             } else if(divertForm.equals(intraDomain)){
+                fatherCount += majorStatistic.getIntraDomainCount();
+                majorMapper.updateStuMajor(majorStatistic.getSubMajorId(),majorStatistic.getIntraDomainCount());
                 majorStatisticJson.put("count", majorStatistic.getIntraDomainCount());
             } else {
                 majorStatisticJson.put("count", 0);
             }
+            majorMapper.updateStuMajor(majorId,fatherCount);
             result.add(majorStatisticJson);
         }
         return result;
     }
+
 }
 
