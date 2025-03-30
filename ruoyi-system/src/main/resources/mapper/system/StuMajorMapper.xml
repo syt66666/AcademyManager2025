@@ -9,6 +9,13 @@
         <result property="parentId"    column="parent_id" />
     </resultMap>
 
+    <resultMap type="MajorStatistic" id="MajorStatisticResult">
+        <id property="subMajorId" column="sub_major_id"/>
+        <result property="subMajorName" column="sub_major_name"/>
+        <result property="intraClassCount" column="intra_class_count"/>
+        <result property="intraDomainCount" column="intra_domain_count"/>
+    </resultMap>
+
     <select id="selectByAcademyAndType" resultMap="StuMajorResult">
         SELECT *
         FROM stu_major
@@ -32,4 +39,27 @@
         SELECT * FROM stu_major
         WHERE parent_id = #{parentId}
     </select>
+
+    <select id="selectMajorStatistics" resultMap="MajorStatisticResult">
+        SELECT
+            sm.major_id AS sub_major_id,
+            sm.major_name AS sub_major_name,
+            COUNT(
+                    CASE WHEN si.divert_form = '可类内任选，并转专业'
+                        AND sm.major_name = si.system_major  -- 明确关联条件
+                             THEN 1 END
+            ) AS intra_class_count,
+            COUNT(
+                    CASE WHEN si.divert_form = '可域内任选，并转专业'
+                        AND sm.major_name = si.original_system_major  -- 明确关联条件
+                             THEN 1 END
+            ) AS intra_domain_count
+        FROM stu_major sm
+                 LEFT JOIN stu_info si
+                           ON (sm.major_name = si.system_major AND si.divert_form = '可类内任选，并转专业')
+                               OR (sm.major_name = si.original_system_major AND si.divert_form = '可域内任选，并转专业')
+        WHERE sm.parent_id = #{parentId}
+        GROUP BY sm.major_id, sm.major_name
+    </select>
+
 </mapper>
