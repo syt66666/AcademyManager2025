@@ -6,10 +6,12 @@ import com.ruoyi.system.domain.StuMajor;
 import com.ruoyi.system.domain.dto.MajorStatistic;
 import com.ruoyi.system.mapper.StuMajorMapper;
 
+import com.ruoyi.system.service.IDataChangeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +26,15 @@ public class MajorSelectionServiceImpl {
     @Autowired
     private StrategyFactory strategyFactory;
 
+    @Resource
+    public IDataChangeService dataChangeService;
+
+    MajorSelectionServiceImpl(IDataChangeService dataChangeService) {
+        this.dataChangeService = dataChangeService;
+    }
+
     public List<StuMajor> getAvailableMajors(    @RequestParam("major") String major,
-                                                  @RequestParam("academy") String academy,
+                                                 @RequestParam("academy") String academy,
                                                  @RequestParam("innovationStatus") Integer innovationStatus,
                                                  @RequestParam("policyStatus") Integer policyStatus) {
         System.out.println(111+"major: " + major + " academy: " + academy + " innovationStatus: " + innovationStatus + " policyStatus: " + policyStatus);
@@ -56,10 +65,12 @@ public class MajorSelectionServiceImpl {
                 fatherCount += majorStatistic.getIntraClassCount();
                 majorMapper.updateStuMajor(majorStatistic.getSubMajorId(),majorStatistic.getIntraClassCount());
                 majorStatisticJson.put("count", majorStatistic.getIntraClassCount());
+                dataChangeService.notifyDataChange(majorStatistic.getSubMajorName(), majorStatistic.getIntraClassCount());
             } else if(divertForm.equals(intraDomain)){
                 fatherCount += majorStatistic.getIntraDomainCount();
                 majorMapper.updateStuMajor(majorStatistic.getSubMajorId(),majorStatistic.getIntraDomainCount());
                 majorStatisticJson.put("count", majorStatistic.getIntraDomainCount());
+                dataChangeService.notifyDataChange(majorStatistic.getSubMajorName(), majorStatistic.getIntraDomainCount());
             } else {
                 majorStatisticJson.put("count", 0);
             }
@@ -70,4 +81,3 @@ public class MajorSelectionServiceImpl {
     }
 
 }
-

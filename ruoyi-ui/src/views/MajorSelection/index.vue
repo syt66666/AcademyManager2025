@@ -172,13 +172,18 @@ export default {
         main: null,
         pie: null,
         grade: []
-      }
+      },
+      ws: null,
+      reconnectAttempts: 0,
+      isConnected: false,
     }
   },
   async mounted() {
     await this.getData()   // 先获取数据
     this.initCharts()           // 再初始化图表
-    this.startSimulation()  // 已注释
+    // this.startSimulation()  // 已注释
+    this.connectWebSocket() //
+    window.addEventListener('data-update', this.handleDataUpdate)
   },
   watch: {
     childMajors: {
@@ -197,7 +202,7 @@ export default {
     }
   },
   beforeDestroy() {
-    if (this.refreshTimer) clearInterval(this.refreshTimer)
+    if (this.ws) this.ws.close()
     window.removeEventListener('resize', this.handleResize)
     this.disposeCharts()
   },
@@ -285,7 +290,15 @@ export default {
         this.loading = false
       }
     },
-    // extractChildMajors 方法（需要接收 countsData）
+    async getNum(topLevelMajorIds) {
+      const response = await getMajorCount({
+
+        majorId: parseInt(topLevelMajorIds, 10) || 0,      // 专业ID（字符串类型）
+        divertFrom: this.divertForm // 分流类型
+      })
+    },
+    // 数据提取方法
+// 修改后的 extractChildMajors 方法（需要接收 countsData）
     extractChildMajors(data, countsData) {
       return data.flatMap(item => {
         // 查找当前专业的人数数据（新增匹配逻辑）
@@ -310,6 +323,22 @@ export default {
         return [...current, ...children]
       })
     },
+
+    // 临时模拟数据方法（实际接口有数据后应删除）
+    addMockData(data) {
+      const mock = (node) => {
+        if (node.children) {
+          node.children.forEach(mock)
+        } else {
+          node.studentNum = Math.floor(Math.random() * 100) + 50
+          node.gradeA = Math.floor(node.studentNum * 0.2)
+          node.gradeB = Math.floor(node.studentNum * 0.5)
+          node.gradeC = node.studentNum - node.gradeA - node.gradeB
+        }
+      }
+      data.forEach(mock)
+    },
+
     // 图表初始化
     initCharts() {
       // 销毁已存在的实例
@@ -441,7 +470,7 @@ export default {
         } catch (error) {
           console.error('定时刷新失败:', error)
         }
-      }, 10000) // 建议5秒间隔
+      }, 5000) // 建议5秒间隔
     },
 
     tableRowClassName({ row }) {
@@ -471,7 +500,61 @@ export default {
       safeDispose(this.charts.pie)
       this.charts.grade.forEach(safeDispose)
       this.charts.grade = []
-    }
+    },
+    // 新增 WebSocket 连接方法
+    connectWebSocket() {
+      const wsUrl = `ws://${window.location.host}/ws-data`
+      this.ws = new WebSocket(wsUrl)
+
+      this.ws.onopen = () => {
+        this.isConnected = true
+        this.reconnectAttempts = 0
+        console.log('WebSocket connected')
+        this.subscribeDataUpdates()
+      }
+
+      this.ws.onmessage = async (event) => {
+        const data = JSON.parse(event.data)
+        if (data.type === 'DATA_CHANGE') {
+          await this.getData()  // 触发数据刷新
+          this.$message.info('检测到数据更新，已刷新最新信息')
+        }
+      }
+
+      this.ws.onclose = () => {
+        this.isConnected = false
+        console.log('WebSocket disconnected')
+        this.handleReconnect()
+      }
+
+      this.ws.onerror = (error) => {
+        console.error('WebSocket error:', error)
+        this.ws.close()
+      }
+    },
+
+    // 新增重连逻辑
+    handleReconnect() {
+      if (this.reconnectAttempts < 5) {
+        setTimeout(() => {
+          console.log(`尝试重连 (${this.reconnectAttempts + 1}/5)`)
+          this.connectWebSocket()
+          this.reconnectAttempts++
+        }, Math.min(1000 * (2 ** this.reconnectAttempts), 30000))
+      }
+    },
+
+    // 新增订阅方法
+    subscribeDataUpdates() {
+      const subscribeMsg = {
+        "command": "SUBSCRIBE",
+        "identifier": JSON.stringify({
+          "channel": "DataUpdateChannel"
+        })
+      }
+      this.ws.send(JSON.stringify(subscribeMsg))
+    },
+
   }
 }
 </script>
