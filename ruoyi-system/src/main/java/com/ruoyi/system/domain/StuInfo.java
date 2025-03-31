@@ -1,105 +1,59 @@
 package com.ruoyi.system.domain;
 
-public class StuInfo {
-    // 学号
-    private Integer id;
-    // 学生学号
+import lombok.Data;
+import com.ruoyi.common.annotation.Excel;
+import com.ruoyi.common.core.domain.BaseEntity;
+
+@Data
+public class StuInfo extends BaseEntity
+{
+    private static final long serialVersionUID = 1L;
+
+    /** 主键 */
+    private Long id;
+
+    /** 学生学号 */
+    @Excel(name = "学生学号")
     private String studentId;
-    // 学生姓名
+
+    /** 学生姓名 */
+    @Excel(name = "学生姓名")
     private String studentName;
-    // 学院
+
+    /** 所属书院 */
+    @Excel(name = "所属书院")
     private String academy;
-    // 系统专业
-    private String systemMajor;
-    // 专业
+
+    /** 原系统内专业 */
+    @Excel(name = "原系统内专业")
+    private String originalSystemMajor;
+
+    /** 录取专业 */
+    @Excel(name = "录取专业")
     private String major;
-    // 学生班级
+
+    /** 分流后系统内专业 */
+    @Excel(name = "分流后系统内专业")
+    private String systemMajor;
+
+    /** 行政班 */
+    @Excel(name = "行政班")
     private String studentClass;
-    // 转专业形式
+
+    /** 分流形式 */
+    @Excel(name = "分流形式")
     private String divertForm;
-    // 创新班
-    private Integer innovationClass;  // 改为包装类型
-    // 学生性别
+
+    /** 是否创新班或拔尖班（0不是 1是） */
+    @Excel(name = "是否创新班或拔尖班")
+    private Integer innovationClass;
+
+    /** 创新班政策状态（0保持 1放弃） */
+    @Excel(name = "创新班政策状态", readConverterExp = "0=保持,1=放弃")
+    private Integer policyStatus;
+
+    /** 学生性别 */
+    @Excel(name = "学生性别")
     private String studentSex;
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public String getStudentName() {
-        return studentName;
-    }
-
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
-    public String getAcademy() {
-        return academy;
-    }
-
-    public void setAcademy(String academy) {
-        this.academy = academy;
-    }
-
-    public String getSystemMajor() {
-        return systemMajor;
-    }
-
-    public void setSystemMajor(String systemMajor) {
-        this.systemMajor = systemMajor;
-    }
-
-    public String getMajor() {
-        return major;
-    }
-
-    public void setMajor(String major) {
-        this.major = major;
-    }
-
-    public String getStudentClass() {
-        return studentClass;
-    }
-
-    public void setStudentClass(String studentClass) {
-        this.studentClass = studentClass;
-    }
-
-    public String getDivertForm() {
-        return divertForm;
-    }
-
-    public void setDivertForm(String divertForm) {
-        this.divertForm = divertForm;
-    }
-
-    public Integer getInnovationClass() {
-        return innovationClass;
-    }
-
-    public void setInnovationClass(Integer innovationClass) {
-        this.innovationClass = innovationClass;
-    }
-
-    public String getStudentSex() {
-        return studentSex;
-    }
-
-    public void setStudentSex(String studentSex) {
-        this.studentSex = studentSex;
-    }
 }
-

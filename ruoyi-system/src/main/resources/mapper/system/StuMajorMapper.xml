@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.StuMajorMapper">
+    <resultMap type="StuMajor" id="StuMajorResult">
+        <id     property="majorId"     column="major_id" />
+        <result property="academy"     column="academy" />
+        <result property="type"        column="type" />
+        <result property="parentId"    column="parent_id" />
+    </resultMap>
+
+    <resultMap type="MajorStatistic" id="MajorStatisticResult">
+        <id property="subMajorId" column="sub_major_id"/>
+        <result property="subMajorName" column="sub_major_name"/>
+        <result property="intraClassCount" column="intra_class_count"/>
+        <result property="intraDomainCount" column="intra_domain_count"/>
+    </resultMap>
+
+    <select id="selectByAcademyAndType" resultMap="StuMajorResult">
+        SELECT *
+        FROM stu_major
+        WHERE type= #{type} AND major_id IN (
+            SELECT major_id
+            FROM stu_major
+            WHERE major_name = #{major}
+              AND academy = #{academy}
+              AND type = #{type}
+        )
+           OR parent_id IN (
+            SELECT major_id
+            FROM stu_major
+            WHERE major_name = #{major}
+              AND academy = #{academy}
+              AND type = #{type}
+        );
+    </select>
+
+    <select id="selectChildrenByParentId" resultMap="StuMajorResult">
+        SELECT * FROM stu_major
+        WHERE parent_id = #{parentId}
+    </select>
+
+    <select id="selectMajorStatistics" resultMap="MajorStatisticResult">
+        SELECT
+            sm.major_id AS sub_major_id,
+            sm.major_name AS sub_major_name,
+            SUM(
+                    CASE WHEN si_intra_class.student_id IS NOT NULL THEN 1 ELSE 0 END
+            ) AS intra_class_count,
+            SUM(
+                    CASE WHEN si_intra_domain.student_id IS NOT NULL THEN 1 ELSE 0 END
+            ) AS intra_domain_count
+        FROM stu_major sm
+                 LEFT JOIN stu_info si_intra_class
+                           ON sm.major_name = si_intra_class.system_major
+                               AND si_intra_class.divert_form IN ('可类内任选，并转专业', '可类内任选，不能转专业')
+                 LEFT JOIN stu_info si_intra_domain
+                           ON sm.major_name = si_intra_domain.original_system_major
+                               AND si_intra_domain.divert_form = '可域内任选，并转专业'
+        WHERE sm.parent_id = #{parentId}
+        GROUP BY sm.major_id, sm.major_name
+    </select>
+    <update id="updateStuMajor" parameterType="StuMajor">
+        update stu_major
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentNum != null">student_num = #{studentNum},</if>
+<!--            <if test="gradeA != null">grade_A = #{gradeA},</if>-->
+<!--            <if test="gradeB != null">grade_B = #{gradeB},</if>-->
+<!--            <if test="gradeC != null">grade_C = #{gradeC},</if>-->
+        </trim>
+        where major_id = #{majorId}
+    </update>
+</mapper>

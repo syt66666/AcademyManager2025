@@ -49,16 +49,17 @@
                 placeholder="请选择你的专业"
                 class="major-select"
                 filterable
+                @change="handleMajorChange"
                 popper-class="beautiful-select"
               >
                 <el-option
-                  v-for="major in majors"
-                  :key="major.name"
-                  :label="major.name"
-                  :value="major.name"
+                  v-for="major in childMajors"
+                  :key="major.majorId"
+                  :label="major.majorName"
+                  :value="major.majorId"
                 >
-                  <span class="option-text">{{ major.name }}</span>
-                  <span class="option-count">{{ major.current }}人已选</span>
+                  <span class="option-text">{{ major.majorName }}</span>
+                  <span class="option-count">{{ major.total || 0 }}人已选</span>
                 </el-option>
               </el-select>
               <el-button
@@ -80,10 +81,9 @@
               实时人数统计
             </h3>
             <el-table
-              :data="majors"
+              :data="childMajors"
               style="width: 100%"
               :row-class-name="tableRowClassName"
-              v-loading="loading"
               class="beautiful-table"
             >
               <el-table-column
@@ -101,17 +101,17 @@
                 <template #default="{row}">
                   <span class="major-name">
                     <i class="el-icon-notebook-2"></i>
-                    {{ row.name }}
+                    {{ row.majorName }}
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column label="已选人数" align="right" header-align="right">
+              <el-table-column label="总人数" align="right" header-align="right">
                 <template #default="{row}">
                   <el-tag
-                    :type="getCountType(row.current)"
+                    :type="getCountType(row.total)"
                     class="count-tag"
                   >
-                    {{ row.current }} 人
+                    {{ row.total || 0 }} 人
                   </el-tag>
                 </template>
               </el-table-column>
@@ -136,7 +136,8 @@
 
 <script>
 import * as echarts from 'echarts'
-import { debounce } from 'lodash'
+import {getMajorCount, getMajorTree, getStudent, updateStudent} from "@/api/system/student";
+import store from "@/store";
 
 const COLOR_SCHEME = [
   { start: '#6A81E0', end: '#8E37D7' },
@@ -147,24 +148,25 @@ const COLOR_SCHEME = [
 export default {
   data() {
     return {
+      selectKey: 0, // 新增
+      form: {
+        major: '',
+        academy: '',
+        innovationStatus: null,
+        policyStatus: null
+      },
+      //学生信息
+      userName: store.state.user.name,
+      childMajors: [], // 处理后的子专业数据
+      responseData: null,
+      errorMsg: '',
+      requestUrl: '',
       selectedMajor: '',
       loading: false,
       gradeCharts: [
-        { title: 'A级成绩分布', type: 'A' },
-        { title: 'B级成绩分布', type: 'B' },
-        { title: 'C级成绩分布', type: 'C' }
-      ],
-      majors: [
-        {
-          name: '计算机科学',
-          current: 45,
-          grades: { A: 20, B: 50, C: 30 }
-        },
-        {
-          name: '电子信息工程',
-          current: 33,
-          grades: { A: 15, B: 60, C: 25 }
-        }
+        { title: 'A级人数分布', type: 'A' },
+        { title: 'B级人数分布', type: 'B' },
+        { title: 'C级人数分布', type: 'C' }
       ],
       charts: {
         main: null,
@@ -173,35 +175,174 @@ export default {
       }
     }
   },
-
-  mounted() {
-    this.$nextTick(() => {
-      this.initCharts()
-      this.startSimulation()
-    })
-    window.addEventListener('resize', debounce(this.handleResize, 300))
+  async mounted() {
+    await this.getData()   // 先获取数据
+    this.initCharts()           // 再初始化图表
+    this.startSimulation()  // 已注释
   },
-
+  watch: {
+    childMajors: {
+      deep: true,
+      handler(newVal) {
+        if (newVal.length > 0) {
+          this.$nextTick(() => {
+            if (!this.charts.main || this.charts.main.isDisposed()) {
+              this.initCharts()
+            } else {
+              this.updateAllCharts()
+            }
+          })
+        }
+      }
+    }
+  },
   beforeDestroy() {
+    if (this.refreshTimer) clearInterval(this.refreshTimer)
     window.removeEventListener('resize', this.handleResize)
     this.disposeCharts()
   },
-
   methods: {
+    async fetchMajorCounts(topLevelMajorId) {
+      try {
+        const { data: countData } = await getMajorCount({
+          majorId: topLevelMajorId,
+          divertFrom: this.divertForm
+        })
+        return countData
+      } catch (error) {
+        console.error('获取人数失败:', error)
+        return []
+      }
+    },
+    handleMajorChange(majorId) {
+      this.selectedMajor = majorId
+    },
+    async handleConfirm() {
+      if (!this.selectedMajor) return
+
+      try {
+        const selectedMajor = this.childMajors.find(
+          m => m.majorId === this.selectedMajor
+        )
+        //调用接口更新学生信息
+        await updateStudent({
+          studentId: this.userName,
+          systemMajor: selectedMajor.majorName
+        })
+        // 3. 重新获取最新专业数据（关键步骤）
+        await this.getData()
+        // 4. 清空已选专业并提示成功
+        this.selectedMajor = ''
+        this.$message.success('专业选择成功')
+      } catch (error) {
+        this.$message.error('操作失败')
+      }
+    },
+    async getData() {
+      this.loading = true
+      this.errorMsg = ''
+      this.responseData = null
+      try {
+        // 1. 先获取学生信息
+        const studentResponse = await getStudent(this.userName)
+        const studentInfo = studentResponse.studentInfo
+        this.divertForm = studentInfo.divertForm
+        // 2. 正确映射字段
+        this.form = {
+          major: studentInfo.divertForm.includes("类内任选") ? studentInfo.major : studentInfo.originalSystemMajor, // 关键字段映射
+          academy: studentInfo.academy,
+          innovationStatus: studentInfo.innovationClass,
+          policyStatus: studentInfo.policyStatus
+        }
+
+        // 3. 确保参数有效性
+        const params = {
+          major: this.form.major,
+          academy: this.form.academy,
+          ...(this.form.innovationStatus && { innovationStatus: this.form.innovationStatus }),
+          ...(this.form.policyStatus && { policyStatus: this.form.policyStatus })
+        }
+
+        // 调用接口得到专业数据
+        const { data } = await getMajorTree(params)
+
+        // 获取顶层专业ID（新增）
+        const topLevelMajorIds = data
+          .filter(item => item.parentId === null)
+          .map(item => item.majorId)
+        const topMajorId = topLevelMajorIds[0] || 0
+
+        // 获取人数统计数据（新增关键步骤）
+        const countsData = await this.fetchMajorCounts(topMajorId)
+
+        // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
+        this.childMajors = this.extractChildMajors(data, countsData)
+
+      } catch (error) {
+        this.errorMsg = `请求失败：${error.message}`
+        console.error(error)
+      } finally {
+        this.loading = false
+      }
+    },
+    // extractChildMajors 方法（需要接收 countsData）
+    extractChildMajors(data, countsData) {
+      return data.flatMap(item => {
+        // 查找当前专业的人数数据（新增匹配逻辑）
+        const majorCounts = countsData.find(c => c.majorName === item.majorName) || {}
+
+        const current = item.children?.length === 0 ? [{
+          majorId: item.majorId,
+          majorName: item.majorName,
+          total: majorCounts.count || 0,  // 使用接口返回的数据
+          grades: {
+            A: item.gradeA || 0,
+            B: item.gradeB || 0,
+            C: item.gradeC || 0
+          }
+        }] : []
+
+        // 递归处理子级时传递 countsData（重要修改）
+        const children = item.children?.flatMap(child =>
+          this.extractChildMajors([child], countsData)
+        ) || []
+
+        return [...current, ...children]
+      })
+    },
+    // 图表初始化
     initCharts() {
+      // 销毁已存在的实例
+      this.disposeCharts()
+
+      // 重新初始化
       this.charts.main = echarts.init(this.$refs.mainChart)
       this.charts.pie = echarts.init(this.$refs.pieChart)
       this.gradeCharts.forEach((_, index) => {
-        const refName = 'gradeChart' + index
-        this.charts.grade[index] = echarts.init(this.$refs[refName][0])
+        this.charts.grade[index] = echarts.init(this.$refs[`gradeChart${index}`][0])
       })
+
       this.updateAllCharts()
+
+      // 添加窗口resize监听
+      window.addEventListener('resize', this.handleResize)
     },
 
     updateAllCharts() {
-      this.updateMainChart()
-      this.updateGradeCharts()
-      this.updatePieChart()
+      if (!this.charts.main || this.charts.main.isDisposed()) return
+
+      try {
+        this.updateMainChart()
+        this.updateGradeCharts()
+        this.updatePieChart()
+
+        // 添加重绘逻辑
+        this.charts.main.resize()
+        this.charts.pie.resize()
+        this.charts.grade.forEach(chart => chart.resize())
+      } catch (e) {
+        console.error('图表更新失败:', e)
+      }
     },
 
     updateMainChart() {
@@ -209,33 +350,23 @@ export default {
         tooltip: {
           trigger: 'axis',
           backgroundColor: 'rgba(255,255,255,0.95)',
-          formatter: params => `
-            <b>${params[0].name}</b><br>
-            ${params.map(p => `
+          formatter: params => {
+            const total = this.childMajors.find(m => m.majorName === params[0].name)?.total || 1
+            return params.map(p => `
               <span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background:${p.color}"></span>
-              ${p.seriesName}: ${Math.round(p.value)}人 (${this.majors.find(m => m.name === p.name).grades[p.seriesName[0]]}%)
-            `).join('<br>')}`
+              ${p.seriesName}: ${p.value}人 (${((p.value/total)*100).toFixed(1)}%)
+            `).join('<br>')
+          }
         },
-        legend: {
-          data: ['A级成绩', 'B级成绩', 'C级成绩'],
-          bottom: 20
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '15%',
-          containLabel: true
-        },
-        yAxis: {
-          type: 'category',
-          data: this.majors.map(m => m.name)
-        },
+        legend: { data: ['A级人数', 'B级人数', 'C级人数'], bottom: 20 },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        yAxis: { type: 'category', data: this.childMajors.map(m => m.majorName) },
         xAxis: { type: 'value' },
         series: ['A', 'B', 'C'].map((type, index) => ({
-          name: `${type}级成绩`,
+          name: `${type}级人数`,
           type: 'bar',
           stack: 'total',
-          data: this.majors.map(m => m.current * (m.grades[type] / 100)),
+          data: this.childMajors.map(m => m.grades[type]),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
               { offset: 0, color: COLOR_SCHEME[index].start },
@@ -254,19 +385,13 @@ export default {
         const option = {
           xAxis: {
             type: 'category',
-            data: this.majors.map(m => m.name),
-            axisLabel: {
-              rotate: 30,
-              color: '#666'
-            }
+            data: this.childMajors.map(m => m.majorName),
+            axisLabel: { rotate: 30, color: '#666' }
           },
-          yAxis: {
-            type: 'value',
-            axisLabel: { color: '#666' }
-          },
+          yAxis: { type: 'value', axisLabel: { color: '#666' } },
           series: [{
             type: 'bar',
-            data: this.majors.map(m => m.current * (m.grades[chart.type] / 100)),
+            data: this.childMajors.map(m => m.grades[chart.type]),
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: COLOR_SCHEME[index].start },
@@ -284,17 +409,13 @@ export default {
     updatePieChart() {
       const option = {
         tooltip: { trigger: 'item' },
-        legend: {
-          orient: 'vertical',
-          left: 20,
-          top: 'middle'
-        },
+        legend: { show: false },
         series: [{
           type: 'pie',
           radius: ['40%', '70%'],
-          data: this.majors.map((m, i) => ({
-            name: m.name,
-            value: m.current,
+          data: this.childMajors.map((m, i) => ({
+            name: m.majorName,
+            value: m.total,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
                 { offset: 0, color: COLOR_SCHEME[i % 3].start },
@@ -307,37 +428,29 @@ export default {
       this.charts.pie.setOption(option)
     },
 
-    handleConfirm() {
-      if (this.selectedMajor) {
-        const major = this.majors.find(m => m.name === this.selectedMajor)
-        if (major) {
-          major.current++
-          this.selectedMajor = ''
+
+
+// 修改 startSimulation 方法
+    startSimulation() {
+      this.refreshTimer = setInterval(async () => {
+        try {
+          // 重新获取最新数据
+          await this.getData()
+          // 更新图表
           this.updateAllCharts()
+        } catch (error) {
+          console.error('定时刷新失败:', error)
         }
-      }
+      }, 10000) // 建议5秒间隔
     },
 
     tableRowClassName({ row }) {
-      return row.current > 50 ? 'warning-row' : ''
+      return row.total > 50 ? 'warning-row' : ''
     },
 
     getCountType(count) {
+      count = count || 0
       return count > 60 ? 'danger' : count > 40 ? 'warning' : 'success'
-    },
-
-    startSimulation() {
-      setInterval(() => {
-        this.majors.forEach(major => {
-          major.current = Math.max(0, major.current + Math.floor(Math.random() * 3 - 1))
-          major.grades = {
-            A: Math.min(100, major.grades.A + Math.random() * 2 - 1),
-            B: Math.min(100, major.grades.B + Math.random() * 2 - 1),
-            C: Math.min(100, major.grades.C + Math.random() * 2 - 1)
-          }
-        })
-        this.updateAllCharts()
-      }, 2000)
     },
 
     handleResize() {
@@ -347,9 +460,17 @@ export default {
     },
 
     disposeCharts() {
-      this.charts.main.dispose()
-      this.charts.pie.dispose()
-      this.charts.grade.forEach(chart => chart.dispose())
+      // 增加实例状态判断
+      const safeDispose = (instance) => {
+        if (instance && !instance.isDisposed()) {
+          instance.dispose()
+        }
+      }
+
+      safeDispose(this.charts.main)
+      safeDispose(this.charts.pie)
+      this.charts.grade.forEach(safeDispose)
+      this.charts.grade = []
     }
   }
 }

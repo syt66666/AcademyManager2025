@@ -111,20 +111,25 @@
             </template>
           </el-table-column>
           <!-- 修改成绩列 -->
-          <el-table-column prop="scoreValue" label="成绩" sortable>
+          <el-table-column prop="scoreValue" label="成绩" width="100" sortable>
+            <template slot-scope="{ row }">
+              <span class="credit-badge">{{ row.scoreValue }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="percentRank" label="成绩位次" sortable>
             <template slot-scope="{ row }">
               <div class="score-progress">
                 <div
                   class="progress-bar"
                   :style="{
-          width: `${parseScore(row.scoreValue).value}%`,
-          background: scoreColor(row.scoreValue),
+          width: `${parseScore(row.percentRank).value}%`,
+          background: scoreColor(row.percentRank),
         }"
                 >
         <span class="score-text">
-          {{ row.scoreValue }}
-          <span v-if="!parseScore(row.scoreValue).isValid" class="score-tag">
-            {{ parseScore(row.scoreValue).value === 100 ? '✔' : '✖' }}
+          {{ row.percentRank+'%' }}
+          <span v-if="!parseScore(row.percentRank).isValid" class="score-tag">
+            {{ parseScore(row.percentRank).value === 100 ? '✔' : '✖' }}
           </span>
         </span>
                 </div>
@@ -163,11 +168,18 @@ import { listScore } from "@/api/system/score";
 import store from "@/store";
 
 export default {
-  mounted() {
-    // 直接获取参数
-    const semesterName = this.$route.query.semester
-    // 可以存储到组件data中
-    this.activeSemester = semesterName
+  created() {
+    // 获取路由参数中的学期名称
+    const semesterName = this.$route.query.semester || '';
+    this.activeSemester = semesterName;
+    // 获取当前学期
+    this.semester=this.activeSemester.includes("上")? "第一学期" : "第二学期"
+    // 从store获取学生ID
+    const studentId = this.$store.state.user.name || '';
+    // 调用计算函数
+    this.academicYear = this.calculateAcademicYear(semesterName, studentId);
+    //获取成绩数据
+    this.getList();
   },
   data() {
     return {
@@ -192,20 +204,55 @@ export default {
         pageSize: 10,
         studentId: store.state.user.name,
         courseName: "",
-        courseCategory:""
+        courseCategory:"",
+        semester: "",
+        academicYear:"",
       },
       // 课程类型选项
       courseCategorys: [
         { value: "必修", label: "必修" },
         { value: "选修", label: "选修" },
+        { value: "通识", label: "通识" },
       ],
     };
   },
-  created() {
-    this.getList();
-  },
   methods: {
-    // 在methods中添加
+    calculateAcademicYear(semesterName, studentId) {
+      // 1. 提取基准年份
+      const baseYear = this.extractBaseYear(studentId);
+      if (baseYear === null) {
+        console.error('学号格式错误，无法计算学年');
+        return '未知年份';
+      }
+
+      // 2. 计算年级增量
+      const gradeIncrement = this.getGradeIncrement(semesterName);
+
+      // 3. 返回最终年份（可根据需求返回数字或字符串）
+      return baseYear + gradeIncrement;
+      // 或 return `${baseYear + gradeIncrement}级`;
+    },
+
+    extractBaseYear(studentId) {
+      const yearMatch = studentId.match(/^\d{4}/);
+      return yearMatch ? parseInt(yearMatch[0], 10) : null;
+    },
+
+    getGradeIncrement(semesterName) {
+      const GRADE_MAP = {
+        '大一': 0,
+        '大二': 1,
+        '大三': 2,
+        '大四': 3
+      };
+
+      // 匹配第一个符合的年级关键词
+      const matchedGrade = Object.keys(GRADE_MAP).find(grade =>
+        semesterName.includes(grade)
+      );
+
+      return matchedGrade ? GRADE_MAP[matchedGrade] : 0;
+    },
     parseScore(score) {
       if (score === "通过") return { value: 100, isValid: false }; // 通过不计入统计
       if (score === "不通过") return { value: 0, isValid: false };  // 不通过不计入统计
@@ -218,6 +265,9 @@ export default {
     /** 查询成绩列表 */
     getList() {
       this.loading = true;
+      this.queryParams.semester=this.semester;
+      this.queryParams.academicYear=this.academicYear;
+      console.log(this.queryParams)
       listScore(this.queryParams).then(response => {
         this.scoreList = response.rows;
         this.total = response.total;
