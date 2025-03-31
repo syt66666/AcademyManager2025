@@ -150,11 +150,11 @@ export default {
     return {
       title: '双数据对比分析',
       indicators: [
-        { name: '技术能力', max: 100 },
-        { name: '沟通能力', max: 100 },
-        { name: '执行效率', max: 100 },
-        { name: '创新指数', max: 100 },
-        { name: '行业经验', max: 100 }
+        { name: '学业成绩', max: 100 },
+        { name: '科创竞赛', max: 100 },
+        { name: '文体活动', max: 100 },
+        { name: '讲座报告', max: 100 },
+        { name: '导师指导', max: 100 }
       ],
       activeIndex: null,
       panelTop: 0,
