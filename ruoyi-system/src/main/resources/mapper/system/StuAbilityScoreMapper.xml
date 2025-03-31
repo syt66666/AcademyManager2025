@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.StuAbilityScoreMapper">
+
+    <resultMap id="gpaResultMap" type="GpaResultDTO">
+        <result property="studentId" column="student_id"/>
+        <result property="rawGpa" column="raw_gpa"/>
+    </resultMap>
+
+    <!-- 必修课加权平均GPA计算（支持增量查询） -->
+    <select id="selectRequiredGPA" resultMap="gpaResultMap">
+        SELECT
+        student_id,
+        ROUND(
+        COALESCE(SUM(gpa * credit) / NULLIF(SUM(credit), 0), 0),
+        2
+        ) AS raw_gpa
+        FROM (
+        SELECT
+        s.student_id,
+        s.gpa,
+        COALESCE(c.credit, 0) AS credit,
+        ROW_NUMBER() OVER (
+        PARTITION BY s.student_id, s.course_code
+        ORDER BY
+        CASE s.score_type
+        WHEN '正考' THEN 1
+        WHEN '重修' THEN 2
+        WHEN '补考' THEN 3
+        ELSE 4
+        END,
+        s.upload_time DESC
+        ) AS rn
+        FROM stu_score s
+        INNER JOIN stu_course c
+        ON s.course_code = c.course_code
+        AND c.course_category = '必修'
+        WHERE s.gpa IS NOT NULL
+        <if test="studentIds != null and !studentIds.isEmpty()">
+            AND s.student_id IN
+            <foreach item="id" collection="studentIds" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        ) t
+        WHERE rn = 1
+        GROUP BY student_id
+    </select>
+
+    <!-- 批量更新优化（MySQL 8.0+ 使用VALUES方式） -->
+    <update id="batchUpdateAcademicScores">
+        UPDATE stu_ability_score a
+        JOIN (
+        <foreach collection="list" item="item" separator=" UNION ALL ">
+            SELECT
+            #{item.studentId} AS student_id,
+            #{item.academicScore} AS academic_score
+        </foreach>
+        ) t USING(student_id)
+        SET a.academic_score = COALESCE(t.academic_score, 0)
+    </update>
+
+</mapper>

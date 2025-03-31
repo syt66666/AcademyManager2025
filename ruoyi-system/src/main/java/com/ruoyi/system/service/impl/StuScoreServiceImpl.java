@@ -1,13 +1,17 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
+import com.ruoyi.system.domain.dto.GpaResultDTO;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.compress.utils.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.StuScoreMapper;
@@ -27,6 +31,8 @@ public class StuScoreServiceImpl implements IStuScoreService
 {
     @Autowired
     private StuScoreMapper stuScoreMapper;
+    @Autowired
+    private StuAbilityScoreServiceImpl stuAbilityScoreService;
     @Autowired
     private Validator validator;
     /**
@@ -130,7 +136,10 @@ public class StuScoreServiceImpl implements IStuScoreService
         if (CollectionUtils.isEmpty(importList)) {
             throw new ServiceException("导入数据不能为空");
         }
-
+        // 收集受影响的学生ID（去重）
+        Set<String> affectedStudents = importList.stream()
+                .map(StuScore::getStudentId)
+                .collect(Collectors.toSet());
         // 1. 按课程分组处理
         Map<String, List<StuScore>> courseMap = importList.stream()
                 .collect(Collectors.groupingBy(StuScore::getCourseCode));
@@ -154,10 +163,14 @@ public class StuScoreServiceImpl implements IStuScoreService
             // 5. 批量更新排名和总人数到数据库
             stuScoreMapper.batchUpdateRank(allScores);
         });
-
+        // 触发增量计算
+        if (!affectedStudents.isEmpty()) {
+            stuAbilityScoreService.calculateAndStoreGPAScores(
+                    new ArrayList<>(affectedStudents)
+            );
+        }
         return "成功导入" + importList.size() + "条，影响课程：" + courseMap.keySet();
     }
-
     // 仅计算排名和总人数
     private void calculateRank(List<StuScore> scores) {
         // 按成绩降序排序

@@ -3,7 +3,9 @@ package com.ruoyi.system.domain;
 import lombok.Data;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class StuInfo extends BaseEntity
 {

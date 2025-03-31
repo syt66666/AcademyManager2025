@@ -68,7 +68,6 @@ public interface StuScoreMapper
 
     void batchUpdateRank(List<StuScore> allScores);
 
-    List<GpaResultDTO> selectRequiredGPA();
-    void batchUpdateAcademicScores(@Param("list") List<StudentAbilityScore> scores);
+
 
 }
