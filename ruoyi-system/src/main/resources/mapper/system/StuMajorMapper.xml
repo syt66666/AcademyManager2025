@@ -26,6 +26,15 @@
         <result property="intraDomainCount" column="intra_domain_count"/>
     </resultMap>
 
+    <resultMap type="MajorStatisticDTO" id="MajorStatisticDTOResult">
+        <id property="majorId" column="major_id"/>
+        <result property="majorName" column="major_name"/>
+        <result property="gradeA" column="grade_A"/>
+        <result property="gradeB" column="grade_B"/>
+        <result property="gradeC" column="grade_C"/>
+        <result property="studentNum" column="student_num"/>
+    </resultMap>
+
     <select id="selectByAcademyAndType" resultMap="StuMajorResult">
         SELECT *
         FROM stu_major
@@ -50,6 +59,28 @@
         WHERE parent_id = #{parentId}
     </select>
 
+<select id="selectMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
+    SELECT
+        sr.major_id,
+        si.system_major AS major_name,
+        COUNT(CASE WHEN si.grade_level = 'A' THEN 1 END) AS grade_A,
+        COUNT(CASE WHEN si.grade_level = 'B' THEN 1 END) AS grade_B,
+        COUNT(CASE WHEN si.grade_level = 'C' THEN 1 END) AS grade_C,
+        COUNT(si.student_id) AS student_num
+    FROM stu_major sm
+             LEFT JOIN stu_info si
+                       ON sm.major_name =
+                          CASE
+                              WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
+                                  THEN si.major
+                              WHEN si.divert_form = '可域内任选，并转专业'
+                                  THEN si.original_system_major
+                              END
+             Left JOIN stu_major sr on sr.parent_id=sm.major_id AND si.system_major=sr.major_name
+    WHERE sm.major_id = #{majorId}
+    GROUP BY system_major,sr.major_id;
+
+</select>
     <select id="selectMajorStatistics" resultMap="MajorStatisticResult">
         SELECT
             sm.major_id AS sub_major_id,
@@ -125,11 +156,31 @@
         update stu_major
         <trim prefix="SET" suffixOverrides=",">
             <if test="studentNum != null">student_num = #{studentNum},</if>
-<!--            <if test="gradeA != null">grade_A = #{gradeA},</if>-->
-<!--            <if test="gradeB != null">grade_B = #{gradeB},</if>-->
-<!--            <if test="gradeC != null">grade_C = #{gradeC},</if>-->
+            <if test="gradeA != null">grade_A = #{gradeA},</if>
+            <if test="gradeB != null">grade_B = #{gradeB},</if>
+            <if test="gradeC != null">grade_C = #{gradeC},</if>
         </trim>
         where major_id = #{majorId}
+    </update>
+    <update id="batchUpdateMajors">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE stu_major
+            <trim prefix="SET" suffixOverrides=",">
+                <if test="item.studentNum != null">
+                    student_num = #{item.studentNum},
+                </if>
+                <if test="item.gradeA != null">
+                    grade_A = #{item.gradeA},
+                </if>
+                <if test="item.gradeB != null">
+                    grade_B = #{item.gradeB},
+                </if>
+                <if test="item.gradeC != null">
+                    grade_C = #{item.gradeC},
+                </if>
+            </trim>
+            WHERE major_id = #{item.majorId}
+        </foreach>
     </update>
 
     <select id="selectDistinctMajorIdsByStudents">

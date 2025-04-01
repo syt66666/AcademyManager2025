@@ -47,7 +47,7 @@ public class MajorController extends BaseController {
         try {
             int parsedMajorId = Integer.parseInt(majorId);
             return success(
-                    selectionService.getEveryMajorCount(parsedMajorId, divertFrom)
+                    selectionService.getEveryMajorCount(parsedMajorId)
             );
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("专业ID必须为数字");

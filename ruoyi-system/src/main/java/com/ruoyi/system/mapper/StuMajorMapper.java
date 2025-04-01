@@ -1,8 +1,8 @@
 package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.StuMajor;
-import com.ruoyi.system.domain.dto.MajorScoreDTO;
 import com.ruoyi.system.domain.dto.MajorStatistic;
+import com.ruoyi.system.domain.dto.MajorStatisticDTO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -17,6 +17,9 @@ public interface StuMajorMapper {
     List<MajorStatistic> selectMajorStatistics(
             @Param("parentId") Integer parentId
     );
+    List<MajorStatisticDTO> selectMajorStatisticGradesNum(
+            @Param("majorId") Integer majorId
+    );
     void updateRankedStudents(@Param("majorId") List<Integer> majorIds);
     /**
      * 根据学生ID列表获取所属专业ID（去重）
@@ -26,6 +29,11 @@ public interface StuMajorMapper {
     List<Integer> selectDistinctMajorIdsByStudents(
             @Param("studentIds") List<String> studentIds
     );
-    public int updateStuMajor(@Param("majorId") Integer majorId,
-            @Param("studentNum") Integer studentNum);
+    public void updateStuMajor(@Param("majorId") Integer majorId,
+                               @Param("gradeA") Integer gradeA,
+                               @Param("gradeB") Integer gradeB,
+                               @Param("gradeC") Integer gradeC,
+                               @Param("studentNum") Integer studentNum);
+    // 新增批量更新方法
+    void batchUpdateMajors(@Param("list") List<MajorStatisticDTO> updateList);
 }
