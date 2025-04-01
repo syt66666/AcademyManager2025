@@ -1,7 +1,6 @@
 <template>
   <div class="navbar">
     <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
-
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" v-if="!topNav"/>
     <top-nav id="topmenu-container" class="topmenu-container" v-if="topNav"/>
     <search id="header-search" class="right-menu-item" />
@@ -50,6 +49,7 @@ import Hamburger from '@/components/Hamburger'
 import Screenfull from '@/components/Screenfull'
 import axios from "axios";
 import {getStudent} from "@/api/system/student";
+import sidebar from "@/layout/components/Sidebar/index.vue";
 
 
 export default {
@@ -70,6 +70,9 @@ export default {
     Screenfull,
   },
   computed: {
+    sidebar() {
+      return sidebar
+    },
     userName() {
       return this.$store.state.user.name; // 获取用户名
     },

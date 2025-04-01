@@ -527,6 +527,7 @@ export default {
   --info-color: #909399;
   --border-radius: 8px;
   --box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  margin-left: 100px;
 }
 
 /* ================= 查询表单区域 ================= */
