@@ -83,7 +83,8 @@ export function getMajorCount(params) {
     url: '/system/major/count',
     method: 'get',
     params: {
-      major_id: params.majorId
+      major_id: params.majorId,
+      is_tell: params.isTell
       // 可扩展其他参数...
     }
   })

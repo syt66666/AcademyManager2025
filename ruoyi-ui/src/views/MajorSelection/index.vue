@@ -207,10 +207,11 @@ export default {
     this.disposeCharts()
   },
   methods: {
-    async fetchMajorCounts(topLevelMajorId) {
+    async fetchMajorCounts(topLevelMajorId,isTell) {
       try {
         const { data: countData } = await getMajorCount({
-          majorId: topLevelMajorId
+          majorId: topLevelMajorId,
+          isTell: isTell
         })
         return countData
       } catch (error) {
@@ -234,7 +235,7 @@ export default {
           systemMajor: selectedMajor.majorName
         })
         // 3. 重新获取最新专业数据（关键步骤）
-        await this.getData()
+        await this.getData(true)
         // 4. 清空已选专业并提示成功
         this.selectedMajor = ''
         this.$message.success('专业选择成功')
@@ -242,7 +243,7 @@ export default {
         this.$message.error('操作失败')
       }
     },
-    async getData() {
+    async getData(isTell = false) {
       this.loading = true
       this.errorMsg = ''
       this.responseData = null
@@ -277,11 +278,11 @@ export default {
         const topMajorId = topLevelMajorIds[0] || 0
 
         // 获取人数统计数据（新增关键步骤）
-        const countsData = await this.fetchMajorCounts(topMajorId)
-
-        // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
-        this.childMajors = this.extractChildMajors(data, countsData)
-
+        const countsData = await this.fetchMajorCounts(topMajorId,isTell)
+if(countsData.length !== 0) {
+  // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
+  this.childMajors = this.extractChildMajors(data, countsData)
+}
       } catch (error) {
         this.errorMsg = `请求失败：${error.message}`
         console.error(error)
@@ -433,8 +434,6 @@ export default {
       this.charts.pie.setOption(option)
     },
 
-
-
 // 修改 startSimulation 方法
     startSimulation() {
       this.refreshTimer = setInterval(async () => {
@@ -479,34 +478,42 @@ export default {
     },
     // 新增 WebSocket 连接方法
     connectWebSocket() {
-      const wsUrl = `ws://${window.location.host}/ws-data`
+      const wsUrl = `ws://localhost:8080/websocket/message`
       this.ws = new WebSocket(wsUrl)
 
-      this.ws.onopen = () => {
-        this.isConnected = true
-        this.reconnectAttempts = 0
-        console.log('WebSocket connected')
-        this.subscribeDataUpdates()
-      }
+      // this.ws.onopen = () => {
+      //   this.isConnected = true
+      //   this.reconnectAttempts = 0
+      //   console.log('WebSocket connected')
+      //   this.subscribeDataUpdates()
+      // }
 
-      this.ws.onmessage = async (event) => {
-        const data = JSON.parse(event.data)
-        if (data.type === 'DATA_CHANGE') {
-          await this.getData()  // 触发数据刷新
-          this.$message.info('检测到数据更新，已刷新最新信息')
+      // this.ws.onmessage = async (event) => {
+      //   const data = JSON.parse(event.data)
+      //   if (data.type === 'DATA_CHANGE') {
+      //     await this.getData()  // 触发数据刷新
+      //     this.$message.info('检测到数据更新，已刷新最新信息')
+      //   }
+      // }
+
+      // this.ws.onclose = () => {
+      //   this.isConnected = false
+      //   console.log('WebSocket disconnected')
+      //   this.handleReconnect()
+      // }
+      const self = this
+
+      this.ws.onmessage = function(event) {
+        const message = JSON.parse(event.data)
+        if (message.type === 'student_update') {
+          console.log('student_update!!!')
+          self.getData()
         }
       }
-
-      this.ws.onclose = () => {
-        this.isConnected = false
-        console.log('WebSocket disconnected')
-        this.handleReconnect()
-      }
-
-      this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error)
-        this.ws.close()
-      }
+      // this.ws.onerror = (error) => {
+      //   console.error('WebSocket error:', error)
+      //   this.ws.close()
+      // }
     },
 
     // 新增重连逻辑

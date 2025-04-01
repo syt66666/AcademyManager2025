@@ -35,18 +35,19 @@ public class MajorController extends BaseController {
     /**
      * 获取专业人数统计
      * @param majorId 专业ID (必填)
-     * @param divertFrom 分流来源 (必填)
+     * @param isTell 分流来源 (必填)
      * @return 统计结果 {major_name: "专业名", count: 人数}
      */
     @GetMapping("/count")
     public AjaxResult getEveryMajorCount(
-            @RequestParam(value = "major_id", required = true) String majorId
+            @RequestParam(value = "major_id", required = true) String majorId,
+            @RequestParam(value = "is_tell", required = true) boolean isTell
     ) {
         System.out.println("majorId: " + majorId);
         try {
             int parsedMajorId = Integer.parseInt(majorId);
             return success(
-                    selectionService.getEveryMajorCount(parsedMajorId)
+                    selectionService.getEveryMajorCount(parsedMajorId,isTell)
             );
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("专业ID必须为数字");

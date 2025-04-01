@@ -2,8 +2,8 @@ package com.ruoyi.system.service.impl;
 
 
 import com.alibaba.fastjson2.JSONObject;
+import com.ruoyi.system.service.websocket.WebSocketUsers;
 import com.ruoyi.system.domain.StuMajor;
-import com.ruoyi.system.domain.dto.MajorStatistic;
 import com.ruoyi.system.domain.dto.MajorStatisticDTO;
 import com.ruoyi.system.mapper.StuMajorMapper;
 
@@ -15,9 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -47,13 +45,7 @@ public class MajorSelectionServiceImpl {
                 .getAvailableMajors(major, academy);
     }
 
-    /**
-     *
-     *
-     * @param majorId
-     * @param divertForm
-     * @return
-     */
+
 //    public List<JSONObject> getEveryMajorCount(Integer majorId, String divertForm) {
 //
 //        //子专业
@@ -85,9 +77,11 @@ public class MajorSelectionServiceImpl {
 //        return result;
 //    }
     @Transactional(rollbackFor = Exception.class)
-    public List<JSONObject> getEveryMajorCount(Integer majorId) {
-        List<MajorStatisticDTO> majorStatistics = majorMapper.selectMajorStatisticGradesNum(majorId);
+    public List<JSONObject> getEveryMajorCount(Integer majorId, boolean isTell) {
         List<JSONObject> result = new ArrayList<>();
+        if(!isTell){
+        List<MajorStatisticDTO> majorStatistics = majorMapper.selectMajorStatisticGradesNum(majorId);
+
 
         // 初始化统计变量
         AtomicInteger fatherACount = new AtomicInteger(0);
@@ -113,10 +107,7 @@ public class MajorSelectionServiceImpl {
                     json.put("count", dto.getStudentNum());
                     result.add(json);
 
-                    // 异步通知
-                    CompletableFuture.runAsync(() ->
-                            dataChangeService.notifyDataChange(dto.getMajorName(), dto.getGradeA(), dto.getGradeB(), dto.getGradeC(), dto.getStudentNum())
-                    );
+
                 })
                 .collect(Collectors.toList());
 
@@ -130,8 +121,14 @@ public class MajorSelectionServiceImpl {
                 fatherBCount.get(),
                 fatherCCount.get(),
                 fatherTotal.get()
-        );
-
+        );}else
+        // 异步通知客户端
+        {
+            CompletableFuture.runAsync(() ->
+                            // 发送WebSocket消息通知所有客户端
+                            WebSocketUsers.sendMessageToUsersByText("{\"type\": \"student_update\"}")
+//                            dataChangeService.notifyDataChange(dto.getMajorName(), dto.getGradeA(), dto.getGradeB(), dto.getGradeC(), dto.getStudentNum())
+            );}
         return result;
     }
 }
