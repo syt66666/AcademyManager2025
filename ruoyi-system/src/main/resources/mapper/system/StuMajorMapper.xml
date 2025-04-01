@@ -9,6 +9,16 @@
         <result property="parentId"    column="parent_id" />
     </resultMap>
 
+    <resultMap type="MajorScoreDTO" id="MajorScoreResult">
+        <id     property="majorId"     column="major_id" />
+        <result property="academicScore"     column="academic_score" />
+        <result property="studentId"        column="student_id" />
+        <result property="ranking"        column="ranking" />
+    </resultMap>
+    <resultMap type="MajorScoreDTO" id="MajorScoreResult2">
+        <id     property="studentId"     column="student_id" />
+        <result property="majorId"        column="major_id" />
+    </resultMap>
     <resultMap type="MajorStatistic" id="MajorStatisticResult">
         <id property="subMajorId" column="sub_major_id"/>
         <result property="subMajorName" column="sub_major_name"/>
@@ -60,6 +70,57 @@
         WHERE sm.parent_id = #{parentId}
         GROUP BY sm.major_id, sm.major_name
     </select>
+
+    <update id="updateRankedStudents">
+        UPDATE stu_info si
+        JOIN (
+        SELECT
+        student_id,
+        major_id,
+        DENSE_RANK() OVER (
+        PARTITION BY major_id
+        ORDER BY
+        CASE WHEN academic_score IS NULL THEN 1 ELSE 0 END,
+        academic_score DESC
+        ) AS ranking,
+        CASE
+        WHEN (PERCENT_RANK() OVER (
+        PARTITION BY major_id
+        ORDER BY academic_score DESC
+        )) &lt;= 0.2 THEN 'A'
+        WHEN (PERCENT_RANK() OVER (
+        PARTITION BY major_id
+        ORDER BY academic_score DESC
+        )) &lt;= 0.6 THEN 'B'
+        ELSE 'C'
+        END AS grade_level
+        FROM (
+        SELECT
+        s1.student_id,
+        s1.academic_score,
+        s3.major_id  <!-- 专业ID来自stu_major表 -->
+        FROM stu_ability_score s1
+        JOIN stu_info s2 ON s1.student_id = s2.student_id
+        JOIN stu_major s3 ON s3.major_name =
+        CASE
+        WHEN s2.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
+        THEN s2.major
+        WHEN s2.divert_form = '可域内任选，并转专业'
+        THEN s2.original_system_major
+        END
+        WHERE s3.major_id IN
+        <foreach collection="majorId" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ) filtered_data
+        ) tr
+        ON si.student_id = tr.student_id
+        SET
+        si.ranking = tr.ranking,
+        si.grade_level = tr.grade_level
+        <!-- 移除错误的major_id条件 -->
+    </update>
+
     <update id="updateStuMajor" parameterType="StuMajor">
         update stu_major
         <trim prefix="SET" suffixOverrides=",">
@@ -70,4 +131,22 @@
         </trim>
         where major_id = #{majorId}
     </update>
+
+    <select id="selectDistinctMajorIdsByStudents">
+        SELECT DISTINCT
+        major_id
+        FROM stu_info si
+            JOIN stu_major sm
+                ON sm.major_name =
+        CASE
+        WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
+        THEN si.major
+        WHEN si.divert_form = '可域内任选，并转专业'
+        THEN si.original_system_major
+        END
+        WHERE si.student_id IN
+        <foreach item="id" collection="studentIds" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

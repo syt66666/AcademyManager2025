@@ -323,22 +323,6 @@ export default {
         return [...current, ...children]
       })
     },
-
-    // 临时模拟数据方法（实际接口有数据后应删除）
-    addMockData(data) {
-      const mock = (node) => {
-        if (node.children) {
-          node.children.forEach(mock)
-        } else {
-          node.studentNum = Math.floor(Math.random() * 100) + 50
-          node.gradeA = Math.floor(node.studentNum * 0.2)
-          node.gradeB = Math.floor(node.studentNum * 0.5)
-          node.gradeC = node.studentNum - node.gradeA - node.gradeB
-        }
-      }
-      data.forEach(mock)
-    },
-
     // 图表初始化
     initCharts() {
       // 销毁已存在的实例
@@ -564,6 +548,7 @@ export default {
   padding: 30px;
   background: #f8faff;
   min-height: 100vh;
+  margin-left: 100px;
 }
 
 .neo-card {

@@ -136,10 +136,7 @@ public class StuScoreServiceImpl implements IStuScoreService
         if (CollectionUtils.isEmpty(importList)) {
             throw new ServiceException("导入数据不能为空");
         }
-        // 收集受影响的学生ID（去重）
-        Set<String> affectedStudents = importList.stream()
-                .map(StuScore::getStudentId)
-                .collect(Collectors.toSet());
+
         // 1. 按课程分组处理
         Map<String, List<StuScore>> courseMap = importList.stream()
                 .collect(Collectors.groupingBy(StuScore::getCourseCode));
@@ -163,6 +160,11 @@ public class StuScoreServiceImpl implements IStuScoreService
             // 5. 批量更新排名和总人数到数据库
             stuScoreMapper.batchUpdateRank(allScores);
         });
+        //计算学生必修课总绩点绩点
+        // 收集受影响的学生ID（去重）
+        Set<String> affectedStudents = importList.stream()
+                .map(StuScore::getStudentId)
+                .collect(Collectors.toSet());
         // 触发增量计算
         if (!affectedStudents.isEmpty()) {
             stuAbilityScoreService.calculateAndStoreGPAScores(

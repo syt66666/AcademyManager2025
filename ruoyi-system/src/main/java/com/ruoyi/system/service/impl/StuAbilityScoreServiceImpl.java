@@ -2,7 +2,9 @@ package com.ruoyi.system.service.impl;
 
 import com.ruoyi.system.domain.StudentAbilityScore;
 import com.ruoyi.system.domain.dto.GpaResultDTO;
+import com.ruoyi.system.domain.dto.MajorScoreDTO;
 import com.ruoyi.system.mapper.StuAbilityScoreMapper;
+import com.ruoyi.system.mapper.StuMajorMapper;
 import com.ruoyi.system.mapper.StuScoreMapper;
 import com.ruoyi.system.service.IStuAbilityScoreService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,8 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
     private StuScoreMapper scoreMapper;
     @Autowired
     private StuAbilityScoreMapper abilityMapper;
+    @Autowired
+    private StuMajorMapper majorMapper;
 
     @Value("${gpa.maxValue:5.0}")
     private BigDecimal maxGpa; // 系统配置最高GPA
@@ -63,6 +67,8 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
         log.info("共更新{}条学业成绩数据，涉及学生{}人",
                 scores.size(),
                 gpaResults.stream().map(GpaResultDTO::getStudentId).distinct().count());
+        List<Integer> majorScores = majorMapper.selectDistinctMajorIdsByStudents(studentIds);
+        majorMapper.updateRankedStudents(majorScores);
     }
 
     // 手动实现列表分片（兼容JDK8）

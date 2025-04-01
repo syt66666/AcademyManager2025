@@ -12,6 +12,4 @@ public class MajorStatistic {
     private String subMajorName;
     private Integer intraClassCount; // 类内任选数量
     private Integer intraDomainCount; // 域内任选数量
-
-    // 省略 getter/setter/toString
 }

@@ -111,6 +111,7 @@ public class StuScoreController extends BaseController
         LoginUser loginUser = getLoginUser();
         String operName = loginUser.getUsername();
         String message = stuScoreService.importScore(userList, updateSupport, operName);
+
         return AjaxResult.success(message);
     }
 
