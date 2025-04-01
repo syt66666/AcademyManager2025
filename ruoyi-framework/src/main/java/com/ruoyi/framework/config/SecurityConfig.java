@@ -115,6 +115,7 @@ public class SecurityConfig
                     // 静态资源，可匿名访问
                     .antMatchers(HttpMethod.GET, "/", "/*.html", "/**/*.html", "/**/*.css", "/**/*.js", "/profile/**").permitAll()
                     .antMatchers("/swagger-ui.html", "/swagger-resources/**", "/webjars/**", "/*/api-docs", "/druid/**").permitAll()
+                        .antMatchers("/websocket/**").permitAll()
                         .antMatchers("/system/questionnaire/times").permitAll()
                         .antMatchers("/api/check-questionnaire-completed").permitAll()
                         .antMatchers("/api/student").permitAll()
