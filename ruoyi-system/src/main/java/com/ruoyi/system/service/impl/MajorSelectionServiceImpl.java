@@ -115,7 +115,7 @@ public class MajorSelectionServiceImpl {
 
                     // 异步通知
                     CompletableFuture.runAsync(() ->
-                            dataChangeService.notifyDataChange(dto.getMajorName(), dto.getStudentNum())
+                            dataChangeService.notifyDataChange(dto.getMajorName(), dto.getGradeA(), dto.getGradeB(), dto.getGradeC(), dto.getStudentNum())
                     );
                 })
                 .collect(Collectors.toList());

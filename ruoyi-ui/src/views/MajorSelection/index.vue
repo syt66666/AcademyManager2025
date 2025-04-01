@@ -210,8 +210,7 @@ export default {
     async fetchMajorCounts(topLevelMajorId) {
       try {
         const { data: countData } = await getMajorCount({
-          majorId: topLevelMajorId,
-          divertFrom: this.divertForm
+          majorId: topLevelMajorId
         })
         return countData
       } catch (error) {
@@ -290,28 +289,21 @@ export default {
         this.loading = false
       }
     },
-    async getNum(topLevelMajorIds) {
-      const response = await getMajorCount({
-
-        majorId: parseInt(topLevelMajorIds, 10) || 0,      // 专业ID（字符串类型）
-        divertFrom: this.divertForm // 分流类型
-      })
-    },
     // 数据提取方法
 // 修改后的 extractChildMajors 方法（需要接收 countsData）
     extractChildMajors(data, countsData) {
       return data.flatMap(item => {
         // 查找当前专业的人数数据（新增匹配逻辑）
         const majorCounts = countsData.find(c => c.majorName === item.majorName) || {}
-
+        console.log(majorCounts)
         const current = item.children?.length === 0 ? [{
           majorId: item.majorId,
           majorName: item.majorName,
           total: majorCounts.count || 0,  // 使用接口返回的数据
           grades: {
-            A: item.gradeA || 0,
-            B: item.gradeB || 0,
-            C: item.gradeC || 0
+            A: majorCounts.countA || 0,
+            B: majorCounts.countB || 0,
+            C: majorCounts.countC || 0
           }
         }] : []
 

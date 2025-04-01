@@ -40,10 +40,9 @@ public class MajorController extends BaseController {
      */
     @GetMapping("/count")
     public AjaxResult getEveryMajorCount(
-            @RequestParam(value = "major_id", required = true) String majorId,
-            @RequestParam(value = "divert_from", required = true) String divertFrom
+            @RequestParam(value = "major_id", required = true) String majorId
     ) {
-        System.out.println("majorId: " + majorId + " divertFrom: " + divertFrom);
+        System.out.println("majorId: " + majorId);
         try {
             int parsedMajorId = Integer.parseInt(majorId);
             return success(

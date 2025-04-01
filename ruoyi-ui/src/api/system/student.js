@@ -83,8 +83,7 @@ export function getMajorCount(params) {
     url: '/system/major/count',
     method: 'get',
     params: {
-      major_id: params.majorId,     // 前端使用驼峰参数名
-      divert_from: params.divertFrom,
+      major_id: params.majorId
       // 可扩展其他参数...
     }
   })
