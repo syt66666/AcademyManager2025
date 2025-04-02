@@ -466,7 +466,12 @@ if(countsData.length !== 0) {
 
     // 新增 WebSocket 连接方法
     connectWebSocket() {
-      const wsUrl = `ws://localhost:8080/websocket/message`
+      // const wsUrl = `ws://localhost:8080/websocket/message`
+      const host = window.location.hostname
+
+      // 生成完整 URL
+      const wsUrl = `ws://${host}:${process.env.VUE_APP_WS_BACKEND_PORT}/websocket/message`   // 生产环境路径
+      console.log('WebSocket URL:', wsUrl)
       this.ws = new WebSocket(wsUrl)
 
       this.ws.onmessage = (event) => {

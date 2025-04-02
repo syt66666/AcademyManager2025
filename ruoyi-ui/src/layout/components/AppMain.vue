@@ -34,7 +34,6 @@ export default {
   },
   mounted() {
     this.addIframe();
-    this.initializeQuestionnaire(); // 初始化问卷数据
   },
   methods: {
     addIframe() {
