@@ -43,6 +43,25 @@
               </h3>
               <div class="decorative-line"></div>
             </div>
+            <!-- 在专业选择的下拉框和确认按钮之间添加 -->
+            <div class="policy-switch" v-if="form.innovationStatus === 1">
+              <el-checkbox
+                v-model="form.policyStatus"
+                :true-label="1"
+                :false-label="0"
+                class="policy-checkbox"
+                @change="handleCheckboxChange"
+              >
+                <span class="policy-text">放弃创新班政策</span>
+                <el-tooltip
+                  effect="light"
+                  content="选择此项将放弃创新班特殊政策"
+                  placement="top"
+                >
+                  <i class="el-icon-warning-outline"></i>
+                </el-tooltip>
+              </el-checkbox>
+            </div>
             <div class="select-container">
               <el-select
                 v-model="selectedMajor"
@@ -140,9 +159,9 @@ import {getMajorCount, getMajorTree, getStudent, updateStudent} from "@/api/syst
 import store from "@/store";
 
 const COLOR_SCHEME = [
-  { start: '#6A81E0', end: '#8E37D7' },
-  { start: '#7BCFA6', end: '#4CAF50' },
-  { start: '#FFC107', end: '#FF9800' }
+  {start: '#6A81E0', end: '#8E37D7'},
+  {start: '#7BCFA6', end: '#4CAF50'},
+  {start: '#FFC107', end: '#FF9800'}
 ]
 
 export default {
@@ -156,8 +175,9 @@ export default {
         policyStatus: null
       },
       //学生信息
+      previousPolicyStatus: null,
       userName: store.state.user.name,
-      innovationClass:'',
+      innovationClass: '',
       childMajors: [], // 处理后的子专业数据
       responseData: null,
       errorMsg: '',
@@ -165,9 +185,9 @@ export default {
       selectedMajor: '',
       loading: false,
       gradeCharts: [
-        { title: 'A级人数分布', type: 'A' },
-        { title: 'B级人数分布', type: 'B' },
-        { title: 'C级人数分布', type: 'C' }
+        {title: 'A级人数分布', type: 'A'},
+        {title: 'B级人数分布', type: 'B'},
+        {title: 'C级人数分布', type: 'C'}
       ],
       charts: {
         main: null,
@@ -207,9 +227,44 @@ export default {
     this.disposeCharts()
   },
   methods: {
-    async fetchMajorCounts(parentId,isTell,majorId) {
+    // 修改后的处理方法
+    handleCheckboxChange(newValue) {
+      this.previousPolicyStatus=this.form.policyStatus===0?1:0
+      this.$confirm(
+        `确定要${newValue === 1 ? '放弃' : '保留'}创新班政策吗？`,
+        '操作确认',
+        {
+          confirmButtonText: '确认',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+      ).then(() => {
+        // 用户确认后执行更新
+        this.updatePolicyStatus()
+      }).catch(() => {
+        // 用户取消时恢复旧值
+        this.form.policyStatus = this.previousPolicyStatus
+        this.$message.info('已取消操作')
+      })
+    },
+
+    // 原有的更新方法保持不变
+    async updatePolicyStatus() {
       try {
-        const { data: countData } = await getMajorCount({
+        await updateStudent({
+          studentId: this.userName,
+          policyStatus: this.form.policyStatus
+        })
+        await this.getData()
+        this.$message.success('政策状态更新成功')
+      } catch (error) {
+        this.$message.error('政策状态更新失败')
+        console.error(error)
+      }
+    },
+    async fetchMajorCounts(parentId, isTell, majorId) {
+      try {
+        const {data: countData} = await getMajorCount({
           parentId: parentId,
           majorId: majorId,
           isTell: isTell
@@ -227,13 +282,18 @@ export default {
       if (!this.selectedMajor) return
 
       try {
+        // 添加policyStatus验证
+        if (this.form.innovationStatus === 1 && this.form.policyStatus === null) {
+          return this.$message.warning("请选择是否放弃创新班政策")
+        }
         const selectedMajor = this.childMajors.find(
           m => m.majorId === this.selectedMajor
         )
         //调用接口更新学生信息
         await updateStudent({
           studentId: this.userName,
-          systemMajor: selectedMajor.majorName
+          systemMajor: selectedMajor.majorName,
+          policyStatus: this.form.innovationStatus === 1 ? this.form.policyStatus : 0
         })
         // 3. 重新获取最新专业数据（关键步骤）
         await this.getData(true)
@@ -253,8 +313,8 @@ export default {
         const studentResponse = await getStudent(this.userName)
         const studentInfo = studentResponse.studentInfo
         this.divertForm = studentInfo.divertForm
-        this.innovationClass=studentInfo.innovationClass
-        console.log('this.innovationClass:'+ this.innovationClass)
+        this.innovationClass = studentInfo.innovationClass
+        console.log('this.innovationClass:' + this.innovationClass)
         // 2. 正确映射字段
         this.form = {
           major: studentInfo.divertForm.includes("类内任选") ? studentInfo.major : studentInfo.originalSystemMajor, // 关键字段映射
@@ -267,12 +327,12 @@ export default {
         const params = {
           major: this.form.major,
           academy: this.form.academy,
-          ...(this.form.innovationStatus && { innovationStatus: this.form.innovationStatus }),
-          ...(this.form.policyStatus && { policyStatus: this.form.policyStatus })
+          ...(this.form.innovationStatus && {innovationStatus: this.form.innovationStatus}),
+          ...(this.form.policyStatus && {policyStatus: this.form.policyStatus})
         }
 
         // 调用接口得到专业数据
-        const { data } = await getMajorTree(params)
+        const {data} = await getMajorTree(params)
 
         // 获取顶层专业ID（新增）
         const topLevelMajorIds = data
@@ -280,11 +340,11 @@ export default {
           .map(item => item.majorId)
         const topMajorId = topLevelMajorIds[0] || 0
         // 获取人数统计数据（新增关键步骤）
-        const countsData = await this.fetchMajorCounts(topMajorId,isTell,this.selectedMajor)
-if(countsData.length !== 0) {
-  // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
-  this.childMajors = this.extractChildMajors(data, countsData)
-}
+        const countsData = await this.fetchMajorCounts(topMajorId, isTell, this.selectedMajor)
+        if (countsData.length !== 0) {
+          // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
+          this.childMajors = this.extractChildMajors(data, countsData)
+        }
       } catch (error) {
         this.errorMsg = `请求失败：${error.message}`
         console.error(error)
@@ -298,7 +358,7 @@ if(countsData.length !== 0) {
       return data.flatMap(item => {
         // 查找当前专业的人数数据（新增匹配逻辑）
         const majorCounts = countsData.find(c => c.majorName === item.majorName) || {}
-        console.log(majorCounts)
+        // console.log(majorCounts)
         const current = item.children?.length === 0 ? [{
           majorId: item.majorId,
           majorName: item.majorName,
@@ -362,14 +422,14 @@ if(countsData.length !== 0) {
             const total = this.childMajors.find(m => m.majorName === params[0].name)?.total || 1
             return params.map(p => `
               <span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background:${p.color}"></span>
-              ${p.seriesName}: ${p.value}人 (${((p.value/total)*100).toFixed(1)}%)
+              ${p.seriesName}: ${p.value}人 (${((p.value / total) * 100).toFixed(1)}%)
             `).join('<br>')
           }
         },
-        legend: { data: ['A级人数', 'B级人数', 'C级人数'], bottom: 20 },
-        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
-        yAxis: { type: 'category', data: this.childMajors.map(m => m.majorName) },
-        xAxis: { type: 'value' },
+        legend: {data: ['A级人数', 'B级人数', 'C级人数'], bottom: 20},
+        grid: {left: '3%', right: '4%', bottom: '15%', containLabel: true},
+        yAxis: {type: 'category', data: this.childMajors.map(m => m.majorName)},
+        xAxis: {type: 'value'},
         series: ['A', 'B', 'C'].map((type, index) => ({
           name: `${type}级人数`,
           type: 'bar',
@@ -377,8 +437,8 @@ if(countsData.length !== 0) {
           data: this.childMajors.map(m => m.grades[type]),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-              { offset: 0, color: COLOR_SCHEME[index].start },
-              { offset: 1, color: COLOR_SCHEME[index].end }
+              {offset: 0, color: COLOR_SCHEME[index].start},
+              {offset: 1, color: COLOR_SCHEME[index].end}
             ]),
             borderRadius: [0, 8, 8, 0]
           },
@@ -394,16 +454,16 @@ if(countsData.length !== 0) {
           xAxis: {
             type: 'category',
             data: this.childMajors.map(m => m.majorName),
-            axisLabel: { rotate: 30, color: '#666' }
+            axisLabel: {rotate: 30, color: '#666'}
           },
-          yAxis: { type: 'value', axisLabel: { color: '#666' } },
+          yAxis: {type: 'value', axisLabel: {color: '#666'}},
           series: [{
             type: 'bar',
             data: this.childMajors.map(m => m.grades[chart.type]),
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: COLOR_SCHEME[index].start },
-                { offset: 1, color: COLOR_SCHEME[index].end }
+                {offset: 0, color: COLOR_SCHEME[index].start},
+                {offset: 1, color: COLOR_SCHEME[index].end}
               ]),
               borderRadius: [8, 8, 0, 0]
             },
@@ -416,8 +476,8 @@ if(countsData.length !== 0) {
 
     updatePieChart() {
       const option = {
-        tooltip: { trigger: 'item' },
-        legend: { show: false },
+        tooltip: {trigger: 'item'},
+        legend: {show: false},
         series: [{
           type: 'pie',
           radius: ['40%', '70%'],
@@ -426,8 +486,8 @@ if(countsData.length !== 0) {
             value: m.total,
             itemStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: COLOR_SCHEME[i % 3].start },
-                { offset: 1, color: COLOR_SCHEME[i % 3].end }
+                {offset: 0, color: COLOR_SCHEME[i % 3].start},
+                {offset: 1, color: COLOR_SCHEME[i % 3].end}
               ])
             }
           }))
@@ -436,7 +496,7 @@ if(countsData.length !== 0) {
       this.charts.pie.setOption(option)
     },
 
-    tableRowClassName({ row }) {
+    tableRowClassName({row}) {
       return row.total > 50 ? 'warning-row' : ''
     },
 
@@ -522,18 +582,18 @@ if(countsData.length !== 0) {
 .neo-card {
   border: none !important;
   border-radius: 20px !important;
-  box-shadow: 0 10px 30px rgba(106,129,224,0.1) !important;
+  box-shadow: 0 10px 30px rgba(106, 129, 224, 0.1) !important;
   transition: transform 0.3s, box-shadow 0.3s;
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(106,129,224,0.2) !important;
+    box-shadow: 0 15px 40px rgba(106, 129, 224, 0.2) !important;
   }
 }
 
 .glow-card {
   background: linear-gradient(145deg, #ffffff, #f8faff) !important;
-  box-shadow: 0 4px 20px rgba(106,129,224,0.15) !important;
+  box-shadow: 0 4px 20px rgba(106, 129, 224, 0.15) !important;
 }
 
 .selection-header {
@@ -564,14 +624,14 @@ if(countsData.length !== 0) {
     height: 50px !important;
     border-radius: 12px !important;
     border: 2px solid #e6e9f4 !important;
-    background: rgba(255,255,255,0.9) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
     font-size: 16px;
     color: #2c3e50;
     transition: all 0.3s;
 
     &:hover {
       border-color: #6A81E0 !important;
-      box-shadow: 0 4px 12px rgba(106,129,224,0.15);
+      box-shadow: 0 4px 12px rgba(106, 129, 224, 0.15);
     }
 
     &:focus {
@@ -605,15 +665,15 @@ if(countsData.length !== 0) {
     height: 100%;
     background: linear-gradient(
         90deg,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,0.2) 50%,
-        rgba(255,255,255,0) 100%
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0) 100%
     );
     transition: left 0.6s;
   }
 
   &:hover {
-    box-shadow: 0 8px 20px rgba(106,129,224,0.3) !important;
+    box-shadow: 0 8px 20px rgba(106, 129, 224, 0.3) !important;
 
     .hover-effect {
       left: 100%;
@@ -663,7 +723,7 @@ if(countsData.length !== 0) {
 
 .beautiful-select {
   border: none !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
   border-radius: 12px !important;
 
   .el-select-dropdown__item {
@@ -729,5 +789,18 @@ if(countsData.length !== 0) {
 
 .main-chart {
   border-radius: 16px;
+}
+.policy-switch {
+  transition: all 0.3s;
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(106,129,224,0.1);
+  }
+
+  .el-checkbox__input.is-checked .el-checkbox__inner {
+    background-color: #6A81E0;
+    border-color: #6A81E0;
+  }
 }
 </style>
