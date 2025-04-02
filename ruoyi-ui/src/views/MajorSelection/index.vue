@@ -157,6 +157,7 @@ export default {
       },
       //学生信息
       userName: store.state.user.name,
+      innovationClass:'',
       childMajors: [], // 处理后的子专业数据
       responseData: null,
       errorMsg: '',
@@ -207,7 +208,6 @@ export default {
   },
   methods: {
     async fetchMajorCounts(parentId,isTell,majorId) {
-      console.log(parentId,isTell,majorId)
       try {
         const { data: countData } = await getMajorCount({
           parentId: parentId,
@@ -230,7 +230,6 @@ export default {
         const selectedMajor = this.childMajors.find(
           m => m.majorId === this.selectedMajor
         )
-        console.log(this.selectedMajor)
         //调用接口更新学生信息
         await updateStudent({
           studentId: this.userName,
@@ -254,6 +253,8 @@ export default {
         const studentResponse = await getStudent(this.userName)
         const studentInfo = studentResponse.studentInfo
         this.divertForm = studentInfo.divertForm
+        this.innovationClass=studentInfo.innovationClass
+        console.log('this.innovationClass:'+ this.innovationClass)
         // 2. 正确映射字段
         this.form = {
           major: studentInfo.divertForm.includes("类内任选") ? studentInfo.major : studentInfo.originalSystemMajor, // 关键字段映射
@@ -471,13 +472,11 @@ if(countsData.length !== 0) {
 
       // 生成完整 URL
       const wsUrl = `ws://${host}:${process.env.VUE_APP_WS_BACKEND_PORT}/websocket/message`   // 生产环境路径
-      console.log('WebSocket URL:', wsUrl)
       this.ws = new WebSocket(wsUrl)
 
       this.ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data)
-          console.log('收到更新:', message)
           this.handleWebSocketMessage(message) // 调用处理方法
         } catch (e) {
           console.error('消息解析失败', e)
@@ -491,7 +490,6 @@ if(countsData.length !== 0) {
         const index = this.childMajors.findIndex(
           m => m.majorId === message.majorId
         )
-        console.log(index)
         if (index > -1) {
           // 使用 Vue.set 确保响应式更新
           this.$set(this.childMajors, index, {
@@ -508,29 +506,7 @@ if(countsData.length !== 0) {
           this.updateAllCharts()
         }
       }
-    },
-    // 新增重连逻辑
-    handleReconnect() {
-      if (this.reconnectAttempts < 5) {
-        setTimeout(() => {
-          console.log(`尝试重连 (${this.reconnectAttempts + 1}/5)`)
-          this.connectWebSocket()
-          this.reconnectAttempts++
-        }, Math.min(1000 * (2 ** this.reconnectAttempts), 30000))
-      }
-    },
-
-    // 新增订阅方法
-    subscribeDataUpdates() {
-      const subscribeMsg = {
-        "command": "SUBSCRIBE",
-        "identifier": JSON.stringify({
-          "channel": "DataUpdateChannel"
-        })
-      }
-      this.ws.send(JSON.stringify(subscribeMsg))
-    },
-
+    }
   }
 }
 </script>
