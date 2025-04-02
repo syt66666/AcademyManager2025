@@ -181,9 +181,8 @@ export default {
   async mounted() {
     await this.getData()   // 先获取数据
     this.initCharts()           // 再初始化图表
-    // this.startSimulation()  // 已注释
     this.connectWebSocket() //
-    window.addEventListener('data-update', this.handleDataUpdate)
+    // window.addEventListener('data-update', this.handleDataUpdate)
   },
   watch: {
     childMajors: {
@@ -279,7 +278,6 @@ export default {
           .filter(item => item.parentId === null)
           .map(item => item.majorId)
         const topMajorId = topLevelMajorIds[0] || 0
-console.log(this.selectedMajor)
         // 获取人数统计数据（新增关键步骤）
         const countsData = await this.fetchMajorCounts(topMajorId,isTell,this.selectedMajor)
 if(countsData.length !== 0) {
@@ -293,8 +291,8 @@ if(countsData.length !== 0) {
         this.loading = false
       }
     },
+
     // 数据提取方法
-// 修改后的 extractChildMajors 方法（需要接收 countsData）
     extractChildMajors(data, countsData) {
       return data.flatMap(item => {
         // 查找当前专业的人数数据（新增匹配逻辑）
@@ -334,9 +332,9 @@ if(countsData.length !== 0) {
       this.updateAllCharts()
 
       // 添加窗口resize监听
-      window.addEventListener('resize', this.handleResize)
+      // window.addEventListener('resize', this.handleResize)
     },
-
+    //更新所有表格数据
     updateAllCharts() {
       if (!this.charts.main || this.charts.main.isDisposed()) return
 
@@ -437,20 +435,6 @@ if(countsData.length !== 0) {
       this.charts.pie.setOption(option)
     },
 
-// 修改 startSimulation 方法
-    startSimulation() {
-      this.refreshTimer = setInterval(async () => {
-        try {
-          // 重新获取最新数据
-          await this.getData()
-          // 更新图表
-          this.updateAllCharts()
-        } catch (error) {
-          console.error('定时刷新失败:', error)
-        }
-      }, 5000) // 建议5秒间隔
-    },
-
     tableRowClassName({ row }) {
       return row.total > 50 ? 'warning-row' : ''
     },
@@ -479,32 +463,11 @@ if(countsData.length !== 0) {
       this.charts.grade.forEach(safeDispose)
       this.charts.grade = []
     },
+
     // 新增 WebSocket 连接方法
     connectWebSocket() {
       const wsUrl = `ws://localhost:8080/websocket/message`
       this.ws = new WebSocket(wsUrl)
-
-      // this.ws.onopen = () => {
-      //   this.isConnected = true
-      //   this.reconnectAttempts = 0
-      //   console.log('WebSocket connected')
-      //   this.subscribeDataUpdates()
-      // }
-
-      // this.ws.onmessage = async (event) => {
-      //   const data = JSON.parse(event.data)
-      //   if (data.type === 'DATA_CHANGE') {
-      //     await this.getData()  // 触发数据刷新
-      //     this.$message.info('检测到数据更新，已刷新最新信息')
-      //   }
-      // }
-
-      // this.ws.onclose = () => {
-      //   this.isConnected = false
-      //   console.log('WebSocket disconnected')
-      //   this.handleReconnect()
-      // }
-      const self = this
 
       this.ws.onmessage = (event) => {
         try {

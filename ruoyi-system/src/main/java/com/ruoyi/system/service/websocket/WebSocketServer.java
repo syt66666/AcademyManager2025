@@ -54,7 +54,7 @@ public class WebSocketServer
             WebSocketUsers.put(session.getId(), session);
             LOGGER.info("\n 建立连接 - {}", session);
             LOGGER.info("\n 当前人数 - {}", WebSocketUsers.getUsers().size());
-            WebSocketUsers.sendMessageToUserByText(session, "连接成功");
+//            WebSocketUsers.sendMessageToUserByText(session, "连接成功");
         }
     }
 

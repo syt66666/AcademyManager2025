@@ -50,6 +50,7 @@ import Screenfull from '@/components/Screenfull'
 import axios from "axios";
 import {getStudent} from "@/api/system/student";
 import sidebar from "@/layout/components/Sidebar/index.vue";
+import {Breadcrumb} from "element-ui";
 
 
 export default {
@@ -64,7 +65,7 @@ export default {
     };
   },
   components: {
-    // Breadcrumb,
+    Breadcrumb,
     TopNav,
     Hamburger,
     Screenfull,
