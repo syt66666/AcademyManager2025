@@ -141,6 +141,7 @@ public class WebSocketUsers
 
         // 确保广播方法发送给所有连接
         public static void sendMessageToAll(String message) {
+            System.out.println("广播消息：" + message);
             getUsers().forEach((sessionId, session) -> {
                 try {
                     session.getBasicRemote().sendText(message);

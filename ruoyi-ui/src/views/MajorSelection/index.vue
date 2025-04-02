@@ -283,9 +283,9 @@ export default {
 
       try {
         // 添加policyStatus验证
-        if (this.form.innovationStatus === 1 && this.form.policyStatus === null) {
-          return this.$message.warning("请选择是否放弃创新班政策")
-        }
+        // if (this.form.innovationStatus === 1 && this.form.policyStatus === null) {
+        //   return this.$message.warning("请选择是否放弃创新班政策")
+        // }
         const selectedMajor = this.childMajors.find(
           m => m.majorId === this.selectedMajor
         )
@@ -295,6 +295,7 @@ export default {
           systemMajor: selectedMajor.majorName,
           policyStatus: this.form.innovationStatus === 1 ? this.form.policyStatus : 0
         })
+        console.log(1111)
         // 3. 重新获取最新专业数据（关键步骤）
         await this.getData(true)
         // 4. 清空已选专业并提示成功
@@ -358,7 +359,7 @@ export default {
       return data.flatMap(item => {
         // 查找当前专业的人数数据（新增匹配逻辑）
         const majorCounts = countsData.find(c => c.majorName === item.majorName) || {}
-        // console.log(majorCounts)
+        console.log(majorCounts)
         const current = item.children?.length === 0 ? [{
           majorId: item.majorId,
           majorName: item.majorName,
@@ -527,16 +528,19 @@ export default {
 
     // 新增 WebSocket 连接方法
     connectWebSocket() {
-      // const wsUrl = `ws://localhost:8080/websocket/message`
+      const wsUrl = `ws://localhost:8080/websocket/message`
       const host = window.location.hostname
 
       // 生成完整 URL
-      const wsUrl = `ws://${host}:${process.env.VUE_APP_WS_BACKEND_PORT}/websocket/message`   // 生产环境路径
+      // const wsUrl = `ws://${host}:${process.env.VUE_APP_WS_BACKEND_PORT}/websocket/message`   // 生产环境路径
+      console.log('host:', wsUrl)
+
       this.ws = new WebSocket(wsUrl)
 
       this.ws.onmessage = (event) => {
         try {
           const message = JSON.parse(event.data)
+          console.log(message)
           this.handleWebSocketMessage(message) // 调用处理方法
         } catch (e) {
           console.error('消息解析失败', e)
