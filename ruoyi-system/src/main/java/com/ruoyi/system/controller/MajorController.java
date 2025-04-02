@@ -40,14 +40,15 @@ public class MajorController extends BaseController {
      */
     @GetMapping("/count")
     public AjaxResult getEveryMajorCount(
-            @RequestParam(value = "major_id", required = true) String majorId,
+            @RequestParam(value = "parent_id", required = true) String parentId,
+            @RequestParam(value = "major_id", required = false, defaultValue = "0") String majorId,
             @RequestParam(value = "is_tell", required = true) boolean isTell
     ) {
-        System.out.println("majorId: " + majorId);
         try {
+            int parsedParentId = Integer.parseInt(parentId);
             int parsedMajorId = Integer.parseInt(majorId);
             return success(
-                    selectionService.getEveryMajorCount(parsedMajorId,isTell)
+                    selectionService.getEveryMajorCount(parsedParentId,parsedMajorId,isTell)
             );
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("专业ID必须为数字");

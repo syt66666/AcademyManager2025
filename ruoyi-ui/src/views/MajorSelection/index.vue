@@ -207,10 +207,12 @@ export default {
     this.disposeCharts()
   },
   methods: {
-    async fetchMajorCounts(topLevelMajorId,isTell) {
+    async fetchMajorCounts(parentId,isTell,majorId) {
+      console.log(parentId,isTell,majorId)
       try {
         const { data: countData } = await getMajorCount({
-          majorId: topLevelMajorId,
+          parentId: parentId,
+          majorId: majorId,
           isTell: isTell
         })
         return countData
@@ -229,6 +231,7 @@ export default {
         const selectedMajor = this.childMajors.find(
           m => m.majorId === this.selectedMajor
         )
+        console.log(this.selectedMajor)
         //调用接口更新学生信息
         await updateStudent({
           studentId: this.userName,
@@ -276,9 +279,9 @@ export default {
           .filter(item => item.parentId === null)
           .map(item => item.majorId)
         const topMajorId = topLevelMajorIds[0] || 0
-
+console.log(this.selectedMajor)
         // 获取人数统计数据（新增关键步骤）
-        const countsData = await this.fetchMajorCounts(topMajorId,isTell)
+        const countsData = await this.fetchMajorCounts(topMajorId,isTell,this.selectedMajor)
 if(countsData.length !== 0) {
   // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
   this.childMajors = this.extractChildMajors(data, countsData)
@@ -503,19 +506,41 @@ if(countsData.length !== 0) {
       // }
       const self = this
 
-      this.ws.onmessage = function(event) {
-        const message = JSON.parse(event.data)
-        if (message.type === 'student_update') {
-          console.log('student_update!!!')
-          self.getData()
+      this.ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data)
+          console.log('收到更新:', message)
+          this.handleWebSocketMessage(message) // 调用处理方法
+        } catch (e) {
+          console.error('消息解析失败', e)
         }
       }
-      // this.ws.onerror = (error) => {
-      //   console.error('WebSocket error:', error)
-      //   this.ws.close()
-      // }
     },
+    // 新增 WebSocket 数据更新方法
+    handleWebSocketMessage(message) {
+      if (message.type === 'student_update') {
+        // 查找匹配的专业
+        const index = this.childMajors.findIndex(
+          m => m.majorId === message.majorId
+        )
+        console.log(index)
+        if (index > -1) {
+          // 使用 Vue.set 确保响应式更新
+          this.$set(this.childMajors, index, {
+            ...this.childMajors[index],
+            total: message.total,
+            grades: {
+              A: message.gradeA,
+              B: message.gradeB,
+              C: message.gradeC
+            }
+          })
 
+          // 可选：触发图表更新
+          this.updateAllCharts()
+        }
+      }
+    },
     // 新增重连逻辑
     handleReconnect() {
       if (this.reconnectAttempts < 5) {

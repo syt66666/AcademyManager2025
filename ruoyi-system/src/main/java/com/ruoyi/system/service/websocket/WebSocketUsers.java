@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.socket.TextMessage;
 
 /**
  * websocket 客户端用户集
@@ -137,4 +138,16 @@ public class WebSocketUsers
             LOGGER.info("\n[你已离线]");
         }
     }
+
+        // 确保广播方法发送给所有连接
+        public static void sendMessageToAll(String message) {
+            getUsers().forEach((sessionId, session) -> {
+                try {
+                    session.getBasicRemote().sendText(message);
+                } catch (IOException e) {
+                    // 错误处理
+                }
+            });
+        }
+
 }
