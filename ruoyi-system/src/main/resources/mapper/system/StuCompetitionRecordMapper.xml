@@ -27,7 +27,14 @@
     <sql id="selectStuCompetitionRecordVo">
         select competition_id, stu_info.student_id, stu_info.student_name, stu_info.academy, competition_name, competition_level, award_level, scholarship_points, award_date, proof_material, audit_status, apply_time, nick_name, audit_time, audit_remark, semester from stu_competition_record left join stu_info on stu_competition_record.student_id = stu_info.student_id
     </sql>
-
+    <select id="getStuCompetitionRecordCount" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            stu_competition_record
+        where
+            student_id=#{studentId} AND audit_status='已通过'
+    </select>
     <select id="selectStuCompetitionRecordList" parameterType="StuCompetitionRecord" resultMap="StuCompetitionRecordResult">
         <include refid="selectStuCompetitionRecordVo"/>
         <where>

@@ -76,4 +76,5 @@ public interface StuCompetitionRecordMapper
                                  @Param("semester") String semester);
 
     Map<String, Integer> countAuditStatus();
+    int getStuCompetitionRecordCount(@Param("studentId") String studentId);
 }

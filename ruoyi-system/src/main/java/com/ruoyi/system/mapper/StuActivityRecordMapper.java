@@ -77,4 +77,5 @@ public interface StuActivityRecordMapper
                                  @Param("semester") String semester);
 
     Map<String, Integer> countAuditStatus();
+    int getStuActivityRecordCount(@Param("studentId") String studentId);
 }

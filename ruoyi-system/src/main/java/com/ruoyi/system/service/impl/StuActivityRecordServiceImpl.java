@@ -20,14 +20,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
-public class StuActivityRecordServiceImpl implements IStuActivityRecordService
-{
+public class StuActivityRecordServiceImpl implements IStuActivityRecordService {
     @Autowired
     private StuActivityRecordMapper stuActivityRecordMapper;
     @Autowired
     private AuditHistoryMapper auditHistoryMapper;
     @Autowired
     private ISysUserService userService;
+
     /**
      * 查询学生文体活动记录
      *
@@ -35,8 +35,7 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
      * @return 学生文体活动记录
      */
     @Override
-    public StuActivityRecord selectStuActivityRecordByActivityId(Integer activityId)
-    {
+    public StuActivityRecord selectStuActivityRecordByActivityId(Integer activityId) {
         return stuActivityRecordMapper.selectStuActivityRecordByActivityId(activityId);
     }
 
@@ -47,8 +46,7 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
      * @return 学生文体活动记录
      */
     @Override
-    public List<StuActivityRecord> selectStuActivityRecordList(StuActivityRecord stuActivityRecord)
-    {
+    public List<StuActivityRecord> selectStuActivityRecordList(StuActivityRecord stuActivityRecord) {
         return stuActivityRecordMapper.selectStuActivityRecordList(stuActivityRecord);
     }
 
@@ -59,9 +57,48 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
      * @return 结果
      */
     @Override
-    public int insertStuActivityRecord(StuActivityRecord stuActivityRecord)
-    {
+    public int insertStuActivityRecord(StuActivityRecord stuActivityRecord) {
+        int score = calculateActivityScore(stuActivityRecord);
+        stuActivityRecord.setScholarshipPoints((long) score);
         return stuActivityRecordMapper.insertStuActivityRecord(stuActivityRecord);
+    }
+
+    public int calculateActivityScore(StuActivityRecord record) {
+        // 1. 活动级别基础分判断（类似成绩分布的基础分逻辑）
+        int baseScore = 0;
+        String activityLevel = record.getActivityLevel();
+        if ("国际级".equals(activityLevel)) {
+            baseScore = 100;
+        } else if ("国家级".equals(activityLevel)) {
+            baseScore = 80;
+        } else if ("省级".equals(activityLevel)) {
+            baseScore = 60;
+        } else if ("校级".equals(activityLevel)) {
+            baseScore = 40;
+        } else if ("院级".equals(activityLevel)) {
+            baseScore = 20;
+        }
+
+        // 2. 奖项等级系数判断（类似不同等级的权重调整）
+        double coefficient = 0.0;
+        String awardLevel = record.getAwardLevel();
+        if ("特等奖".equals(awardLevel)) {
+            coefficient = 1.0;
+        } else if ("一等奖".equals(awardLevel)) {
+            coefficient = 0.8;
+        } else if ("二等奖".equals(awardLevel)) {
+            coefficient = 0.6;
+        } else if ("三等奖".equals(awardLevel)) {
+            coefficient = 0.4;
+        } else if ("优秀奖".equals(awardLevel)) {
+            coefficient = 0.2;
+        }
+
+        // 4. 综合计算（类似成绩分布的总分计算）
+        int totalScore = (int) Math.round(baseScore * coefficient);
+
+        // 5. 最低保障分（类似成绩分布的保底逻辑）
+        return Math.max(totalScore, 5);
     }
 
     /**
@@ -71,8 +108,9 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
      * @return 结果
      */
     @Override
-    public int updateStuActivityRecord(StuActivityRecord stuActivityRecord)
-    {
+    public int updateStuActivityRecord(StuActivityRecord stuActivityRecord) {
+        int score = calculateActivityScore(stuActivityRecord);
+        stuActivityRecord.setScholarshipPoints((long) score);
         return stuActivityRecordMapper.updateStuActivityRecord(stuActivityRecord);
     }
 
@@ -83,8 +121,7 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
      * @return 结果
      */
     @Override
-    public int deleteStuActivityRecordByActivityIds(Integer[] activityIds)
-    {
+    public int deleteStuActivityRecordByActivityIds(Integer[] activityIds) {
         return stuActivityRecordMapper.deleteStuActivityRecordByActivityIds(activityIds);
     }
 
@@ -95,8 +132,7 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
      * @return 结果
      */
     @Override
-    public int deleteStuActivityRecordByActivityId(Integer activityId)
-    {
+    public int deleteStuActivityRecordByActivityId(Integer activityId) {
         return stuActivityRecordMapper.deleteStuActivityRecordByActivityId(activityId);
     }
 
@@ -191,7 +227,7 @@ public class StuActivityRecordServiceImpl implements IStuActivityRecordService
         try {
             return stuActivityRecordMapper.countAuditStatus();
         } catch (Exception e) {
-            return new HashMap<String, Integer>(){{
+            return new HashMap<String, Integer>() {{
                 put("pending", 0);
                 put("approved", 0);
                 put("rejected", 0);

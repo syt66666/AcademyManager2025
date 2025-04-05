@@ -44,7 +44,14 @@
         from stu_activity_record
                  left join stu_info on stu_activity_record.student_id = stu_info.student_id
     </sql>
-
+    <select id="getStuActivityRecordCount" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            stu_activity_record
+        where
+            student_id=#{studentId} AND audit_status='已通过'
+    </select>
     <select id="selectStuActivityRecordList" parameterType="StuActivityRecord" resultMap="StuActivityRecordResult">
         <include refid="selectStuActivityRecordVo"/>
         <where>
