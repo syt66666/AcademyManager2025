@@ -62,24 +62,23 @@
 <select id="selectMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
     SELECT
         sr.major_id,
-        si.system_major AS major_name,
+        sr.major_name AS major_name,
         COUNT(CASE WHEN si.grade_level = 'A' THEN 1 END) AS grade_A,
         COUNT(CASE WHEN si.grade_level = 'B' THEN 1 END) AS grade_B,
         COUNT(CASE WHEN si.grade_level = 'C' THEN 1 END) AS grade_C,
         COUNT(si.student_id) AS student_num
     FROM stu_major sm
-             LEFT JOIN stu_info si
-                       ON sm.major_name =
-                          CASE
-                              WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
-                                  THEN si.major
-                              WHEN si.divert_form = '可域内任选，并转专业'
-                                  THEN si.original_system_major
-                              END
-             Left JOIN stu_major sr on sr.parent_id=sm.major_id AND si.system_major=sr.major_name
-    WHERE sm.major_id = #{majorId}
+             right  JOIN stu_info si
+                         ON sm.major_name =
+                            CASE
+                                WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
+                                    THEN si.major
+                                WHEN si.divert_form = '可域内任选，并转专业'
+                                    THEN si.original_system_major
+                                END
+             RIGHT JOIN stu_major sr on sr.parent_id=sm.major_id AND si.system_major=sr.major_name
+    WHERE sm.parent_id is NULL and sr.parent_id = #{parentId}
     GROUP BY system_major,sr.major_id;
-
 </select>
     <select id="selectMajorStatistics" resultMap="MajorStatisticResult">
         SELECT

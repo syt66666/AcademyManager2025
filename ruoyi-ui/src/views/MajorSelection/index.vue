@@ -62,6 +62,29 @@
                 </el-tooltip>
               </el-checkbox>
             </div>
+            <div class="status-container">
+              <el-alert
+                v-if="this.systemMajor"
+                :title="`当前选择专业：${this.systemMajor}`"
+                type="success"
+                :closable="false"
+                show-icon
+                class="status-alert"
+              >
+                <i class="el-icon-success" slot="icon"></i>
+              </el-alert>
+
+              <el-alert
+                v-else
+                title="尚未选择专业"
+                type="info"
+                :closable="false"
+                show-icon
+                class="status-alert"
+              >
+                <i class="el-icon-info" slot="icon"></i>
+              </el-alert>
+            </div>
             <div class="select-container">
               <el-select
                 v-model="selectedMajor"
@@ -315,7 +338,8 @@ export default {
         const studentInfo = studentResponse.studentInfo
         this.divertForm = studentInfo.divertForm
         this.innovationClass = studentInfo.innovationClass
-        console.log('this.innovationClass:' + this.innovationClass)
+        this.systemMajor = studentInfo.systemMajor
+        console.log('this.systemMajor:' + this.systemMajor)
         // 2. 正确映射字段
         this.form = {
           major: studentInfo.divertForm.includes("类内任选") ? studentInfo.major : studentInfo.originalSystemMajor, // 关键字段映射
@@ -528,8 +552,14 @@ export default {
 
     // 新增 WebSocket 连接方法
     connectWebSocket() {
-      const wsUrl = `ws://localhost:8080/websocket/message`
+      // const wsUrl = `ws://localhost:8080/websocket/message`
       const host = window.location.hostname
+      const baseUrl = process.env.VUE_APP_BASE_API;  // http://localhost:8080
+      const wsPath = process.env.VUE_APP_WEBSOCKET_PATH;  // /websocket/message
+
+// 提取主机和端口
+      const { hostname, port } = new URL(baseUrl);
+      const wsUrl = `ws://${hostname}:${port}${wsPath}`;
 
       // 生成完整 URL
       // const wsUrl = `ws://${host}:${process.env.VUE_APP_WS_BACKEND_PORT}/websocket/message`   // 生产环境路径

@@ -18,7 +18,7 @@ public interface StuMajorMapper {
             @Param("parentId") Integer parentId
     );
     List<MajorStatisticDTO> selectMajorStatisticGradesNum(
-            @Param("majorId") Integer majorId
+            @Param("parentId") Integer parentId
     );
     void updateRankedStudents(@Param("majorId") List<Integer> majorIds);
     /**

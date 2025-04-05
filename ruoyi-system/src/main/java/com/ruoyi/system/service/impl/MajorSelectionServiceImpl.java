@@ -82,9 +82,9 @@ public class MajorSelectionServiceImpl {
                     fatherTotal.get()
             );
         } else {
+            System.out.println("majorStatistics: " + majorStatistics);
             // 创建包含详细数据的消息列表
             List<JSONObject> messages = majorStatistics.stream()
-//                    .filter(dto -> dto.getMajorId().equals(majorId)) // 添加过滤条件
                     .map(dto -> new JSONObject()
                             .fluentPut("type", "student_update")
                             .fluentPut("majorId", dto.getMajorId())
