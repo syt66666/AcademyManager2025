@@ -508,8 +508,8 @@ export default {
         },
         yAxis: {
           type: 'category',
-          axisLine: { show: false },
-          axisTick: { show: false },
+          axisLine: {show: false},
+          axisTick: {show: false},
           axisLabel: {
             color: '#666',
             fontSize: 12,
@@ -530,33 +530,50 @@ export default {
             fontSize: 12
           }
         },
-        series: ['A','B','C'].map((type, index) => ({
+        animationDuration: 800,  // 增加动画总时长
+        animationDurationUpdate: 1000,  // 数据更新动画时长
+        animationEasingUpdate: 'cubicOut',  // 更新动画曲线
+        series: ['A', 'B', 'C'].map((type, index) => ({
           name: `${type}级人数`,
           type: 'bar',
           stack: 'total',
           data: this.childMajors.map(m => m.grades[type]),
+          barWidth: 30,
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-              { offset: 0, color: COLOR_SCHEME[index].start },
-              { offset: 1, color: COLOR_SCHEME[index].end }
+              {offset: 0, color: COLOR_SCHEME[index].start},
+              {offset: 1, color: COLOR_SCHEME[index].end}
             ]),
             borderRadius: [6, 6, 0, 0],
-            shadowColor: 'rgba(0,0,0,0.08)',
-            shadowBlur: 6,
-            shadowOffsetY: 3
+            shadowColor: 'rgba(134, 65, 244, 0.1)',  // 更柔和的阴影颜色
+            shadowBlur: 12,  // 增加阴影模糊度
+            shadowOffsetY: 4  // 调整阴影偏移
           },
-          barWidth: 30,
           emphasis: {
             itemStyle: {
-              shadowColor: 'rgba(0,0,0,0.12)',
-              shadowBlur: 8,
-              shadowOffsetY: 4
+              shadowColor: 'rgba(134, 65, 244, 0.2)',  // 悬停时加强阴影
+              shadowBlur: 16
             }
           },
-          animationDelay: index * 60  // 添加动画延迟效果
+            animationDelay: function (params) {
+              // 动态延迟算法（更丝滑的波浪效果）
+              return params.dataIndex * 30 + index * 60;
+            },
         })),
-        animationEasing: 'cubicOut'  // 更流畅的动画曲线
-      };
+        // 新增视觉过渡效果
+        graphic: {
+          elements: [{
+            type: 'rect',
+            left: 'center',
+            top: 'middle',
+            silent: true,
+            invisible: true,
+            z: 100,
+            shape: { width: 0, height: 0 },
+            style: { fill: 'rgba(134, 65, 244, 0.1)' }
+          }]
+        }
+      }
 
       this.charts.main.setOption(option);
     },
