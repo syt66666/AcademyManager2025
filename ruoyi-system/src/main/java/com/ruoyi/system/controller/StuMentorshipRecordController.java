@@ -311,8 +311,10 @@ public class StuMentorshipRecordController extends BaseController {
         mentorship.setAuditStatus(auditDTO.getAuditStatus());
         mentorship.setAuditRemark(auditDTO.getAuditRemark());
         mentorship.setAuditTime(new Date());
+        String studentId=stuMentorshipRecordService.selectStuMentorshipRecordByRecordId(auditDTO.getRecordId()).getStudentId();
+
         // 执行更新操作
-        return toAjax(stuMentorshipRecordService.updateMentorshipAuditInfo(mentorship));
+        return toAjax(stuMentorshipRecordService.updateMentorshipAuditInfo(mentorship,studentId));
     }
 
     @GetMapping("/auditCount")

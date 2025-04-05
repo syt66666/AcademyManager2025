@@ -1,5 +1,6 @@
 package com.ruoyi.system.service.impl;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import com.ruoyi.common.core.domain.AjaxResult;
@@ -8,9 +9,9 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.ServletUtils;
 import com.ruoyi.common.utils.ip.IpUtils;
-import com.ruoyi.system.domain.AuditHistory;
-import com.ruoyi.system.domain.StuMentorshipRecord;
+import com.ruoyi.system.domain.*;
 import com.ruoyi.system.mapper.AuditHistoryMapper;
+import com.ruoyi.system.mapper.StuAbilityScoreMapper;
 import com.ruoyi.system.service.ISysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,8 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
     private AuditHistoryMapper auditHistoryMapper;
     @Autowired
     private ISysUserService userService;
+    @Autowired
+    private StuAbilityScoreMapper stuAbilityScoreMapper;
 
     /**
      * 查询导师指导记录
@@ -122,7 +125,7 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
     }
 
     @Override
-    public int updateMentorshipAuditInfo(StuMentorshipRecord mentorship) {
+    public int updateMentorshipAuditInfo(StuMentorshipRecord mentorship,String studentId) {
         // 1. 获取原始状态
         StuMentorshipRecord originalRecord = stuMentorshipRecordMapper
                 .selectStuMentorshipRecordByRecordId(mentorship.getRecordId());
@@ -141,7 +144,14 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
                 mentorship.getAuditStatus(),
                 mentorship.getAuditRemark()
         );
-
+        //如果审核状态是“已通过”，那么进行雷达图的更新
+        if(studentId!=null) {
+            int recodeCount = stuMentorshipRecordMapper.getStuMentorshipRecordCount(studentId);
+            StuAbilityScore studentAbilityScore = new StuAbilityScore();
+            studentAbilityScore.setStudentId(studentId);
+            studentAbilityScore.setTutorialScore(BigDecimal.valueOf(12.5 * recodeCount));
+            stuAbilityScoreMapper.updateStuAbilityScore(studentAbilityScore);
+        }
         return updateResult;
     }
 

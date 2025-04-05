@@ -133,16 +133,14 @@
         where record_id = #{recordId}
     </select>
 
-<!--    <select id="searchTutorId" resultType="java.lang.String">-->
-<!--        SELECT-->
-<!--            smi.tutor_id-->
-<!--        FROM-->
-<!--            stu_mentorship_record smr-->
-<!--                LEFT JOIN-->
-<!--            stu_mentor_info smi ON smr.student_id = smi.student_id-->
-<!--        WHERE smr.student_id = #{studentId}-->
-<!--        limit 1-->
-<!--    </select>-->
+    <select id="getStuMentorshipRecordCount" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            stu_mentorship_record smr
+        where
+            student_id=#{studentId} AND audit_status='已通过'
+    </select>
 
     <insert id="insertStuMentorshipRecord" parameterType="StuMentorshipRecord" useGeneratedKeys="true" keyProperty="recordId">
         insert into stu_mentorship_record

@@ -8,7 +8,36 @@
         <result property="studentId" column="student_id"/>
         <result property="rawGpa" column="raw_gpa"/>
     </resultMap>
+    <resultMap type="StuAbilityScore" id="StuAbilityScoreResult">
+        <result property="studentId"    column="student_id"    />
+        <result property="academy"    column="academy"    />
+        <result property="academicScore"    column="academic_score"    />
+        <result property="competitionScore"    column="competition_score"    />
+        <result property="activityScore"    column="activity_score"    />
+        <result property="lectureScore"    column="lecture_score"    />
+        <result property="tutorialScore"    column="tutorial_score"    />
+    </resultMap>
 
+    <sql id="selectStuAbilityScoreVo">
+        select student_id, academy, academic_score, competition_score, activity_score, lecture_score, tutorial_score from stu_ability_score
+    </sql>
+
+    <select id="selectStuAbilityScoreByStudentId" parameterType="String" resultMap="StuAbilityScoreResult">
+        <include refid="selectStuAbilityScoreVo"/>
+        where student_id = #{studentId}
+    </select>
+    <update id="updateStuAbilityScore" parameterType="StuAbilityScore">
+        update stu_ability_score
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="academy != null">academy = #{academy},</if>
+            <if test="academicScore != null">academic_score = #{academicScore},</if>
+            <if test="competitionScore != null">competition_score = #{competitionScore},</if>
+            <if test="activityScore != null">activity_score = #{activityScore},</if>
+            <if test="lectureScore != null">lecture_score = #{lectureScore},</if>
+            <if test="tutorialScore != null">tutorial_score = #{tutorialScore},</if>
+        </trim>
+        where student_id = #{studentId}
+    </update>
     <!-- 必修课加权平均GPA计算（支持增量查询） -->
     <select id="selectRequiredGPA" resultMap="gpaResultMap">
         SELECT
@@ -49,7 +78,7 @@
         GROUP BY student_id
     </select>
 
-    <!-- 批量更新优化（MySQL 8.0+ 使用VALUES方式） -->
+    <!-- 批量更新绩点 -->
     <update id="batchUpdateAcademicScores">
         UPDATE stu_ability_score a
         JOIN (

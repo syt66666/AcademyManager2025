@@ -61,7 +61,7 @@ public interface IStuMentorshipRecordService
 
     List<StuMentorshipRecord> selectMentorshipRecordList(StuMentorshipRecord stuMentorshipRecord);
 
-    int updateMentorshipAuditInfo(StuMentorshipRecord mentorship);
+    int updateMentorshipAuditInfo(StuMentorshipRecord mentorship,String studentId);
 
     Map<String, Integer> countAuditStatus();
 }

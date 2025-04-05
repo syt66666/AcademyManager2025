@@ -84,4 +84,6 @@ public interface StuMentorshipRecordMapper
     int updateMentorshipAuditInfo(StuMentorshipRecord mentorship);
 
     Map<String, Integer> countAuditStatus();
+
+    int getStuMentorshipRecordCount(@Param("studentId") String studentId);
 }
