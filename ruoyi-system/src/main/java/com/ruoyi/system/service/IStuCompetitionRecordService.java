@@ -57,7 +57,7 @@ public interface IStuCompetitionRecordService
      */
     public int deleteStuCompetitionRecordByCompetitionId(Integer competitionId);
 
-    int updateCompetitionAuditInfo(StuCompetitionRecord competition);
+    int updateCompetitionAuditInfo(StuCompetitionRecord competition,String studentId);
 
     List<StuCompetitionRecord> selectCompetitionRecordList(StuCompetitionRecord stuCompetitionRecord);
 

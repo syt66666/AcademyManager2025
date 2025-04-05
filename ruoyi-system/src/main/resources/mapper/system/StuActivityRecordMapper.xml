@@ -46,7 +46,7 @@
     </sql>
     <select id="getStuActivityRecordCount" resultType="int">
         SELECT
-            COUNT(*)
+            sum(scholarship_points)
         FROM
             stu_activity_record
         where

@@ -56,7 +56,7 @@ public interface IStuActivityRecordService
      */
     public int deleteStuActivityRecordByActivityId(Integer activityId);
 
-    public int updateActivityAuditInfo(StuActivityRecord activity);
+    public int updateActivityAuditInfo(StuActivityRecord activity,String studentId);
 
     public List<StuActivityRecord> selectAuditActivityRecordList(StuActivityRecord stuActivityRecord);
 

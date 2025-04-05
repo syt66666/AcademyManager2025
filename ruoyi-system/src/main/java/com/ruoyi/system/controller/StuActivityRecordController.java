@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.system.domain.dto.ActivityAuditDTO;
+import com.ruoyi.system.mapper.StuAbilityScoreMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,9 @@ public class StuActivityRecordController extends BaseController
     private IStuActivityRecordService stuActivityRecordService;
     @Value("${file.upload-dir}") // 注入配置路径
     private String uploadDir;
+    @Autowired
+    private StuAbilityScoreMapper stuAbilityScoreMapper;
+
     /**
      * 查询学生文体活动记录列表
      */
@@ -269,8 +273,9 @@ public class StuActivityRecordController extends BaseController
         activity.setAuditStatus(auditDTO.getAuditStatus());
         activity.setAuditRemark(auditDTO.getAuditRemark());
         activity.setAuditTime(new Date());
+        String studentId=stuActivityRecordService.selectStuActivityRecordByActivityId(activity.getActivityId()).getStudentId();
         // 执行更新操作
-        return toAjax(stuActivityRecordService.updateActivityAuditInfo(activity));
+        return toAjax(stuActivityRecordService.updateActivityAuditInfo(activity,studentId));
     }
 
     @GetMapping("/auditList")

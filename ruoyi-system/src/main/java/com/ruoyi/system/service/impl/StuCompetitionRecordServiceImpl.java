@@ -1,5 +1,6 @@
 package com.ruoyi.system.service.impl;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import com.ruoyi.common.core.domain.AjaxResult;
@@ -9,8 +10,10 @@ import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.ServletUtils;
 import com.ruoyi.common.utils.ip.IpUtils;
 import com.ruoyi.system.domain.AuditHistory;
+import com.ruoyi.system.domain.StuAbilityScore;
 import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.mapper.AuditHistoryMapper;
+import com.ruoyi.system.mapper.StuAbilityScoreMapper;
 import com.ruoyi.system.service.ISysUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +31,8 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
     private AuditHistoryMapper auditHistoryMapper;
     @Autowired
     private ISysUserService userService;
+    @Autowired
+    private StuAbilityScoreMapper stuAbilityScoreMapper;
 
     /**
      * 查询学生科创竞赛记录
@@ -139,7 +144,7 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
 
     @Override
     @Transactional(rollbackFor = Exception.class) // 添加事务管理
-    public int updateCompetitionAuditInfo(StuCompetitionRecord competition) {
+    public int updateCompetitionAuditInfo(StuCompetitionRecord competition, String studentId) {
         // 1. 获取原始状态
         StuCompetitionRecord originalRecord = stuCompetitionRecordMapper
                 .selectStuCompetitionRecordByCompetitionId(competition.getCompetitionId());
@@ -159,6 +164,14 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
                 competition.getAuditRemark()
         );
 
+        if (studentId != null) {
+            int score = stuCompetitionRecordMapper.getStuCompetitionRecordCount(studentId);
+            StuAbilityScore studentAbilityScore = new StuAbilityScore();
+            studentAbilityScore.setStudentId(studentId);
+            // 使用BigDecimal精确计算并取最小值
+            studentAbilityScore.setCompetitionScore(BigDecimal.valueOf(score));
+            stuAbilityScoreMapper.updateStuAbilityScore(studentAbilityScore);
+        }
         return updateResult;
     }
 

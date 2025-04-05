@@ -272,8 +272,9 @@ public class StuCompetitionRecordController extends BaseController
         competition.setAuditStatus(auditDTO.getAuditStatus());
         competition.setAuditRemark(auditDTO.getAuditRemark());
         competition.setAuditTime(new Date());
-        // 执行更新操作
-        return toAjax(stuCompetitionRecordService.updateCompetitionAuditInfo(competition));
+        String studentId=stuCompetitionRecordService.selectStuCompetitionRecordByCompetitionId(competition.getCompetitionId())
+                .getStudentId();        // 执行更新操作
+        return toAjax(stuCompetitionRecordService.updateCompetitionAuditInfo(competition,studentId));
     }
 
     @GetMapping("/auditList")
