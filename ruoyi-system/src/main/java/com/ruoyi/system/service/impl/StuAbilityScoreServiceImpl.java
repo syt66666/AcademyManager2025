@@ -1,8 +1,8 @@
 package com.ruoyi.system.service.impl;
 
+import com.ruoyi.system.domain.StuAbilityScore;
 import com.ruoyi.system.domain.StudentAbilityScore;
 import com.ruoyi.system.domain.dto.GpaResultDTO;
-import com.ruoyi.system.domain.dto.MajorScoreDTO;
 import com.ruoyi.system.mapper.StuAbilityScoreMapper;
 import com.ruoyi.system.mapper.StuMajorMapper;
 import com.ruoyi.system.mapper.StuScoreMapper;
@@ -41,7 +41,11 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
     public void calculateAndStoreGPAScores() {
         calculateAndStoreGPAScores(Collections.emptyList());
     }
-
+    @Override
+    public StuAbilityScore selectStuAbilityScoreByStudentId(String studentId)
+    {
+        return abilityMapper.selectStuAbilityScoreByStudentId(studentId);
+    }
     // 新增增量计算方法（包可见性，供其他Service调用）
     @Override
     @Transactional(rollbackFor = Exception.class)

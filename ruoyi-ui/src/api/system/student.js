@@ -90,3 +90,10 @@ export function getMajorCount(params) {
     }
   })
 }
+// 查询学生能力分数（雷达图专用）详细
+export function getAbility(studentId) {
+  return request({
+    url: '/system/ability/' + studentId,
+    method: 'get'
+  })
+}

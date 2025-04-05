@@ -11,5 +11,5 @@ public interface StuAbilityScoreMapper {
     List<GpaResultDTO> selectRequiredGPA(@Param("studentIds") List<String> studentIds);
     void batchUpdateAcademicScores(@Param("list") List<StudentAbilityScore> scores);
     public int updateStuAbilityScore(StuAbilityScore stuAbilityScore);
-    public StudentAbilityScore selectStuAbilityScoreByStudentId(String studentId);
+    public StuAbilityScore selectStuAbilityScoreByStudentId(String studentId);
 }

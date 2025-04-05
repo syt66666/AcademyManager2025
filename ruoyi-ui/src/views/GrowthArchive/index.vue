@@ -141,7 +141,9 @@
 </template>
 
 <script>
+import {getAbility} from "@/api/system/student";
 import EnhancedRadarChart from '@/components/RadarChart/index.vue';
+import store from "../../store";
 export default {
   components: {
     EnhancedRadarChart
@@ -149,13 +151,8 @@ export default {
   data() {
     return {
       title: '双数据对比分析',
-      indicators: [
-        { name: '学业成绩', max: 100 },
-        { name: '科创竞赛', max: 100 },
-        { name: '文体活动', max: 100 },
-        { name: '讲座报告', max: 100 },
-        { name: '导师指导', max: 100 }
-      ],
+      abilityData: null, // 新增存储能力数据
+      radarData: [],   // 初始化为空数组
       activeIndex: null,
       panelTop: 0,
       semesters: [], // 改为动态生成
@@ -169,6 +166,9 @@ export default {
     }
   },
   computed: {
+    studentId() {
+      return this.$store.state.user.name;
+    },
     // 新增计算属性
     firstHalfSemesters() {
       return this.semesters.slice(0, 4);
@@ -176,17 +176,14 @@ export default {
     secondHalfSemesters() {
       return this.semesters.slice(4, 8);
     },
-    radarData() {
-      return [
-        {
-        name: '综合能力',
-        value: [85, 70, 90, 80, 75]
-      },
-        {
-          name: '平均',
-          value: [60, 60, 60, 60, 60]
-        }
-      ];
+    indicators() {
+      return this.abilityData ? [
+        { name: '学业成绩', max: 100 },
+        { name: '科创竞赛', max: 100 },
+        { name: '文体活动', max: 100 },
+        { name: '讲座报告', max: 100 },
+        { name: '导师指导', max: 100 }
+      ] : [];
     },
     lastUpdate() {
       return new Date().toLocaleDateString();
@@ -218,7 +215,48 @@ export default {
       }
     })
   },
+  mounted() {
+    this.fetchAbilityData();
+  },
   methods: {
+    async fetchAbilityData() {
+      try {
+        const response = await getAbility(this.studentId);
+        if (response.code === 200) {
+          this.abilityData = response.data;
+          console.log(this.abilityData)
+          this.prepareRadarData();
+        } else {
+          this.$message.error('数据获取失败: ' + response.msg);
+        }
+      } catch (error) {
+        console.error('API请求错误:', error);
+        this.$message.error('获取能力数据失败');
+      } finally {
+        this.loading = false;
+      }
+    },
+    // 准备雷达图数据格式
+    prepareRadarData() {
+      if (!this.abilityData) return;
+
+      this.radarData = [
+        {
+          name: '综合能力',
+          value: [
+            this.abilityData.academicScore,
+            this.abilityData.competitionScore,
+            this.abilityData.activityScore,
+            this.abilityData.lectureScore,
+            this.abilityData.tutorialScore
+          ]
+        },
+        {
+          name: '书院平均',
+          value: [60, 65, 70, 60, 55] // 示例数据，可根据实际情况替换
+        }
+      ];
+    },
     // 修改点击处理方法
     handleCardClick(index) {
       if (this.semesters[index].status === 'future') {
