@@ -114,7 +114,7 @@
                 type="primary"
                 class="confirm-btn gradient-btn"
                 @click="handleConfirm"
-                :disabled="!selectedMajor"
+                :disabled="!selectedMajor || !isValidTime"
               >
                 <i class="el-icon-check"></i>
                 <span class="btn-text">立即确认</span>
@@ -203,7 +203,12 @@ export default {
       return Date.parse('2023-09-01 08:00:00')
     },
     endTimestamp() {
-      return Date.parse('2025-09-05 18:00:00')
+      return Date.parse('2025-04-06 14:46:00')
+    },
+    // 新增时间有效性计算
+    isValidTime() {
+      const now = Date.now()
+      return now >= this.startTimestamp && now <= this.endTimestamp
     }
   },
   data() {
@@ -320,6 +325,10 @@ export default {
       this.selectedMajor = majorId
     },
     async handleConfirm() {
+      // 新增时间有效性验证
+      if (!this.isValidTime) {
+        return this.$message.error('当前不在可选时间段内，无法提交')
+      }
       if (!this.selectedMajor) return
 
       try {
