@@ -47,7 +47,7 @@ public interface IStuLectureReportService {
      */
     public List<StuLectureReport> selectStuLecReportList(StuLectureReport stuLectureReport);
 
-    int updateMentorshipAuditInfo(StuLectureReport report);
+    int updateMentorshipAuditInfo(StuLectureReport report,String studentId);
 
     AjaxResult checkUnique(StuLectureReport stuLectureReport);
 

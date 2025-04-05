@@ -31,7 +31,14 @@
         <include refid="selectStuLectureReportVo"/>
         where report_id = #{reportId}
     </select>
-
+    <select id="getStuLectureReportCount" resultType="int">
+        SELECT
+            COUNT(*)
+        FROM
+            stu_lec_report
+        where
+            student_id=#{studentId} AND audit_status=1
+    </select>
     <insert id="insertStuLectureInformation">
         INSERT INTO stu_lec_report
         <trim prefix="(" suffix=")" suffixOverrides=",">

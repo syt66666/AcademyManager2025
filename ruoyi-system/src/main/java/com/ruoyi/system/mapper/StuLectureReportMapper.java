@@ -69,4 +69,6 @@ public interface StuLectureReportMapper {
                                  @Param("auditStatus") Integer auditStatus);
 
     Map<String, Integer> countAuditStatus();
+
+    int getStuLectureReportCount(String studentId);
 }

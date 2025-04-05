@@ -262,8 +262,9 @@ public class StuLectureReportController extends BaseController{
         report.setAuditStatus(auditDTO.getAuditStatus());
         report.setAuditRemark(auditDTO.getAuditRemark());
         report.setAuditTime(new Date());
+        String studentId=IStuLectureReportService.selectStuLecReportByReportId(auditDTO.getReportId()).getStudentId();
         // 执行更新操作
-        return toAjax(IStuLectureReportService.updateMentorshipAuditInfo(report));
+        return toAjax(IStuLectureReportService.updateMentorshipAuditInfo(report,studentId));
     }
     @PostMapping("/checkUnique")
     public AjaxResult checkUnique(@RequestBody StuLectureReport stuLectureReport) {

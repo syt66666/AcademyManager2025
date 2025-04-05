@@ -149,7 +149,10 @@ public class StuMentorshipRecordServiceImpl implements IStuMentorshipRecordServi
             int recodeCount = stuMentorshipRecordMapper.getStuMentorshipRecordCount(studentId);
             StuAbilityScore studentAbilityScore = new StuAbilityScore();
             studentAbilityScore.setStudentId(studentId);
-            studentAbilityScore.setTutorialScore(BigDecimal.valueOf(12.5 * recodeCount));
+            // 使用BigDecimal精确计算并取最小值
+            BigDecimal tutorialScore = BigDecimal.valueOf(12.5).multiply(BigDecimal.valueOf(recodeCount));
+            tutorialScore = tutorialScore.min(BigDecimal.valueOf(100)); // 确保不超过100分
+            studentAbilityScore.setTutorialScore(tutorialScore);
             stuAbilityScoreMapper.updateStuAbilityScore(studentAbilityScore);
         }
         return updateResult;

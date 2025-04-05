@@ -9,12 +9,10 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.ServletUtils;
 import com.ruoyi.common.utils.ip.IpUtils;
-import com.ruoyi.system.domain.AuditHistory;
-import com.ruoyi.system.domain.StuCompetitionRecord;
-import com.ruoyi.system.domain.StuInfo;
-import com.ruoyi.system.domain.StuLectureReport;
+import com.ruoyi.system.domain.*;
 import com.ruoyi.system.domain.vo.StuLectureReportVo;
 import com.ruoyi.system.mapper.AuditHistoryMapper;
+import com.ruoyi.system.mapper.StuAbilityScoreMapper;
 import com.ruoyi.system.mapper.StuInfoMapper;
 import com.ruoyi.system.mapper.StuLectureReportMapper;
 import com.ruoyi.system.service.IStuLectureReportService;
@@ -25,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,6 +39,8 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
     private AuditHistoryMapper auditHistoryMapper;
     @Autowired
     private ISysUserService userService;
+    @Autowired
+    private StuAbilityScoreMapper stuAbilityScoreMapper;
 
     /**
      * 查询学生参与报告信息
@@ -146,7 +147,7 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
     }
 
     @Override
-    public int updateMentorshipAuditInfo(StuLectureReport report) {
+    public int updateMentorshipAuditInfo(StuLectureReport report,String studentId) {
         // 1. 获取原始状态
         StuLectureReport originalRecord = stuLectureReportMapper
                 .selectStuLecReportByReportId(report.getReportId());
@@ -165,7 +166,19 @@ public class StuLectureReportServiceImpl implements IStuLectureReportService {
                 report.getAuditStatusStr(),
                 report.getAuditRemark()
         );
+        //如果审核状态是“已通过”，那么进行雷达图的更新
+        if(studentId!=null) {
+            int recodeCount = stuLectureReportMapper.getStuLectureReportCount(studentId);
+            StuAbilityScore studentAbilityScore = new StuAbilityScore();
+            studentAbilityScore.setStudentId(studentId);
+            // 精确计算 12.5 * recodeCount
+            BigDecimal lectureScore = BigDecimal.valueOf(12.5).multiply(BigDecimal.valueOf(recodeCount));
 
+            // 获取与100的最小值（自动处理小数点后位数）
+            lectureScore = lectureScore.min(BigDecimal.valueOf(100));
+            studentAbilityScore.setLectureScore(lectureScore);
+            stuAbilityScoreMapper.updateStuAbilityScore(studentAbilityScore);
+        }
         return updateResult;
     }
 
