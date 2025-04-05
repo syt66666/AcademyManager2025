@@ -68,29 +68,7 @@
                 </el-tooltip>
               </el-checkbox>
             </div>
-            <div class="status-container">
-              <el-alert
-                v-if="this.systemMajor"
-                :title="`当前选择专业：${this.systemMajor}`"
-                type="success"
-                :closable="false"
-                show-icon
-                class="status-alert"
-              >
-                <i class="el-icon-success" slot="icon"></i>
-              </el-alert>
 
-              <el-alert
-                v-else
-                title="尚未选择专业"
-                type="info"
-                :closable="false"
-                show-icon
-                class="status-alert"
-              >
-                <i class="el-icon-info" slot="icon"></i>
-              </el-alert>
-            </div>
             <div class="select-container">
               <el-select
                 v-model="selectedMajor"
@@ -110,16 +88,30 @@
                   <span class="option-count">{{ major.total || 0 }}人已选</span>
                 </el-option>
               </el-select>
-              <el-button
-                type="primary"
-                class="confirm-btn gradient-btn"
-                @click="handleConfirm"
-                :disabled="!selectedMajor || !isValidTime"
-              >
-                <i class="el-icon-check"></i>
-                <span class="btn-text">立即确认</span>
-                <div class="hover-effect"></div>
-              </el-button>
+              <div class="status-positioner">
+                <div class="status-container">
+                  <div v-if="systemMajor" class="text-status success-text">
+                    <i class="el-icon-success"></i>
+                    {{ systemMajor }}
+                  </div>
+                  <div v-else class="text-status info-text">
+                    <i class="el-icon-info"></i>
+                    尚未选择
+                  </div>
+                </div>
+              </div>
+              <div class="action-row">
+                <el-button
+                  type="primary"
+                  class="confirm-btn gradient-btn"
+                  @click="handleConfirm"
+                  :disabled="!selectedMajor || !isValidTime"
+                >
+                  <i class="el-icon-check"></i>
+                  <span class="btn-text">立即确认</span>
+                  <div class="hover-effect"></div>
+                </el-button>
+              </div>
             </div>
           </div>
 
@@ -187,6 +179,7 @@ import * as echarts from 'echarts'
 import {getMajorCount, getMajorTree, getStudent, updateStudent} from "@/api/system/student";
 import store from "@/store";
 import TimeCountdown from '@/components/FlipCountdown/index'
+
 const COLOR_SCHEME = [
   {start: '#6A81E0', end: '#8E37D7'},
   {start: '#7BCFA6', end: '#4CAF50'},
@@ -275,7 +268,7 @@ export default {
   methods: {
     // 修改后的处理方法
     handleCheckboxChange(newValue) {
-      this.previousPolicyStatus=this.form.policyStatus===0?1:0
+      this.previousPolicyStatus = this.form.policyStatus === 0 ? 1 : 0
       this.$confirm(
         `确定要${newValue === 1 ? '放弃' : '保留'}创新班政策吗？`,
         '操作确认',
@@ -585,7 +578,7 @@ export default {
       const wsPath = process.env.VUE_APP_WEBSOCKET_PATH;  // /websocket/message
 
 // 提取主机和端口
-      const { hostname, port } = new URL(baseUrl);
+      const {hostname, port} = new URL(baseUrl);
       const wsUrl = `ws://${hostname}:${port}${wsPath}`;
 
       // 生成完整 URL
@@ -633,6 +626,7 @@ export default {
 </script>
 
 <style lang="scss">
+/* ==================== 基础布局 ==================== */
 .container {
   padding: 30px;
   background: #f8faff;
@@ -640,6 +634,7 @@ export default {
   margin-left: 100px;
 }
 
+/* ==================== 卡片系统 ==================== */
 .neo-card {
   border: none !important;
   border-radius: 20px !important;
@@ -657,6 +652,7 @@ export default {
   box-shadow: 0 4px 20px rgba(106, 129, 224, 0.15) !important;
 }
 
+/* ==================== 头部区域 ==================== */
 .selection-header {
   padding: 30px !important;
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
@@ -677,6 +673,7 @@ export default {
   }
 }
 
+/* ==================== 表单元素 ==================== */
 .major-select {
   width: 100%;
   margin-bottom: 20px !important;
@@ -742,6 +739,7 @@ export default {
   }
 }
 
+/* ==================== 数据表格 ==================== */
 .beautiful-table {
   th {
     background: #f8f9fa !important;
@@ -782,6 +780,7 @@ export default {
   }
 }
 
+/* ==================== 下拉选择 ==================== */
 .beautiful-select {
   border: none !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
@@ -813,20 +812,7 @@ export default {
   }
 }
 
-.section-title {
-  font-size: 20px;
-  color: #2c3e50;
-  margin-bottom: 25px;
-  display: flex;
-  align-items: center;
-
-  i {
-    margin-right: 10px;
-    font-size: 24px;
-    color: #6A81E0;
-  }
-}
-
+/* ==================== 图表区域 ==================== */
 .top-charts {
   height: 25vh;
   margin-bottom: 30px;
@@ -844,24 +830,289 @@ export default {
   }
 }
 
-.main-content {
-  height: calc(75vh - 90px);
-}
-
 .main-chart {
   border-radius: 16px;
 }
+
 .policy-switch {
   transition: all 0.3s;
 
   &:hover {
     transform: scale(1.02);
-    box-shadow: 0 2px 8px rgba(106,129,224,0.1);
+    box-shadow: 0 2px 8px rgba(106, 129, 224, 0.1);
   }
 
   .el-checkbox__input.is-checked .el-checkbox__inner {
     background-color: #6A81E0;
     border-color: #6A81E0;
+  }
+}
+
+.select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .action-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    .confirm-btn {
+      flex-shrink: 0; // 防止按钮被压缩
+      margin-right: auto; // 按钮靠左
+    }
+
+    .status-container {
+      flex-grow: 1;
+      max-width: 60%;
+      min-width: 280px; // 最小宽度防止内容挤压
+
+      .el-alert {
+        margin: 0;
+        padding: 8px 16px !important;
+      }
+    }
+  }
+}
+
+/* 修改政策切换部分样式 */
+.policy-switch {
+  // 移除背景和边框
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 8px 0 !important; // 调整间距
+  margin: 12px 0 !important;
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+
+  .el-checkbox {
+    display: flex;
+    align-items: center;
+
+    &__input {
+      margin-left: 8px; // 增加左边距
+      margin-right: 0; // 清除默认右边距
+
+      // 选中状态颜色保持
+      &.is-checked .el-checkbox__inner {
+        background-color: #6A81E0;
+        border-color: #6A81E0;
+      }
+    }
+
+    &__label {
+      display: flex;
+      flex-direction: row-reverse; // 文字和图标的排列顺序
+      align-items: center;
+    }
+
+    .el-icon-warning-outline {
+      order: -1; // 图标保持在文字左侧
+      margin-right: 6px;
+      margin-left: 0;
+    }
+  }
+
+  // 悬停状态调整
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+
+    .policy-text::after {
+      width: 100%; // 悬停时显示下划线动画
+    }
+  }
+
+  .el-checkbox {
+    &__label {
+      display: flex;
+      align-items: center;
+      font-size: 15px;
+      color: #2c3e50;
+      letter-spacing: 0.5px;
+      flex-direction: row-reverse;
+    }
+
+    &__input {
+      margin-left: 8px;
+      margin-right: 0;
+
+      &.is-checked .el-checkbox__inner {
+        background-color: #6A81E0;
+        border-color: #6A81E0;
+      }
+    }
+
+    .el-icon-warning-outline {
+      order: -1;
+      margin-right: 6px;
+      color: #FFC107 !important;
+      font-size: 18px;
+      transition: all 0.3s;
+
+      &:hover {
+        transform: rotate(15deg) scale(1.1);
+      }
+    }
+  }
+
+  .policy-text {
+    font-weight: 600;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: #6A81E0;
+      transition: width 0.3s;
+    }
+  }
+}
+
+/* 优化状态提示样式 */
+.status-container {
+  .text-status {
+    font-size: 14px;
+    line-height: 1.5;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+    // 移除background属性
+    padding: 0 !important;
+
+    i {
+      margin-right: 8px;
+      font-size: 16px;
+    }
+
+    &.success-text {
+      color: #67C23A;
+      background: rgba(103, 194, 58, 0.08);
+    }
+
+    &.info-text {
+      color: #909399;
+      background: rgba(144, 147, 153, 0.08);
+    }
+  }
+}
+
+/* 新增动画 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 调整按钮和状态的布局 */
+.action-row {
+  display: flex;
+  gap: 20px;
+  align-items: stretch; // 保持等高
+
+  .confirm-btn {
+    min-width: 140px;
+    height: 50px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      transform: translateY(-2px) scale(1.02);
+    }
+  }
+}
+
+/* 新增样式 */
+.select-container {
+  position: relative;
+
+  .status-positioner {
+    position: absolute;
+    bottom: 60px;
+    right: 12px;
+    z-index: 2;
+  }
+
+  .status-container {
+    .text-status {
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: transparent !important;
+
+      i {
+        font-size: 14px;
+        margin-right: 4px;
+      }
+
+      &.success-text {
+        color: #67C23A;
+
+        i {
+          color: #67C23A;
+        }
+      }
+
+      &.info-text {
+        color: #909399;
+
+        i {
+          color: #909399;
+        }
+      }
+    }
+  }
+
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .select-container {
+    .action-row {
+      flex-direction: column;
+
+      .status-container {
+        max-width: 100%;
+        min-width: auto;
+        width: 100%;
+      }
+
+      .confirm-btn {
+        width: 100%;
+        margin-right: 0;
+      }
+    }
+
+    .status-positioner {
+      position: static;
+      margin-top: 8px;
+      text-align: right;
+    }
+
+    .confirm-btn {
+      margin-top: 15px;
+    }
+  }
+
+  .policy-switch {
+    background: transparent !important;
+    box-shadow: none !important;
   }
 }
 </style>
