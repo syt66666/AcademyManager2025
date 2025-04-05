@@ -462,35 +462,103 @@ export default {
       const option = {
         tooltip: {
           trigger: 'axis',
-          backgroundColor: 'rgba(255,255,255,0.95)',
+          backgroundColor: 'rgba(255,255,255,0.98)',
+          borderWidth: 0,
+          borderRadius: 8,
+          shadowBlur: 12,
+          shadowColor: 'rgba(0,0,0,0.1)',
+          padding: [12, 18],
+          textStyle: {
+            color: '#666',
+            fontSize: 14
+          },
           formatter: params => {
-            const total = this.childMajors.find(m => m.majorName === params[0].name)?.total || 1
-            return params.map(p => `
-              <span style="display:inline-block;margin-right:5px;border-radius:50%;width:10px;height:10px;background:${p.color}"></span>
-              ${p.seriesName}: ${p.value}人 (${((p.value / total) * 100).toFixed(1)}%)
-            `).join('<br>')
+            const total = this.childMajors.find(m => m.majorName === params[0].name)?.total || 1;
+            return `<div style="font-weight:500;margin-bottom:8px">${params[0].name}</div>` +
+              params.map(p => `
+                        <div style="display:flex;align-items:center;margin:6px 0">
+                            <span style="display:inline-block;margin-right:10px;border-radius:4px;width:12px;height:12px;background:${p.color}"></span>
+                            <span style="flex:1">${p.seriesName}</span>
+                            <span style="font-weight:500;color:#333">${p.value}人</span>
+                            <span style="color:#999;margin-left:8px">(${((p.value / total) * 100).toFixed(1)}%)</span>
+                        </div>
+                    `).join('')
           }
         },
-        legend: {data: ['A级人数', 'B级人数', 'C级人数'], bottom: 20},
-        grid: {left: '3%', right: '4%', bottom: '15%', containLabel: true},
-        yAxis: {type: 'category', data: this.childMajors.map(m => m.majorName)},
-        xAxis: {type: 'value'},
-        series: ['A', 'B', 'C'].map((type, index) => ({
+        legend: {
+          data: ['A级人数', 'B级人数', 'C级人数'],
+          bottom: 20,
+          itemGap: 20,
+          itemWidth: 14,
+          itemHeight: 8,
+          itemStyle: {
+            borderRadius: 4
+          },
+          textStyle: {
+            fontSize: 12,
+            color: '#666'
+          }
+        },
+        grid: {
+          left: '2%',
+          right: '5%',
+          bottom: '18%',
+          top: '10%',
+          containLabel: true
+        },
+        yAxis: {
+          type: 'category',
+          axisLine: { show: false },
+          axisTick: { show: false },
+          axisLabel: {
+            color: '#666',
+            fontSize: 12,
+            margin: 12
+          },
+          data: this.childMajors.map(m => m.majorName)
+        },
+        xAxis: {
+          type: 'value',
+          splitLine: {
+            lineStyle: {
+              color: '#f0f0f0',
+              type: 'dashed'
+            }
+          },
+          axisLabel: {
+            color: '#999',
+            fontSize: 12
+          }
+        },
+        series: ['A','B','C'].map((type, index) => ({
           name: `${type}级人数`,
           type: 'bar',
           stack: 'total',
           data: this.childMajors.map(m => m.grades[type]),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-              {offset: 0, color: COLOR_SCHEME[index].start},
-              {offset: 1, color: COLOR_SCHEME[index].end}
+              { offset: 0, color: COLOR_SCHEME[index].start },
+              { offset: 1, color: COLOR_SCHEME[index].end }
             ]),
-            borderRadius: [0, 8, 8, 0]
+            borderRadius: [6, 6, 0, 0],
+            shadowColor: 'rgba(0,0,0,0.08)',
+            shadowBlur: 6,
+            shadowOffsetY: 3
           },
-          barWidth: 36
-        }))
-      }
-      this.charts.main.setOption(option)
+          barWidth: 30,
+          emphasis: {
+            itemStyle: {
+              shadowColor: 'rgba(0,0,0,0.12)',
+              shadowBlur: 8,
+              shadowOffsetY: 4
+            }
+          },
+          animationDelay: index * 60  // 添加动画延迟效果
+        })),
+        animationEasing: 'cubicOut'  // 更流畅的动画曲线
+      };
+
+      this.charts.main.setOption(option);
     },
 
     updateGradeCharts() {
