@@ -1,5 +1,11 @@
 <template>
   <div class="container">
+    <div>
+      <time-countdown
+        :start-time="startTimestamp"
+        :end-time="endTimestamp"
+      />
+    </div>
     <!-- 顶部统计图表 -->
     <el-row :gutter="20" class="top-charts">
       <el-col
@@ -180,7 +186,7 @@
 import * as echarts from 'echarts'
 import {getMajorCount, getMajorTree, getStudent, updateStudent} from "@/api/system/student";
 import store from "@/store";
-
+import TimeCountdown from '@/components/FlipCountdown/index'
 const COLOR_SCHEME = [
   {start: '#6A81E0', end: '#8E37D7'},
   {start: '#7BCFA6', end: '#4CAF50'},
@@ -188,6 +194,18 @@ const COLOR_SCHEME = [
 ]
 
 export default {
+  components: {
+    TimeCountdown
+  },
+  computed: {
+    // 将时间字符串转换为时间戳
+    startTimestamp() {
+      return Date.parse('2023-09-01 08:00:00')
+    },
+    endTimestamp() {
+      return Date.parse('2025-09-05 18:00:00')
+    }
+  },
   data() {
     return {
       selectKey: 0, // 新增
