@@ -61,24 +61,32 @@
 
 <select id="selectMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
     SELECT
-        sr.major_id,
-        sr.major_name AS major_name,
-        COUNT(CASE WHEN si.grade_level = 'A' THEN 1 END) AS grade_A,
-        COUNT(CASE WHEN si.grade_level = 'B' THEN 1 END) AS grade_B,
-        COUNT(CASE WHEN si.grade_level = 'C' THEN 1 END) AS grade_C,
-        COUNT(si.student_id) AS student_num
-    FROM stu_major sm
-             right  JOIN stu_info si
-                         ON sm.major_name =
-                            CASE
-                                WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
-                                    THEN si.major
-                                WHEN si.divert_form = '可域内任选，并转专业'
-                                    THEN si.original_system_major
-                                END
-             RIGHT JOIN stu_major sr on sr.parent_id=sm.major_id AND si.system_major=sr.major_name
-    WHERE sm.parent_id is NULL and sr.parent_id = #{parentId}
-    GROUP BY system_major,sr.major_id;
+        child.major_id,
+        child.major_name,
+        COUNT(CASE WHEN info.grade_level = 'A' THEN 1 END) AS grade_A,
+        COUNT(CASE WHEN info.grade_level = 'B' THEN 1 END) AS grade_B,
+        COUNT(CASE WHEN info.grade_level = 'C' THEN 1 END) AS grade_C,
+        COUNT(info.student_id) AS student_num
+    FROM stu_major parent
+             RIGHT JOIN stu_info info
+                        ON parent.major_name =
+                           CASE
+                               WHEN info.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
+                                   THEN info.major
+                               WHEN info.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
+                                   THEN info.original_system_major
+                               ELSE NULL
+                               END
+                            AND info.divert_form = #{divertForm}
+             RIGHT JOIN stu_major child
+                        ON child.parent_id = parent.major_id
+                            AND info.system_major = child.major_name
+    WHERE
+        parent.parent_id IS NULL
+      AND child.parent_id = #{parentId}
+    GROUP BY
+        child.major_id,
+        child.major_name;
 </select>
     <select id="selectMajorStatistics" resultMap="MajorStatisticResult">
         SELECT
@@ -96,11 +104,27 @@
                                AND si_intra_class.divert_form IN ('可类内任选，并转专业', '可类内任选，不能转专业')
                  LEFT JOIN stu_info si_intra_domain
                            ON sm.major_name = si_intra_domain.original_system_major
-                               AND si_intra_domain.divert_form = '可域内任选，并转专业'
+                               AND si_intra_domain.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
         WHERE sm.parent_id = #{parentId}
         GROUP BY sm.major_id, sm.major_name
     </select>
+    <select id="getMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
+        SELECT
+            major_name,
+            SUM(grade_A) AS grade_A,
+            SUM(grade_B) AS grade_B,
+            SUM(grade_C) AS grade_C,
+            SUM(student_num) AS student_num
 
+        FROM stu_major s1
+        WHERE major_name in (SELECT major_name
+                             FROM stu_major s2
+                             WHERE parent_id=#{parentId})
+          AND academy=(SELECT academy
+                       FROM stu_major s2
+                       WHERE major_id=#{parentId})
+        GROUP BY major_name
+    </select>
     <update id="updateRankedStudents">
         UPDATE stu_info si
         JOIN (
@@ -135,7 +159,7 @@
         CASE
         WHEN s2.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
         THEN s2.major
-        WHEN s2.divert_form = '可域内任选，并转专业'
+        WHEN s2.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
         THEN s2.original_system_major
         END
         WHERE s3.major_id IN
@@ -191,7 +215,7 @@
         CASE
         WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
         THEN si.major
-        WHEN si.divert_form = '可域内任选，并转专业'
+        WHEN si.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
         THEN si.original_system_major
         END
         WHERE si.student_id IN

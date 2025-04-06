@@ -5,5 +5,5 @@ import com.ruoyi.system.domain.StuMajor;
 import java.util.List;
 
 public interface MajorStrategy {
-    List<StuMajor> getAvailableMajors(String major, String academy);
+    List<StuMajor> getAvailableMajors(String major, String academy,String divertForm);
 }

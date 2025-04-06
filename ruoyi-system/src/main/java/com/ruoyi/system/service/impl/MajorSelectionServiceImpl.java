@@ -29,18 +29,24 @@ public class MajorSelectionServiceImpl {
 
     public List<StuMajor> getAvailableMajors(@RequestParam("major") String major,
                                              @RequestParam("academy") String academy,
+                                             @RequestParam("divertForm") String divertForm,
                                              @RequestParam("innovationStatus") Integer innovationStatus,
                                              @RequestParam("policyStatus") Integer policyStatus) {
         System.out.println(111 + "major: " + major + " academy: " + academy + " innovationStatus: " + innovationStatus + " policyStatus: " + policyStatus);
         return strategyFactory.getStrategy(innovationStatus, policyStatus)
-                .getAvailableMajors(major, academy);
+                .getAvailableMajors(major, academy,divertForm);
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public List<JSONObject> getEveryMajorCount(Integer parentId, Integer majorId , boolean isTell) {
+    public List<JSONObject> getEveryMajorCount(Integer parentId, boolean isTell, String divertFrom) {
         List<JSONObject> result = new ArrayList<>();
-        List<MajorStatisticDTO> majorStatistics = majorMapper.selectMajorStatisticGradesNum(parentId);
+        //得到父专业下面的所有子专业的数据
         if (!isTell) {
+            System.out.println("parentId:"+parentId);
+            System.out.println("divertFrom:"+divertFrom);
+
+            //更新专业人数数据
+            List<MajorStatisticDTO> majorStatistics = majorMapper.selectMajorStatisticGradesNum(parentId, divertFrom);
 
             // 初始化统计变量
             AtomicInteger fatherACount = new AtomicInteger(0);
@@ -56,23 +62,10 @@ public class MajorSelectionServiceImpl {
                         fatherBCount.addAndGet(dto.getGradeB());
                         fatherCCount.addAndGet(dto.getGradeC());
                         fatherTotal.addAndGet(dto.getStudentNum());
-
-                        // 构建响应数据
-                        JSONObject json = new JSONObject();
-                        json.put("majorName", dto.getMajorName());
-                        json.put("countA", dto.getGradeA());
-                        json.put("countB", dto.getGradeB());
-                        json.put("countC", dto.getGradeC());
-                        json.put("count", dto.getStudentNum());
-                        result.add(json);
-
-
                     })
                     .collect(Collectors.toList());
-
             // 批量更新子专业
             majorMapper.batchUpdateMajors(updateList);
-
             // 更新父级数据
             majorMapper.updateStuMajor(
                     parentId,
@@ -81,8 +74,24 @@ public class MajorSelectionServiceImpl {
                     fatherCCount.get(),
                     fatherTotal.get()
             );
+
+            //获取所有类型的专业人数
+            List<MajorStatisticDTO> majorStatistics2 = majorMapper.getMajorStatisticGradesNum(parentId);
+            majorStatistics2.stream()
+                    .peek(dto -> {
+                        // 构建响应数据
+                        JSONObject json = new JSONObject();
+                        json.put("majorName", dto.getMajorName());
+                        json.put("countA", dto.getGradeA());
+                        json.put("countB", dto.getGradeB());
+                        json.put("countC", dto.getGradeC());
+                        json.put("count", dto.getStudentNum());
+                        result.add(json);
+                    })
+                    .collect(Collectors.toList());
+
         } else {
-            System.out.println("majorStatistics: " + majorStatistics);
+            List<MajorStatisticDTO> majorStatistics = majorMapper.getMajorStatisticGradesNum(parentId);
             // 创建包含详细数据的消息列表
             List<JSONObject> messages = majorStatistics.stream()
                     .map(dto -> new JSONObject()
@@ -98,12 +107,9 @@ public class MajorSelectionServiceImpl {
             // 异步发送WebSocket消息
             CompletableFuture.runAsync(() -> {
                 messages.forEach(message ->
-//                        WebSocketUsers.sendMessageToUsersByText(message.toJSONString())
                         // 发送给所有客户端（包括自己）
                         WebSocketUsers.sendMessageToAll(message.toJSONString())
                 );
-                // 或者批量发送（根据前端处理能力选择）
-//                 WebSocketUsers.sendMessageToUsersByText(messages.toJSONString());
             });
         }
         return result;

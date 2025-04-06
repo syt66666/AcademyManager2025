@@ -17,11 +17,20 @@ public class RegularStrategy implements MajorStrategy {
     private StuMajorMapper majorMapper;
 
     @Override
-    public List<StuMajor> getAvailableMajors(String major,String academy) {
+    public List<StuMajor> getAvailableMajors(String major,String academy,String divertForm) {
         List<StuMajor> majors = new ArrayList<>();
-        System.out.println(111+"major: " + major + " academy: " + academy );
-        majors.addAll(majorMapper.selectByAcademyAndType(major, academy, 1)); // 类内
-        majors.addAll(majorMapper.selectByAcademyAndType(major, academy, 2)); // 域内
+        System.out.println(111+"major: " + major + " academy: " + academy+ " divertForm: " + divertForm);
+        if ("可类内任选，并转专业".equals(divertForm)
+                || "可类内任选，不能转专业".equals(divertForm)){
+            majors.addAll(majorMapper.selectByAcademyAndType(major, academy, 1)); // 类内
+        }else if("可域内任选，并转专业".equals(divertForm)){
+            majors.addAll(majorMapper.selectByAcademyAndType(major, academy, 2)); // 域内
+        } else if ("仅可转专业".equals(divertForm)) {
+            majors.addAll(majorMapper.selectByAcademyAndType(major, academy, 5)); // 仅可转专业
+        } else if ("不可变更专业".equals(divertForm)) {
+            majors.addAll(majorMapper.selectByAcademyAndType(major, academy, 6)); // 不可转专业
+        }
+
         return MajorTreeUtils.buildTree(majors);
     }
 }

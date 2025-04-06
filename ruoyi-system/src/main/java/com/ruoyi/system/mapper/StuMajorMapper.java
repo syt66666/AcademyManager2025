@@ -18,7 +18,8 @@ public interface StuMajorMapper {
             @Param("parentId") Integer parentId
     );
     List<MajorStatisticDTO> selectMajorStatisticGradesNum(
-            @Param("parentId") Integer parentId
+            @Param("parentId") Integer parentId,
+            @Param("divertForm") String divertForm
     );
     void updateRankedStudents(@Param("majorId") List<Integer> majorIds);
     /**
@@ -36,4 +37,7 @@ public interface StuMajorMapper {
                                @Param("studentNum") Integer studentNum);
     // 新增批量更新方法
     void batchUpdateMajors(@Param("list") List<MajorStatisticDTO> updateList);
+
+    List<MajorStatisticDTO> getMajorStatisticGradesNum(
+            @Param("parentId") Integer parentId);
 }

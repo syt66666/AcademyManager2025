@@ -196,7 +196,7 @@ export default {
       return Date.parse('2023-09-01 08:00:00')
     },
     endTimestamp() {
-      return Date.parse('2025-04-06 14:46:00')
+      return Date.parse('2025-05-20 08:00:00')
     },
     // 新增时间有效性计算
     isValidTime() {
@@ -301,11 +301,11 @@ export default {
         console.error(error)
       }
     },
-    async fetchMajorCounts(parentId, isTell, majorId) {
+    async fetchMajorCounts(parentId, isTell, divertForm) {
       try {
         const {data: countData} = await getMajorCount({
           parentId: parentId,
-          majorId: majorId,
+          divertForm: divertForm,
           isTell: isTell
         })
         return countData
@@ -372,9 +372,12 @@ export default {
         const params = {
           major: this.form.major,
           academy: this.form.academy,
+          divertForm:this.divertForm,
           ...(this.form.innovationStatus && {innovationStatus: this.form.innovationStatus}),
           ...(this.form.policyStatus && {policyStatus: this.form.policyStatus})
         }
+        console.log('params:')
+        console.log(params)
 
         // 调用接口得到专业数据
         const {data} = await getMajorTree(params)
@@ -385,7 +388,7 @@ export default {
           .map(item => item.majorId)
         const topMajorId = topLevelMajorIds[0] || 0
         // 获取人数统计数据（新增关键步骤）
-        const countsData = await this.fetchMajorCounts(topMajorId, isTell, this.selectedMajor)
+        const countsData = await this.fetchMajorCounts(topMajorId, isTell, this.divertForm)
         if (countsData.length !== 0) {
           // 处理专业数据时合并人数（修改 extractChildMajors 调用方式）
           this.childMajors = this.extractChildMajors(data, countsData)

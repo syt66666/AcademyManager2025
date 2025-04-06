@@ -23,13 +23,14 @@ public class MajorController extends BaseController {
     public AjaxResult getMajorTree(
             @RequestParam("major") String major,
             @RequestParam("academy") String academy,
+            @RequestParam("divertForm") String divertForm,
             @RequestParam(name = "innovationStatus", defaultValue = "0") Integer innovationStatus,
             @RequestParam(name = "policyStatus", defaultValue = "0") Integer policyStatus
     ) {
 
-        System.out.println("major: " + major + " academy: " + academy + " innovationStatus: " + innovationStatus + " policyStatus: " + policyStatus);
+        System.out.println("major: " + major + " academy: " + academy + " divertForm: " + divertForm + " innovationStatus: " + innovationStatus + " policyStatus: " + policyStatus);
         return success(
-                selectionService.getAvailableMajors(major, academy, innovationStatus, policyStatus)
+                selectionService.getAvailableMajors(major, academy, divertForm , innovationStatus, policyStatus)
         );
     }
     /**
@@ -41,14 +42,13 @@ public class MajorController extends BaseController {
     @GetMapping("/count")
     public AjaxResult getEveryMajorCount(
             @RequestParam(value = "parent_id", required = true) String parentId,
-            @RequestParam(value = "major_id", required = false, defaultValue = "0") String majorId,
+            @RequestParam(value = "divert_form", required = false, defaultValue = "0") String divertForm,
             @RequestParam(value = "is_tell", required = true) boolean isTell
     ) {
         try {
             int parsedParentId = Integer.parseInt(parentId);
-            int parsedMajorId = Integer.parseInt(majorId);
             return success(
-                    selectionService.getEveryMajorCount(parsedParentId,parsedMajorId,isTell)
+                    selectionService.getEveryMajorCount(parsedParentId,isTell,divertForm)
             );
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("专业ID必须为数字");

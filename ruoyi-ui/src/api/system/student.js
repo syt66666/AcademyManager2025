@@ -84,8 +84,8 @@ export function getMajorCount(params) {
     method: 'get',
     params: {
       parent_id: params.parentId,
-      major_id: params.majorId,
       is_tell: params.isTell,
+      divert_form:params.divertForm
       // 可扩展其他参数...
     }
   })

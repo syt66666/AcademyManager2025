@@ -15,7 +15,7 @@ public class InnovationDropStrategy implements MajorStrategy {
 
     @Override
     @Cacheable(value = "majors", key = "#major + '_' + #academy + '_drop'") // 修改缓存key
-    public List<StuMajor> getAvailableMajors(String major, String academy) {
+    public List<StuMajor> getAvailableMajors(String major, String academy,String divertForm) {
         System.out.println("InnovationDropStrategy.getAvailableMajors");
         return MajorTreeUtils.buildTree(
                 majorMapper.selectByAcademyAndType(major, academy, 4)

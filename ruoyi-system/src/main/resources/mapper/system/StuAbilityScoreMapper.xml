@@ -24,49 +24,64 @@
 
     <select id="selectStuAbilityScoreByStudentId" parameterType="String" resultMap="StuAbilityScoreResult">
         SELECT
-        student_id,
-        academy,
-        -- 处理学术排名百分比
-        CASE WHEN academy_student_count > 1
-        THEN ROUND(
-        (academy_student_count - academic_rank) * 100.0 / (academy_student_count - 1),
-        2
-        )
-        ELSE 100.00  -- 书院仅1人时直接给满分
-        END AS academic_score,
-        -- 同理处理其他排名百分比
-        CASE WHEN academy_student_count > 1
-        THEN ROUND(
-        (academy_student_count - competition_rank) * 100.0 / (academy_student_count - 1),
-        2
-        )
-        ELSE 100.00
-        END AS competition_score,
-        CASE WHEN academy_student_count > 1
-        THEN ROUND(
-        (academy_student_count - activity_rank) * 100.0 / (academy_student_count - 1),
-        2
-        )
-        ELSE 100.00
-        END AS activity_score,
-        lecture_score,
-        tutorial_score
+            student_id,
+            academy,
+            -- 处理学术排名百分比，使用书院内学术排名的最大值作为分母
+            CASE WHEN max_academic_rank > 1
+                     THEN ROUND(
+                        (max_academic_rank - academic_rank) * 100.0 / (max_academic_rank - 1),
+                        2
+                          )
+                 ELSE 100.00  -- 当所有学生排名相同时（如并列第一），直接给满分
+                END AS academic_rank_percent,
+            -- 同理处理其他排名百分比
+            CASE WHEN max_competition_rank > 1
+                     THEN ROUND(
+                        (max_competition_rank - competition_rank) * 100.0 / (max_competition_rank - 1),
+                        2
+                          )
+                 ELSE 100.00
+                END AS competition_rank_percent,
+            CASE WHEN max_activity_rank > 1
+                     THEN ROUND(
+                        (max_activity_rank - activity_rank) * 100.0 / (max_activity_rank - 1),
+                        2
+                          )
+                 ELSE 100.00
+                END AS activity_rank_percent,
+            lecture_score,
+            tutorial_score
         FROM (
-        SELECT
-        student_id,
-        academy,
-        academic_score,
-        competition_score,
-        activity_score,
-        lecture_score,
-        tutorial_score,
-        RANK() OVER (PARTITION BY academy ORDER BY academic_score DESC) AS academic_rank,
-        RANK() OVER (PARTITION BY academy ORDER BY competition_score DESC) AS competition_rank,
-        RANK() OVER (PARTITION BY academy ORDER BY activity_score DESC) AS activity_rank,
-        COUNT(*) OVER (PARTITION BY academy) AS academy_student_count
-        FROM stu_ability_score
-        WHERE academy = (SELECT academy FROM stu_ability_score WHERE student_id=#{studentId})
-        ) sub
+                 SELECT
+                     student_id,
+                     academy,
+                     lecture_score,
+                     tutorial_score,
+                     academic_rank,
+                     MAX(academic_rank) OVER (PARTITION BY academy) AS max_academic_rank,
+                         competition_rank,
+                     MAX(competition_rank) OVER (PARTITION BY academy) AS max_competition_rank,
+                         activity_rank,
+                     MAX(activity_rank) OVER (PARTITION BY academy) AS max_activity_rank
+                 FROM (
+                          SELECT
+                              student_id,
+                              academy,
+                              academic_score,
+                              competition_score,
+                              activity_score,
+                              lecture_score,
+                              tutorial_score,
+                              -- 计算学术排名
+                              RANK() OVER (PARTITION BY academy ORDER BY academic_score DESC) AS academic_rank,
+            -- 计算竞赛排名
+                                  RANK() OVER (PARTITION BY academy ORDER BY competition_score DESC) AS competition_rank,
+            -- 计算活动排名
+                                  RANK() OVER (PARTITION BY academy ORDER BY activity_score DESC) AS activity_rank
+                          FROM stu_ability_score
+                          WHERE academy = (SELECT academy FROM stu_ability_score WHERE student_id=#{studentId})
+                      ) AS inner_sub
+             ) AS outer_sub
         WHERE student_id=#{studentId};
     </select>
     <update id="updateStuAbilityScore" parameterType="StuAbilityScore">
