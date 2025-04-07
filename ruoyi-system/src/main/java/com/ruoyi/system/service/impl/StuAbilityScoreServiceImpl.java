@@ -71,8 +71,9 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
         log.info("共更新{}条学业成绩数据，涉及学生{}人",
                 scores.size(),
                 gpaResults.stream().map(GpaResultDTO::getStudentId).distinct().count());
-        List<Integer> majorScores = majorMapper.selectDistinctMajorIdsByStudents(studentIds);
-        majorMapper.updateRankedStudents(majorScores);
+        List<String> academy = majorMapper.selectDistinctMajorIdsByStudents(studentIds);
+        System.out.println("academy:"+academy);
+        majorMapper.updateRankedStudents(academy);
     }
 
     // 手动实现列表分片（兼容JDK8）

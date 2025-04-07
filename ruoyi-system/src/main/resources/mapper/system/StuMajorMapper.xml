@@ -130,49 +130,34 @@
         JOIN (
         SELECT
         student_id,
-        major_id,
-        DENSE_RANK() OVER (
-        PARTITION BY major_id
+        academy,
+        ROW_NUMBER() OVER (
+        PARTITION BY academy
         ORDER BY
         CASE WHEN academic_score IS NULL THEN 1 ELSE 0 END,
         academic_score DESC
         ) AS ranking,
         CASE
-        WHEN (PERCENT_RANK() OVER (
-        PARTITION BY major_id
-        ORDER BY academic_score DESC
-        )) &lt;= 0.2 THEN 'A'
-        WHEN (PERCENT_RANK() OVER (
-        PARTITION BY major_id
-        ORDER BY academic_score DESC
-        )) &lt;= 0.6 THEN 'B'
+        WHEN PERCENT_RANK() OVER (PARTITION BY academy ORDER BY academic_score DESC) &lt;= 0.2 THEN 'A'
+        WHEN PERCENT_RANK() OVER (PARTITION BY academy ORDER BY academic_score DESC) &lt;= 0.6 THEN 'B'
         ELSE 'C'
         END AS grade_level
         FROM (
         SELECT
         s1.student_id,
         s1.academic_score,
-        s3.major_id  <!-- 专业ID来自stu_major表 -->
+        s1.academy
         FROM stu_ability_score s1
         JOIN stu_info s2 ON s1.student_id = s2.student_id
-        JOIN stu_major s3 ON s3.major_name =
-        CASE
-        WHEN s2.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
-        THEN s2.major
-        WHEN s2.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
-        THEN s2.original_system_major
-        END
-        WHERE s3.major_id IN
-        <foreach collection="majorId" item="id" open="(" separator="," close=")">
-            #{id}
+        WHERE s1.academy IN
+        <foreach collection="academy" item="academy" open="(" separator="," close=")">
+            #{academy}
         </foreach>
         ) filtered_data
-        ) tr
-        ON si.student_id = tr.student_id
+        ) tr ON si.student_id = tr.student_id
         SET
         si.ranking = tr.ranking,
-        si.grade_level = tr.grade_level
-        <!-- 移除错误的major_id条件 -->
+        si.grade_level = tr.grade_level;
     </update>
 
     <update id="updateStuMajor" parameterType="StuMajor">
@@ -208,7 +193,7 @@
 
     <select id="selectDistinctMajorIdsByStudents">
         SELECT DISTINCT
-        major_id
+        sm.academy
         FROM stu_info si
             JOIN stu_major sm
                 ON sm.major_name =

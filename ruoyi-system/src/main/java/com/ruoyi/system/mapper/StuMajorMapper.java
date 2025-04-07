@@ -21,13 +21,13 @@ public interface StuMajorMapper {
             @Param("parentId") Integer parentId,
             @Param("divertForm") String divertForm
     );
-    void updateRankedStudents(@Param("majorId") List<Integer> majorIds);
+    void updateRankedStudents(@Param("academy") List<String> academy);
     /**
      * 根据学生ID列表获取所属专业ID（去重）
      * @param studentIds 学生ID列表
      * @return 专业ID列表
      */
-    List<Integer> selectDistinctMajorIdsByStudents(
+    List<String> selectDistinctMajorIdsByStudents(
             @Param("studentIds") List<String> studentIds
     );
     public void updateStuMajor(@Param("majorId") Integer majorId,
