@@ -1,11 +1,17 @@
 // 查询问卷数据
 import request from "@/utils/request";
 
-export function fetchEchartsData(questionnaireId) {
+// export function fetchEchartsData(questionnaireId) {
+//   return request({
+//     url: '/system/questionnaire/echarts2',
+//     method: 'get',
+//     params: { questionnaireId },
+//   });
+// }
+export function fetchEchartsData() {
   return request({
-    url: '/system/questionnaire/echarts2',
+    url: '/system/major/majorNum',
     method: 'get',
-    params: { questionnaireId },
   });
 }
 export function getStudentQuestionnaieData(query) {

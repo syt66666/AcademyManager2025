@@ -2,18 +2,26 @@ package com.ruoyi.system.service.impl;
 
 
 import com.alibaba.fastjson2.JSONObject;
+import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.system.domain.UserQuestionnaireAnswer;
+import com.ruoyi.system.domain.dto.MajorStatistic;
+import com.ruoyi.system.domain.dto.StuInfoDTO;
+import com.ruoyi.system.mapper.StuInfoMapper;
 import com.ruoyi.system.service.websocket.WebSocketUsers;
 import com.ruoyi.system.domain.StuMajor;
 import com.ruoyi.system.domain.dto.MajorStatisticDTO;
 import com.ruoyi.system.mapper.StuMajorMapper;
 
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -26,6 +34,53 @@ public class MajorSelectionServiceImpl {
 
     @Autowired
     private StrategyFactory strategyFactory;
+
+    @Autowired
+    private StuInfoMapper stuInfoMapper;
+
+    public Map<String, ?> echarts2() {
+        Map<String, Object> result = new HashMap<>();
+
+        // 1. 获取原始数据
+        List<StuInfoDTO> stuInfoDTOS = stuInfoMapper.getAcademyNum();
+        Map<String, Integer> beforeCnt = new HashMap<>();
+        for (StuInfoDTO info : stuInfoDTOS) {
+            String academy=info.getAcademy();
+            Integer studentNum= info.getStudentNum();
+            beforeCnt.put(academy, studentNum);
+        }
+
+        // 2. 处理分流后数据
+        Map<String, Map<String, Integer>> afterCnt1 = new HashMap<>();
+        Map<String, Map<String, Map<String, Integer>>> changeMajorType = new HashMap<>();
+
+        List<MajorStatistic> answers = majorMapper.getMajorNum();
+        for (MajorStatistic answer : answers) {
+            String academy = answer.getAcademy();
+            String type = String.valueOf(answer.getType());
+            Integer studentNum = answer.getStudentNum();
+            String majorName = answer.getMajorName();
+
+            // 分流后统计：按学院-专业累加
+            if (StringUtils.isNotEmpty(academy) && StringUtils.isNotEmpty(majorName)) {
+                // 更新学院-专业人数
+                Map<String, Integer> afterMap1 = afterCnt1.computeIfAbsent(academy, k -> new HashMap<>());
+                afterMap1.put(majorName, afterMap1.getOrDefault(majorName, 0) + studentNum);
+
+                // 更新分流类型分布
+                Map<String, Map<String, Integer>> academyChangeType = changeMajorType.computeIfAbsent(academy, k -> new HashMap<>());
+                Map<String, Integer> majorChangeType1 = academyChangeType.computeIfAbsent(majorName, k -> new HashMap<>());
+                majorChangeType1.put(type, majorChangeType1.getOrDefault(type, 0) + studentNum);
+            }
+        }
+
+
+        //map<String, map<String, Integer>> map
+        result.put("beforeCnt", beforeCnt);
+        result.put("afterCnt1", afterCnt1);
+        result.put("changeMajorType", changeMajorType);
+        return result;
+    }
 
     public List<StuMajor> getAvailableMajors(@RequestParam("major") String major,
                                              @RequestParam("academy") String academy,

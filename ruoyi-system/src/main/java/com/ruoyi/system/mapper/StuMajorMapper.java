@@ -13,10 +13,7 @@ public interface StuMajorMapper {
             @Param("academy") String academy,
             @Param("type") Integer type
     );
-    List<StuMajor> selectChildrenByParentId(Long parentId);
-    List<MajorStatistic> selectMajorStatistics(
-            @Param("parentId") Integer parentId
-    );
+
     List<MajorStatisticDTO> selectMajorStatisticGradesNum(
             @Param("parentId") Integer parentId,
             @Param("divertForm") String divertForm
@@ -40,4 +37,6 @@ public interface StuMajorMapper {
 
     List<MajorStatisticDTO> getMajorStatisticGradesNum(
             @Param("parentId") Integer parentId);
+    //得到所有专业人数
+    List<MajorStatistic> getMajorNum();
 }

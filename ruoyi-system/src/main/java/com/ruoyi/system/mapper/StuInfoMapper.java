@@ -1,6 +1,9 @@
 package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.StuInfo;
+import com.ruoyi.system.domain.UserQuestionnaireAnswer;
+import com.ruoyi.system.domain.dto.StuInfoDTO;
+import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -55,5 +58,12 @@ public interface StuInfoMapper {
      * @return 学生信息集合
      */
     public StuInfo selectStuInfoById(String studentId);
+
+
+    @MapKey("academy")  // 指定返回 Map 的键为 academy 字段
+    List<StuInfoDTO> getAcademyNum();
+
+    List<StuInfo> getStudentChangeMajorInfo(StuInfo stuInfo);
+
 }
 

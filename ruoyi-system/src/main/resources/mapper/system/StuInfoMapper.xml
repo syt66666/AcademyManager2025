@@ -18,11 +18,21 @@
         <result property="policyStatus"    column="policy_status"    />
         <result property="studentSex"    column="student_sex"    />
     </resultMap>
-
+    <resultMap type="StuInfoDTO" id="StuInfoResult2">
+        <result property="academy"    column="academy"    />
+        <result property="studentNum"    column="student_count"    />
+    </resultMap>
     <sql id="selectStuInfoVo">
         select id, student_id, student_name, academy, original_system_major, major, system_major, student_class, divert_form, innovation_class, policy_status, student_sex from stu_info
     </sql>
-
+    <select id="getAcademyNum" resultMap="StuInfoResult2">
+        SELECT
+        academy AS academy,
+        COUNT(*) AS student_count  <!-- 别名必须与 Mapper 中的字段名匹配 -->
+        FROM stu_info
+        WHERE academy IS NOT NULL
+        GROUP BY academy
+    </select>
     <select id="selectStuInfoList" parameterType="StuInfo" resultMap="StuInfoResult">
         <include refid="selectStuInfoVo"/>
         <where>
@@ -103,5 +113,16 @@
             #{studentId}
         </foreach>
     </delete>
-
+    <select id="getStudentChangeMajorInfo" parameterType="StuInfo" resultMap="StuInfoResult">
+        SELECT student_id, student_name, academy, original_system_major, system_major, change_major_type
+        FROM stu_info
+        <where>
+            <if test="studentId != null and studentId != ''">AND student_id = #{studentId}</if>
+            <if test="studentName != null and studentName != ''">AND student_name LIKE CONCAT('%', #{studentName}, '%')</if>
+            <if test="academy != null and academy != ''">AND academy = #{academy}</if>
+            <if test="originalSystemMajor != null and originalSystemMajor != ''">AND original_system_major = #{originalSystemMajor}</if>
+            <if test="systemMajor != null and systemMajor != ''">AND system_major = #{systemMajor}</if>
+            <if test="changeMajorType != null and changeMajorType != ''">AND change_major_type = #{changeMajorType}</if>
+        </where>
+    </select>
 </mapper>

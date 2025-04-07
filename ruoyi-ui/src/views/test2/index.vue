@@ -4,24 +4,24 @@
     <div class="left-container">
       <el-card class="custom-card">
         <!-- 滑动按钮 -->
-<!--        <div class="switch-container">-->
-<!--          <el-switch-->
-<!--            v-model="isAfterMajorChange"-->
-<!--            active-text="转专业后"-->
-<!--            inactive-text="分流后"-->
-<!--            @change="updateChart"-->
-<!--          />-->
-<!--        </div>-->
+        <!--        <div class="switch-container">-->
+        <!--          <el-switch-->
+        <!--            v-model="isAfterMajorChange"-->
+        <!--            active-text="转专业后"-->
+        <!--            inactive-text="分流后"-->
+        <!--            @change="updateChart"-->
+        <!--          />-->
+        <!--        </div>-->
         <!-- 用于放置Echarts图表的DOM元素 -->
-        <div id="echarts1" class="echart-container" />
-        <div id="echarts3" class="echart-container" />
-        <div id="changeTypeChart" class="echart-container" />
+        <div id="echarts1" class="echart-container"/>
+        <div id="echarts3" class="echart-container"/>
+        <div id="changeTypeChart" class="echart-container"/>
       </el-card>
     </div>
     <div class="right-container">
       <div id="echarts-container" class="echart-container"></div>
       <div class="student">
-        <student-index ref="student" />
+        <student-index ref="student"/>
       </div>
     </div>
   </div>
@@ -32,14 +32,15 @@
 import * as echarts from 'echarts';
 import StudentIndex from '@/views/Qstatistics/student';
 import {fetchEchartsData} from "@/api/system/questionnaire";
+
 export default {
-  components: { StudentIndex },
+  components: {StudentIndex},
   data() {
     return {
       isAfterMajorChange: false,//初始状态为分流后
-      academyChangeType : { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 },
+      academyChangeType: {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0},
       selected: null,
-      options: ["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
+      options: ["令希书院", "伯川书院", "厚德书院", "大煜书院", "求实书院", "知行书院", "笃学书院"],
     }
   },
   mounted() {
@@ -49,11 +50,11 @@ export default {
   },
   watch: {
     selected(newVal, oldVal) {
-      if(this.selected!==null){
+      if (this.selected !== null) {
         this.noHideCharts();
         this.getEcharts3();
         this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
-      }else {
+      } else {
         // 如果 selected 为 null，隐藏图表
         this.hideCharts();
       }
@@ -61,11 +62,11 @@ export default {
     isAfterMajorChange(newVal) {
       // 在状态改变时执行的逻辑，可以用于触发其他操作
       this.getEcharts1();
-      this.selected=null;
+      this.selected = null;
 
     }
   },
-  methods:{
+  methods: {
     noHideCharts() {
       // 假设你有一个容器 ID 为 'echarts-container'
       const chartContainer = document.getElementById('echarts3');
@@ -101,17 +102,9 @@ export default {
       var myChart = echarts.init(chartDom);
       //分流前学生的数据
       const beforeCnt = data.beforeCnt;  // 转专业前的学生数量
-      let afterCnt=null;
-      let afterMajorChangeType=null;
-      if(this.isAfterMajorChange===false){
-        afterCnt = data.afterCnt1;// 分流后的学生数量
-        afterMajorChangeType = data.changeMajorType;
-        this.$refs.student.time=false;
-      }else {
-        afterCnt = data.afterCnt2;
-        afterMajorChangeType = data.afterMajorChangeType;
-        this.$refs.student.time=true;
-      }
+      let afterCnt = data.afterCnt1;// 分流后的学生数量
+      let afterMajorChangeType = data.changeMajorType;
+      this.$refs.student.time = false;
       let xData = [];
       let beforeData = [];
       let afterData = [];
@@ -119,7 +112,7 @@ export default {
       // 准备数据
       for (let [academy, majors] of Object.entries(afterCnt)) {
         xData.push(academy);
-        // 计算转专业前的总学生数量
+        // 计算分流前的总学生数量
         let beforeTotal = 0;
         if (beforeCnt[academy]) {
           // 直接获取当前书院的学生数量
@@ -127,8 +120,8 @@ export default {
         }
         beforeData.push(beforeTotal);
 
-        this.academyChangeType[academy] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };
-        // 计算转专业后的总学生数量
+        this.academyChangeType[academy] = {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0};
+        // 计算分流后的总学生数量
         let afterTotal = 0;
         for (let [major, count] of Object.entries(majors)) {
           afterTotal += count;
@@ -218,8 +211,8 @@ export default {
             itemStyle: {
               normal: {
                 color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [ // 渐变色
-                  { offset: 0, color: '#ff7f7f' },
-                  { offset: 1, color: '#ff3d3d' }
+                  {offset: 0, color: '#ff7f7f'},
+                  {offset: 1, color: '#ff3d3d'}
                 ]),
                 borderRadius: [10, 10, 0, 0] // 圆角设置
               }
@@ -245,8 +238,8 @@ export default {
             itemStyle: {
               normal: {
                 color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [ // 渐变色
-                  { offset: 0, color: '#4c9aff' },
-                  { offset: 1, color: '#1d76d1' }
+                  {offset: 0, color: '#4c9aff'},
+                  {offset: 1, color: '#1d76d1'}
                 ]),
                 borderRadius: [10, 10, 0, 0] // 圆角设置
               }
@@ -272,7 +265,7 @@ export default {
       //注册点击事件（可选）
       myChart.getZr().off('click');
       const that = this;
-      myChart.getZr().on('click', function(param) {
+      myChart.getZr().on('click', function (param) {
         const pointInPixel = [param.offsetX, param.offsetY];
         if (myChart.containPixel('grid', pointInPixel)) {
           const xIndex = myChart.convertFromPixel({seriesIndex: 0}, [param.offsetX, param.offsetY])[0];
@@ -301,7 +294,7 @@ export default {
     renderChangeTypePieChart(academyChangeTypeData, chartDomId) {
       // 检查数据
       console.log('发送的数据:', academyChangeTypeData);
-      const chartData =  Object.entries(academyChangeTypeData)
+      const chartData = Object.entries(academyChangeTypeData)
         .filter(([changeType, count]) => changeType !== 'Unknown' && count > 0)
         .map(([changeType, count]) => ({
           name: this.getChangeTypeName(changeType),
@@ -404,28 +397,38 @@ export default {
         console.log('Clicked on:', params.name, 'with value:', params.value);
         let type = null;
         switch (params.name) {
-          case '保持当前专业': type = 1; break;
-          case '域内任选专业': type = 2; break;
-          case '类内任选专业': type = 3; break;
-          case '拔尖/创新班政策内任选专业': type = 4; break;
-          case '转专业': type = 5; break;
+          case '保持当前专业':
+            type = 1;
+            break;
+          case '域内任选专业':
+            type = 2;
+            break;
+          case '类内任选专业':
+            type = 3;
+            break;
+          case '拔尖/创新班政策内任选专业':
+            type = 4;
+            break;
+          case '转专业':
+            type = 5;
+            break;
         }
-        this.$refs.student.major=null;
+        this.$refs.student.major = null;
         this.$refs.student.type = type;
       });
     },
 
     getEcharts1() {
       // 调用 fetchEchartsData 来获取数据
-      fetchEchartsData(1)
+      fetchEchartsData()
         .then(response => {
           this.echarts1(response.data);
         })
     },
     getEcharts3() {
-      fetchEchartsData(1)
+      fetchEchartsData()
         .then(response => {
-          this.echarts3(response.data,this.selected);
+          this.echarts3(response.data, this.selected);
         });
     },
 
@@ -446,7 +449,7 @@ export default {
       } else if (academy === '厚德书院') {
         allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
       } else if (academy === '大煜书院') {
-        allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程","储能科学与工程"];
+        allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程", "储能科学与工程"];
       } else if (academy === '知行书院') {
         allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统"];
       } else if (academy === '笃学书院') {
@@ -458,7 +461,7 @@ export default {
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
       // 遍历数据，根据数据更新 yData
-      if (this.isAfterMajorChange===false&&data.afterCnt1 && data.afterCnt1[academy]) {
+      if (this.isAfterMajorChange === false && data.afterCnt1 && data.afterCnt1[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt1[academy])) {
           // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
           let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
@@ -468,7 +471,7 @@ export default {
         }
       }
       // 遍历数据，根据数据更新 yData
-      if (this.isAfterMajorChange===true&&data.afterCnt2 && data.afterCnt2[academy]) {
+      if (this.isAfterMajorChange === true && data.afterCnt2 && data.afterCnt2[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt2[academy])) {
           // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
           let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
@@ -477,7 +480,7 @@ export default {
           }
         }
       }
-      let type=this.isAfterMajorChange;
+      let type = this.isAfterMajorChange;
       const option = {
         title: {
           text: `${this.selected}分流后各专业人数统计`,
@@ -543,8 +546,8 @@ export default {
             itemStyle: {
               normal: {
                 color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                  { offset: 0, color: '#3b82f6' },
-                  { offset: 1, color: '#9333ea' }
+                  {offset: 0, color: '#3b82f6'},
+                  {offset: 1, color: '#9333ea'}
                 ]),
                 borderRadius: [10, 10, 0, 0] // 圆角设置
               }
@@ -571,32 +574,32 @@ export default {
       myChart.resize();
       option && myChart.setOption(option);
       const that = this;
-      myChart.on('click', function(param) {
+      myChart.on('click', function (param) {
         if (param.componentType === 'series') {
           const clickedMajor = param.name;  // 获取点击的专业名称
 
-          console.log('this.isAfterMajorChange11:'+type)
+          console.log('this.isAfterMajorChange11:' + type)
           // 获取该专业的专业类型分布数据
-          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor,type);
+          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor, type);
           // 显示该专业的转专业类型的比例，可以用饼图展示
-          updateChangeTypeChart(majorChangeType,clickedMajor);
+          updateChangeTypeChart(majorChangeType, clickedMajor);
           that.$refs.student.major = clickedMajor;
           that.$refs.student.type = null;
         }
       });
 
       // 获取该专业的转专业类型分布
-      function getChangeMajorTypeForMajor(data, academy, major,type) {
+      function getChangeMajorTypeForMajor(data, academy, major, type) {
         const afterMajorChangeType = {};  // 统计该专业的转专业类型
         // // 遍历数据，统计该专业的转专业类型
-        if (type===true&&data.afterMajorChangeType && data.afterMajorChangeType[academy] && data.afterMajorChangeType[academy][major]) {
+        if (type === true && data.afterMajorChangeType && data.afterMajorChangeType[academy] && data.afterMajorChangeType[academy][major]) {
           for (let [changeType, count] of Object.entries(data.afterMajorChangeType[academy][major])) {
             afterMajorChangeType[changeType] = count;
           }
         }
 
         // 遍历数据，统计该专业的转专业类型
-        if (type===false&&data.changeMajorType && data.changeMajorType[academy] && data.changeMajorType[academy][major]) {
+        if (type === false && data.changeMajorType && data.changeMajorType[academy] && data.changeMajorType[academy][major]) {
           for (let [changeType, count] of Object.entries(data.changeMajorType[academy][major])) {
             afterMajorChangeType[changeType] = count;
           }
@@ -605,7 +608,7 @@ export default {
       }
 
       // 更新转专业类型分布图
-      function updateChangeTypeChart(majorChangeType,clickedMajor) {
+      function updateChangeTypeChart(majorChangeType, clickedMajor) {
         var chartDom = document.getElementById('changeTypeChart');
         var myChart = echarts.init(chartDom);
 
@@ -712,11 +715,21 @@ export default {
           console.log('Clicked on:', params.name, 'with value:', params.value);
           let type = null;
           switch (params.name) {
-            case '保持当前专业': type = 1; break;
-            case '域内任选专业': type = 2; break;
-            case '类内任选专业': type = 3; break;
-            case '拔尖/创新班政策内任选专业': type = 4; break;
-            case '转专业': type = 5; break;
+            case '保持当前专业':
+              type = 1;
+              break;
+            case '域内任选专业':
+              type = 2;
+              break;
+            case '类内任选专业':
+              type = 3;
+              break;
+            case '拔尖/创新班政策内任选专业':
+              type = 4;
+              break;
+            case '转专业':
+              type = 5;
+              break;
           }
           that.$refs.student.type = type;
         });
@@ -752,7 +765,8 @@ export default {
   height: 300px; /* 适当调整图表的高度 */
   min-height: 200px; /* 最小高度 */
 }
-.student{
+
+.student {
   width: 100%;
   background-color: rgba(255, 255, 255, 0);
 }
@@ -762,6 +776,7 @@ export default {
   .container {
     flex-direction: column;
   }
+
   .left-container, .right-container {
     width: 100%;
   }

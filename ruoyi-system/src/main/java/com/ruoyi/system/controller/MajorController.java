@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/system/major")
 public class MajorController extends BaseController {
@@ -54,5 +56,15 @@ public class MajorController extends BaseController {
             throw new IllegalArgumentException("专业ID必须为数字");
         }
     }
-
+    //查询不同学院转专业人数
+    @GetMapping("/majorNum")
+    public AjaxResult echarts2()
+    {
+        try {
+            Map<String, ?> result = selectionService.echarts2();
+            return AjaxResult.success(result);
+        } catch (Exception e) {
+            return AjaxResult.error("获取数据失败: " + e.getMessage());
+        }
+    }
 }

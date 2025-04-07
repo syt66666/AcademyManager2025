@@ -58,4 +58,8 @@ public class StuInfo extends BaseEntity
     @Excel(name = "学生性别")
     private String studentSex;
 
+    /** 学生选专业类型 */
+    @Excel(name = "学生选专业类型")
+    private Integer changeMajorType ;
+
 }

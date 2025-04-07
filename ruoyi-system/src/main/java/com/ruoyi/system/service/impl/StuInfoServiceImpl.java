@@ -90,4 +90,9 @@ public class StuInfoServiceImpl implements IStuInfoService
     public StuInfo getStudentInfoById(String studentId) {
         return stuInfoMapper.selectStuInfoById(studentId);
     }
+
+    @Override
+    public List<StuInfo> getStudentChangeMajorInfo(StuInfo stuInfo) {
+        return stuInfoMapper.getStudentChangeMajorInfo(stuInfo);
+    }
 }

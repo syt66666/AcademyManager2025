@@ -3,27 +3,27 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.StuMajorMapper">
     <resultMap type="StuMajor" id="StuMajorResult">
-        <id     property="majorId"     column="major_id" />
-        <result property="academy"     column="academy" />
-        <result property="type"        column="type" />
-        <result property="parentId"    column="parent_id" />
+        <id property="majorId" column="major_id"/>
+        <result property="academy" column="academy"/>
+        <result property="type" column="type"/>
+        <result property="parentId" column="parent_id"/>
     </resultMap>
 
     <resultMap type="MajorScoreDTO" id="MajorScoreResult">
-        <id     property="majorId"     column="major_id" />
-        <result property="academicScore"     column="academic_score" />
-        <result property="studentId"        column="student_id" />
-        <result property="ranking"        column="ranking" />
+        <id property="majorId" column="major_id"/>
+        <result property="academicScore" column="academic_score"/>
+        <result property="studentId" column="student_id"/>
+        <result property="ranking" column="ranking"/>
     </resultMap>
     <resultMap type="MajorScoreDTO" id="MajorScoreResult2">
-        <id     property="studentId"     column="student_id" />
-        <result property="majorId"        column="major_id" />
+        <id property="studentId" column="student_id"/>
+        <result property="majorId" column="major_id"/>
     </resultMap>
     <resultMap type="MajorStatistic" id="MajorStatisticResult">
-        <id property="subMajorId" column="sub_major_id"/>
-        <result property="subMajorName" column="sub_major_name"/>
-        <result property="intraClassCount" column="intra_class_count"/>
-        <result property="intraDomainCount" column="intra_domain_count"/>
+        <result property="majorName" column="major_name"/>
+        <result property="academy" column="academy"/>
+        <result property="studentNum" column="student_num"/>
+        <result property="type" column="type"/>
     </resultMap>
 
     <resultMap type="MajorStatisticDTO" id="MajorStatisticDTOResult">
@@ -35,94 +35,86 @@
         <result property="studentNum" column="student_num"/>
     </resultMap>
 
+    <select id="getMajorNum" resultMap="MajorStatisticResult">
+        SELECT
+            major_name,
+            academy,
+            COALESCE(SUM(student_num), 0) AS student_num,
+            CASE
+                WHEN type = 1 THEN 3
+                WHEN type IN (2,4) THEN 2
+                WHEN type = 3 THEN 4
+                WHEN type IN (5,6) THEN 1
+                END AS type
+        FROM stu_major
+        WHERE parent_id IS NOT NULL
+        GROUP BY
+            major_name,
+            academy,
+            CASE
+                WHEN type = 1 THEN 3
+                WHEN type IN (2,4) THEN 2
+                WHEN type = 3 THEN 4
+                WHEN type IN (5,6) THEN 1
+                END;
+    </select>
+
     <select id="selectByAcademyAndType" resultMap="StuMajorResult">
         SELECT *
         FROM stu_major
-        WHERE type= #{type} AND major_id IN (
-            SELECT major_id
-            FROM stu_major
-            WHERE major_name = #{major}
-              AND academy = #{academy}
-              AND type = #{type}
-        )
-           OR parent_id IN (
-            SELECT major_id
-            FROM stu_major
-            WHERE major_name = #{major}
-              AND academy = #{academy}
-              AND type = #{type}
-        );
+        WHERE type = #{type} AND major_id IN (SELECT major_id
+                                              FROM stu_major
+                                              WHERE major_name = #{major}
+                                                AND academy = #{academy}
+                                                AND type = #{type})
+           OR parent_id IN (SELECT major_id
+                            FROM stu_major
+                            WHERE major_name = #{major}
+                              AND academy = #{academy}
+                              AND type = #{type});
     </select>
 
-    <select id="selectChildrenByParentId" resultMap="StuMajorResult">
-        SELECT * FROM stu_major
-        WHERE parent_id = #{parentId}
-    </select>
 
-<select id="selectMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
-    SELECT
-        child.major_id,
-        child.major_name,
-        COUNT(CASE WHEN info.grade_level = 'A' THEN 1 END) AS grade_A,
-        COUNT(CASE WHEN info.grade_level = 'B' THEN 1 END) AS grade_B,
-        COUNT(CASE WHEN info.grade_level = 'C' THEN 1 END) AS grade_C,
-        COUNT(info.student_id) AS student_num
-    FROM stu_major parent
-             RIGHT JOIN stu_info info
-                        ON parent.major_name =
-                           CASE
-                               WHEN info.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
-                                   THEN info.major
-                               WHEN info.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
-                                   THEN info.original_system_major
-                               ELSE NULL
-                               END
-                            AND info.divert_form = #{divertForm}
-             RIGHT JOIN stu_major child
-                        ON child.parent_id = parent.major_id
-                            AND info.system_major = child.major_name
-    WHERE
-        parent.parent_id IS NULL
-      AND child.parent_id = #{parentId}
-    GROUP BY
-        child.major_id,
-        child.major_name;
-</select>
-    <select id="selectMajorStatistics" resultMap="MajorStatisticResult">
-        SELECT
-            sm.major_id AS sub_major_id,
-            sm.major_name AS sub_major_name,
-            SUM(
-                    CASE WHEN si_intra_class.student_id IS NOT NULL THEN 1 ELSE 0 END
-            ) AS intra_class_count,
-            SUM(
-                    CASE WHEN si_intra_domain.student_id IS NOT NULL THEN 1 ELSE 0 END
-            ) AS intra_domain_count
-        FROM stu_major sm
-                 LEFT JOIN stu_info si_intra_class
-                           ON sm.major_name = si_intra_class.system_major
-                               AND si_intra_class.divert_form IN ('可类内任选，并转专业', '可类内任选，不能转专业')
-                 LEFT JOIN stu_info si_intra_domain
-                           ON sm.major_name = si_intra_domain.original_system_major
-                               AND si_intra_domain.divert_form IN ('可域内任选，并转专业','仅可转专业','不可变更专业')
-        WHERE sm.parent_id = #{parentId}
-        GROUP BY sm.major_id, sm.major_name
+    <select id="selectMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
+        SELECT child.major_id,
+               child.major_name,
+               COUNT(CASE WHEN info.grade_level = 'A' THEN 1 END) AS grade_A,
+               COUNT(CASE WHEN info.grade_level = 'B' THEN 1 END) AS grade_B,
+               COUNT(CASE WHEN info.grade_level = 'C' THEN 1 END) AS grade_C,
+               COUNT(info.student_id)                             AS student_num
+        FROM stu_major parent
+                 RIGHT JOIN stu_info info
+                            ON parent.major_name =
+                               CASE
+                                   WHEN info.divert_form IN ('可类内任选，并转专业', '可类内任选，不能转专业')
+                                       THEN info.major
+                                   WHEN info.divert_form IN ('可域内任选，并转专业', '仅可转专业', '不可变更专业')
+                                       THEN info.original_system_major
+                                   ELSE NULL
+                                   END
+                                AND info.divert_form = #{divertForm}
+                 RIGHT JOIN stu_major child
+                            ON child.parent_id = parent.major_id
+                                AND info.system_major = child.major_name
+        WHERE parent.parent_id IS NULL
+          AND child.parent_id = #{parentId}
+        GROUP BY child.major_id,
+                 child.major_name;
     </select>
     <select id="getMajorStatisticGradesNum" resultMap="MajorStatisticDTOResult">
-        SELECT
-            major_name,
-            SUM(grade_A) AS grade_A,
-            SUM(grade_B) AS grade_B,
-            SUM(grade_C) AS grade_C,
-            SUM(student_num) AS student_num
+        SELECT major_name,
+               SUM(grade_A)     AS grade_A,
+               SUM(grade_B)     AS grade_B,
+               SUM(grade_C)     AS grade_C,
+               SUM(student_num) AS student_num
 
         FROM stu_major s1
         WHERE major_name in (SELECT major_name
                              FROM stu_major s2
-                             WHERE parent_id=#{parentId})
-          AND academy=(SELECT academy
-                       FROM stu_major s2
-                       WHERE major_id=#{parentId})
+                             WHERE parent_id = #{parentId})
+          AND academy = (SELECT academy
+                         FROM stu_major s2
+                         WHERE major_id = #{parentId})
         GROUP BY major_name
     </select>
     <update id="updateRankedStudents">
@@ -195,8 +187,8 @@
         SELECT DISTINCT
         sm.academy
         FROM stu_info si
-            JOIN stu_major sm
-                ON sm.major_name =
+        JOIN stu_major sm
+        ON sm.major_name =
         CASE
         WHEN si.divert_form IN ('可类内任选，并转专业','可类内任选，不能转专业')
         THEN si.major

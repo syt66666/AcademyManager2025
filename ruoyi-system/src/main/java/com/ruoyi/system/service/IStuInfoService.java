@@ -2,6 +2,7 @@ package com.ruoyi.system.service;
 
 import java.util.List;
 import com.ruoyi.system.domain.StuInfo;
+import com.ruoyi.system.domain.UserQuestionnaireAnswer;
 
 /**
  * 学生信息Service接口
@@ -59,4 +60,5 @@ public interface IStuInfoService
      * @return 学生信息
      */
     public StuInfo getStudentInfoById(String studentId);
+    List<StuInfo> getStudentChangeMajorInfo(StuInfo stuInfo);
 }

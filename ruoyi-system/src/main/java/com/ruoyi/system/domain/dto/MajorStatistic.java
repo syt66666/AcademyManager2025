@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MajorStatistic {
-    private Integer subMajorId;
-    private String subMajorName;
-    private Integer intraClassCount; // 类内任选数量
-    private Integer intraDomainCount; // 域内任选数量
+    private String majorName;
+    private String academy;
+    private Integer studentNum;
+    private Integer type;//1为保留当前专业 2域内 3类内 4创新班
 }

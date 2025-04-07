@@ -4,7 +4,9 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.QuestionnaireAnswer;
+import com.ruoyi.system.domain.StuInfo;
 import com.ruoyi.system.domain.UserQuestionnaireAnswer;
+import com.ruoyi.system.service.IStuInfoService;
 import com.ruoyi.system.service.IUserQuestionnaireService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,8 @@ import java.util.Map;
 public class UserQuestionnaireController extends BaseController {
     @Autowired
     private IUserQuestionnaireService userQuestionnaireService;
+    @Autowired
+    private IStuInfoService stuInfoService;
 
     //检查学生是否已经填写问卷
     @GetMapping("/system/questionnaire/checkCompleted")
@@ -40,14 +44,14 @@ public class UserQuestionnaireController extends BaseController {
 
     //查询学生提交的问卷答案
     @GetMapping("/system/questionnaire/answers")
-    public TableDataInfo getStudentQuestionnaireAnswers(UserQuestionnaireAnswer answer) {
+    public TableDataInfo getStudentQuestionnaireAnswers(StuInfo stuInfo) {
         startPage();
-        List<UserQuestionnaireAnswer> answers = userQuestionnaireService.getStudentQuestionnaireAnswers(answer);
+        List<StuInfo> answers = stuInfoService.getStudentChangeMajorInfo(stuInfo);
         return getDataTable(answers);
     }
     @GetMapping("/system/questionnaire/exportAllAnswers")
-    public TableDataInfo exportAllAnswers(UserQuestionnaireAnswer answer) {
-        List<UserQuestionnaireAnswer> answers = userQuestionnaireService.getStudentQuestionnaireAnswers(answer);
+    public TableDataInfo exportAllAnswers(StuInfo stuInfo) {
+        List<StuInfo> answers = stuInfoService.getStudentChangeMajorInfo(stuInfo);
         return getDataTable(answers);
     }
 
