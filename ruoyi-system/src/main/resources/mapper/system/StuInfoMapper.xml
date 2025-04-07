@@ -99,6 +99,7 @@
             <if test="innovationClass != null">innovation_class = #{innovationClass},</if>
             <if test="policyStatus != null">policy_status = #{policyStatus},</if>
             <if test="studentSex != null">student_sex = #{studentSex},</if>
+            <if test="changeMajorType != null">change_major_type = #{changeMajorType},</if>
         </trim>
         where student_id = #{studentId}
     </update>

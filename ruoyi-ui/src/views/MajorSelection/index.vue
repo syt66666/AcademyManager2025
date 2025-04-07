@@ -214,6 +214,8 @@ export default {
         policyStatus: null
       },
       //学生信息
+      systemMajor:null,
+      changeMajorType:'',
       previousPolicyStatus: null,
       userName: store.state.user.name,
       innovationClass: '',
@@ -332,13 +334,22 @@ export default {
         const selectedMajor = this.childMajors.find(
           m => m.majorId === this.selectedMajor
         )
+        if(this.divertForm.includes('类内任选')){
+          this.changeMajorType=3;
+        }else if(this.divertForm.includes('域内任选')||this.form.policyStatus===1){
+          this.changeMajorType=2;
+        }else if(this.form.innovationStatus === 1&&this.form.policyStatus===0){
+          this.changeMajorType=4;
+        }else {
+          this.changeMajorType=1;
+        }
         //调用接口更新学生信息
         await updateStudent({
           studentId: this.userName,
           systemMajor: selectedMajor.majorName,
-          policyStatus: this.form.innovationStatus === 1 ? this.form.policyStatus : 0
+          policyStatus: this.form.innovationStatus === 1 ? this.form.policyStatus : 0,
+          changeMajorType:this.changeMajorType
         })
-        console.log(1111)
         // 3. 重新获取最新专业数据（关键步骤）
         await this.getData(true)
         // 4. 清空已选专业并提示成功
