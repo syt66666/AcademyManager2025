@@ -85,7 +85,6 @@
             </template>
           </el-table-column>
 
-
           <!-- 讲座时间 -->
           <el-table-column prop="reportDate" label="讲座时间" width="120" align="center">
             <template v-slot="scope">
@@ -337,7 +336,6 @@
 
             <!-- 现场图片 -->
             <el-form-item label="现场图片" prop="reportPicture">
-
               <el-upload
                 multiple
                 :limit="5"
@@ -420,11 +418,7 @@
         class="native-pdf-preview"
       >
         <div v-if="currentDocument.type === 'pdf'" class="preview-container">
-          <iframe
-            :src="`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=0`"
-            style="width: 100%; height: 75vh; border: none;"
-            @load="disablePdfInteractions"
-          ></iframe>
+          <VuePdfEmbed :source="currentDocument.url" />
         </div>
         <div v-else-if="currentDocument.type === 'docx'" class="preview-container docx-preview">
           <div v-html="docxContent" class="docx-content"></div>
@@ -435,11 +429,15 @@
 </template>
 
 <script>
+import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
 import axios from "axios";
 import {addReport, listReport, updateReport, delReport, checkLectureUnique} from "@/api/student/lecture";
 import store from "@/store";
 
 export default {
+  components: {
+    VuePdfEmbed
+  },
   data() {
     return {
       allowedImageTypes: ['image/jpg', 'image/png','image/jpeg'], // 允许的文件类型
@@ -543,6 +541,7 @@ export default {
 
       try {
         this.currentDocument = file;
+        console.log("current url", this.currentDocument);
         if (file.type === 'pdf') {
           this.docPreviewVisible = true; // 直接显示iframe
         } else if (file.type === 'docx') {
