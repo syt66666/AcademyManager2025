@@ -508,6 +508,7 @@ export default {
     this.listReport();  // 在页面加载时获取数据
   },
   methods: {
+
     // 处理文档操作命令
     handleDocCommand(command) {
       console.log(command.action)
@@ -735,6 +736,7 @@ export default {
       if (!isValidExt) {
         return done(false, `文件 ${file.name} 的扩展名不合法`)
       }
+      return done(true); // 新增此行
     },
     // 状态标签样式
     getStatusTagType(status) {
@@ -952,18 +954,28 @@ export default {
     //总结文档下载
     async downloadReportFeeling(row) {
       try {
-        const filePaths = row.reportFeeling;
-        const fileName = row.reportFeelingName || this.getFileName(filePaths);
+        const filePath = row.reportFeeling;
+        const fileName = row.reportFeelingName;
+        // 1. 获取文件内容
+        const response = await fetch(filePath, {
+          headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+        });
+        const blob = await response.blob();
+        // 2. 创建临时链接
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
-        // link.download = this.generateFeelingFileName();
-        link.download = fileName;
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName; // 关键：直接使用后端返回的准确文件名
+        // 3. 触发下载
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+
+        // 4. 清理资源
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        }, 100);
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
-        console.error("下载错误详情:", error);
       }
     },
 

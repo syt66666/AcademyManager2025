@@ -588,6 +588,7 @@ export default {
           return;
         }
         console.log("我进来了0" + command.row.summaryFilePath)
+        console.log("我进来了0" + command.row.summaryFileName)
         const fileData = {
           url: `${process.env.VUE_APP_BASE_API}/profile/${filePath}`,
           type: this.getFileType(filePath),
@@ -874,20 +875,34 @@ export default {
     },
 
     //总结文档下载
+// 修改后的文档下载方法
     async downloadSummaryDocument(row) {
       try {
-        const filePaths = row.summaryFilePath;
-        const fileName = row.summaryFileName || this.getFileName(filePaths);
+        const filePath = `${process.env.VUE_APP_BASE_API}/profile/${row.summaryFilePath}`;
+        const fileName = row.summaryFileName;
+
+        // 1. 获取文件内容
+        const response = await fetch(filePath, {
+          headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+        });
+        const blob = await response.blob();
+
+        // 2. 创建临时链接
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
-        // link.download = this.generateSummaryFileName();
-        link.download = fileName;
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName; // 关键：直接使用后端返回的准确文件名
+
+        // 3. 触发下载
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+
+        // 4. 清理资源
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        }, 100);
       } catch (error) {
         this.$message.error(`下载失败: ${error.message}`);
-        console.error("下载错误详情:", error);
       }
     },
 // 下载单个文件
@@ -989,6 +1004,7 @@ export default {
       if (!isValidExt) {
         return done(false, `文件 ${file.name} 的扩展名不合法`)
       }
+      return done(true); // 新增此行
     },
 
 

@@ -97,7 +97,7 @@ public class StuCompetitionRecordController extends BaseController
             if (record.getExistingProofMaterial() != null) {
                 finalFilePaths.addAll(record.getExistingProofMaterial());
             }
-
+            System.out.println(Arrays.toString(proofMaterials));
             // 2. 处理新上传文件
             if (proofMaterials != null && proofMaterials.length > 0) {
                 for (MultipartFile file : proofMaterials) {

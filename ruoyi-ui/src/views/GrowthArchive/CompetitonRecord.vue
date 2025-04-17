@@ -531,6 +531,7 @@ export default {
         isOld: true,
         path: path
       })).filter(Boolean);
+
     },
     handlePreviewFile(file) {
       if (file.isOld) {
@@ -560,7 +561,6 @@ export default {
         this.fileList = fileList.slice(-5)
         return true
       }
-      console.log("file.raw.type:", file.raw.type)
       // 类型验证
       const isValidType = this.allowedImageTypes.includes(file.raw.type)
       if (!isValidType) {
@@ -582,6 +582,7 @@ export default {
       if (!isValidExt) {
         return done(false, `文件 ${file.name} 的扩展名不合法`)
       }
+      return done(true); // 新增此行
     },
     async handleDelete(row) {
       try {
@@ -749,6 +750,15 @@ export default {
 
           const recordBlob = new Blob([JSON.stringify(recordData)], {type: "application/json"});
           formData.append("record", recordBlob);
+          // 调试点：打印当前 fileList
+          console.log('[DEBUG] 提交时的 fileList:',
+            this.fileList.map(file => ({
+              name: file.name,
+              size: file.size,
+              isOld: file.isOld,
+              raw: !!file.raw // 检查是否有 raw 属性
+            })))
+
           this.fileList.forEach((file) => formData.append("proofMaterial", file.raw));
 
           const config = {

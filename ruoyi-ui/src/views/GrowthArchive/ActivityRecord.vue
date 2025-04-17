@@ -577,6 +577,7 @@ export default {
       if (!isValidExt) {
         return done(false, `文件 ${file.name} 的扩展名不合法`)
       }
+      return done(true); // 新增此行
     },
     async downloadFiles(filePaths) {
       try {
