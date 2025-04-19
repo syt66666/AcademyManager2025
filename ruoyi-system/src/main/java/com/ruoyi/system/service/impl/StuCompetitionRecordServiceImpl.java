@@ -165,7 +165,7 @@ public class StuCompetitionRecordServiceImpl implements IStuCompetitionRecordSer
         );
 
         if (studentId != null) {
-            int score = stuCompetitionRecordMapper.getStuCompetitionRecordCount(studentId);
+            Integer score = stuCompetitionRecordMapper.getStuCompetitionRecordCount(studentId);
             StuAbilityScore studentAbilityScore = new StuAbilityScore();
             studentAbilityScore.setStudentId(studentId);
             // 使用BigDecimal精确计算并取最小值
