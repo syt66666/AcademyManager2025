@@ -212,7 +212,7 @@ export default {
       this.setNumBasedOnSpecialty(this.systemMajor);//得到专业类别对应num3,用于问卷选项加载
       this.setNumBasedOnClass(this.systemMajor);//得到创新班专业类别对应num4,用于问卷选项加载
       this.loadQuestionnaireBySplitFlow();// 根据分流形式加载不同的问卷
-      this.getLastAnswerForQuestion(questionId);
+      // this.getLastAnswerForQuestion(questionId);
       this.academyFilter();
     },
     // 根据分流形式加载不同的问卷
