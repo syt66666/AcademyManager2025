@@ -126,4 +126,5 @@
             <if test="changeMajorType != null and changeMajorType != ''">AND change_major_type = #{changeMajorType}</if>
         </where>
     </select>
+
 </mapper>

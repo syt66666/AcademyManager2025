@@ -54,7 +54,18 @@ public class UserQuestionnaireController extends BaseController {
         List<StuInfo> answers = stuInfoService.getStudentChangeMajorInfo(stuInfo);
         return getDataTable(answers);
     }
-
+    //查询学生提交的问卷答案
+    @GetMapping("/system/questionnaire/answers2")
+    public TableDataInfo getStudentQuestionnaireAnswers2(UserQuestionnaireAnswer answer) {
+        startPage();
+        List<UserQuestionnaireAnswer> answers = userQuestionnaireService.getStudentQuestionnaireAnswers(answer);
+        return getDataTable(answers);
+    }
+    @GetMapping("/system/questionnaire/exportAllAnswers2")
+    public TableDataInfo exportAllAnswers2(UserQuestionnaireAnswer answer) {
+        List<UserQuestionnaireAnswer> answers = userQuestionnaireService.getStudentQuestionnaireAnswers(answer);
+        return getDataTable(answers);
+    }
     //提交问卷答案，将结果保存到数据库
     @PostMapping("/system/questionnaire/submitAnswers")
     public ResponseEntity<?> submitQuestionnaire(@RequestBody QuestionnaireAnswer answer) {

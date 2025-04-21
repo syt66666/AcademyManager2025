@@ -30,7 +30,7 @@
 
 <script>
 import * as echarts from 'echarts';
-import StudentIndex from '@/views/Qstatistics/student';
+import StudentIndex from '@/views/test2/student';
 import {fetchEchartsData} from "@/api/system/questionnaire";
 
 export default {

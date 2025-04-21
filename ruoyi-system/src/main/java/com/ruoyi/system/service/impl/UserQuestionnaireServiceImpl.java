@@ -41,7 +41,7 @@ public class UserQuestionnaireServiceImpl implements IUserQuestionnaireService {
     for (UserQuestionnaireAnswer answer : answers) {
 
         String academy = answer.getAcademy();
-        String systemMajor = answer.getSystemMajor();
+        String originalSystemMajor = answer.getOriginalSystemMajor();
         String changeAcademy = answer.getChangeAdress();
         String changeMajor = answer.getChangeMajor();
         String changeType = answer.getChangeMajorType();

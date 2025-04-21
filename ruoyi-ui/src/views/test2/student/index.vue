@@ -12,21 +12,19 @@
         ref="table"
         v-loading="loading"
         :data="studentList"
-        @selection-change="handleSelectionChange"
         border
         max-height="none"
         size="medium"
         class="nowrap-table"
       >
-        <el-table-column label="学号" align="center" prop="userName" min-width="150" />
-        <el-table-column label="转前书院" align="center" prop="academy" min-width="180" />
-        <el-table-column label="转前专业" align="center" prop="originalSystemMajor" min-width="180" />
-        <el-table-column label="分流后书院" align="center" prop="changeAdress" min-width="180" />
-        <el-table-column label="分流后专业" align="center" prop="changeMajor" min-width="180" />
-        <el-table-column label="一阶段分流类型" align="center" :prop="'changeMajorType'" :formatter="formatDivertType" min-width="200"/>
-        <el-table-column label="转专业后书院" align="center" prop="afterChangeAdress" min-width="180" />
-        <el-table-column label="转专业后专业" align="center" prop="afterChangeMajor" min-width="180" />
-        <el-table-column label="二阶段分流类型" align="center" :prop="'afterChangeMajorType'" :formatter="formatDivertType" min-width="200"/>
+        <el-table-column label="学号" align="center" prop="studentId" min-width="150"/>
+        <el-table-column label="姓名" align="center" prop="studentName" min-width="150"/>
+        <el-table-column label="转前书院" align="center" prop="academy" min-width="180"/>
+        <el-table-column label="转前专业" align="center" prop="originalSystemMajor" min-width="180"/>
+        <el-table-column label="分流后书院" align="center" prop="academy" min-width="180"/>
+        <el-table-column label="分流后专业" align="center" prop="systemMajor" min-width="180"/>
+        <el-table-column label="分流类型" align="center" :prop="'changeMajorType'" :formatter="formatDivertType"
+                         min-width="200"/>
       </el-table>
 
       <!-- 分页 -->
@@ -43,7 +41,7 @@
 </template>
 
 <script>
-import { getAllStudentQuestionnaieData2, getStudentQuestionnaieData2 } from "@/api/system/questionnaire";
+import {getAllStudentQuestionnaieData, getStudentQuestionnaieData} from "@/api/system/questionnaire";
 import * as XLSX from 'xlsx';
 
 export default {
@@ -68,16 +66,12 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        id: null,
-        userName: null,
+        studentId: null,
+        studentName: null,
         academy: null,
+        systemMajor: null,
         originalSystemMajor: null,
-        changeAdress: null,
-        changeMajor: null,
         changeMajorType: null,
-        afterChangeAdress: null,
-        afterChangeMajor: null,
-        afterChangeMajorType: null,
       },
     };
   },
@@ -90,9 +84,9 @@ export default {
     },
     getList() {
       this.loading = true;
-      getStudentQuestionnaieData2(this.queryParams)
+      getStudentQuestionnaieData(this.queryParams)
         .then((response) => {
-          const { rows, total } = response;
+          const {rows, total} = response;
           this.studentList = rows;
           this.total = total;
           this.loading = false;
@@ -101,9 +95,9 @@ export default {
           this.$message.error("获取数据失败，请稍后重试");
           this.loading = false;
         });
-      getAllStudentQuestionnaieData2(this.queryParams)
+      getAllStudentQuestionnaieData(this.queryParams)
         .then((response) => {
-          const { rows, total } = response;
+          const {rows, total} = response;
           this.allStudentList = rows;
           this.loading = false;
         })
@@ -118,32 +112,26 @@ export default {
     },
     resetQuery() {
       this.queryParams = {
-        id: null,
-        userName: null,
+        studentId: null,
+        studentName: null,
         academy: null,
+        systemMajor: null,
         originalSystemMajor: null,
-        changeAdress: null,
-        changeMajor: null,
         changeMajorType: null,
-        afterChangeAdress: null,
-        afterChangeMajor: null,
-        afterChangeMajorType: null,
       };
       this.getList();
     },
     // 导出 Excel 文件
     exportExcel() {
-      const headers = ['学号', '转前书院', '转前专业', '分流后书院', '分流后专业', '一阶段分流类型', '转专业后书院', '转专业后专业', '二阶段分流类型'];
+      const headers = ['学号', '姓名','转前书院', '转前专业', '分流后书院', '分流后专业', '分流类型'];
       const rows = this.allStudentList.map(item => [
-        item.userName,
+        item.studentId,
+        item.studentName,
         item.academy,
         item.originalSystemMajor,
-        item.changeAdress,
-        item.changeMajor,
+        item.academy,
+        item.systemMajor,
         this.formatDivertType(item, null, item.changeMajorType),
-        item.afterChangeAdress,
-        item.afterChangeMajor,
-        this.formatDivertType(item, null, item.afterChangeMajorType)
       ]);
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
       const workbook = XLSX.utils.book_new();
@@ -154,36 +142,16 @@ export default {
     }
   },
   watch: {
-    time(newVal) {
-      this.queryParams.changeAdress = null;
-      this.queryParams.afterChangeAdress = null;
-      this.queryParams.changeMajor = null;
-      this.queryParams.afterChangeMajor = null;
-      this.queryParams.changeMajorType = null;
-      this.queryParams.afterChangeMajorType = null;
-    },
     academy(newVal) {
-      if (this.time === false) {
-        this.queryParams.changeAdress = newVal;
-      } else {
-        this.queryParams.afterChangeAdress = newVal;
-      }
+      this.queryParams.academy = newVal;
       this.getList();
     },
     major(newVal) {
-      if (this.time === false) {
-        this.queryParams.changeMajor = newVal;
-      } else {
-        this.queryParams.afterChangeMajor = newVal;
-      }
+      this.queryParams.systemMajor = newVal;
       this.getList();
     },
     type(newVal) {
-      if (this.time === false) {
-        this.queryParams.changeMajorType = newVal;
-      } else {
-        this.queryParams.afterChangeMajorType = newVal;
-      }
+      this.queryParams.changeMajorType = newVal;
       this.getList();
     },
   },

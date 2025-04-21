@@ -31,7 +31,7 @@
 <script>
 import * as echarts from 'echarts';
 import StudentIndex from '@/views/Qstatistics/student';
-import {fetchEchartsData} from "@/api/system/questionnaire";
+import {fetchEchartsData2} from "@/api/system/questionnaire";
 export default {
   components: { StudentIndex },
   data() {
@@ -416,14 +416,14 @@ export default {
     },
 
     getEcharts1() {
-      // 调用 fetchEchartsData 来获取数据
-        fetchEchartsData(1)
+      // 调用 fetchEchartsData2 来获取数据
+        fetchEchartsData2(2)
           .then(response => {
             this.echarts1(response.data);
           })
     },
     getEcharts3() {
-      fetchEchartsData(1)
+      fetchEchartsData2(2)
         .then(response => {
           this.echarts3(response.data,this.selected);
         });
@@ -731,6 +731,7 @@ export default {
   display: flex; /* 使用 flex 布局 */
   justify-content: space-between; /* 在水平上分布子元素 */
   gap: 20px; /* 设置左右容器之间的间距 */
+  margin-left: 100px;
 }
 
 .left-container {
@@ -751,7 +752,8 @@ export default {
   height: 300px; /* 适当调整图表的高度 */
   min-height: 200px; /* 最小高度 */
 }
-.student{
+
+.student {
   width: 100%;
   background-color: rgba(255, 255, 255, 0);
 }
@@ -761,6 +763,7 @@ export default {
   .container {
     flex-direction: column;
   }
+
   .left-container, .right-container {
     width: 100%;
   }

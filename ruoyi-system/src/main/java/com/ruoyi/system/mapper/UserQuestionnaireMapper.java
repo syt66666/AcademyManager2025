@@ -17,7 +17,7 @@ public interface UserQuestionnaireMapper {
     @Results({
             //@Result(column = "studentId", property = "studentId"),
             @Result(column = "academy", property = "academy"),
-            @Result(column = "system_major", property = "systemMajor"),
+            @Result(column = "original_system_major", property = "originalSystemMajor"),
             @Result(column = "change_adress", property = "changeAdress"),
             @Result(column = "change_major", property = "changeMajor"),
             @Result(column = "change_major_type", property = "changeMajorType"),
