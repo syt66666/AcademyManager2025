@@ -117,7 +117,10 @@ pagehelper:
   helperDialect: mysql
   supportMethodsArguments: true
   params: count=countSql
-
+#deepseek大模型
+deepseek:
+  api-key: sk-0368b9bc48584f839d7b81dd69725492
+  endpoint: https://api.deepseek.com/v1/chat/completions
 # Swagger配置
 swagger:
   # 是否开启swagger

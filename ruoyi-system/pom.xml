@@ -76,6 +76,27 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <!-- Spring WebFlux（WebClient依赖） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+            <!-- 强制指定版本（与父项目一致） -->
+            <version>${spring-boot.version}</version>
+            <!-- 排除旧版本传递依赖 -->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-webflux</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- 显式引入与Spring Boot 2.5.15兼容的版本 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webflux</artifactId>
+            <version>5.3.23</version>
+        </dependency>
     </dependencies>
 
 </project>
