@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.EnrollmentsMapper">
+
+    <resultMap type="Enrollments" id="EnrollmentsResult">
+        <result property="enrollmentId"    column="enrollment_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="courseCode"    column="course_code"    />
+        <result property="enrollmentTime"    column="enrollment_time"    />
+    </resultMap>
+
+    <sql id="selectEnrollmentsVo">
+        select enrollment_id, student_id, course_code, enrollment_time from enrollments
+    </sql>
+
+    <select id="selectEnrollmentsList" parameterType="Enrollments" resultMap="EnrollmentsResult">
+        <include refid="selectEnrollmentsVo"/>
+        <where>
+            <if test="studentId != null "> and student_id = #{studentId}</if>
+            <if test="courseCode != null "> and course_code = #{courseCode}</if>
+            <if test="enrollmentTime != null "> and enrollment_time = #{enrollmentTime}</if>
+        </where>
+    </select>
+
+    <select id="selectEnrollmentsByEnrollmentId" parameterType="Long" resultMap="EnrollmentsResult">
+        <include refid="selectEnrollmentsVo"/>
+        where enrollment_id = #{enrollmentId}
+    </select>
+
+    <insert id="insertEnrollments" parameterType="Enrollments" useGeneratedKeys="true" keyProperty="enrollmentId">
+        insert into enrollments
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null">student_id,</if>
+            <if test="courseCode != null">course_code,</if>
+            <if test="enrollmentTime != null">enrollment_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null">#{studentId},</if>
+            <if test="courseCode != null">#{courseCode},</if>
+            <if test="enrollmentTime != null">#{enrollmentTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateEnrollments" parameterType="Enrollments">
+        update enrollments
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="courseCode != null">course_code = #{courseCode},</if>
+            <if test="enrollmentTime != null">enrollment_time = #{enrollmentTime},</if>
+        </trim>
+        where enrollment_id = #{enrollmentId}
+    </update>
+
+    <delete id="deleteEnrollmentsByEnrollmentId" parameterType="Long">
+        delete from enrollments where enrollment_id = #{enrollmentId}
+    </delete>
+
+    <delete id="deleteEnrollmentsByEnrollmentIds" parameterType="String">
+        delete from enrollments where enrollment_id in
+        <foreach item="enrollmentId" collection="array" open="(" separator="," close=")">
+            #{enrollmentId}
+        </foreach>
+    </delete>
+</mapper>

@@ -112,7 +112,6 @@ public class StuInfoController extends BaseController
      */
     @GetMapping("/nickName")
     public AjaxResult getNickName() {
-        System.out.println(getUserNick());
         AjaxResult success = AjaxResult.success(getUserNick());
         return AjaxResult.success(getUserNick());
     }

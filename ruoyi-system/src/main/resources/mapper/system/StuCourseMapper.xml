@@ -13,10 +13,12 @@
         <result property="teacherName"    column="teacher_name"    />
         <result property="academy"    column="academy"    />
         <result property="courseHours"    column="course_hours"    />
+        <result property="courseCapacity"    column="course_capacity"    />
+        <result property="enrolledStudent"    column="enrolled_student"    />
     </resultMap>
 
     <sql id="selectStuCourseVo">
-        select course_id, course_code, course_name, credit, course_category, teacher_name, academy, course_hours from stu_course
+        select course_id, course_code, course_name, credit, course_category, teacher_name, academy, course_hours, course_capacity, enrolled_student from stu_course
     </sql>
 
     <select id="selectStuCourseList" parameterType="StuCourse" resultMap="StuCourseResult">
@@ -29,6 +31,8 @@
             <if test="teacherName != null  and teacherName != ''"> and teacher_name like concat('%', #{teacherName}, '%')</if>
             <if test="academy != null  and academy != ''"> and academy = #{academy}</if>
             <if test="courseHours != null "> and course_hours = #{courseHours}</if>
+            <if test="courseCapacity != null "> and course_capacity = #{courseCapacity}</if>
+            <if test="enrolledStudent != null "> and enrolled_student = #{enrolledStudent}</if>
         </where>
     </select>
 
@@ -37,6 +41,10 @@
         where course_id = #{courseId}
     </select>
 
+    <select id="selectStuCourseByCourseCode" parameterType="String" resultMap="StuCourseResult">
+        <include refid="selectStuCourseVo"/>
+        where course_code = #{courseCode}
+    </select>
     <insert id="insertStuCourse" parameterType="StuCourse" useGeneratedKeys="true" keyProperty="courseId">
         insert into stu_course
         <trim prefix="(" suffix=")" suffixOverrides=",">
@@ -47,6 +55,8 @@
             <if test="teacherName != null and teacherName != ''">teacher_name,</if>
             <if test="academy != null">academy,</if>
             <if test="courseHours != null">course_hours,</if>
+            <if test="courseCapacity != null">course_capacity,</if>
+            <if test="enrolledStudent != null">enrolled_student,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="courseCode != null and courseCode != ''">#{courseCode},</if>
@@ -56,6 +66,8 @@
             <if test="teacherName != null and teacherName != ''">#{teacherName},</if>
             <if test="academy != null">#{academy},</if>
             <if test="courseHours != null">#{courseHours},</if>
+            <if test="courseCapacity != null">#{courseCapacity},</if>
+            <if test="enrolledStudent != null">#{enrolledStudent},</if>
         </trim>
     </insert>
 
@@ -69,6 +81,8 @@
             <if test="teacherName != null and teacherName != ''">teacher_name = #{teacherName},</if>
             <if test="academy != null">academy = #{academy},</if>
             <if test="courseHours != null">course_hours = #{courseHours},</if>
+            <if test="courseCapacity != null">course_capacity = #{courseCapacity},</if>
+            <if test="enrolledStudent != null">enrolled_student = #{enrolledStudent},</if>
         </trim>
         where course_id = #{courseId}
     </update>
@@ -83,10 +97,4 @@
             #{courseId}
         </foreach>
     </delete>
-
-    <select id="selectStuCourseByCourseCode" parameterType="String" resultMap="StuCourseResult">
-        <include refid="selectStuCourseVo"/>
-        where course_code = #{courseCode}
-    </select>
-
 </mapper>

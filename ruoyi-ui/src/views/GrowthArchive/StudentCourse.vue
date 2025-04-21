@@ -120,15 +120,20 @@
         <el-table-column label="课程名称" align="center" prop="courseName" min-width="200" />
         <el-table-column label="开课院系" align="center" prop="academy" min-width="120"/>
         <el-table-column label="授课教师" align="center" prop="teacherName" min-width="140" />
-        <el-table-column label="学分值" align="center" prop="credit" min-width="100">
+        <el-table-column label="学分值" align="center" prop="credit" min-width="80">
           <template slot-scope="{row}">
             <span class="credit-badge">{{ row.credit }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="总课时数" align="center" prop="courseHours" min-width="120">
+        <el-table-column label="总课时数" align="center" prop="courseHours" min-width="90">
           <template slot-scope="{row}">
             <span class="credit-badge">{{ row.courseHours }}</span>
           </template>
+        </el-table-column>
+        <el-table-column label="课程容量" align="center" prop="courseCapacity" min-width="90" >
+        <template slot-scope="{row}">
+          <span class="credit-badge">{{ row.courseCapacity }}</span>
+        </template>
         </el-table-column>
         <el-table-column label="课程类型" align="center" min-width="120">
           <template slot-scope="{row}">
@@ -142,7 +147,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template slot-scope="scope">
             <el-button
               size="mini"
@@ -306,7 +311,8 @@ export default {
         courseCategory: null,
         teacherName: null,
         academy: null,
-        courseHours: null
+        courseHours: null,
+        courseCapacity:null
       },
       // 用户导入参数
       upload: {
@@ -384,7 +390,8 @@ export default {
         courseCategory: null,
         teacherName: null,
         academy: null,
-        courseHours: null
+        courseHours: null,
+        courseCapacity:null
       };
       this.resetForm("form");
     },

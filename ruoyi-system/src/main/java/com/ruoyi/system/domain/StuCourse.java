@@ -14,31 +14,40 @@ public class StuCourse extends BaseEntity
     private Long courseId;
 
     /** 课程唯一编号（如CS101） */
-    @Excel(name = "课程代码")
+    @Excel(name = "课程代码", readConverterExp = "如=CS101")
     private String courseCode;
 
     /** 课程全称 */
     @Excel(name = "课程名称")
     private String courseName;
 
-    /** 开课院系 */
-    @Excel(name = "开课院系")
-    private String academy;
+    /** 学分值 */
+    @Excel(name = "学分")
+    private Long credit;
+
+    /** 课程类型 */
+    @Excel(name = "课程类型", readConverterExp = "如必修/选修/通识/特色课")
+    private String courseCategory;
 
     /** 授课教师 */
     @Excel(name = "授课教师")
     private String teacherName;
 
-    /** 学分值 */
-    @Excel(name = "学分值")
-    private Long credit;
+    /** 开课院系 */
+    @Excel(name = "开课院系")
+    private String academy;
 
     /** 总课时数 */
+    @Excel(name = "总课时数")
     private Integer courseHours;
 
-    /** 课程类型 */
-    @Excel(name = "课程类型")
-    private String courseCategory;
+    /** 课程容量 */
+    @Excel(name = "课程容量")
+    private Long courseCapacity;
+
+    /** 当前选择人数 */
+    @Excel(name = "当前选择人数")
+    private Long enrolledStudent;
 
     public void setCourseId(Long courseId)
     {
@@ -70,7 +79,6 @@ public class StuCourse extends BaseEntity
     public void setCredit(Long credit)
     {
         this.credit = credit;
-        setCourseHours((int) (credit * 12));
     }
 
     public Long getCredit()
@@ -113,7 +121,24 @@ public class StuCourse extends BaseEntity
     {
         return courseHours;
     }
+    public void setCourseCapacity(Long courseCapacity)
+    {
+        this.courseCapacity = courseCapacity;
+    }
 
+    public Long getCourseCapacity()
+    {
+        return courseCapacity;
+    }
+    public void setEnrolledStudent(Long enrolledStudent)
+    {
+        this.enrolledStudent = enrolledStudent;
+    }
+
+    public Long getEnrolledStudent()
+    {
+        return enrolledStudent;
+    }
 
     @Override
     public String toString() {
@@ -126,6 +151,8 @@ public class StuCourse extends BaseEntity
                 .append("teacherName", getTeacherName())
                 .append("academy", getAcademy())
                 .append("courseHours", getCourseHours())
+                .append("courseCapacity", getCourseCapacity())
+                .append("enrolledStudent", getEnrolledStudent())
                 .toString();
     }
 }
