@@ -1,30 +1,33 @@
 <template>
   <div class="navbar">
-    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
+    <hamburger id="hamburger-container" :is-active="sidebar.opened" class="hamburger-container"
+               @toggleClick="toggleSideBar"/>
     <breadcrumb id="breadcrumb-container" class="breadcrumb-container" v-if="!topNav"/>
     <top-nav id="topmenu-container" class="topmenu-container" v-if="topNav"/>
-    <search id="header-search" class="right-menu-item" />
+    <search id="header-search" class="right-menu-item"/>
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-<span class="user-info" v-if="userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'&&this.splitFlow!=='不可变更专业'">
+<span class="user-info"
+      v-if="userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'&&this.splitFlow!=='不可变更专业'">
   <span class="label">书院：</span>{{ department }}
   <span class="label">系统内专业：</span>{{ specialty }}
   <span class="label">招生录取专业：</span>{{ major }}
   <span class="label">分流形式：</span>{{ splitFlow }}
 </span>
-        <span class="user-info" v-if="userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'&&this.splitFlow==='不可变更专业'">
+        <span class="user-info"
+              v-if="userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'&&this.splitFlow==='不可变更专业'">
   <span class="label">书院：</span>{{ department }}
   <span class="label">系统内专业：</span>{{ specialty }}
   <span class="label">分流形式：</span>{{ splitFlow }}
 </span>
-        <search id="header-search" class="right-menu-item" />
-        <screenfull id="screenfull" class="right-menu-item hover-effect" />
+        <search id="header-search" class="right-menu-item"/>
+        <screenfull id="screenfull" class="right-menu-item hover-effect"/>
       </template>
 
       <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
         <div class="avatar-wrapper">
           <img :src="avatar" class="user-avatar">
-          <i class="el-icon-caret-bottom" />
+          <i class="el-icon-caret-bottom"/>
         </div>
         <el-dropdown-menu slot="dropdown">
           <router-link to="/user/profile">
@@ -43,7 +46,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import {mapGetters} from 'vuex'
 import TopNav from '@/components/TopNav'
 import Hamburger from '@/components/Hamburger'
 import Screenfull from '@/components/Screenfull'
@@ -60,8 +63,8 @@ export default {
       department: '',
       major: '',
       specialty: '',
-      splitFlow:'',
-      specialClass:''
+      splitFlow: '',
+      specialClass: ''
     };
   },
   components: {
@@ -100,7 +103,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.userName)
     this.initializeUserData();
   },
   methods: {
@@ -113,7 +115,13 @@ export default {
           this.studentName = studentInfo.studentName;
           this.department = studentInfo.academy;
           this.major = studentInfo.major;
-          this.splitFlow = studentInfo.divertForm;
+          if (studentInfo.divertForm === '可类内任选，并转专业') {
+            this.splitFlow = '可类内任选'
+          } else if (studentInfo.divertForm === '可类内任选，并转专业') {
+            this.splitFlow = '可类内任选'
+          } else if (studentInfo.divertForm === '可域内任选，并转专业') {
+            this.splitFlow = '可域内任选'
+          }else this.splitFlow = studentInfo.divertForm;
           this.specialty = studentInfo.originalSystemMajor;
           if (studentInfo.innovationClass === 1) {
             this.specialClass = '是';
@@ -135,7 +143,8 @@ export default {
         this.$store.dispatch('LogOut').then(() => {
           location.href = '/index';
         })
-      }).catch(() => {});
+      }).catch(() => {
+      });
     },
 
   }
@@ -149,7 +158,7 @@ export default {
   overflow: hidden;
   position: relative;
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
 
   .hamburger-container {
     line-height: 46px;
@@ -157,12 +166,13 @@ export default {
     float: left;
     cursor: pointer;
     transition: background .3s;
-    -webkit-tap-highlight-color:transparent;
+    -webkit-tap-highlight-color: transparent;
 
     &:hover {
       background: rgba(0, 0, 0, .025)
     }
   }
+
   .user-info {
     display: inline-block;
     font-size: 14px;

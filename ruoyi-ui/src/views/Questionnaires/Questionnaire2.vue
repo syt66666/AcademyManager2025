@@ -209,7 +209,6 @@ export default {
       this.splitFlow = studentInfo.divertForm;
       this.systemMajor = studentInfo.originalSystemMajor;
       this.specialClass = studentInfo.innovationClass;
-      console.log(studentInfo)
       this.setNumBasedOnAcademy(this.academy);//得到书院对应num,用于问卷选项加载
       this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
       this.setNumBasedOnSpecialty(this.systemMajor);//得到专业类别对应num3,用于问卷选项加载
@@ -769,13 +768,11 @@ export default {
     },
     // 处理选项点击事件
     handleOptionClick(option, index) {
-      // console.log(this.num4)
       //记录最后一次点击的内容
       this.finalAnswerText = option.text;
       if (this.finalAnswerText === '保持现有专业') {
         this.finalAnswerText = this.major;
       }
-      console.log("最后一次点击内容：" + this.finalAnswerText);
       this.$set(this.selectedOptions, index, option.id);
       this.completed = option.next === null;
       this.currentDisplay = this.currentDisplay.slice(0, index + 1);
