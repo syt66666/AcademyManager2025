@@ -5,7 +5,7 @@
         <div class="question-box">
           <h2>{{ index + 1 }}. {{ question.text }}</h2>
           <div class="options">
-            <label v-for="option in getFilteredOptions(question.options)" :key="option.id">
+            <label v-for="option in (question.options || [])" :key="option.id">
               <input
                 type="radio"
                 :value="option.id"
@@ -23,7 +23,7 @@
       <div v-if="showConfirmDialogFlag" class="dialog-container">
         <div class="dialog-box">
           <h2>确认提交</h2>
-          <p>您确定要提交问卷吗？</p>
+          <p>您确定要提交问卷吗？您选择的专业是：{{ this.finalAnswerText }}</p>
           <div class="dialog-footer">
             <el-button @click="handleCancel">取消</el-button>
             <el-button type="primary" @click="submitQuestionnaire" class="confirm-button">确认提交</el-button>
@@ -59,11 +59,8 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
-      finalAnswerText: ' ', // 分流的专业选择
-      finalAnswerText2: ' ', // 转专业的书院选择
-      finalAnswerText3: ' ',//转专业的专业选择
-      finalAnswerText4: 0,//分流类型记录
-      finalAnswerText5: 0,//转专业类型记录
+      finalAnswerText: '', // 分流的专业选择
+      finalAnswerText2: 0,//分流类型记录
       userName: store.state.user.name, // 获取用户名
       splitFlow: '', // 分流形式
       num: null, // 转换书院信息
@@ -78,7 +75,10 @@ export default {
   methods: {
     //过滤掉专业括号内容
     filterText(text) {
-      return text.replace(/（.*?）|\(.*?\)/g, '').trim();
+      if(text!=="车辆工程（英语强化）") {
+        return text.replace(/（.*?）|\(.*?\)/g, '').trim();
+      }
+      else return text;
     },
     //设置num1值，书院的对应值
     setNumBasedOnAcademy(academy) {
@@ -131,6 +131,9 @@ export default {
           break;
         case '智能制造工程':
           this.num2 = 16;
+          break;
+        case '设计学类':
+          this.num2 = 17;
           break;
         default:
           this.num2 = null;
@@ -207,7 +210,6 @@ export default {
       this.systemMajor = studentInfo.originalSystemMajor;
       this.specialClass = studentInfo.innovationClass;
       console.log(studentInfo)
-
       this.setNumBasedOnAcademy(this.academy);//得到书院对应num,用于问卷选项加载
       this.setNumBasedOnMajor(this.major);//得到专业对应num2,用于问卷选项加载
       this.setNumBasedOnSpecialty(this.systemMajor);//得到专业类别对应num3,用于问卷选项加载
@@ -221,13 +223,13 @@ export default {
       if (this.specialClass === 0) {
         switch (this.splitFlow) {
           case '仅可转专业':
-            this.questionnaire = this.getQuestionnaireA();
+            this.questionnaire = this.getQuestionnaire();
             break;
           case '可类内任选，并转专业':
             this.questionnaire = this.getQuestionnaireB();
             break;
           case '可类内任选，不能转专业':
-            this.questionnaire = this.getQuestionnaireC();
+            this.questionnaire = this.getQuestionnaireB();
             break;
           case '可域内任选，并转专业':
             this.questionnaire = this.getQuestionnaireD();
@@ -250,7 +252,7 @@ export default {
           id: 1,
           text: '您的分流形式是 [单选题]',
           options: [
-            {id: 1, text: '不可变更专业', next: null},
+            {id: 1, text: '保持现有专业', next: null},
           ]
         },
         {
@@ -259,143 +261,6 @@ export default {
           options: []
         }
       ];
-    },
-    // 只可转专业的学生问卷
-    getQuestionnaireA() {
-      this.filter = 1;
-      return [
-        {
-          id: 1,
-          text: '如果满足要求，您是否决定转专业？ [单选题]',
-          options: [
-            {id: 1, text: '是', next: 2},
-            {id: 2, text: '否', next: null},
-          ]
-        },
-        {
-          id: 2,
-          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题]',
-          options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 3},
-            {id: 2, text: '伯川书院——智能制造学域', next: 4},
-            {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 9},
-
-          ]
-        },
-        {
-          id: 3,
-          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '化学工程与工艺', next: null},
-            {id: 2, text: '精细化工', next: null},
-            {id: 3, text: '制药工程', next: null},
-            {id: 4, text: '高分子材料与工程', next: null},
-            {id: 5, text: '安全工程', next: null},
-            {id: 6, text: '过程装备与控制工程', next: null},
-            {id: 7, text: '环境工程', next: null},
-            {id: 8, text: '环境科学', next: null},
-            {id: 9, text: '生物工程', next: null}
-          ]
-        },
-        {
-          id: 4,
-          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '智能制造工程', next: null},
-            {id: 2, text: '能源与动力工程', next: null},
-            {id: 3, text: '机械设计制造及其自动化', next: null},
-            {id: 4, text: '车辆工程（英语强化）', next: null},
-            {id: 5, text: '测控技术与仪器', next: null},
-            {id: 6, text: '金属材料工程', next: null},
-            {id: 7, text: '功能材料', next: null},
-            {id: 8, text: '材料成型及控制工程', next: null},
-            {id: 9, text: '生物医学工程', next: null}
-          ]
-        },
-        {
-          id: 5,
-          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '数学与应用数学', next: null},
-            {id: 2, text: '信息与计算科学', next: null}
-          ]
-        },
-        {
-          id: 6,
-          text: '请在 令希书院——智能建造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '工程力学', next: null},
-            {id: 2, text: '飞行器设计与工程', next: null},
-            {id: 3, text: '船舶与海洋工程', next: null},
-            {id: 4, text: '智能建造', next: null},
-            {id: 5, text: '水利水电工程', next: null},
-            {id: 6, text: '港口航道与海岸工程', next: null},
-            {id: 7, text: '海洋资源开发技术', next: null},
-            {id: 8, text: '交通工程', next: null},
-            {id: 9, text: '工程管理', next: null},
-            {id: 10, text: '建筑环境与能源应用工程', next: null},
-            {id: 11, text: '土木工程', next: null}
-          ]
-        },
-        {
-          id: 7,
-          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '金融学', next: null},
-            {id: 2, text: '工商管理', next: null},
-            {id: 3, text: '物流管理', next: null},
-            {id: 4, text: '国际经济与贸易', next: null},
-            {id: 5, text: '知识产权', next: null},
-            {id: 6, text: '公共事业管理', next: null},
-            {id: 7, text: '马克思主义理论', next: null},
-            {id: 8, text: '哲学', next: null},
-            {id: 9, text: '广播电视学', next: null},
-            {id: 10, text: '汉语言文学', next: null},
-            {id: 11, text: '英语', next: null},
-            {id: 12, text: '翻译', next: null},
-            {id: 13, text: '日语', next: null},
-            {id: 14, text: '建筑学', next: null},
-            {id: 15, text: '城乡规划', next: null},
-            {id: 16, text: '工业设计', next: null},
-            {id: 17, text: '视觉传达设计', next: null},
-            {id: 18, text: '环境设计', next: null},
-            {id: 19, text: '雕塑', next: null},
-          ]
-        },
-        {
-          id: 8,
-          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '电气工程及其自动化', next: null},
-            {id: 2, text: '自动化', next: null},
-            {id: 3, text: '电子信息工程', next: null},
-            {id: 4, text: '计算机科学与技术', next: null},
-            {id: 555, text: '生物医学工程', next: null},
-            {id: 6, text: '光电信息科学与工程', next: null},
-            {id: 7, text: '大数据管理与应用', next: null},
-            {id: 8, text: '信息管理与信息系统', next: null}
-          ]
-        },
-        {
-          id: 9,
-          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '软件工程', next: null},
-            {id: 2, text: '网络工程', next: null},
-            {id: 3, text: '集成电路设计与集成系统', next: null},
-            {id: 4, text: '电子科学与技术', next: null}
-          ]
-        },
-        {
-          id: 999,
-          text: '问卷结束，感谢您的参与！',
-          options: []
-        }
-      ]
     },
     //类内任选，并转专业的学生问卷
     getQuestionnaireB() {
@@ -405,222 +270,95 @@ export default {
           id: 1,
           text: '您的分流形式是 [单选题] ',
           options: [
-            {id: 1, text: '类内任选专业，并转专业', next: this.num2},
-          ]
-        },
-        {
-          id: 20,
-          text: '如果满足要求，您是否决定转专业？ [单选题] ',
-          options: [
-            {id: 1, text: '是', next: 2},
-            {id: 2, text: '否', next: null},
-          ]
-        },
-        {
-          id: 2,
-          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题] ',
-          options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 3},
-            {id: 2, text: '伯川书院——智能制造学域 ', next: 4},
-            {id: 4, text: '令希书院——智能建造学域', next: 6},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 8},
-            {id: 5, text: '厚德书院——人文社科学域', next: 7},
-            {id: 3, text: '笃学书院——理科强基学域', next: 5},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 9}
-          ]
-        },
-        {
-          id: 3,
-          text: '请在 大煜书院——物质创造学域 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '化学工程与工艺', next: null},
-            {id: 2, text: '精细化工', next: null},
-            {id: 3, text: '制药工程', next: null},
-            {id: 4, text: '高分子材料与工程', next: null},
-            {id: 5, text: '安全工程', next: null},
-            {id: 6, text: '过程装备与控制工程', next: null},
-            {id: 7, text: '环境工程', next: null},
-            {id: 8, text: '环境科学', next: null},
-            {id: 9, text: '生物工程', next: null}
-          ]
-        },
-        {
-          id: 4,
-          text: '请在 伯川书院——智能制造学域 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '智能制造工程', next: null},
-            {id: 2, text: '能源与动力工程', next: null},
-            {id: 3, text: '机械设计制造及其自动化', next: null},
-            {id: 4, text: '车辆工程（英语强化）', next: null},
-            {id: 5, text: '测控技术与仪器', next: null},
-            {id: 6, text: '金属材料工程', next: null},
-            {id: 7, text: '功能材料', next: null},
-            {id: 8, text: '材料成型及控制工程', next: null},
-            {id: 9, text: '生物医学工程', next: null}
-          ]
-        },
-        {
-          id: 5,
-          text: '请在 笃学书院——理科强基学域 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '数学与应用数学', next: null},
-            {id: 2, text: '信息与计算科学', next: null}
-          ]
-        },
-        {
-          id: 6,
-          text: '请在 令希书院——智能建造学域 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '工程力学', next: null},
-            {id: 2, text: '飞行器设计与工程', next: null},
-            {id: 3, text: '船舶与海洋工程', next: null},
-            {id: 4, text: '智能建造', next: null},
-            {id: 5, text: '水利水电工程', next: null},
-            {id: 6, text: '港口航道与海岸工程', next: null},
-            {id: 7, text: '海洋资源开发技术', next: null},
-            {id: 8, text: '交通工程', next: null},
-            {id: 9, text: '工程管理', next: null},
-            {id: 10, text: '建筑环境与能源应用工程', next: null},
-            {id: 11, text: '土木工程', next: null}
-          ]
-        },
-        {
-          id: 7,
-          text: '请在 厚德书院——人文社科学域 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '金融学', next: null},
-            {id: 2, text: '工商管理', next: null},
-            {id: 3, text: '物流管理', next: null},
-            {id: 4, text: '国际经济与贸易', next: null},
-            {id: 5, text: '知识产权', next: null},
-            {id: 6, text: '公共事业管理', next: null},
-            {id: 7, text: '马克思主义理论', next: null},
-            {id: 8, text: '哲学', next: null},
-            {id: 9, text: '广播电视学', next: null},
-            {id: 10, text: '汉语言文学', next: null},
-            {id: 11, text: '英语', next: null},
-            {id: 12, text: '翻译', next: null},
-            {id: 13, text: '日语', next: null},
-            {id: 14, text: '建筑学', next: null},
-            {id: 15, text: '城乡规划', next: null},
-            {id: 16, text: '工业设计', next: null},
-            {id: 17, text: '视觉传达设计', next: null},
-            {id: 18, text: '环境设计', next: null},
-            {id: 19, text: '雕塑', next: null}
-
-          ]
-        },
-        {
-          id: 8,
-          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '电气工程及其自动化', next: null},
-            {id: 2, text: '自动化', next: null},
-            {id: 3, text: '电子信息工程', next: null},
-            {id: 4, text: '计算机科学与技术', next: null},
-            {id: 5, text: '生物医学工程', next: null},
-            {id: 6, text: '光电信息科学与工程', next: null},
-            {id: 7, text: '大数据管理与应用', next: null},
-            {id: 8, text: '信息管理与信息系统', next: null}
-          ]
-        },
-        {
-          id: 9,
-          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题] ',
-          options: [
-            {id: 1, text: '软件工程', next: null},
-            {id: 2, text: '网络工程', next: null},
-            {id: 3, text: '集成电路设计与集成系统', next: null},
-            {id: 4, text: '电子科学与技术', next: null}
+            {id: 1, text: '类内任选专业', next: this.num2},
           ]
         },
         {
           id: 10,
           text: '请您选择 材料类 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '金属材料工程', next: 20},
-            {id: 222, text: '功能材料', next: 20},
-            {id: 333, text: '材料成型及控制工程', next: 20}
+            {id: 111, text: '金属材料工程', next: null},
+            {id: 222, text: '功能材料', next: null},
+            {id: 333, text: '材料成型及控制工程', next: null}
           ]
         },
         {
           id: 11,
           text: '请您选择 管理科学与工程类 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '大数据管理与应用', next: 20},
-            {id: 222, text: '信息管理与信息系统', next: 20}
+            {id: 111, text: '大数据管理与应用', next: null},
+            {id: 222, text: '信息管理与信息系统', next: null},
+            {id: 333, text: '国际经济与贸易', next: null},
+            {id: 444, text: '金融学', next: null},
+            {id: 555, text: '知识产权', next: null},
+            {id: 666, text: '工商管理', next: null},
+            {id: 777, text: '物流管理', next: null}
           ]
         },
         {
           id: 12,
           text: '请您选择 化工与制药类 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '化学工程与工艺', next: 20},
-            {id: 222, text: '精细化工', next: 20},
-            {id: 333, text: '制药工程', next: 20},
-            {id: 444, text: '高分子材料与工程', next: 20},
-            {id: 555, text: '安全工程', next: 20}
+            {id: 111, text: '化学工程与工艺（电化学工程方向）', next: null},
+            {id: 222, text: '化学工程与工艺（材料化工方向）', next: null},
+            {id: 333, text: '化学工程与工艺（化学工程方向）', next: null},
+            {id: 444, text: '化学工程与工艺（化学工艺方向）', next: null},
+            {id: 555, text: '化学工程与工艺（催化化学与工程方向）', next: null},
+            {id: 666, text: '化学工程与工艺（智能化工方向）', next: null},
+            {id: 777, text: '精细化工', next: null},
+            {id: 888, text: '制药工程', next: null},
+            {id: 1111, text: '高分子材料与工程', next: null},
+            {id: 1222, text: '安全工程', next: null}
           ]
         },
         {
           id: 13,
           text: '请您选择 环境科学与工程类 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '环境科学', next: 20},
-            {id: 222, text: '环境工程', next: 20}
+            {id: 111, text: '环境科学', next: null},
+            {id: 222, text: '环境工程', next: null}
           ]
         },
         {
           id: 14,
           text: '请您选择 新闻传播学类 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '广播电视学', next: 20},
-            {id: 222, text: '汉语言文学', next: 20}
+            {id: 111, text: '广播电视学', next: null},
+            {id: 222, text: '汉语言文学', next: null}
           ]
         },
         {
           id: 15,
           text: ' 请您选择 智能建造 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '智能建造', next: 20},
-            {id: 222, text: '水利水电工程', next: 20},
-            {id: 333, text: '港口航道与海岸工程', next: 20},
-            {id: 444, text: '海洋资源开发技术', next: 20},
-            {id: 555, text: '交通工程', next: 20},
-            {id: 666, text: '工程管理', next: 20},
-            {id: 777, text: '建筑环境与能源应用工程', next: 20},
-            {id: 888, text: '土木工程', next: 20}
+            {id: 111, text: '智能建造', next: null},
+            {id: 222, text: '水利水电工程', next: null},
+            {id: 333, text: '港口航道与海岸工程', next: null},
+            {id: 444, text: '海洋资源开发技术', next: null},
+            {id: 555, text: '交通工程', next: null},
+            {id: 666, text: '工程管理', next: null},
+            {id: 777, text: '建筑环境与能源应用工程', next: null},
+            {id: 888, text: '土木工程', next: null}
           ]
         },
         {
           id: 16,
           text: '请您选择 智能制造工程 内的意向专业 [单选题] ',
           options: [
-            {id: 111, text: '智能制造工程', next: 20},
-            {id: 222, text: '能源与动力工程', next: 20},
-            {id: 333, text: '机械设计制造及其自动化', next: 20},
-            {id: 444, text: '车辆工程（英语强化）', next: 20},
-            {id: 555, text: '测控技术与仪器', next: 20},
-            {id: 666, text: '金属材料工程', next: 20},
-            {id: 777, text: '功能材料', next: 20},
-            {id: 888, text: '材料成型及控制工程', next: 20},
-            {id: 999, text: '生物医学工程', next: 20}
+            {id: 111, text: '智能制造工程', next: null},
+            {id: 222, text: '能源与动力工程', next: null},
+            {id: 333, text: '机械设计制造及其自动化', next: null},
+            {id: 444, text: '车辆工程（英语强化）', next: null},
+            {id: 555, text: '测控技术与仪器', next: null},
+            {id: 666, text: '金属材料工程', next: null},
+            {id: 777, text: '功能材料', next: null},
+            {id: 888, text: '材料成型及控制工程', next: null},
+            {id: 999, text: '生物医学工程', next: null}
           ]
         },
         {
-          id: 999,
-          text: '问卷结束，感谢您的参与！',
-          options: []
-        }
-      ];
-    },
-    // 类内任选，不可转专业的学生问卷
-    getQuestionnaireC() {
-      this.filter = null;
-      return [
-        {
-          id: 1,
-          text: '请在类内进行专业选择 [单选题]',
+          id: 17,
+          text: '请您选择 设计学类 内的意向专业 [单选题]',
           options: [
             {id: 1, text: '视觉传达设计', next: null},
             {id: 2, text: '环境设计', next: null},
@@ -634,6 +372,7 @@ export default {
         }
       ];
     },
+
     // 域内任选的学生问卷
     getQuestionnaireD() {
       this.filter = 3;
@@ -643,187 +382,31 @@ export default {
           id: 1,
           text: '您的分流形式是 [单选题]',
           options: [
-            {id: 1, text: '域内任选专业，并转专业', next: this.num3},
-          ]
-        },
-        {
-          id: 20,
-          text: '如果满足要求，您是否决定转专业？ [单选题]',
-          options: [
-            {id: 1, text: '是', next: 2},
-            {id: 2, text: '否', next: null},
-          ]
-        },
-        {
-          id: 2,
-          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题]',
-          options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 14},
-            {id: 2, text: '伯川书院——智能制造学域', next: 15},
-            {id: 4, text: '令希书院——智能建造学域', next: 17},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 19},
-            {id: 5, text: '厚德书院——人文社科学域', next: 18},
-            {id: 3, text: '笃学书院——理科强基学域', next: 16},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 21}
+            {id: 1, text: '域内任选专业', next: this.num3},
           ]
         },
         {
           id: 3,
           text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
-            {id: 1, text: '化学工程与工艺', next: 20},
-            {id: 2, text: '精细化工', next: 20},
-            {id: 3, text: '制药工程', next: 20},
-            {id: 4, text: '高分子材料与工程', next: 20},
-            {id: 5, text: '安全工程', next: 20},
-            {id: 6, text: '过程装备与控制工程', next: 20},
-            {id: 7, text: '环境工程', next: 20},
-            {id: 8, text: '环境科学', next: 20},
-            {id: 9, text: '生物工程', next: 20}
+            {id: 1, text: '化学工程与工艺（电化学工程方向）', next: null},
+            {id: 2, text: '化学工程与工艺（材料化工方向）', next: null},
+            {id: 3, text: '化学工程与工艺（化学工程方向）', next: null},
+            {id: 4, text: '化学工程与工艺（化学工艺方向）', next: null},
+            {id: 5, text: '化学工程与工艺（催化化学与工程方向）', next: null},
+            {id: 6, text: '化学工程与工艺（智能化工方向）', next: null},
+            {id: 7, text: '精细化工', next: null},
+            {id: 8, text: '制药工程', next: null},
+            {id: 9, text: '高分子材料与工程', next: null},
+            {id: 10, text: '安全工程', next: null},
+            {id: 11, text: '过程装备与控制工程', next: null},
+            {id: 12, text: '环境工程', next: null},
+            {id: 13, text: '环境科学', next: null},
+            {id: 14, text: '生物工程', next: null}
           ]
         },
         {
           id: 4,
-          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '智能制造工程', next: 20},
-            {id: 2, text: '能源与动力工程', next: 20},
-            {id: 3, text: '机械设计制造及其自动化', next: 20},
-            {id: 4, text: '车辆工程（英语强化）', next: 20},
-            {id: 5, text: '测控技术与仪器', next: 20},
-            {id: 6, text: '金属材料工程', next: 20},
-            {id: 7, text: '功能材料', next: 20},
-            {id: 8, text: '材料成型及控制工程', next: 20},
-            {id: 9, text: '生物医学工程', next: 20}
-          ]
-        },
-        {
-          id: 5,
-          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '数学与应用数学', next: 20},
-            {id: 2, text: '信息与计算科学', next: 20}
-          ]
-        },
-        {
-          id: 6,
-          text: '请在 令希书院——智能建造学域 选择专业[单选题]',
-          options: [
-            {id: 1, text: '工程力学', next: 20},
-            {id: 2, text: '飞行器设计与工程', next: 20},
-            {id: 3, text: '船舶与海洋工程', next: 20},
-            {id: 4, text: '智能建造', next: 20},
-            {id: 5, text: '水利水电工程', next: 20},
-            {id: 6, text: '港口航道与海岸工程', next: 20},
-            {id: 7, text: '海洋资源开发技术', next: 20},
-            {id: 8, text: '交通工程', next: 20},
-            {id: 9, text: '工程管理', next: 20},
-            {id: 10, text: '建筑环境与能源应用工程', next: 20},
-            {id: 11, text: '土木工程', next: 20}
-          ]
-        },
-        {
-          id: 7,
-          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
-          options: [
-            {id: 5, text: '知识产权', next: 20},
-            {id: 6, text: '公共事业管理', next: 20},
-            {id: 7, text: '马克思主义理论', next: 20},
-            {id: 8, text: '哲学', next: 20},
-            {id: 9, text: '广播电视学', next: 20},
-            {id: 10, text: '汉语言文学', next: 20},
-            {id: 11, text: '英语', next: 20},
-            {id: 12, text: '翻译', next: 20},
-            {id: 13, text: '日语', next: 20},
-            {id: 14, text: '建筑学', next: 20},
-            {id: 15, text: '城乡规划', next: 20},
-            {id: 16, text: '工业设计', next: 20},
-            {id: 17, text: '视觉传达设计', next: 20},
-            {id: 18, text: '环境设计', next: 20},
-            {id: 19, text: '雕塑', next: 20}
-          ]
-        },
-        {
-          id: 8,
-          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '电气工程及其自动化', next: 20},
-            {id: 2, text: '自动化', next: 20},
-            {id: 3, text: '电子信息工程', next: 20},
-            {id: 4, text: '计算机科学与技术', next: 20},
-            {id: 5, text: '生物医学工程', next: 20},
-            {id: 6, text: '光电信息科学与工程', next: 20},
-            {id: 7, text: '大数据管理与应用', next: 20},
-            {id: 8, text: '信息管理与信息系统', next: 20}
-          ]
-        },
-        {
-          id: 9,
-          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '软件工程', next: 20},
-            {id: 2, text: '网络工程', next: 20},
-            {id: 3, text: '集成电路设计与集成系统', next: 20},
-            {id: 4, text: '电子科学与技术', next: 20}
-          ]
-        },
-        {
-          id: 10,
-          text: '请在 工商管理类 任选专业 [单选题]',
-          options: [
-            {id: 111, text: '金融学', next: 20},
-            {id: 222, text: '工商管理', next: 20},
-            {id: 333, text: '物流管理', next: 20},
-            {id: 444, text: '国际经济与贸易', next: 20},
-          ]
-        },
-        {
-          id: 11,
-          text: '请在 人文社科学域 任选专业 [单选题]',
-          options: [
-            {id: 111, text: '知识产权', next: 20},
-            {id: 222, text: '公共事业管理', next: 20},
-            {id: 333, text: '马克思主义理论', next: 20},
-            {id: 444, text: '哲学', next: 20},
-            {id: 555, text: '广播电视学', next: 20},
-            {id: 666, text: '汉语言文学', next: 20},
-          ]
-        },
-        {
-          id: 12,
-          text: '请在 英语、日语类 任选专业 [单选题]',
-          options: [
-            {id: 111, text: '英语', next: 20},
-            {id: 222, text: '翻译', next: 20},
-            {id: 333, text: '日语', next: 20},
-          ]
-        },
-        {
-          id: 13,
-          text: '请在 建筑类 任选专业 [单选题]',
-          options: [
-            {id: 111, text: '建筑学', next: 20},
-            {id: 222, text: '城乡规划', next: 20},
-            {id: 333, text: '工业设计', next: 20},
-          ]
-        },
-        {
-          id: 14,
-          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '化学工程与工艺', next: null},
-            {id: 2, text: '精细化工', next: null},
-            {id: 3, text: '制药工程', next: null},
-            {id: 4, text: '高分子材料与工程', next: null},
-            {id: 5, text: '安全工程', next: null},
-            {id: 6, text: '过程装备与控制工程', next: null},
-            {id: 7, text: '环境工程', next: null},
-            {id: 8, text: '环境科学', next: null},
-            {id: 9, text: '生物工程', next: null}
-          ]
-        },
-        {
-          id: 15,
           text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: null},
@@ -838,7 +421,7 @@ export default {
           ]
         },
         {
-          id: 16,
+          id: 5,
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
@@ -846,7 +429,7 @@ export default {
           ]
         },
         {
-          id: 17,
+          id: 6,
           text: '请在 令希书院——智能建造学域 选择专业[单选题]',
           options: [
             {id: 1, text: '工程力学', next: null},
@@ -863,13 +446,9 @@ export default {
           ]
         },
         {
-          id: 18,
+          id: 7,
           text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
-            {id: 1, text: '金融学', next: null},
-            {id: 2, text: '工商管理', next: null},
-            {id: 3, text: '物流管理', next: null},
-            {id: 4, text: '国际经济与贸易', next: null},
             {id: 5, text: '知识产权', next: null},
             {id: 6, text: '公共事业管理', next: null},
             {id: 7, text: '马克思主义理论', next: null},
@@ -888,7 +467,7 @@ export default {
           ]
         },
         {
-          id: 19,
+          id: 8,
           text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
@@ -902,13 +481,53 @@ export default {
           ]
         },
         {
-          id: 21,
+          id: 9,
           text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: null},
             {id: 2, text: '网络工程', next: null},
             {id: 3, text: '集成电路设计与集成系统', next: null},
             {id: 4, text: '电子科学与技术', next: null}
+          ]
+        },
+        {
+          id: 10,
+          text: '请在 工商管理类 任选专业 [单选题]',
+          options: [
+            {id: 111, text: '金融学', next: null},
+            {id: 222, text: '工商管理', next: null},
+            {id: 333, text: '物流管理', next: null},
+            {id: 444, text: '国际经济与贸易', next: null},
+          ]
+        },
+        {
+          id: 11,
+          text: '请在 人文社科学域 任选专业 [单选题]',
+          options: [
+            {id: 111, text: '知识产权', next: null},
+            {id: 222, text: '公共事业管理', next: null},
+            {id: 333, text: '马克思主义理论', next: null},
+            {id: 444, text: '哲学', next: null},
+            {id: 555, text: '广播电视学', next: null},
+            {id: 666, text: '汉语言文学', next: null},
+          ]
+        },
+        {
+          id: 12,
+          text: '请在 英语、日语类 任选专业 [单选题]',
+          options: [
+            {id: 111, text: '英语', next: null},
+            {id: 222, text: '翻译', next: null},
+            {id: 333, text: '日语', next: null},
+          ]
+        },
+        {
+          id: 13,
+          text: '请在 建筑类 任选专业 [单选题]',
+          options: [
+            {id: 111, text: '建筑学', next: null},
+            {id: 222, text: '城乡规划', next: null},
+            {id: 333, text: '工业设计', next: null},
           ]
         },
         {
@@ -927,7 +546,7 @@ export default {
           id: 1,
           text: '您的分流形式是 [单选题]',
           options: [
-            {id: 1, text: '域内任选专业，并转专业', next: 50},
+            {id: 1, text: '域内任选专业', next: 50},
           ]
         },
         {
@@ -939,147 +558,27 @@ export default {
           ]
         },
         {
-          id: 20,
-          text: '如果满足要求，您是否决定转专业？ [单选题]',
-          options: [
-            {id: 1, text: '是', next: 2},
-            {id: 2, text: '否', next: null},
-          ]
-        },
-        {
-          id: 2,
-          text: '如果您满足转专业要求您期望转入的书院-学域是 [单选题]',
-          options: [
-            {id: 1, text: '大煜书院——物质创造学域', next: 13},
-            {id: 2, text: '伯川书院——智能制造学域', next: 14},
-            {id: 4, text: '令希书院——智能建造学域', next: 16},
-            {id: 6, text: '知行书院——信息技术学域（一）', next: 18},
-            {id: 5, text: '厚德书院——人文社科学域', next: 17},
-            {id: 3, text: '笃学书院——理科强基学域', next: 15},
-            {id: 7, text: '求实书院——信息技术学域（二）', next: 19}
-          ]
-        },
-        {
           id: 3,
           text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
           options: [
-            {id: 1, text: '化学工程与工艺', next: 20},
-            {id: 2, text: '精细化工', next: 20},
-            {id: 3, text: '制药工程', next: 20},
-            {id: 4, text: '高分子材料与工程', next: 20},
-            {id: 5, text: '安全工程', next: 20},
-            {id: 6, text: '过程装备与控制工程', next: 20},
-            {id: 7, text: '环境工程', next: 20},
-            {id: 8, text: '环境科学', next: 20},
-            {id: 9, text: '生物工程', next: 20}
+            {id: 1, text: '化学工程与工艺（电化学工程方向）', next: null},
+            {id: 2, text: '化学工程与工艺（材料化工方向）', next: null},
+            {id: 3, text: '化学工程与工艺（化学工程方向）', next: null},
+            {id: 4, text: '化学工程与工艺（化学工艺方向）', next: null},
+            {id: 5, text: '化学工程与工艺（催化化学与工程方向）', next: null},
+            {id: 6, text: '化学工程与工艺（智能化工方向）', next: null},
+            {id: 7, text: '精细化工', next: null},
+            {id: 8, text: '制药工程', next: null},
+            {id: 9, text: '高分子材料与工程', next: null},
+            {id: 10, text: '安全工程', next: null},
+            {id: 11, text: '过程装备与控制工程', next: null},
+            {id: 12, text: '环境工程', next: null},
+            {id: 13, text: '环境科学', next: null},
+            {id: 14, text: '生物工程', next: null}
           ]
         },
         {
           id: 4,
-          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '智能制造工程', next: 20},
-            {id: 2, text: '能源与动力工程', next: 20},
-            {id: 3, text: '机械设计制造及其自动化', next: 20},
-            {id: 4, text: '车辆工程（英语强化）', next: 20},
-            {id: 5, text: '测控技术与仪器', next: 20},
-            {id: 6, text: '金属材料工程', next: 20},
-            {id: 7, text: '功能材料', next: 20},
-            {id: 8, text: '材料成型及控制工程', next: 20},
-            {id: 9, text: '生物医学工程', next: 20}
-          ]
-        },
-        {
-          id: 5,
-          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '数学与应用数学', next: 20},
-            {id: 2, text: '信息与计算科学', next: 20}
-          ]
-        },
-        {
-          id: 6,
-          text: '请在 令希书院——智能建造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '工程力学', next: 20},
-            {id: 2, text: '飞行器设计与工程', next: 20},
-            {id: 3, text: '船舶与海洋工程', next: 20},
-            {id: 4, text: '智能建造', next: 20},
-            {id: 5, text: '水利水电工程', next: 20},
-            {id: 6, text: '港口航道与海岸工程', next: 20},
-            {id: 7, text: '海洋资源开发技术', next: 20},
-            {id: 8, text: '交通工程', next: 20},
-            {id: 9, text: '工程管理', next: 20},
-            {id: 10, text: '建筑环境与能源应用工程', next: 20},
-            {id: 11, text: '土木工程', next: 20}
-          ]
-        },
-        {
-          id: 7,
-          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '金融学', next: 20},
-            {id: 2, text: '工商管理', next: 20},
-            {id: 3, text: '物流管理', next: 20},
-            {id: 4, text: '国际经济与贸易', next: 20},
-            {id: 5, text: '知识产权', next: 20},
-            {id: 6, text: '公共事业管理', next: 20},
-            {id: 7, text: '马克思主义理论', next: 20},
-            {id: 8, text: '哲学', next: 20},
-            {id: 9, text: '广播电视学', next: 20},
-            {id: 10, text: '汉语言文学', next: 20},
-            {id: 11, text: '英语', next: 20},
-            {id: 12, text: '翻译', next: 20},
-            {id: 13, text: '日语', next: 20},
-            {id: 14, text: '建筑学', next: 20},
-            {id: 15, text: '城乡规划', next: 20},
-            {id: 16, text: '工业设计', next: 20},
-            {id: 17, text: '视觉传达设计', next: 20},
-            {id: 18, text: '环境设计', next: 20},
-            {id: 19, text: '雕塑', next: 20}
-          ]
-        },
-        {
-          id: 8,
-          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '电气工程及其自动化', next: 20},
-            {id: 2, text: '自动化', next: 20},
-            {id: 3, text: '电子信息工程', next: 20},
-            {id: 4, text: '计算机科学与技术', next: 20},
-            {id: 5, text: '生物医学工程', next: 20},
-            {id: 6, text: '光电信息科学与工程', next: 20},
-            {id: 7, text: '大数据管理与应用', next: 20},
-            {id: 8, text: '信息管理与信息系统', next: 20}
-          ]
-        },
-        {
-          id: 9,
-          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '软件工程', next: 20},
-            {id: 2, text: '网络工程', next: 20},
-            {id: 3, text: '集成电路设计与集成系统', next: 20},
-            {id: 4, text: '电子科学与技术', next: 20}
-          ]
-        },
-        {
-          id: 13,
-          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
-          options: [
-            {id: 1, text: '化学工程与工艺', next: null},
-            {id: 2, text: '精细化工', next: null},
-            {id: 3, text: '制药工程', next: null},
-            {id: 4, text: '高分子材料与工程', next: null},
-            {id: 5, text: '安全工程', next: null},
-            {id: 6, text: '过程装备与控制工程', next: null},
-            {id: 7, text: '环境工程', next: null},
-            {id: 8, text: '环境科学', next: null},
-            {id: 9, text: '生物工程', next: null}
-          ]
-        },
-        {
-          id: 14,
           text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '智能制造工程', next: null},
@@ -1094,7 +593,7 @@ export default {
           ]
         },
         {
-          id: 15,
+          id: 5,
           text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '数学与应用数学', next: null},
@@ -1102,7 +601,7 @@ export default {
           ]
         },
         {
-          id: 16,
+          id: 6,
           text: '请在 令希书院——智能建造学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '工程力学', next: null},
@@ -1119,7 +618,7 @@ export default {
           ]
         },
         {
-          id: 17,
+          id: 7,
           text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
           options: [
             {id: 1, text: '金融学', next: null},
@@ -1144,7 +643,7 @@ export default {
           ]
         },
         {
-          id: 18,
+          id: 8,
           text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
           options: [
             {id: 1, text: '电气工程及其自动化', next: null},
@@ -1158,7 +657,7 @@ export default {
           ]
         },
         {
-          id: 19,
+          id: 9,
           text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
           options: [
             {id: 1, text: '软件工程', next: null},
@@ -1273,7 +772,10 @@ export default {
       // console.log(this.num4)
       //记录最后一次点击的内容
       this.finalAnswerText = option.text;
-      this.finalAnswerText3 = option.text;
+      if (this.finalAnswerText === '保持现有专业') {
+        this.finalAnswerText = this.major;
+      }
+      console.log("最后一次点击内容：" + this.finalAnswerText);
       this.$set(this.selectedOptions, index, option.id);
       this.completed = option.next === null;
       this.currentDisplay = this.currentDisplay.slice(0, index + 1);
@@ -1298,84 +800,33 @@ export default {
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
       this.showEndMessage = true; // 显示结束弹窗
-      if (this.splitFlow === "不可变更专业") {
-        this.finalAnswerText = this.systemMajor;
-        this.finalAnswerText2 = this.academy;
-        this.finalAnswerText3 = this.finalAnswerText;
-        this.finalAnswerText4 = 1;
-        this.finalAnswerText5 = 1;
-        this.finalAnswerText = this.filterText(this.finalAnswerText);
+      //不可+仅可转专业，均为保持当前专业
+      if (this.splitFlow === "不可变更专业" || this.splitFlow === "仅可转专业") {
+        this.finalAnswerText2 = 1;
       }
-      //第一种问卷(测试完成)
-      else if (this.finalAnswerText === "否" && this.splitFlow === "仅可转专业") {
-        this.finalAnswerText = this.major;
-        this.finalAnswerText2 = this.academy;
-        this.finalAnswerText3 = this.finalAnswerText;
-        this.finalAnswerText4 = 1;
-        this.finalAnswerText5 = 1;
-      } else if (this.splitFlow === "仅可转专业") {
-        this.finalAnswerText = this.major;
-        this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4 = 1;
-        this.finalAnswerText5 = 5;
+      //类内任选
+      else if (this.splitFlow === "可类内任选，并转专业") {
+        // this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
+        this.finalAnswerText2 = 3;
       }
 
-      //第二种问卷（测试完成）
-      else if (this.splitFlow === "可类内任选，并转专业" && this.finalAnswerText === "否") {
-        this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
-        this.finalAnswerText2 = this.academy;
-        this.finalAnswerText3 = this.finalAnswerText;
-        this.finalAnswerText4 = 3;
-        this.finalAnswerText5 = 3;
-      } else if (this.splitFlow === "可类内任选，并转专业") {//转专业
-        this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
-        this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4 = 3;
-        this.finalAnswerText5 = 5;
+      //域内非创新班
+      else if (this.splitFlow === "可域内任选，并转专业" && this.specialClass === 0) {
+        //不转专业
+        // this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
+        this.finalAnswerText2 = 2;
       }
 
-      //第三种问卷（测试完成）
-      else if (this.splitFlow === "可类内任选，不能转专业") {
-        this.finalAnswerText2 = this.academy;
-        this.finalAnswerText3 = this.finalAnswerText;
-        this.finalAnswerText4 = 3;
-      }
-
-      //第四种问卷（测试完成）
-      else if (this.splitFlow === "可域内任选，并转专业" && this.finalAnswerText === "否" && this.specialClass === 0) {//不转专业
-        this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-        this.finalAnswerText2 = this.academy;
-        this.finalAnswerText3 = this.finalAnswerText;
-        this.finalAnswerText4 = 2;
-        this.finalAnswerText5 = 2;
-      } else if (this.splitFlow === "可域内任选，并转专业" && this.specialClass === 0) {
-        this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-        this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-        this.finalAnswerText4 = 2;
-        this.finalAnswerText5 = 5;
-      }
-
-      //第五种问卷
-      else if (this.specialClass === 1 && this.finalAnswerText === "否") {//域内任选 不转专业
-        this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-        this.finalAnswerText2 = this.academy;
-        this.finalAnswerText3 = this.finalAnswerText;
-        this.finalAnswerText4 = 2;
-        this.finalAnswerText5 = 2;
-      } else if (this.specialClass === 1) {
-        if (this.getLastAnswerForQuestion(50).selectedOptionText === "否") {//创新班任选
-          this.finalAnswerText = this.getLastAnswerForQuestion(this.num4).selectedOptionText;
-          this.finalAnswerText2 = this.academy;
-          this.finalAnswerText3 = this.finalAnswerText;
-          this.finalAnswerText4 = 4;
-          this.finalAnswerText5 = 4;
-          this.finalAnswerText = this.filterText(this.finalAnswerText);
-
-        } else if (this.getLastAnswerForQuestion(50).selectedOptionText === "是") {//域内选择，并且转专业
-          this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-          this.finalAnswerText2 = this.getLastAnswerForQuestion(2).selectedOptionText;
-          this.finalAnswerText4 = 2;
-          this.finalAnswerText5 = 5;
+      //域内创新班
+      else if (this.specialClass === 1) {
+        if (this.getLastAnswerForQuestion(50).selectedOptionText === "是") {
+          //放弃创新班
+          // this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
+          this.finalAnswerText2 = 2;
+        } else if (this.getLastAnswerForQuestion(50).selectedOptionText === "否") {
+          //不放弃创新班
+          //   this.finalAnswerText = this.getLastAnswerForQuestion(this.num4).selectedOptionText;
+          this.finalAnswerText2 = 4;
         }
       }
       this.submitData();
@@ -1397,76 +848,7 @@ export default {
     handleCancel() {
       this.showConfirmDialogFlag = false;
     },
-
-    getFilteredOptions(options) {
-      // 根据 academy 和 major 字段来过滤选项，隐藏含有 academy 或 major 的选项
-      if (this.major.includes('类') || this.academy === '厚德书院') {
-        options = options.filter(option => option.text !== '保持现有专业');
-      }
-      return options.filter(option => !this.isOptionHidden(option));
-    },
-
-    isOptionHidden(option) {
-      // 如果选项的文本包含当前的 academy 或 major，返回 true（表示隐藏该选项）
-      if (this.filter === 1 && !['555'].includes(option.id.toString())) {
-        return option.text === this.major;
-      } else if (this.filter === 2 && !['111', '222', '333', '444', '555', '666', '777', '888', '999'].includes(option.id.toString())) {
-        switch (this.num2) {
-          case 10:
-            return ['金属材料工程', '功能材料', '材料成型及控制工程'].some(text => option.text.includes(text));
-          case 11:
-            return ['大数据管理与应用', '信息管理与信息系统'].some(text => option.text.includes(text));
-          case 12:
-            return ['化学工程与工艺', '精细化工', '制药工程', '高分子材料与工程', '安全工程'].some(text => option.text.includes(text));
-          case 13:
-            return ['环境科学', '环境工程'].some(text => option.text.includes(text));
-          case 14:
-            return ['广播电视学', '汉语言文学'].some(text => option.text.includes(text));
-          case 15:
-            return ['智能建造', '水利水电工程', '港口航道与海岸工程', '海洋资源开发技术', '交通工程', '工程管理', '建筑环境与能源应用工程', '土木工程'].some(text => option.text === text);
-          case 16:
-            return option.text.includes('伯川书院')
-        }
-      } else if (this.filter === 3) {
-        return option.text.includes(this.academy);
-      } else if (this.filter === 4 && !['111', '222', '333', '444', '555', '666'].includes(option.id.toString())) {
-        switch (this.num3) {
-          case 10:
-            return ['金融学', '工商管理', '物流管理', '国际经济与贸易'].some(text => option.text.includes(text));
-          case 11:
-            return ['知识产权', '公共事业管理', '马克思主义理论', '哲学', '广播电视学', '汉语言文学'].some(text => option.text.includes(text));
-          case 12:
-            return ['英语', '翻译', '日语'].some(text => option.text.includes(text));
-          case 13:
-            return ['建筑学', '城乡规划', '工业设计'].some(text => option.text.includes(text));
-        }
-      } else if (this.filter === 5 && !['111', '222', '333', '444', '555', '666'].includes(option.id.toString())) {
-        let filterText = this.filterText(this.systemMajor);
-        switch (this.num4) {
-          case 100:
-            return ['智能制造工程', '车辆工程（英语强化）', '测控技术与仪器', '机械设计制造及其自动化', this.academy].some(text => option.text.includes(text));
-          case 101:
-            return ['储能科学与工程', '过程装备与控制工程', '化学工程与工艺', '精细化工', this.academy].some(text => option.text.includes(text));
-          case 102:
-            return ['环境科学', '环境工程', this.academy].some(text => option.text.includes(text));
-          case 103:
-            return ['化学工程与工艺', '制药工程', '高分子材料与工程', '安全工程', this.academy].some(text => option.text.includes(text));
-          case 104:
-            return ['建筑学', '城乡规划', this.academy].some(text => option.text.includes(text));
-          case 105:
-            return ['大数据管理与应用', '信息管理与信息系统', this.academy].some(text => option.text.includes(text));
-          case 106:
-            return ['电气工程及其自动化', '自动化', '电子信息工程', '计算机科学与技术', '生物医学工程', '光电信息科学与工程', this.academy].some(text => option.text.includes(text));
-          case 107:
-            return ['智能建造', '水利水电工程', '港口航道与海岸工程', '土木工程', '海洋资源开发技术', this.academy].some(text => option.text.includes(text));
-          case 108:
-            return ['金属材料工程', '功能材料', '材料成型及控制工程', this.academy].some(text => option.text.includes(text));
-          case 200:
-            return option.text.includes(filterText) || option.text.includes(this.academy);
-        }
-      }
-
-    },
+    //过滤书院
     academyFilter() {
       switch (this.finalAnswerText2) {
         case '大煜书院——物质创造学域':
@@ -1499,11 +881,11 @@ export default {
         userName: this.userName,
         questionnaireId: 2,
         changeAdress: this.academy,
-        changeMajor: this.finalAnswerText,
-        changeMajorType: this.finalAnswerText4,
-        afterChangeAdress: this.finalAnswerText2,
-        afterChangeMajor: this.finalAnswerText3,
-        afterChangeMajorType: this.finalAnswerText5,
+        changeMajor: this.filterText(this.finalAnswerText),
+        changeMajorType: this.finalAnswerText2,
+        afterChangeAdress: this.academy,
+        afterChangeMajor: this.finalAnswerText,//没过滤的
+        afterChangeMajorType: this.finalAnswerText2
       };
 
       submitQuestionnaireData(answer)

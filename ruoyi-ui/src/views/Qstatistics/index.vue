@@ -99,51 +99,54 @@ export default {
     echarts1(data) {
       var chartDom = document.getElementById('echarts1');
       var myChart = echarts.init(chartDom);
-      //分流前学生的数据
-      const beforeCnt = data.beforeCnt;  // 转专业前的学生数量
-      let afterCnt=null;
-      let afterMajorChangeType=null;
-      if(this.isAfterMajorChange===false){
-        afterCnt = data.afterCnt1;// 分流后的学生数量
-        afterMajorChangeType = data.changeMajorType;
-        this.$refs.student.time=false;
-      }else {
-        afterCnt = data.afterCnt2;
-        afterMajorChangeType = data.afterMajorChangeType;
-        this.$refs.student.time=true;
-      }
-      let xData = [];
-      let beforeData = [];
-      let afterData = [];
 
-      // 准备数据
-      for (let [academy, majors] of Object.entries(afterCnt)) {
-        xData.push(academy);
-        // 计算转专业前的总学生数量
-        let beforeTotal = 0;
-        if (beforeCnt[academy]) {
-          // 直接获取当前书院的学生数量
-          beforeTotal = beforeCnt[academy];
-        }
-        beforeData.push(beforeTotal);
+      // 固定书院顺序
+      const fixedAcademies = [
+        '大煜书院',
+        '伯川书院',
+        '令希书院',
+        '厚德书院',
+        '知行书院',
+        '笃学书院',
+        '求实书院'
+      ];
 
-        this.academyChangeType[academy] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 };
-        // 计算转专业后的总学生数量
+      // 初始化数据结构
+      let xData = [...fixedAcademies];
+      let beforeData = new Array(fixedAcademies.length).fill(0);
+      let afterData = new Array(fixedAcademies.length).fill(0);
+      this.academyChangeType = {};
+
+      // 获取数据源
+      const afterCnt = this.isAfterMajorChange ? data.afterCnt2 : data.afterCnt1;
+      const afterMajorChangeType = this.isAfterMajorChange
+        ? data.afterMajorChangeType
+        : data.changeMajorType;
+
+      // 填充数据
+      fixedAcademies.forEach((academy, index) => {
+        // 分流前数据
+        beforeData[index] = data.beforeCnt?.[academy] || 0;
+
+        // 分流后数据
         let afterTotal = 0;
-        for (let [major, count] of Object.entries(majors)) {
-          afterTotal += count;
+        if (afterCnt?.[academy]) {
+          afterTotal = Object.values(afterCnt[academy]).reduce((sum, val) => sum + val, 0);
         }
-        afterData.push(afterTotal);
+        afterData[index] = afterTotal;
 
-        if (afterMajorChangeType[academy]) {
-          for (let [major, changeTypes] of Object.entries(afterMajorChangeType[academy])) {
-            for (let [changeType, count] of Object.entries(changeTypes)) {
-              this.academyChangeType[academy][changeType] = (this.academyChangeType[academy][changeType] || 0) + count;
-            }
-          }
+        // 初始化类型统计
+        this.academyChangeType[academy] = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+        if (afterMajorChangeType?.[academy]) {
+          Object.values(afterMajorChangeType[academy]).forEach(majors => {
+            Object.entries(majors).forEach(([type, count]) => {
+              this.academyChangeType[academy][type] = (this.academyChangeType[academy][type] || 0) + count;
+            });
+          });
         }
-      }
+      });
 
+      // ECharts配置
       const option = {
         title: {
           text: "专业分流前后书院人数统计",
@@ -156,18 +159,19 @@ export default {
         },
         tooltip: {
           trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          },
-          formatter: '{b}: {a0}人数: {c0} ({d0}%)<br>{a1}人数: {c1} ({d1}%)' // 显示百分比
+          axisPointer: { type: 'shadow' },
+          formatter: params => {
+            const before = params[0];
+            const after = params[1];
+            return `${before.name}<br>
+          分流前: ${before.value}人<br>
+          分流后: ${after.value}人<br>
+          变化量: ${after.value - before.value}人`;
+          }
         },
         legend: {
           data: ['专业分流前', '专业分流后'],
-          top: '10%',
-          textStyle: {
-            fontSize: 14,
-            color: '#555'
-          }
+          top: '10%'
         },
         grid: {
           bottom: 80,
@@ -176,111 +180,61 @@ export default {
         },
         xAxis: {
           type: 'category',
-          data: xData,  // 书院名称
-          axisTick: {
-            alignWithLabel: true
-          },
+          data: xData,
           axisLabel: {
-            interval: 0,
             rotate: 45,
-            fontSize: 12,
-            color: '#555'
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc'
-            }
+            fontSize: 12
           }
         },
         yAxis: {
           type: 'value',
-          axisLabel: {
-            fontSize: 12,
-            color: '#555'
-          },
-          axisLine: {
-            lineStyle: {
-              color: '#ccc'
-            }
-          },
-          splitLine: {
-            lineStyle: {
-              color: '#f2f2f2'
-            }
-          }
+          splitLine: { show: false }
         },
         series: [
           {
             name: '专业分流前',
             type: 'bar',
             data: beforeData,
-            barWidth: 30, // 设置柱子宽度
+            barWidth: 30,
             itemStyle: {
-              normal: {
-                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [ // 渐变色
-                  { offset: 0, color: '#ff7f7f' },
-                  { offset: 1, color: '#ff3d3d' }
-                ]),
-                borderRadius: [10, 10, 0, 0] // 圆角设置
-              }
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#ff7f7f' },
+                { offset: 1, color: '#ff3d3d' }
+              ]),
+              borderRadius: [10, 10, 0, 0]
             },
-            label: {
-              show: true,
-              position: 'top',
-              formatter: '{c}',
-              fontSize: 14,
-              color: '#333'
-            },
-            emphasis: {
-              itemStyle: {
-                color: '#ff5733'  // 鼠标悬停时的颜色
-              }
-            }
+            label: { show: true, position: 'top' }
           },
           {
             name: '专业分流后',
             type: 'bar',
             data: afterData,
-            barWidth: 30, // 设置柱子宽度
+            barWidth: 30,
             itemStyle: {
-              normal: {
-                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [ // 渐变色
-                  { offset: 0, color: '#4c9aff' },
-                  { offset: 1, color: '#1d76d1' }
-                ]),
-                borderRadius: [10, 10, 0, 0] // 圆角设置
-              }
+              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                { offset: 0, color: '#4c9aff' },
+                { offset: 1, color: '#1d76d1' }
+              ]),
+              borderRadius: [10, 10, 0, 0]
             },
-            label: {
-              show: true,
-              position: 'top',
-              formatter: '{c}',
-              fontSize: 14,
-              color: '#333'
-            },
-            emphasis: {
-              itemStyle: {
-                color: '#3498db'  // 鼠标悬停时的颜色
-              }
-            }
+            label: { show: true, position: 'top' }
           }
         ]
       };
 
-      option && myChart.setOption(option);
+      // 渲染图表
+      myChart.setOption(option);
 
-      //注册点击事件（可选）
-      myChart.getZr().off('click');
+      // 点击事件处理
       const that = this;
+      myChart.getZr().off('click');
       myChart.getZr().on('click', function(param) {
         const pointInPixel = [param.offsetX, param.offsetY];
         if (myChart.containPixel('grid', pointInPixel)) {
-          const xIndex = myChart.convertFromPixel({seriesIndex: 0}, [param.offsetX, param.offsetY])[0];
-          const value = option.xAxis.data[xIndex];
-          that.$refs.student.academy = value;
-          that.$refs.student.major = null;
-          that.$refs.student.type = null;
-          that.selected = value;
+          const xIndex = myChart.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0];
+          const academy = xData[xIndex];
+          that.$refs.student.academy = academy;
+          that.selected = academy;
         }
       });
     },
@@ -430,29 +384,33 @@ export default {
     },
 
     echarts3(data, academy) {
-      //console.log('Received data in echarts3:', data); // 添加调试信息
-
       var chartDom = document.getElementById('echarts3');
       var myChart = echarts.init(chartDom);
-
-      // 定义所有可能的专业列表（横坐标）
       let allMajors;
-      if (academy === '求实书院') {
-        allMajors = ["软件工程", "网络工程", "集成电路设计与集成系统", "电子科学与技术"];
-      } else if (academy === '令希书院') {
-        allMajors = ["智能建造", "水利水电工程", "港口航道与海岸工程", "海洋资源开发技术", "交通工程", "工程管理", "建筑环境与能源应用工程", "土木工程", "工程力学", "飞行器设计与工程", "船舶与海洋工程", "建筑学", "城乡规划"];
-      } else if (academy === '伯川书院') {
-        allMajors = ["智能制造工程", "能源与动力工程", "机械设计制造及其自动化", "车辆工程（英语强化）", "测控技术与仪器", "金属材料工程", "功能材料", "材料成型及控制工程", "生物医学工程"];
-      } else if (academy === '厚德书院') {
-        allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
-      } else if (academy === '大煜书院') {
-        allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程","储能科学与工程"];
-      } else if (academy === '知行书院') {
-        allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统"];
-      } else if (academy === '笃学书院') {
-        allMajors = ["数学与应用数学", "信息与计算科学", "应用物理学", "应用化学", "工程力学", "生物工程"];
-      } else {
-        allMajors = []; // 默认为空数组
+      if(this.isAfterMajorChange===false){
+        // 定义所有可能的专业列表（横坐标）
+        if (academy === '求实书院') {
+          allMajors = ["软件工程", "网络工程", "集成电路设计与集成系统", "电子科学与技术"];
+        } else if (academy === '令希书院') {
+          allMajors = ["智能建造", "水利水电工程", "港口航道与海岸工程", "海洋资源开发技术", "交通工程", "工程管理", "建筑环境与能源应用工程", "土木工程", "工程力学", "飞行器设计与工程", "船舶与海洋工程", "建筑学", "城乡规划"];
+        } else if (academy === '伯川书院') {
+          allMajors = ["智能制造工程", "能源与动力工程", "机械设计制造及其自动化", "车辆工程（英语强化）", "测控技术与仪器", "金属材料工程", "功能材料", "材料成型及控制工程", "生物医学工程"];
+        } else if (academy === '厚德书院') {
+          allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
+        } else if (academy === '大煜书院') {
+          allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程","储能科学与工程"];
+        } else if (academy === '知行书院') {
+          allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统","金融学", "工商管理", "国际经济与贸易","知识产权","物流管理"];
+        } else if (academy === '笃学书院') {
+          allMajors = ["数学与应用数学", "信息与计算科学", "应用物理学", "应用化学", "工程力学", "生物工程"];
+        } else {
+          allMajors = []; // 默认为空数组
+        }
+      }else{
+          // 动态获取当前书院所有存在的专业（来自 afterCnt2 数据）
+          allMajors = data.afterCnt2 && data.afterCnt2[academy]
+            ? Object.keys(data.afterCnt2[academy])
+            : [];
       }
 
       let xData = allMajors;

@@ -141,6 +141,7 @@ export default {
 .questionnaire-list {
   padding: 40px 20px;
   text-align: center;
+  margin-left: 100px;
 }
 
 .questionnaire-grid {
