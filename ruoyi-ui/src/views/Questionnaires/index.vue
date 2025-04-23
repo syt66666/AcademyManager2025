@@ -50,6 +50,7 @@
               <li>请务必保证此次选择完全遵照个人意愿；</li>
               <li>请务必慎重考虑、认真选择，一经提交不得更改。</li>
             </ol>
+            <ImageUpload :limit="1" v-model="img"></ImageUpload>
           </div>
           <div class="dialog-buttons">
             <button
@@ -72,8 +73,12 @@ import axios from 'axios';
 import store from "../../store";
 import {getQuestionnaireTimes} from "@/api/system/questionnaire";
 import {getStudent} from "../../api/system/student";
+import ImageUpload from "@/components/ImageUpload";
 
 export default {
+  components: {
+    ImageUpload
+  },
   data() {
     return {
       userName: store.state.user.name,
@@ -106,7 +111,8 @@ export default {
       // 倒计时相关状态
       countdown: 20,
       isCountdownActive: false,
-      countdownTimer: null
+      countdownTimer: null,
+      img: []
     };
   },
   methods: {
@@ -140,11 +146,20 @@ export default {
     },
 
     confirmSubmit() {
-      if (this.isCountdownActive) return;
+      if (this.isCountdownActive || !this.hasUploadedImage) return;
+      // 提交前的最后验证
+      if (!this.validateSignature()) {
+        alert('请上传有效的签字图片！');
+        return;
+      }
       this.showDialog = false;
       this.$router.push({
         path: `/Questionnaires/Questionnaire${this.selectedQuestionnaireId}`
       });
+    },
+    validateSignature() {
+      // 这里可以添加更复杂的图片验证逻辑
+      return this.hasUploadedImage;
     },
     async checkQuestionnaireStatus() {
       try {
@@ -220,11 +235,33 @@ export default {
   },
   beforeDestroy() {
     clearInterval(this.countdownTimer);
-  }
+  },
+  computed: {
+    hasUploadedImage() {
+      return this.img.length > 0; // 检测是否有上传的图片
+    },
+    getButtonText() {
+      if (this.isCountdownActive) {
+        return `确认签字（${this.countdown}秒）`;
+      }
+      return this.hasUploadedImage ? '确认签字' : '请上传签字图片';
+    }
+  },
 };
 </script>
 
 <style scoped>
+/* 更新确认按钮的禁用样式 */
+.confirm-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+/* 当只缺少图片时的提示样式 */
+.confirm-btn:disabled:not(.countdown-active) {
+  background-color: #ffcccc;
+  color: #cc0000;
+}
 /* 新增倒计时按钮样式 */
 .confirm-btn:disabled {
   background-color: #cccccc;
