@@ -75,10 +75,11 @@ export default {
   methods: {
     //过滤掉专业括号内容
     filterText(text) {
-      if(text!=="车辆工程（英语强化）") {
-        return text.replace(/（.*?）|\(.*?\)/g, '').trim();
+      //创新班或者是英语强化这个专业
+      if(text==="车辆工程（英语强化）"||this.specialClass === 1) {
+        return text;
       }
-      else return text;
+      else return text.replace(/（.*?）|\(.*?\)/g, '').trim();
     },
     //设置num1值，书院的对应值
     setNumBasedOnAcademy(academy) {
@@ -669,86 +670,85 @@ export default {
           id: 100,
           text: '请选择 智能制造工程（创新班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '智能制造工程', next: null},
-            {id: 222, text: '车辆工程（英语强化）', next: null},
-            {id: 333, text: '测控技术与仪器', next: null},
-            {id: 444, text: '机械设计制造及其自动化', next: null},
+            {id: 111, text: '智能制造工程（创新班）', next: null},
+            {id: 222, text: '车辆工程（创新班）', next: null},
+            {id: 333, text: '测控技术与仪器（创新班）', next: null},
+            {id: 444, text: '机械设计制造及其自动化（创新班）', next: null},
           ]
         },
         {
           id: 101,
-          text: '请选择 储能科学与工程(新工科拔尖班) 的内设专业 [单选题]',
+          text: '请选择 储能科学与工程（新工科拔尖班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '储能科学与工程', next: null},
-            {id: 222, text: '过程装备与控制工程', next: null},
-            {id: 333, text: '化学工程与工艺', next: null},
-            {id: 444, text: '精细化工', next: null},
+            {id: 111, text: '储能科学与工程（新工科拔尖班）', next: null},
+            {id: 222, text: '过程装备与控制工程（新工科拔尖班）', next: null},
+            {id: 333, text: '化学工程与工艺（新工科拔尖班）', next: null},
+            {id: 444, text: '精细化工（新工科拔尖班）', next: null},
           ]
         },
         {
           id: 102,
-          text: '请选择 环境科学与工程类(新工科拔尖班) 的内设专业 [单选题]',
+          text: '请选择 环境科学与工程类（新工科拔尖班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '环境科学', next: null},
-            {id: 222, text: '环境工程', next: null},
+            {id: 111, text: '环境科学（新工科拔尖班）', next: null},
+            {id: 222, text: '环境工程（新工科拔尖班）', next: null},
           ]
         },
         {
           id: 103,
-          text: '请选择 化工与制药类(创新班) 的内设专业 [单选题]',
+          text: '请选择 化工与制药类（创新班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '化学工程与工艺', next: null},
-            {id: 222, text: '制药工程', next: null},
-            {id: 333, text: '高分子材料与工程', next: null},
-            {id: 444, text: '安全工程', next: null},
+            {id: 111, text: '化学工程与工艺（创新班）', next: null},
+            {id: 222, text: '制药工程（创新班）', next: null},
+            {id: 333, text: '高分子材料与工程（创新班）', next: null},
+            {id: 444, text: '安全工程（创新班）', next: null},
           ]
         },
         {
           id: 104,
-          text: '请选择 建筑类(新工科拔尖班) 的内设专业 [单选题]',
+          text: '请选择 建筑学（新工科拔尖班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '建筑学', next: null},
-            {id: 222, text: '城乡规划', next: null},
+            {id: 111, text: '建筑学（新工科拔尖班）', next: null},
+            {id: 222, text: '城乡规划（新工科拔尖班）', next: null},
           ]
         },
         {
           id: 105,
-          text: '请选择 大数据管理与应用(新工科拔尖班) 的内设专业 [单选题]',
+          text: '请选择 大数据管理与应用（新工科拔尖班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '大数据管理与应用', next: null},
-            {id: 222, text: '信息管理与信息系统', next: null},
+            {id: 111, text: '大数据管理与应用（新工科拔尖班）', next: null},
+            {id: 222, text: '信息管理与信息系统（新工科拔尖班）', next: null},
           ]
         },
         {
           id: 106,
-          text: '请选择 电子信息类(创新班) 的内设专业 [单选题]',
+          text: '请选择 电子信息类（创新班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '电气工程及其自动化', next: null},
-            {id: 222, text: '自动化', next: null},
-            {id: 333, text: '电子信息工程', next: null},
-            {id: 444, text: '计算机科学与技术', next: null},
-            {id: 555, text: '生物医学工程', next: null},
-            {id: 666, text: '光电信息科学与工程', next: null},
+            {id: 111, text: '电气工程及其自动化（创新班）', next: null},
+            {id: 222, text: '自动化（创新班）', next: null},
+            {id: 333, text: '电子信息工程（创新班）', next: null},
+            {id: 444, text: '计算机科学与技术（创新班）', next: null},
+            {id: 555, text: '生物医学工程（创新班）', next: null},
+            {id: 666, text: '光电信息科学与工程（创新班）', next: null},
           ]
         },
         {
           id: 107,
           text: '请选择 智能建造（创新班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '智能建造', next: null},
-            {id: 222, text: '水利水电工程', next: null},
-            {id: 333, text: '港口航道与海岸工程', next: null},
-            {id: 444, text: '土木工程', next: null},
-            {id: 555, text: '海洋资源开发技术', next: null}
+            {id: 111, text: '智能建造（创新班）', next: null},
+            {id: 222, text: '水利水电工程（创新班）', next: null},
+            {id: 333, text: '港口航道与海岸工程（创新班）', next: null},
+            {id: 444, text: '土木工程（创新班）', next: null}
           ]
         },
         {
           id: 108,
           text: '请选择 材料类（新工科拔尖班） 的内设专业 [单选题]',
           options: [
-            {id: 111, text: '金属材料工程', next: null},
-            {id: 222, text: '功能材料', next: null},
-            {id: 333, text: '材料成型及控制工程', next: null},
+            {id: 111, text: '金属材料工程（新工科拔尖班）', next: null},
+            {id: 222, text: '功能材料（新工科拔尖班）', next: null},
+            {id: 333, text: '材料成型及控制工程（新工科拔尖班）', next: null},
           ]
         },
         {
@@ -771,7 +771,13 @@ export default {
       //记录最后一次点击的内容
       this.finalAnswerText = option.text;
       if (this.finalAnswerText === '保持现有专业') {
-        this.finalAnswerText = this.major;
+        console.log(this.systemMajor);
+        if(this.systemMajor==='土木工程（国际班）'||this.systemMajor==='金属材料工程（中日精英班）'
+          ||this.systemMajor==='机械设计制造及其自动化(日语强化)'||this.systemMajor==='机械设计制造及其自动化（卓越国合班）'){
+          this.finalAnswerText = this.systemMajor;
+          console.log(this.finalAnswerText);
+        }
+        else this.finalAnswerText = this.major;
       }
       this.$set(this.selectedOptions, index, option.id);
       this.completed = option.next === null;
