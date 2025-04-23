@@ -67,13 +67,13 @@
                 <li class="clause-item">
                   <div class="clause-content">
                     <span class="clause-number">1</span>
-                    本次专业选择为专业分流阶段性摸底调查，具有政策参考意义；
+                    本次专业选择为专业分流阶段性摸底调查；
                   </div>
                 </li>
                 <li class="clause-item">
                   <div class="clause-content">
                     <span class="clause-number">2</span>
-                    本次开放时间为{{ selectedStartTime }}至{{ selectedEndTime }}，逾期不候；
+                    本次开放时间为{{ selectedStartTime }}至{{ selectedEndTime }}，请务必在此时间段内进行专业选择；
                   </div>
                 </li>
                 <li class="clause-item">
@@ -107,7 +107,7 @@
             <!-- 签名上传区域 -->
             <div class="signature-upload">
               <div class="upload-header">
-                <span class="upload-title">手写电子签名</span>
+                <span class="upload-title">请上传手写电子签名</span>
               </div>
               <ImageUpload
                 :limit="1"
@@ -414,6 +414,7 @@ export default {
   font-size: 14px;
   margin-bottom: 16px;
   line-height: 1.6;
+  text-align: left;
 }
 .clause-list {
   padding-left: 0;
@@ -718,5 +719,157 @@ export default {
 
 .cancel-btn:hover {
   background-color: #e9e9e9;
+}
+/* 移动端专属适配 - 所有修改都包裹在媒体查询中 */
+@media screen and (max-width: 768px) {
+  /* 问卷列表适配 */
+  .questionnaire-list {
+    padding: 20px 10px !important;
+    margin-left: 0 !important;
+  }
+
+  .questionnaire-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    padding: 0 10px !important;
+  }
+
+  .questionnaire-card {
+    padding: 15px !important;
+    margin: 0 10px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .card-content h3 {
+    font-size: 1.4rem !important;
+    line-height: 1.3;
+  }
+
+  .card-content p {
+    font-size: 0.9rem !important;
+    margin: 8px 0 !important;
+  }
+
+  .time-field {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .btn {
+    padding: 12px 20px !important;
+    font-size: 0.95rem !important;
+    width: 100% !important;
+  }
+
+  /* 承诺书弹窗适配 */
+  .promise-dialog {
+    width: 95% !important;
+    border-radius: 8px !important;
+  }
+
+  .dialog-content {
+    padding: 15px !important;
+  }
+
+  .dialog-header h3 {
+    font-size: 1.3rem !important;
+    margin: 12px 0 !important;
+  }
+
+  .user-info-card {
+    padding: 12px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .info-item {
+    font-size: 0.9rem !important;
+  }
+
+  .clause-item {
+    padding-left: 26px !important;
+  }
+
+  .clause-number {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 11px !important;
+  }
+
+  .clause-content {
+    font-size: 0.85rem !important;
+    line-height: 1.5;
+  }
+
+  .signature-uploader {
+    padding: 15px !important;
+  }
+
+  .dialog-actions {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .confirm-btn,
+  .cancel-btn {
+    width: 100% !important;
+    padding: 14px !important;
+  }
+}
+
+/* 超小屏幕优化 */
+@media screen and (max-width: 480px) {
+  .clause-item {
+    padding-left: 24px !important;
+  }
+
+  .clause-number {
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  .dialog-header h3 {
+    font-size: 1.2rem !important;
+  }
+
+  .info-item {
+    font-size: 0.85rem !important;
+  }
+
+  .time-field strong {
+    min-width: 68px !important;
+  }
+}
+.clause-content {
+  /* 确保容器使用标准盒模型 */
+  display: block;
+  /* 设置足够左内边距避开编号 */
+  padding-left: 32px;
+  /* 强制文本左对齐 */
+  text-align: left;
+  /* 保持原有样式 */
+  color: #444;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.clause-number {
+  /* 绝对定位确保不影响文字流 */
+  position: absolute;
+  left: 0;
+  /* 垂直居中调整 */
+  top: 50%;
+  transform: translateY(-50%);
+  /* 原有编号样式 */
+  width: 20px;
+  height: 20px;
+  background: #395cdc;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
 }
 </style>
