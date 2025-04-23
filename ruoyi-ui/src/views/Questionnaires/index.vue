@@ -50,16 +50,16 @@
               <li>请务必保证此次选择完全遵照个人意愿；</li>
               <li>请务必慎重考虑、认真选择，一经提交不得更改。</li>
             </ol>
-            <ImageUpload :limit="1" v-model="img"></ImageUpload>
+            上传电子签名<ImageUpload :limit="1" :file-size="10" :file-type="['png', 'jpg', 'jpeg']" v-model="img"></ImageUpload>
           </div>
           <div class="dialog-buttons">
-            <button
-              @click="confirmSubmit"
-              :disabled="isCountdownActive"
-              class="confirm-btn"
-            >
-              {{ isCountdownActive ? `确认签字（${countdown}秒）` : '确认签字' }}
-            </button>
+          <button
+            @click="confirmSubmit"
+            :disabled="isCountdownActive || !hasUploadedImage"
+            class="confirm-btn"
+          >
+            {{ getButtonText }}
+          </button>
             <button @click="showDialog = false" class="cancel-btn">取消</button>
           </div>
         </div>
@@ -242,9 +242,9 @@ export default {
     },
     getButtonText() {
       if (this.isCountdownActive) {
-        return `确认签字（${this.countdown}秒）`;
+        return `确认（${this.countdown}秒）`;
       }
-      return this.hasUploadedImage ? '确认签字' : '请上传签字图片';
+      return this.hasUploadedImage ? '确认' : '请上传签字图片';
     }
   },
 };
