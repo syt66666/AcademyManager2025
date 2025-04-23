@@ -38,29 +38,107 @@
     <!-- 承诺书弹窗 -->
     <div v-if="showDialog" class="dialog-overlay">
       <div class="promise-dialog">
+        <!-- 顶部装饰条 -->
+        <div class="dialog-header-bar"></div>
         <div class="dialog-content">
-          <h3>专业选择承诺书</h3>
-          <div class="promise-text">
-            <p>本人 {{ studentName }}（学号：{{ userName }}），已完整阅读并充分理解以下内容：</p>
-            <ol>
-              <li>本次专业选择为专业分流阶段性摸底调查；</li>
-              <li>本次开放时间为{{ selectedStartTime }}至{{ selectedEndTime }}；</li>
-              <li>请务必保证本人已充分了解专业分流相关政策后再进行专业选择；</li>
-              <li>请务必保证此次操作为本人操作，不得他人代选；</li>
-              <li>请务必保证此次选择完全遵照个人意愿；</li>
-              <li>请务必慎重考虑、认真选择，一经提交不得更改。</li>
-            </ol>
-            上传电子签名<ImageUpload :limit="1" :file-size="10" :file-type="['png', 'jpg', 'jpeg']" v-model="img"></ImageUpload>
+          <!-- 标题区域 -->
+          <div class="dialog-header">
+            <h3>专业选择承诺书</h3>
           </div>
-          <div class="dialog-buttons">
-          <button
-            @click="confirmSubmit"
-            :disabled="isCountdownActive || !hasUploadedImage"
-            class="confirm-btn"
-          >
-            {{ getButtonText }}
-          </button>
-            <button @click="showDialog = false" class="cancel-btn">取消</button>
+
+          <!-- 主要内容区域 -->
+          <div class="promise-content">
+            <!-- 用户信息卡片 -->
+            <div class="user-info-card">
+              <div class="info-item">
+                <span class="info-label">承诺人：</span>
+                <span class="info-value">{{ studentName }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">学 号：</span>
+                <span class="info-value">{{ userName }}</span>
+              </div>
+            </div>
+
+            <!-- 承诺条款 -->
+            <div class="clause-container">
+              <p class="clause-preamble">本人已完整阅读并充分理解以下条款内容：</p>
+              <ol class="clause-list">
+                <li class="clause-item">
+                  <div class="clause-content">
+                    <span class="clause-number">1</span>
+                    本次专业选择为专业分流阶段性摸底调查，具有政策参考意义；
+                  </div>
+                </li>
+                <li class="clause-item">
+                  <div class="clause-content">
+                    <span class="clause-number">2</span>
+                    本次开放时间为{{ selectedStartTime }}至{{ selectedEndTime }}，逾期不候；
+                  </div>
+                </li>
+                <li class="clause-item">
+                  <div class="clause-content">
+                    <span class="clause-number">3</span>
+                    请务必保证本人已充分了解专业分流相关政策后再进行专业选择；
+                  </div>
+                </li>
+                <li class="clause-item">
+                  <div class="clause-content">
+                    <span class="clause-number">4</span>
+                    请务必保证此次操作为本人操作，不得他人代选；
+                  </div>
+                </li>
+                <li class="clause-item">
+                  <div class="clause-content">
+                    <span class="clause-number">5</span>
+                    请务必保证此次选择完全遵照个人意愿；
+                  </div>
+                </li>
+                <li class="clause-item">
+                  <div class="clause-content">
+                    <span class="clause-number">6</span>
+                    请务必慎重考虑、认真选择，一经提交不得更改。
+                  </div>
+                </li>
+                <!-- 其他条款结构相同 -->
+              </ol>
+            </div>
+
+            <!-- 签名上传区域 -->
+            <div class="signature-upload">
+              <div class="upload-header">
+                <span class="upload-title">手写电子签名</span>
+              </div>
+              <ImageUpload
+                :limit="1"
+                :file-size="10"
+                :file-type="['png', 'jpg', 'jpeg']"
+                v-model="img"
+                class="signature-uploader"
+              >
+                <template #default>
+                  <div class="uploader-guide">
+                    <i class="icon-upload"></i>
+                    <p>点击上传签字文件</p>
+                  </div>
+                </template>
+              </ImageUpload>
+            </div>
+          </div>
+
+          <!-- 操作按钮组 -->
+          <div class="dialog-actions">
+            <button
+              @click="confirmSubmit"
+              :disabled="isCountdownActive || !hasUploadedImage"
+              class="confirm-btn"
+            >
+              <span class="btn-text">{{ getButtonText }}</span>
+              <span v-if="isCountdownActive" class="countdown-circle"></span>
+            </button>
+            <button @click="showDialog = false" class="cancel-btn">
+              <span class="btn-text">取消</span>
+            </button>
           </div>
         </div>
       </div>
@@ -251,22 +329,233 @@ export default {
 </script>
 
 <style scoped>
-/* 更新确认按钮的禁用样式 */
-.confirm-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-  opacity: 0.7;
+
+/* 遮罩层 */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
 }
-/* 当只缺少图片时的提示样式 */
-.confirm-btn:disabled:not(.countdown-active) {
-  background-color: #ffcccc;
-  color: #cc0000;
+
+/* 弹窗容器 */
+.promise-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 640px;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
 }
-/* 新增倒计时按钮样式 */
+
+/* 顶部装饰条 */
+.dialog-header-bar {
+  height: 4px;
+  background: linear-gradient(135deg, #395cdc 0%, #2b76de 100%);
+}
+
+/* 内容区域 */
+.dialog-content {
+  padding: 28px 32px;
+}
+
+/* 标题样式 */
+.dialog-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.dialog-header h3 {
+  font-size: 24px;
+  color: #1a2b6d;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+/* 用户信息卡片 */
+.user-info-card {
+  background: #f8f9ff;
+  border: 1px solid #e6ebff;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 15px;
+}
+.info-item:last-child {
+  margin-bottom: 0;
+}
+.info-label {
+  color: #666;
+  min-width: 60px;
+}
+.info-value {
+  color: #333;
+  font-weight: 500;
+}
+
+/* 承诺条款 */
+.clause-container {
+  margin-bottom: 28px;
+}
+.clause-preamble {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.clause-list {
+  padding-left: 0;
+  list-style: none;
+}
+.clause-item {
+  margin-bottom: 16px;
+  position: relative;
+  padding-left: 32px;
+}
+.clause-number {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 20px;
+  height: 20px;
+  background: #395cdc;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+.clause-content {
+  color: #444;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+/* 签名上传 */
+.signature-upload {
+  margin-top: 24px;
+}
+.upload-header {
+  margin-bottom: 12px;
+}
+.upload-title {
+  font-size: 15px;
+  color: #333;
+  font-weight: 500;
+}
+.signature-uploader {
+  border: 2px dashed #e0e4f5;
+  border-radius: 8px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+.signature-uploader:hover {
+  border-color: #395cdc;
+  background: #f8faff;
+}
+.uploader-guide {
+  text-align: center;
+  color: #888;
+}
+.icon-upload::before {
+  content: "↑";
+  display: block;
+  font-size: 32px;
+  margin: 0 auto 8px;
+  color: #395cdc;
+}
+.uploader-guide p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 操作按钮 */
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+}
+.confirm-btn, .cancel-btn {
+  padding: 12px 32px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.confirm-btn {
+  background: #395cdc;
+  color: white;
+  border: none;
+}
+.confirm-btn:not(:disabled):hover {
+  background: #2b76de;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(43, 118, 222, 0.3);
+}
+.cancel-btn {
+  background: #f0f2f7;
+  color: #666;
+  border: 1px solid #ddd;
+}
+.cancel-btn:hover {
+  background: #e4e6eb;
+}
+
+/* 禁用状态 */
 .confirm-btn:disabled {
-  background-color: #cccccc;
+  background: #c5cdf0;
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.8;
+}
+
+/* 倒计时动画 */
+.countdown-circle {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 响应式调整 */
+@media (max-width: 640px) {
+  .promise-dialog {
+    width: 90%;
+    margin: 0 16px;
+  }
+  .dialog-content {
+    padding: 24px;
+  }
+  .dialog-actions {
+    flex-direction: column;
+  }
+  .confirm-btn, .cancel-btn {
+    width: 100%;
+  }
 }
 .questionnaire-list {
   padding: 40px 20px;
