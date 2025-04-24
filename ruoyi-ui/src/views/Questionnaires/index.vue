@@ -85,7 +85,7 @@
                 <li class="clause-item">
                   <div class="clause-content">
                     <span class="clause-number">4</span>
-                    请务必保证此次操作为本人操作，不得他人代选；
+                    请务必保证此次操作为本人操作，不得他人代选，否则后果自负；
                   </div>
                 </li>
                 <li class="clause-item">
@@ -177,8 +177,8 @@ export default {
           description: '2024书院学生专业选择意向摸底调查',
           type: '正式专业分流',
           completed: false,
-          start_time: '2025-02-01T00:00:00',
-          end_time: '2026-01-01T00:00:00'
+          start_time: '2025-04-24T00:00:00',
+          end_time: '2025-04-26T16:00:00'
         }
       ],
       showDialog: false,
