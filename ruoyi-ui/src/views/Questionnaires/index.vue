@@ -100,7 +100,6 @@
                     请务必慎重考虑、认真选择，一经提交不得更改。
                   </div>
                 </li>
-                <!-- 其他条款结构相同 -->
               </ol>
             </div>
 
@@ -162,23 +161,32 @@ export default {
       userName: store.state.user.name,
       studentName: '',
       questionnaires: [
+        // {
+        //   id: 1,
+        //   title: '问卷1',
+        //   description: '2024书院学生专业选择意向摸底调查',
+        //   type: '专业分流阶段性摸底调查',
+        //   completed: false,
+        //   start_time: '2024-12-31T00:00:00',
+        //   end_time: '2025-01-01T00:00:00'
+        // },
+        // {
+        //   id: 2,
+        //   title: '问卷2',
+        //   description: '2024书院学生专业选择意向摸底调查',
+        //   type: '专业分流阶段性摸底调查',
+        //   completed: false,
+        //   start_time: '2025-04-24T00:00:00',
+        //   end_time: '2025-04-26T16:00:00'
+        // },
         {
-          id: 1,
-          title: '问卷1',
-          description: '2024书院学生专业选择意向摸底调查',
-          type: '专业分流阶段性摸底调查',
-          completed: false,
-          start_time: '2024-12-31T00:00:00',
-          end_time: '2025-01-01T00:00:00'
-        },
-        {
-          id: 2,
-          title: '问卷2',
-          description: '2024书院学生专业选择意向摸底调查',
+          id: 3,
+          title: '问卷3',
+          description: '2024书院学生正式专业分流',
           type: '正式专业分流',
           completed: false,
-          start_time: '2025-04-24T00:00:00',
-          end_time: '2025-04-26T16:00:00'
+          start_time: '2025-05-1T00:00:00',
+          end_time: '2025-05-20T16:00:00'
         }
       ],
       showDialog: false,
