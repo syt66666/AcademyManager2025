@@ -161,28 +161,28 @@ export default {
       userName: store.state.user.name,
       studentName: '',
       questionnaires: [
-        // {
-        //   id: 1,
-        //   title: '问卷1',
-        //   description: '2024书院学生专业选择意向摸底调查',
-        //   type: '专业分流阶段性摸底调查',
-        //   completed: false,
-        //   start_time: '2024-12-31T00:00:00',
-        //   end_time: '2025-01-01T00:00:00'
-        // },
-        // {
-        //   id: 2,
-        //   title: '问卷2',
-        //   description: '2024书院学生专业选择意向摸底调查',
-        //   type: '专业分流阶段性摸底调查',
-        //   completed: false,
-        //   start_time: '2025-04-24T00:00:00',
-        //   end_time: '2025-04-26T16:00:00'
-        // },
+        {
+          id: 1,
+          title: '问卷1',
+          description: '2024书院学生专业选择意向摸底调查',
+          type: '专业分流阶段性摸底调查',
+          completed: false,
+          start_time: '2024-12-31T00:00:00',
+          end_time: '2025-01-01T00:00:00'
+        },
+        {
+          id: 2,
+          title: '问卷2',
+          description: '2024书院学生专业选择意向摸底调查',
+          type: '专业分流阶段性摸底调查',
+          completed: false,
+          start_time: '2025-04-24T00:00:00',
+          end_time: '2025-04-26T16:00:00'
+        },
         {
           id: 3,
           title: '问卷3',
-          description: '2024书院学生正式专业分流',
+          description: '2024届书院学生正式专业分流',
           type: '正式专业分流',
           completed: false,
           start_time: '2025-05-1T00:00:00',

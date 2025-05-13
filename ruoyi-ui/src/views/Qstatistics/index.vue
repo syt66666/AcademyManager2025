@@ -379,13 +379,13 @@ export default {
 
     getEcharts1() {
       // 调用 fetchEchartsData2 来获取数据
-        fetchEchartsData2(2)
+        fetchEchartsData2(3)
           .then(response => {
             this.echarts1(response.data);
           })
     },
     getEcharts3() {
-      fetchEchartsData2(2)
+      fetchEchartsData2(3)
         .then(response => {
           this.echarts3(response.data,this.selected);
         });
