@@ -26,7 +26,7 @@ public class StuCourseController extends BaseController
     /**
      * 查询课程信息列表
      */
-    @PreAuthorize("@ss.hasPermi('system:course:list')")
+//    @PreAuthorize("@ss.hasPermi('system:course:list')")
     @GetMapping("/list")
     public TableDataInfo list(StuCourse stuCourse)
     {
@@ -38,7 +38,7 @@ public class StuCourseController extends BaseController
     /**
      * 导出课程信息列表
      */
-    @PreAuthorize("@ss.hasPermi('system:course:export')")
+//    @PreAuthorize("@ss.hasPermi('system:course:export')")
     @Log(title = "课程信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, StuCourse stuCourse)
@@ -51,7 +51,7 @@ public class StuCourseController extends BaseController
     /**
      * 获取课程信息详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:course:query')")
+//    @PreAuthorize("@ss.hasPermi('system:course:query')")
     @GetMapping(value = "/{courseId}")
     public AjaxResult getInfo(@PathVariable("courseId") Long courseId)
     {
@@ -61,7 +61,7 @@ public class StuCourseController extends BaseController
     /**
      * 新增课程信息
      */
-    @PreAuthorize("@ss.hasPermi('system:course:add')")
+//    @PreAuthorize("@ss.hasPermi('system:course:add')")
     @Log(title = "课程信息", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody StuCourse stuCourse)
@@ -72,7 +72,7 @@ public class StuCourseController extends BaseController
     /**
      * 修改课程信息
      */
-    @PreAuthorize("@ss.hasPermi('system:course:edit')")
+//    @PreAuthorize("@ss.hasPermi('system:course:edit')")
     @Log(title = "课程信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody StuCourse stuCourse)
@@ -83,7 +83,7 @@ public class StuCourseController extends BaseController
     /**
      * 删除课程信息
      */
-    @PreAuthorize("@ss.hasPermi('system:course:remove')")
+//    @PreAuthorize("@ss.hasPermi('system:course:remove')")
     @Log(title = "课程信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{courseIds}")
     public AjaxResult remove(@PathVariable Long[] courseIds)

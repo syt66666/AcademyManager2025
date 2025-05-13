@@ -43,7 +43,8 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
     }
     @Override
     public StuAbilityScore selectStuAbilityScoreByStudentId(String studentId)
-    {
+    {   StuAbilityScore s = abilityMapper.selectStuAbilityScoreByStudentId(studentId);
+        System.out.println(s);
         return abilityMapper.selectStuAbilityScoreByStudentId(studentId);
     }
     // 新增增量计算方法（包可见性，供其他Service调用）

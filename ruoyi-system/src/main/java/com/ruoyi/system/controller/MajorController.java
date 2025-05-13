@@ -47,6 +47,7 @@ public class MajorController extends BaseController {
             @RequestParam(value = "divert_form", required = false, defaultValue = "0") String divertForm,
             @RequestParam(value = "is_tell", required = true) boolean isTell
     ) {
+        System.out.println("parentId: " + parentId + " divertForm: " + divertForm + " isTell: " + isTell);
         try {
             int parsedParentId = Integer.parseInt(parentId);
             return success(

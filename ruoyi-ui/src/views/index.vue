@@ -32,52 +32,52 @@
       <p class="greeting-message">大工书院祝您心想事成！😊</p>
     </div>
 
-    <!-- 智能助手浮窗 -->
-    <!--    <div class="chat-assistant" @click="toggleChat">-->
-    <!--      <i class="el-icon-chat-dot-round"></i>-->
-    <!--    </div>-->
+<!--     智能助手浮窗 -->
+        <div class="chat-assistant" @click="toggleChat">
+          <i class="el-icon-chat-dot-round"></i>
+        </div>
 
-    <!-- 聊天对话框 -->
-    <!--    <el-dialog-->
-    <!--      :visible.sync="chatVisible"-->
-    <!--      title="大工智能助手"-->
-    <!--      width="600px"-->
-    <!--      custom-class="chat-dialog"-->
-    <!--      @closed="resetChat"-->
-    <!--    >-->
-    <!--      <div class="chat-container">-->
-    <!--        <div class="messages" ref="messages">-->
-    <!--          <div-->
-    <!--            v-for="(msg, index) in chatMessages"-->
-    <!--            :key="index"-->
-    <!--            :class="['message', msg.role]"-->
-    <!--          >-->
-    <!--            <div class="content">{{ msg.content }}</div>-->
-    <!--            <div class="time">{{ msg.time }}</div>-->
-    <!--          </div>-->
-    <!--          <div v-if="isLoading" class="loading">-->
-    <!--            <i class="el-icon-loading"></i> 助手思考中...-->
-    <!--          </div>-->
-    <!--        </div>-->
+<!--     聊天对话框 -->
+        <el-dialog
+          :visible.sync="chatVisible"
+          title="大工智能助手"
+          width="600px"
+          custom-class="chat-dialog"
+          @closed="resetChat"
+        >
+          <div class="chat-container">
+            <div class="messages" ref="messages">
+              <div
+                v-for="(msg, index) in chatMessages"
+                :key="index"
+                :class="['message', msg.role]"
+              >
+                <div class="content">{{ msg.content }}</div>
+                <div class="time">{{ msg.time }}</div>
+              </div>
+              <div v-if="isLoading" class="loading">
+                <i class="el-icon-loading"></i> 助手思考中...
+              </div>
+            </div>
 
-    <!--        <div class="input-area">-->
-    <!--          <el-input-->
-    <!--            type="textarea"-->
-    <!--            :rows="3"-->
-    <!--            v-model="inputMessage"-->
-    <!--            @keyup.enter.native="sendMessage"-->
-    <!--            placeholder="输入您的问题（Shift+Enter换行）"-->
-    <!--          ></el-input>-->
-    <!--          <el-button-->
-    <!--            type="primary"-->
-    <!--            @click="sendMessage"-->
-    <!--            :disabled="!inputMessage.trim()"-->
-    <!--          >-->
-    <!--            发送-->
-    <!--          </el-button>-->
-    <!--        </div>-->
-    <!--      </div>-->
-    <!--    </el-dialog>-->
+            <div class="input-area">
+              <el-input
+                type="textarea"
+                :rows="3"
+                v-model="inputMessage"
+                @keyup.enter.native="sendMessage"
+                placeholder="输入您的问题（Shift+Enter换行）"
+              ></el-input>
+              <el-button
+                type="primary"
+                @click="sendMessage"
+                :disabled="!inputMessage.trim()"
+              >
+                发送
+              </el-button>
+            </div>
+          </div>
+        </el-dialog>
   </div>
 </template>
 

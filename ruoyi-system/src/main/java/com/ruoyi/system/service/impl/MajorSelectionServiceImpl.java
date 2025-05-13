@@ -95,60 +95,58 @@ public class MajorSelectionServiceImpl {
     @Transactional(rollbackFor = Exception.class)
     public List<JSONObject> getEveryMajorCount(Integer parentId, boolean isTell, String divertFrom) {
         List<JSONObject> result = new ArrayList<>();
+        System.out.println("66666666666666666666666666666666666666666666");
         //得到父专业下面的所有子专业的数据
-        if (!isTell) {
-            System.out.println("parentId:"+parentId);
-            System.out.println("divertFrom:"+divertFrom);
 
-            //更新专业人数数据
-            List<MajorStatisticDTO> majorStatistics = majorMapper.selectMajorStatisticGradesNum(parentId, divertFrom);
+        //更新专业人数数据
+        List<MajorStatisticDTO> majorStatistics = majorMapper.selectMajorStatisticGradesNum(parentId, divertFrom);
 
-            // 初始化统计变量
-            AtomicInteger fatherACount = new AtomicInteger(0);
-            AtomicInteger fatherBCount = new AtomicInteger(0);
-            AtomicInteger fatherCCount = new AtomicInteger(0);
-            AtomicInteger fatherTotal = new AtomicInteger(0);
+        // 初始化统计变量
+        AtomicInteger fatherACount = new AtomicInteger(0);
+        AtomicInteger fatherBCount = new AtomicInteger(0);
+        AtomicInteger fatherCCount = new AtomicInteger(0);
+        AtomicInteger fatherTotal = new AtomicInteger(0);
 
-            // 批量处理子专业
-            List<MajorStatisticDTO> updateList = majorStatistics.stream()
-                    .peek(dto -> {
-                        // 累加父级数据
-                        fatherACount.addAndGet(dto.getGradeA());
-                        fatherBCount.addAndGet(dto.getGradeB());
-                        fatherCCount.addAndGet(dto.getGradeC());
-                        fatherTotal.addAndGet(dto.getStudentNum());
-                    })
-                    .collect(Collectors.toList());
-            // 批量更新子专业
-            majorMapper.batchUpdateMajors(updateList);
-            // 更新父级数据
-            majorMapper.updateStuMajor(
-                    parentId,
-                    fatherACount.get(),
-                    fatherBCount.get(),
-                    fatherCCount.get(),
-                    fatherTotal.get()
-            );
+        // 批量处理子专业
+        List<MajorStatisticDTO> updateList = majorStatistics.stream()
+                .peek(dto -> {
+                    // 累加父级数据
+                    fatherACount.addAndGet(dto.getGradeA());
+                    fatherBCount.addAndGet(dto.getGradeB());
+                    fatherCCount.addAndGet(dto.getGradeC());
+                    fatherTotal.addAndGet(dto.getStudentNum());
+                })
+                .collect(Collectors.toList());
+        // 批量更新子专业
+        majorMapper.batchUpdateMajors(updateList);
+        // 更新父级数据
+        majorMapper.updateStuMajor(
+                parentId,
+                fatherACount.get(),
+                fatherBCount.get(),
+                fatherCCount.get(),
+                fatherTotal.get()
+        );
 
-            //获取所有类型的专业人数
-            List<MajorStatisticDTO> majorStatistics2 = majorMapper.getMajorStatisticGradesNum(parentId);
-            majorStatistics2.stream()
-                    .peek(dto -> {
-                        // 构建响应数据
-                        JSONObject json = new JSONObject();
-                        json.put("majorName", dto.getMajorName());
-                        json.put("countA", dto.getGradeA());
-                        json.put("countB", dto.getGradeB());
-                        json.put("countC", dto.getGradeC());
-                        json.put("count", dto.getStudentNum());
-                        result.add(json);
-                    })
-                    .collect(Collectors.toList());
+        //获取所有类型的专业人数
+        List<MajorStatisticDTO> majorStatistics2 = majorMapper.getMajorStatisticGradesNum(parentId);
+        majorStatistics2.stream()
+                .peek(dto -> {
+                    // 构建响应数据
+                    JSONObject json = new JSONObject();
+                    json.put("majorName", dto.getMajorName());
+                    json.put("countA", dto.getGradeA());
+                    json.put("countB", dto.getGradeB());
+                    json.put("countC", dto.getGradeC());
+                    json.put("count", dto.getStudentNum());
+                    result.add(json);
+                })
+                .collect(Collectors.toList());
 
-        } else {
-            List<MajorStatisticDTO> majorStatistics = majorMapper.getMajorStatisticGradesNum(parentId);
+        if (isTell) {
+            List<MajorStatisticDTO> majorStatistics3 = majorMapper.getMajorStatisticGradesNum(parentId);
             // 创建包含详细数据的消息列表
-            List<JSONObject> messages = majorStatistics.stream()
+            List<JSONObject> messages = majorStatistics3.stream()
                     .map(dto -> new JSONObject()
                             .fluentPut("type", "student_update")
                             .fluentPut("majorId", dto.getMajorId())

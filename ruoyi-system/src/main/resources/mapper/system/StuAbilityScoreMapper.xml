@@ -33,7 +33,7 @@
                         2
                           )
                  ELSE 100.00  -- 当所有学生排名相同时（如并列第一），直接给满分
-                END AS academic_rank_percent,
+                END AS academic_score,
             -- 同理处理其他排名百分比
             CASE WHEN max_competition_rank > 1
                      THEN ROUND(
@@ -41,14 +41,14 @@
                         2
                           )
                  ELSE 100.00
-                END AS competition_rank_percent,
+                END AS competition_score,
             CASE WHEN max_activity_rank > 1
                      THEN ROUND(
                         (max_activity_rank - activity_rank) * 100.0 / (max_activity_rank - 1),
                         2
                           )
                  ELSE 100.00
-                END AS activity_rank_percent,
+                END AS activity_score,
             lecture_score,
             tutorial_score
         FROM (

@@ -304,6 +304,7 @@ export default {
       }
     },
     async fetchMajorCounts(parentId, isTell, divertForm) {
+      console.log('fetchMajorCounts', parentId, isTell, divertForm)
       try {
         const {data: countData} = await getMajorCount({
           parentId: parentId,

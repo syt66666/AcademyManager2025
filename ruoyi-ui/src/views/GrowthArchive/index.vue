@@ -143,7 +143,6 @@
 <script>
 import {getAbility} from "@/api/system/student";
 import EnhancedRadarChart from '@/components/RadarChart/index.vue';
-import store from "../../store";
 export default {
   components: {
     EnhancedRadarChart
@@ -224,7 +223,6 @@ export default {
         const response = await getAbility(this.studentId);
         if (response.code === 200) {
           this.abilityData = response.data;
-          console.log(this.abilityData)
           this.prepareRadarData();
         } else {
           this.$message.error('数据获取失败: ' + response.msg);
@@ -239,6 +237,7 @@ export default {
     // 准备雷达图数据格式
     prepareRadarData() {
       if (!this.abilityData) return;
+      console.log(this.abilityData)
 
       this.radarData = [
         {
@@ -249,11 +248,13 @@ export default {
             this.abilityData.activityScore,
             this.abilityData.lectureScore,
             this.abilityData.tutorialScore
+            // 85,70,30,40,75
           ]
+
         },
         {
           name: '书院平均',
-          value: [60, 65, 70, 60, 55] // 示例数据，可根据实际情况替换
+          value: [50, 50, 50, 50, 50] // 示例数据，可根据实际情况替换
         }
       ];
     },

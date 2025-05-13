@@ -35,7 +35,7 @@ export default {
   },
   data() {
     return {
-      title: '智慧书院管理系统',
+      title: '智慧书院系统',
       logo: logoImg // 将导入的图片绑定到 data 中的 logo
     }
   }
