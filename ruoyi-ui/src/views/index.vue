@@ -72,6 +72,15 @@
           </div>
         </div>
       </div>
+      <!-- 新增折线图部分 -->
+      <div class="trend-chart">
+        <div class="chart-header">
+          <h3>月度活动趋势</h3>
+          <span class="subtitle">近30天提交情况</span>
+        </div>
+        <div ref="trendChart" style="height: 320px; margin-top: 15px;"></div>
+      </div>
+
       <!--     智能助手浮窗 -->
       <div class="chat-assistant" @click="toggleChat">
         <i class="el-icon-chat-dot-round"></i>
@@ -127,6 +136,7 @@ import {getNickName, getStudent} from "@/api/system/student";
 import axios from "axios";
 import { getAbility } from "@/api/system/student";
 import EnhancedRadarChart from '@/components/RadarChart/index.vue';
+import * as echarts from 'echarts';
 export default {
   name: "DashboardPage",
   components: {
@@ -234,6 +244,7 @@ export default {
   mounted() {
     this.loadStudentData();
     this.loadAbilityData();
+    this.initChart();
   },
   methods: {
     async loadStudentData() {
@@ -373,6 +384,121 @@ export default {
     resetChat() {
       this.chatMessages = []
       this.inputMessage = ''
+    },
+    initChart() {
+      const chartDom = this.$refs.trendChart;
+      const myChart = echarts.init(chartDom);
+
+      const option = {
+        color: ['#ff6b6b', '#4ecdc4', '#ff9f43', '#5f27cd'],
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: '#fff',
+          borderWidth: 0,
+          borderRadius: 8,
+          textStyle: {
+            color: '#2d3748'
+          }
+        },
+        legend: {
+          bottom: 10,
+          data: ['科创竞赛', '文体活动', '讲座报告', '导师指导'],
+          itemWidth: 12,
+          itemHeight: 12
+        },
+        grid: {
+          top: 50,
+          left: 30,
+          right: 30,
+          bottom: 40
+        },
+        xAxis: {
+          type: 'category',
+          data: this.generateDateLabels(),
+          axisLine: {
+            lineStyle: {
+              color: '#e2e8f0'
+            }
+          }
+        },
+        yAxis: {
+          type: 'value',
+          splitLine: {
+            lineStyle: {
+              color: '#f1f5f9'
+            }
+          }
+        },
+        series: [
+          {
+            name: '科创竞赛',
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            data: [5, 8, 6, 10, 7, 12, 9],
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(255,107,107,0.2)' },
+                { offset: 1, color: 'rgba(255,107,107,0.02)' }
+              ])
+            }
+          },
+          {
+            name: '文体活动',
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            data: [3, 5, 8, 6, 4, 7, 5],
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(78,205,196,0.2)' },
+                { offset: 1, color: 'rgba(78,205,196,0.02)' }
+              ])
+            }
+          },
+          {
+            name: '讲座报告',
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            data: [2, 4, 3, 5, 6, 4, 3],
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(255,159,67,0.2)' },
+                { offset: 1, color: 'rgba(255,159,67,0.02)' }
+              ])
+            }
+          },
+          {
+            name: '导师指导',
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            data: [4, 6, 5, 7, 8, 5, 6],
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(95,39,205,0.2)' },
+                { offset: 1, color: 'rgba(95,39,205,0.02)' }
+              ])
+            }
+          }
+        ]
+      };
+
+      myChart.setOption(option);
+
+      // 窗口调整时自适应
+      window.addEventListener('resize', () => myChart.resize());
+    },
+    generateDateLabels() {
+      const labels = [];
+      const date = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const tempDate = new Date(date);
+        tempDate.setDate(date.getDate() - i);
+        labels.push(`${tempDate.getMonth()+1}/${tempDate.getDate()}`);
+      }
+      return labels;
     }
   }
 };
