@@ -62,18 +62,18 @@
 
             <!-- 承诺条款 -->
             <div class="clause-container">
-              <p class="clause-preamble">本人已完整阅读并充分理解以下条款内容：</p>
+              <p class="clause-preamble">本人已完整阅读并充分理解以下内容：</p>
               <ol class="clause-list">
                 <li class="clause-item">
                   <div class="clause-content">
                     <span class="clause-number">1</span>
-                    本次专业选择为专业分流阶段性摸底调查；
+                    本次为正式专业任选，学校将依此确定您的专业；
                   </div>
                 </li>
                 <li class="clause-item">
                   <div class="clause-content">
                     <span class="clause-number">2</span>
-                    本次开放时间为{{ selectedStartTime }}至{{ selectedEndTime }}，请务必在此时间段内进行专业选择；
+                    专业任选工作时间为{{ selectedStartTime }}至{{ selectedEndTime }}，请务必在此时间段内进行专业选择；
                   </div>
                 </li>
                 <li class="clause-item">
@@ -182,11 +182,11 @@ export default {
         {
           id: 3,
           title: '问卷3',
-          description: '2024届书院学生正式专业分流',
+          description: '2024级书院学生域内专业任选工作',
           type: '正式专业分流',
           completed: false,
-          start_time: '2025-05-1T00:00:00',
-          end_time: '2025-05-20T16:00:00'
+          start_time: '2025-05-19T06:00:00',
+          end_time: '2025-05-21T24:00:00'
         }
       ],
       showDialog: false,

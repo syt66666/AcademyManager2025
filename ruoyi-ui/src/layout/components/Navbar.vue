@@ -12,13 +12,13 @@
   <span class="label">书院：</span>{{ department }}
   <span class="label">系统内专业：</span>{{ specialty }}
   <span class="label">招生录取专业：</span>{{ major }}
-  <span class="label">分流形式：</span>{{ splitFlow }}
+  <span class="label">域内专业任选形式：</span>{{ splitFlow }}
 </span>
         <span class="user-info"
               v-if="userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'&&this.splitFlow==='不可变更专业'">
   <span class="label">书院：</span>{{ department }}
   <span class="label">系统内专业：</span>{{ specialty }}
-  <span class="label">分流形式：</span>{{ splitFlow }}
+  <span class="label">域内专业任选形式：</span>{{ splitFlow }}
 </span>
         <search id="header-search" class="right-menu-item"/>
         <screenfull id="screenfull" class="right-menu-item hover-effect"/>
@@ -116,11 +116,11 @@ export default {
           this.department = studentInfo.academy;
           this.major = studentInfo.major;
           if (studentInfo.divertForm === '可类内任选，并转专业') {
-            this.splitFlow = '可类内任选'
-          } else if (studentInfo.divertForm === '可类内任选，并转专业') {
-            this.splitFlow = '可类内任选'
+            this.splitFlow = '类内任选专业'
+          } else if (studentInfo.divertForm === '可类内任选，不能转专业') {
+            this.splitFlow = '域内任选专业'
           } else if (studentInfo.divertForm === '可域内任选，并转专业') {
-            this.splitFlow = '可域内任选'
+            this.splitFlow = '域内任选专业'
           }else this.splitFlow = studentInfo.divertForm;
           this.specialty = studentInfo.originalSystemMajor;
           if (studentInfo.innovationClass === 1) {

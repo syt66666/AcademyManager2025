@@ -23,7 +23,7 @@
       <div v-if="showConfirmDialogFlag" class="dialog-container">
         <div class="dialog-box">
           <h2>确认提交</h2>
-          <p>您确定要提交问卷吗？您选择的专业是：{{ this.finalAnswerText }}</p>
+          <p>您确定要提交问卷吗？您的选择是：{{ this.finalAnswerText }}</p>
           <div class="dialog-footer">
             <el-button @click="handleCancel">取消</el-button>
             <el-button type="primary" @click="submitQuestionnaire" class="confirm-button">确认提交</el-button>
@@ -229,7 +229,7 @@ export default {
             this.questionnaire = this.getQuestionnaireB();
             break;
           case '可类内任选，不能转专业':
-            this.questionnaire = this.getQuestionnaireB();
+            this.questionnaire = this.getQuestionnaireC();
             break;
           case '可域内任选，并转专业':
             this.questionnaire = this.getQuestionnaireD();
@@ -237,7 +237,12 @@ export default {
           case '不可变更专业':
             this.questionnaire = this.getQuestionnaire();
             break;
+          case '不参与此次专业任选':
+            this.questionnaire = this.getQuestionnaireA();
+            break;
         }
+      } else if(this.splitFlow ==='不参与此次专业任选'){
+        this.questionnaire = this.getQuestionnaireA();
       } else this.questionnaire = this.getQuestionnaireE();
 
       // 初始化显示第一个问题
@@ -262,13 +267,30 @@ export default {
         }
       ];
     },
+    //不参与专业任选
+    getQuestionnaireA() {
+      return [
+        {
+          id: 1,
+          text: '您的域内专业任选形式是 [单选题]',
+          options: [
+            {id: 1, text: '不参与此次专业任选', next: null},
+          ]
+        },
+        {
+          id: 999,
+          text: '问卷结束，感谢您的参与！',
+          options: []
+        }
+      ];
+    },
     //类内任选，并转专业的学生问卷
     getQuestionnaireB() {
       this.filter = 2;
       return [
         {
           id: 1,
-          text: '您的分流形式是 [单选题] ',
+          text: '您的域内专业任选形式是 [单选题] ',
           options: [
             {id: 1, text: '类内任选专业', next: this.num2},
           ]
@@ -367,7 +389,33 @@ export default {
         }
       ];
     },
-
+    //类内任选，并转专业的学生问卷
+    getQuestionnaireC() {
+      this.filter = 2;
+      return [
+        {
+          id: 1,
+          text: '您的域内专业任选形式是 [单选题] ',
+          options: [
+            {id: 1, text: '域内专业任选', next: 2},
+          ]
+        },
+        {
+          id: 2,
+          text: '请您选择 设计学类 内的意向专业 [单选题]',
+          options: [
+            {id: 1, text: '视觉传达设计', next: null},
+            {id: 2, text: '环境设计', next: null},
+            {id: 3, text: '雕塑', next: null},
+          ]
+        },
+        {
+          id: 999,
+          text: '问卷结束，感谢您的参与！',
+          options: []
+        }
+      ];
+    },
     // 域内任选的学生问卷
     getQuestionnaireD() {
       this.filter = 3;
@@ -375,7 +423,7 @@ export default {
       return [
         {
           id: 1,
-          text: '您的分流形式是 [单选题]',
+          text: '您的域内专业任选形式是 [单选题]',
           options: [
             {id: 1, text: '域内任选专业', next: this.num3},
           ]
@@ -534,7 +582,7 @@ export default {
       return [
         {
           id: 1,
-          text: '您的分流形式是 [单选题]',
+          text: '您的域内专业任选形式是 [单选题]',
           options: [
             {id: 1, text: '域内任选专业', next: 50},
           ]
@@ -764,6 +812,9 @@ export default {
         }
         else this.finalAnswerText = this.major;
       }
+      if (this.finalAnswerText === '不参与此次专业任选') {
+        this.finalAnswerText = '不参与此次专业任选';
+      }
       this.$set(this.selectedOptions, index, option.id);
       this.completed = option.next === null;
       this.currentDisplay = this.currentDisplay.slice(0, index + 1);
@@ -792,8 +843,17 @@ export default {
       if (this.splitFlow === "不可变更专业" || this.splitFlow === "仅可转专业") {
         this.finalAnswerText2 = 1;
       }
+      //不参与此次专业任选
+      else if (this.splitFlow === "不参与此次专业任选") {
+        this.finalAnswerText2 = 0;
+      }
       //类内任选
-      else if (this.splitFlow === "可类内任选，并转专业"||this.splitFlow === "可类内任选，不可转专业") {
+      else if (this.splitFlow === "可类内任选，不能转专业") {
+        // this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
+        this.finalAnswerText2 = 2;
+      }
+      //类内任选
+      else if (this.splitFlow === "可类内任选，并转专业") {
         // this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
         this.finalAnswerText2 = 3;
       }
