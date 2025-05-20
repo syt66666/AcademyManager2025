@@ -3,7 +3,7 @@
     <v-chart
       :options="chartOptions"
       :autoresize="true"
-      style="width: 100%; height: 500px"
+      style="width: 100%; height: 100%"
       @legendselectchanged="handleLegendSelect"
     />
   </div>
@@ -74,9 +74,9 @@ export default {
           text: this.title,
           subtext: this.subtext,
           left: 'center',
-          top: 20,
+          top: '5%',
           textStyle: {
-            fontSize: 22,
+            fontSize: 18,
             fontWeight: 'bold',
             color: 'linear-gradient(45deg, #606dbc, #465298)',
             fontFamily: 'Microsoft YaHei'
@@ -112,38 +112,29 @@ export default {
           }
         },
         legend: {
-          data: this.data.map(item => item.name),
-          bottom: 20,
-          icon: 'circle',
-          itemWidth: 10,
-          itemHeight: 10,
-          itemGap: 20,
+          orient: 'vertical',  // 改为垂直布局
+          right: '5%',
+          top: '15%',
+          itemGap: 12,  // 增加图例间距
           textStyle: {
-            color: '#666',
             fontSize: 12,
-            padding: [0, 5]
+            color: '#666'
           }
         },
         radar: {
           indicator: this.indicators,
-          shape: 'polygon',
-          splitNumber: 4,
-          radius: '85%',
-          center: ['50%', '55%'],
+          radius: '70%',  // 缩小雷达图半径
+          center: ['40%', '55%'],  // 调整中心位置
           axisName: {
             color: '#666',
-            fontSize: 12,
-            formatter: (value, indicator) => {
-              return `{a|${value}}\n{b|${indicator.max}}`
+            fontSize: 11,  // 缩小指标文字
+            formatter: (value) => {
+              return value.split('').join('\n')  // 文字竖排
             },
             rich: {
               a: {
-                fontSize: 12,
-                lineHeight: 18
-              },
-              b: {
-                fontSize: 9,
-                color: '#999'
+                fontSize: 11,
+                lineHeight: 16
               }
             }
           },
@@ -224,6 +215,7 @@ export default {
   border-radius: 0 !important;
   box-shadow: none !important;
   overflow: visible;
+  min-height: 400px;  /* 添加最小高度保证显示 */
 }
 
 /* 移除所有装饰效果 */
@@ -234,7 +226,7 @@ export default {
 
 /* 调整图表主体位置 */
 .echarts {
-  margin: -20px; /* 抵消默认边距 */
+  margin: 20px; /* 抵消默认边距 */
 }
 
 </style>

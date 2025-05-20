@@ -1,92 +1,137 @@
 <template>
-  <div class="welcome-container">
-    <div class="welcome-card">
-      <h1 class="welcome-message"
-          v-if="this.userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'">
-        您好，{{ studentName }}！</h1>
-      <h1 class="welcome-message"
-          v-if="this.userName === 'admin'">
-        您好，管理员！</h1>
-      <h1 class="welcome-message"
-          v-if="this.userName === '10001'||this.userName === '10002'||this.userName === '10003'||this.userName === '10004'||this.userName === '10005'||this.userName === '10006'||this.userName === '10007'">
-        您好，{{ studentName }}管理员！</h1>
-      <p class="user-info" v-if="this.userName !== 'admin'&&this.userName!== '10001'&&this.userName!== '10002'&&this.userName!== '10003'&&this.userName!== '10004'&&this.userName!== '10005'&&this.userName!== '10006'&&this.userName!== '10007'">
-        书院：{{ department }}<br/>
-        系统内专业：{{ specialty }}
-        <span v-if="this.splitFlow !== '不可变更专业'">
-    <br/>招生录取专业：{{ major }}
-  </span>
-      </p>
-      <p
-        class="user-info2"
-        v-if="
-      userName !== 'admin' &&
-    (specialty === '土木工程（国际班）' ||
-     specialty === '金属材料工程（中日精英班）' ||
-     specialty === '机械设计制造及其自动化(日语强化)' ||
-     specialty === '机械设计制造及其自动化（卓越国合班）')
-  "
-      >
-        (您目前所在专业为入学后选拔专业，根据学院、学校政策要求，您不再具有专业变更资格，请知悉。)
-      </p>
-      <p class="greeting-message">大工书院祝您心想事成！😊</p>
-    </div>
-
-<!--     智能助手浮窗 -->
-        <div class="chat-assistant" @click="toggleChat">
-          <i class="el-icon-chat-dot-round"></i>
+  <div class="dashboard-container">
+    <!-- 左侧信息面板 -->
+    <div class="left-panel">
+      <!-- 学生信息卡片 -->
+      <div class="info-card">
+        <div class="greeting-section">
+          <h1 class="greeting-text">{{ greetingText }}</h1>
+          <p class="greeting-subtext">大工书院祝您学业进步！🎓</p>
         </div>
 
-<!--     聊天对话框 -->
-        <el-dialog
-          :visible.sync="chatVisible"
-          title="大工智能助手"
-          width="600px"
-          custom-class="chat-dialog"
-          @closed="resetChat"
-        >
-          <div class="chat-container">
-            <div class="messages" ref="messages">
-              <div
-                v-for="(msg, index) in chatMessages"
-                :key="index"
-                :class="['message', msg.role]"
-              >
-                <div class="content">{{ msg.content }}</div>
-                <div class="time">{{ msg.time }}</div>
-              </div>
-              <div v-if="isLoading" class="loading">
-                <i class="el-icon-loading"></i> 助手思考中...
-              </div>
-            </div>
+        <div class="user-info">
+          <div class="info-row">
+            <span class="info-label">所属书院</span>
+            <span class="info-value">{{ department }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">系统专业</span>
+            <span class="info-value">{{ specialty }}</span>
+          </div>
+          <div v-if="major" class="info-row">
+            <span class="info-label">录取专业</span>
+            <span class="info-value">{{ major }}</span>
+          </div>
+        </div>
 
-            <div class="input-area">
-              <el-input
-                type="textarea"
-                :rows="3"
-                v-model="inputMessage"
-                @keyup.enter.native="sendMessage"
-                placeholder="输入您的问题（Shift+Enter换行）"
-              ></el-input>
-              <el-button
-                type="primary"
-                @click="sendMessage"
-                :disabled="!inputMessage.trim()"
-              >
-                发送
-              </el-button>
+        <div v-if="showSpecialNotice" class="special-notice">
+          <i class="el-icon-warning"></i>
+          您所在专业为选拔专业，不可变更
+        </div>
+      </div>
+
+      <!-- 能力雷达图 -->
+      <div class="radar-card">
+        <div class="card-header">
+          <span class="header-icon">📊</span>
+          <h3 class="header-title">综合能力评估</h3>
+          <span class="update-time">更新于 {{ lastUpdate }}</span>
+        </div>
+        <enhanced-radar-chart
+          :data="radarData"
+          :indicators="indicators"
+          style="height: 380px; margin-top: 15px;"
+        />
+      </div>
+    </div>
+
+    <!-- 右侧成长档案 -->
+    <div class="right-panel">
+      <h2 class="growth-title">成长档案概览</h2>
+      <div class="growth-grid">
+        <div
+          v-for="(item, key) in growthData"
+          :key="key"
+          class="growth-card"
+          :class="[key, { 'highlight': item.highlight }]"
+          @click="handleCardClick(key)"
+        >
+          <div class="card-icon">{{ item.icon }}</div>
+          <div class="card-content">
+            <h3 class="card-title">{{ item.label }}</h3>
+            <div class="data-section">
+              <span class="main-value">{{ item.value }}</span>
+              <span class="unit">{{ item.unit }}</span>
+            </div>
+            <div class="trend-section">
+              <span :class="['trend', item.trend]">
+                {{ trendIcon(item.trend) }} {{ item.ratio }}%
+              </span>
+              <span class="trend-label">学期同比</span>
             </div>
           </div>
-        </el-dialog>
+        </div>
+      </div>
+      <!--     智能助手浮窗 -->
+      <div class="chat-assistant" @click="toggleChat">
+        <i class="el-icon-chat-dot-round"></i>
+      </div>
+      <!--     聊天对话框 -->
+      <el-dialog
+        :visible.sync="chatVisible"
+        title="大工智能助手"
+        width="600px"
+        custom-class="chat-dialog"
+        @closed="resetChat"
+      >
+        <div class="chat-container">
+          <div class="messages" ref="messages">
+            <div
+              v-for="(msg, index) in chatMessages"
+              :key="index"
+              :class="['message', msg.role]"
+            >
+              <div class="content">{{ msg.content }}</div>
+              <div class="time">{{ msg.time }}</div>
+            </div>
+            <div v-if="isLoading" class="loading">
+              <i class="el-icon-loading"></i> 助手思考中...
+            </div>
+          </div>
+
+          <div class="input-area">
+            <el-input
+              type="textarea"
+              :rows="3"
+              v-model="inputMessage"
+              @keyup.enter.native="sendMessage"
+              placeholder="输入您的问题（Shift+Enter换行）"
+            ></el-input>
+            <el-button
+              type="primary"
+              @click="sendMessage"
+              :disabled="!inputMessage.trim()"
+            >
+              发送
+            </el-button>
+          </div>
+        </div>
+      </el-dialog>
+    </div>
   </div>
+
 </template>
 
 <script>
 import {getNickName, getStudent} from "@/api/system/student";
 import axios from "axios";
-
+import { getAbility } from "@/api/system/student";
+import EnhancedRadarChart from '@/components/RadarChart/index.vue';
 export default {
-  name: "WelcomePage",
+  name: "DashboardPage",
+  components: {
+    EnhancedRadarChart,
+  },
   data() {
     return {
       // 表单参数
@@ -102,50 +147,179 @@ export default {
       chatVisible: false,
       inputMessage: '',
       chatMessages: [],
-      isLoading: false
+      isLoading: false,
+      // 雷达图数据
+      abilityData: null,
+      radarData: [],
+
+      // 成长数据
+      growthData: {
+        competition: {
+          label: '科创竞赛',
+          icon: '🏆',
+          value: 0,
+          unit: '次参与',
+          ratio: 0,
+          trend: 'up',
+          highlight: false
+        },
+        activity: {
+          label: '文体活动',
+          icon: '🎨',
+          value: 0,
+          unit: '项成果',
+          ratio: 0,
+          trend: 'up',
+          highlight: true
+        },
+        report: {
+          label: '讲座报告',
+          icon: '📚',
+          value: 0,
+          unit: '场参与',
+          ratio: 0,
+          trend: 'flat',
+          highlight: false
+        },
+        mentorship: {
+          label: '导师指导',
+          icon: '👥',
+          value: 0,
+          unit: '次交流',
+          ratio: 0,
+          trend: 'up',
+          highlight: false
+        }
+      }
     };
   },
   computed: {
     userName() {
-      return this.$store.state.user.name; // 获取用户名
+      return this.$store.state.user.name;
+    },
+    greetingText() {
+      if (this.userName === 'admin') return '您好，管理员';
+      if (this.isSpecialAdmin) return `您好，${this.studentName}管理员`;
+      return `欢迎回来，${this.studentName}同学`;
+    },
+    showSpecialNotice() {
+      const specialMajors = [
+        '土木工程（国际班）',
+        '金属材料工程（中日精英班）',
+        '机械设计制造及其自动化(日语强化)',
+        '机械设计制造及其自动化（卓越国合班）'
+      ];
+      return specialMajors.includes(this.specialty);
+    },
+    isSpecialAdmin() {
+      return /^1000[1-7]$/.test(this.userName);
+    },
+    indicators() {
+      return this.abilityData ? [
+        { name: '学业成绩', max: 100 },
+        { name: '科创竞赛', max: 100 },
+        { name: '文体活动', max: 100 },
+        { name: '讲座报告', max: 100 },
+        { name: '导师指导', max: 100 }
+      ] : [];
+    },
+    lastUpdate() {
+      return new Date().toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
     }
   },
   mounted() {
-    this.initializeUserData();
+    this.loadStudentData();
+    this.loadAbilityData();
   },
   methods: {
-    async initializeUserData() {
-      if (this.userName === 'admin') {
-        this.studentName = '管理员'
-      } else if(this.userName === '10001' ||
-        this.userName === '10002'||
-        this.userName === '10003'||
-        this.userName === '10004'||
-        this.userName === '10005'||
-        this.userName === '10006'||
-        this.userName === '10007'){
-        const response = await getNickName();
-        this.studentName = response.msg;
-      }
-      else{
+    async loadStudentData() {
+      try {
+        if (this.userName === 'admin') return;
 
-        getStudent(this.userName).then(response => {
-          const studentInfo = response.studentInfo;
-          this.studentName = studentInfo.studentName;
-          this.department = studentInfo.academy;
-          this.splitFlow = studentInfo.divertForm;
-          this.major = studentInfo.major;
-          this.specialty = studentInfo.originalSystemMajor;
-          if (studentInfo.innovationClass === 1) {
-            this.specialClass = '是';
-          } else {
-            this.specialClass = '否';
-          }
-        });
+        const response = await getStudent(this.userName);
+        const data = response.studentInfo;
+
+        this.studentName = data.studentName;
+        this.department = data.academy || '--';
+        this.specialty = data.originalSystemMajor || '--';
+        this.major = data.major;
+        this.splitFlow = data.divertForm;
+
+        // 初始化成长数据
+        this.initGrowthData(data);
+      } catch (error) {
+        console.error('学生数据加载失败:', error);
+      }
+    },
+
+    async loadAbilityData() {
+      try {
+        const response = await getAbility(this.userName);
+        if (response.code === 200) {
+          this.abilityData = response.data;
+          this.prepareRadarData();
+        }
+      } catch (error) {
+        console.error('能力数据加载失败:', error);
+      }
+    },
+
+    initGrowthData(studentData) {
+      // 模拟数据，实际应替换为API数据
+      this.growthData.competition.value = studentData.competitionCount || 0;
+      this.growthData.activity.value = studentData.activityCount || 0;
+      this.growthData.report.value = studentData.lectureCount || 0;
+      this.growthData.mentorship.value = studentData.mentorMeetingCount || 0;
+    },
+
+    prepareRadarData() {
+      if (!this.abilityData) return;
+
+      this.radarData = [
+        {
+          name: '个人能力',
+          value: [
+            this.abilityData.academicScore,
+            this.abilityData.competitionScore,
+            this.abilityData.activityScore,
+            this.abilityData.lectureScore,
+            this.abilityData.tutorialScore
+          ]
+        },
+        {
+          name: '书院平均',
+          value: [75, 60, 65, 70, 68]
+        }
+      ];
+    },
+
+    trendIcon(trend) {
+      return {
+        up: '↑',
+        down: '↓',
+        flat: '→'
+      }[trend];
+    },
+
+    handleCardClick(type) {
+      // 处理卡片点击事件
+      const routes = {
+        competition: '/GrowthArchive/CompetitonRecord',
+        activity: '/GrowthArchive/ActivityRecord',
+        report: '/GrowthArchive/ReportManagement',
+        mentorship: '/GrowthArchive/MentorshipRecord'
+      };
+      if (routes[type]) {
+        this.$router.push(routes[type]);
       }
     },
     toggleChat() {
       this.chatVisible = !this.chatVisible
+      console.log(this.chatVisible)
     },
 
     async sendMessage() {
@@ -205,117 +379,250 @@ export default {
 </script>
 
 <style scoped>
-.welcome-container {
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 1fr 1.8fr;
+  gap: 30px;
+  padding-left: 120px;
+  padding-top: 20px;
+  min-height: calc(100vh - 60px);
+  background: #f8fafc;
+}
+
+/* 左侧面板样式 */
+.left-panel {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); /* 柔和的渐变背景 */
-  padding: 20px;
+  flex-direction: column;
+  gap: 25px;
 }
 
-.welcome-card {
-  background: rgba(255, 255, 255, 0.95); /* 半透明白色背景 */
-  padding: 3rem;
-  border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1),
-  inset 0 0 15px rgba(255, 255, 255, 0.3); /* 内外阴影结合 */
-  max-width: 800px;
-  width: 100%;
-  text-align: center;
-  transition: transform 0.3s ease;
-  backdrop-filter: blur(5px); /* 背景模糊效果 */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* 柔和边框 */
+.info-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.welcome-card:hover {
-  transform: translateY(-5px); /* 悬停微动效 */
+.greeting-section {
+  margin-bottom: 20px;
 }
 
-.welcome-message {
-  font-size: 2.5rem;
-  font-weight: 600;
+.greeting-text {
+  font-size: 2.2rem;
   color: #2c3e50;
-  margin-bottom: 1.5rem;
-  position: relative;
-  padding-bottom: 1rem;
+  margin-bottom: 8px;
 }
 
-.welcome-message::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, #6a89cc 0%, #82ccdd 100%); /* 装饰性下划线 */
+.greeting-subtext {
+  color: #718096;
+  font-size: 1rem;
 }
 
 .user-info {
-  font-size: 1.1rem;
-  color: #4a5568;
-  margin-bottom: 2rem;
-  text-align: left;
-  line-height: 1.8;
-  background: rgba(241, 245, 249, 0.4); /* 浅色背景 */
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin: 25px 0;
 }
 
-.user-info2 {
-  font-size: 0.95rem;
-  color: #2b6cb0;
-  margin-bottom: 2rem;
-  text-align: left;
-  padding: 1rem;
-  background: rgba(66, 153, 225, 0.08);
-  border-left: 4px solid #4299e1; /* 左侧装饰条 */
-  border-radius: 6px;
-  animation: fadeIn 0.5s ease; /* 淡入动画 */
-}
-
-.greeting-message {
-  font-size: 1.2rem;
-  color: #48bb78;
-  font-weight: 500;
-  display: inline-flex;
+.info-row {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1.5rem;
-  border-radius: 30px;
-  background: rgba(72, 187, 120, 0.1); /* 浅绿色背景 */
+  padding: 14px;
+  margin: 10px 0;
+  background: #f8f9fa;
+  border-radius: 8px;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+.info-label {
+  color: #4a5568;
+  font-size: 0.95rem;
+}
+
+.info-value {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.special-notice {
+  padding: 15px;
+  background: #fff9e6;
+  border-radius: 8px;
+  color: #e67e22;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-top: 20px;
+}
+
+.special-notice i {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+/* 雷达图卡片 */
+.radar-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  flex: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.header-icon {
+  font-size: 1.8rem;
+  margin-right: 12px;
+}
+
+.header-title {
+  font-size: 1.2rem;
+  color: #2d3748;
+  margin: 0;
+  flex: 1;
+}
+
+.update-time {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+/* 右侧成长档案 */
+.right-panel {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.growth-title {
+  color: #2d3748;
+  margin-bottom: 25px;
+  font-size: 1.4rem;
+}
+
+.growth-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.growth-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  display: flex;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border-left: 4px solid;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+}
+
+.growth-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.growth-card.competition { border-color: #ff6b6b; }
+.growth-card.activity { border-color: #4ecdc4; }
+.growth-card.report { border-color: #ff9f43; }
+.growth-card.mentorship { border-color: #5f27cd; }
+
+.card-icon {
+  font-size: 2.8rem;
+  margin-right: 20px;
+  width: 60px;
+  text-align: center;
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-title {
+  color: #4a5568;
+  font-size: 1.1rem;
+  margin: 0 0 12px 0;
+}
+
+.data-section {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.main-value {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-right: 8px;
+}
+
+.unit {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.trend-section {
+  display: flex;
+  align-items: center;
+}
+
+.trend {
+  font-size: 0.95rem;
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+.trend.up { color: #2ecc71; }
+.trend.down { color: #e74c3c; }
+.trend.flat { color: #f39c12; }
+
+.trend-label {
+  color: #718096;
+  font-size: 0.85rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .left-panel {
+    order: 2;
+  }
+
+  .right-panel {
+    order: 1;
+    margin-bottom: 30px;
   }
 }
 
 @media (max-width: 768px) {
-  .welcome-card {
-    padding: 2rem;
-    margin: 1rem;
+  .dashboard-container {
+    padding: 15px;
   }
 
-  .welcome-message {
-    font-size: 2rem;
+  .growth-grid {
+    grid-template-columns: 1fr;
   }
 
-  .user-info {
-    font-size: 1rem;
-    padding: 1rem;
+  .greeting-text {
+    font-size: 1.8rem;
   }
 
-  .greeting-message {
-    font-size: 1.1rem;
+  .card-icon {
+    font-size: 2.2rem;
+    margin-right: 15px;
+  }
+
+  .main-value {
+    font-size: 1.6rem;
   }
 }
 /* 智能助手图标美化 */
@@ -398,93 +705,5 @@ export default {
   animation: messageAppear 0.3s ease;
 }
 
-@keyframes messageAppear {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.message.user {
-  margin-left: auto;
-}
-
-.message.user .content {
-  background: #409EFF;
-  color: white;
-  border-radius: 18px 18px 4px 18px;
-}
-
-.message.assistant .content {
-  background: #ffffff;
-  color: #2d3748;
-  border-radius: 18px 18px 18px 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.content {
-  padding: 14px 18px;
-  font-size: 15px;
-  line-height: 1.5;
-  position: relative;
-  transition: transform 0.2s ease;
-}
-
-.time {
-  font-size: 12px;
-  color: #718096;
-  margin-top: 6px;
-  text-align: right;
-}
-
-/* 输入区域美化 */
-.input-area {
-  padding: 20px;
-  background: #fff;
-  border-top: 1px solid #edf2f7;
-}
-
-.input-area .el-textarea__inner {
-  border-radius: 12px;
-  padding: 14px;
-  font-size: 15px;
-  border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.input-area .el-textarea__inner:focus {
-  border-color: #409EFF;
-  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-}
-
-.input-area .el-button {
-  margin-top: 16px;
-  height: 48px;
-  border-radius: 12px;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-}
-
-.loading {
-  text-align: center;
-  padding: 16px;
-  color: #718096;
-  font-size: 14px;
-}
-
-.loading i {
-  margin-right: 8px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 </style>
 
