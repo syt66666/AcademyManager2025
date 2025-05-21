@@ -3,18 +3,46 @@
     <!-- 左侧部分 (echarts 图表部分) -->
     <div class="left-container">
       <el-card class="custom-card">
-        <!-- 滑动按钮 -->
-        <!--        <div class="switch-container">-->
-        <!--          <el-switch-->
-        <!--            v-model="isAfterMajorChange"-->
-        <!--            active-text="转专业后"-->
-        <!--            inactive-text="分流后"-->
-        <!--            @change="updateChart"-->
-        <!--          />-->
-        <!--        </div>-->
+        <div class="warning-indicator">
+      <span class="indicator-item">
+        <span class="indicator-color" style="background-color: #ff7875;"></span>
+        超过上限
+      </span>
+          <span class="indicator-item">
+        <span class="indicator-color" style="background-color: #ffc069;"></span>
+        低于下限
+      </span>
+        </div>
         <!-- 用于放置Echarts图表的DOM元素 -->
         <div id="echarts1" class="echart-container"/>
         <div id="echarts3" class="echart-container"/>
+        <div class="warning-panel">
+          <el-alert
+            v-if="warningData.overLimit.length > 0"
+            title="超过人数上限专业"
+            type="error"
+            :closable="false"
+            show-icon>
+            <ul>
+              <li v-for="(item, index) in warningData.overLimit" :key="'over'+index">
+                {{ item.major }}：{{ item.current }}人（上限 {{ item.limit }}人）
+              </li>
+            </ul>
+          </el-alert>
+
+          <el-alert
+            v-if="warningData.underLimit.length > 0"
+            title="低于人数下限专业"
+            type="warning"
+            :closable="false"
+            show-icon>
+            <ul>
+              <li v-for="(item, index) in warningData.underLimit" :key="'under'+index">
+                {{ item.major }}：{{ item.current }}人（下限 {{ item.limit }}人）
+              </li>
+            </ul>
+          </el-alert>
+        </div>
         <div id="changeTypeChart" class="echart-container"/>
       </el-card>
     </div>
@@ -41,6 +69,10 @@ export default {
       academyChangeType: {'1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0},
       selected: null,
       options: ["令希书院", "伯川书院", "厚德书院", "大煜书院", "求实书院", "知行书院", "笃学书院"],
+      warningData: {
+        overLimit: [], // 超过上限的专业
+        underLimit: [] // 低于下限的专业
+      }
     }
   },
   mounted() {
@@ -433,8 +465,29 @@ export default {
     },
 
     echarts3(data, academy) {
-      //console.log('Received data in echarts3:', data); // 添加调试信息
+      // console.log('Received data in echarts3:', data); // 添加调试信息
+      // ✅ 新增：切换书院时清空旧预警数据
+      this.warningData.overLimit = [];
+      this.warningData.underLimit = [];
+      // 新增预警阈值配置
+      const WARNING_CONFIG = {
+        OVER: { color: '#ff7875', text: '超过上限' },
+        UNDER: { color: '#ffc069', text: '低于下限' },
+        NORMAL: { color: '#3b82f6' }
+      };
+      // ✅ 新增测试阈值数据
+      const testMajorLimits = {
+        "求实书院": {
+          "软件工程": { min: 5, max: 10 },
+          "网络工程": { min: 30, max: 90 }
+        },
+        "令希书院": {
+          "智能建造": { min: 35, max: 80 }
+        },
+      };
 
+      // ✅ 使用测试数据（正式环境需替换为接口数据）
+      const majorLimits = testMajorLimits[academy] || {};
       var chartDom = document.getElementById('echarts3');
       var myChart = echarts.init(chartDom);
 
@@ -461,15 +514,41 @@ export default {
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
       // 遍历数据，根据数据更新 yData
+      // ✅ 3. 数据填充与阈值检测统一处理
       if (this.isAfterMajorChange === false && data.afterCnt1 && data.afterCnt1[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt1[academy])) {
-          // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
-          let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
+          let majorIndex = allMajors.indexOf(k2);
           if (majorIndex !== -1) {
-            yData[majorIndex] += v2; // 增加该专业的学生人数
+            yData[majorIndex] += v2;
+
+            // ✅ 4. 使用统一阈值配置
+            const limits = majorLimits[k2] || {min: 0, max: Infinity};
+            if (v2 > limits.max) {
+              this.warningData.overLimit.push({
+                major: k2,
+                current: v2,
+                limit: limits.max
+              });
+            } else if (v2 < limits.min) {
+              this.warningData.underLimit.push({
+                major: k2,
+                current: v2,
+                limit: limits.min
+              });
+            }
           }
         }
       }
+      // ✅ 正确位置：在所有数据处理完成后统一提示
+      if (this.warningData.overLimit.length > 0 || this.warningData.underLimit.length > 0) {
+        this.$notify({
+          title: '专业人数预警',
+          message: `发现 ${this.warningData.overLimit.length} 个超限专业和 ${this.warningData.underLimit.length} 个不足专业`,
+          type: 'warning',
+          duration: 5000
+        });
+      }
+
       // 遍历数据，根据数据更新 yData
       if (this.isAfterMajorChange === true && data.afterCnt2 && data.afterCnt2[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt2[academy])) {
@@ -493,10 +572,11 @@ export default {
         },
         tooltip: {
           trigger: 'axis',
-          axisPointer: {
-            type: 'shadow'
-          },
-          formatter: '{b}: {c}' // 显示数量
+          formatter: params => {
+            const {name, value} = params[0];
+            const limits = majorLimits[name] || {min: 0, max: Infinity};
+            let status = '';
+          }
         },
         grid: {
           bottom: 100,
@@ -545,11 +625,17 @@ export default {
             barWidth: '50%', // 设置柱子宽度
             itemStyle: {
               normal: {
-                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                  {offset: 0, color: '#3b82f6'},
-                  {offset: 1, color: '#9333ea'}
-                ]),
-                borderRadius: [10, 10, 0, 0] // 圆角设置
+                // ✅ 5. 修正颜色回调函数
+                color: (params) => {
+                  const major = xData[params.dataIndex];
+                  const value = yData[params.dataIndex];
+                  const limits = majorLimits[major] || { min: 0, max: Infinity };
+
+                  if (value > limits.max) return WARNING_CONFIG.OVER.color;
+                  if (value < limits.min) return WARNING_CONFIG.UNDER.color;
+                  return WARNING_CONFIG.NORMAL.color;
+                },
+                borderRadius: [10, 10, 0, 0]
               }
             },
             label: {
@@ -566,7 +652,8 @@ export default {
             },
             backgroundStyle: {
               color: 'rgba(180, 180, 180, 0.2)'
-            }
+            },
+
           }
         ]
       };
@@ -577,7 +664,6 @@ export default {
       myChart.on('click', function (param) {
         if (param.componentType === 'series') {
           const clickedMajor = param.name;  // 获取点击的专业名称
-
           console.log('this.isAfterMajorChange11:' + type)
           // 获取该专业的专业类型分布数据
           const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor, type);
@@ -735,7 +821,6 @@ export default {
         });
       }
     }
-
   },
 };
 </script>
@@ -794,5 +879,44 @@ export default {
     flex-direction: column;
     gap: 20px;
   }
+}
+.warning-indicator {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  z-index: 100;
+  display: flex;
+  gap: 15px;
+}
+
+.indicator-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.indicator-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+.warning-panel {
+  margin-top: 20px;
+}
+
+.warning-panel .el-alert {
+  margin-bottom: 15px;
+}
+
+.warning-panel ul {
+  margin: 5px 0 0 20px;
+  padding: 0;
+}
+
+.warning-panel li {
+  line-height: 1.8;
+  color: #666;
 }
 </style>

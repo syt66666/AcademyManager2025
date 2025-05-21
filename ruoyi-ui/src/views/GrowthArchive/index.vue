@@ -53,19 +53,19 @@
           </div>
 
           <!-- 中间雷达图 -->
-          <div class="radar-card">
-            <div class="radar-header">
-              <span class="chart-icon">📊</span>
-              综合能力评估
-              <span class="update-time">(最近更新: {{ lastUpdate }})</span>
-            </div>
-            <enhanced-radar-chart
-              :data="radarData"
-              :indicators="indicators"
-              :title="''"
-              style="height: 280px;"
-            />
-          </div>
+<!--          <div class="radar-card">-->
+<!--            <div class="radar-header">-->
+<!--              <span class="chart-icon">📊</span>-->
+<!--              综合能力评估-->
+<!--              <span class="update-time">(最近更新: {{ lastUpdate }})</span>-->
+<!--            </div>-->
+<!--            <enhanced-radar-chart-->
+<!--              :data="radarData"-->
+<!--              :indicators="indicators"-->
+<!--              :title="''"-->
+<!--              style="height: 280px;"-->
+<!--            />-->
+<!--          </div>-->
 
           <!-- 下半部分学期卡片 -->
           <div
