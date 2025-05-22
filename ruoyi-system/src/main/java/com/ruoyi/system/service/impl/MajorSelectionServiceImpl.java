@@ -87,7 +87,6 @@ public class MajorSelectionServiceImpl {
                                              @RequestParam("divertForm") String divertForm,
                                              @RequestParam("innovationStatus") Integer innovationStatus,
                                              @RequestParam("policyStatus") Integer policyStatus) {
-        System.out.println(111 + "major: " + major + " academy: " + academy + " innovationStatus: " + innovationStatus + " policyStatus: " + policyStatus);
         return strategyFactory.getStrategy(innovationStatus, policyStatus)
                 .getAvailableMajors(major, academy,divertForm);
     }
@@ -95,7 +94,6 @@ public class MajorSelectionServiceImpl {
     @Transactional(rollbackFor = Exception.class)
     public List<JSONObject> getEveryMajorCount(Integer parentId, boolean isTell, String divertFrom) {
         List<JSONObject> result = new ArrayList<>();
-        System.out.println("66666666666666666666666666666666666666666666");
         //得到父专业下面的所有子专业的数据
 
         //更新专业人数数据

@@ -210,7 +210,7 @@ export default {
     greetingText() {
       if (this.userName === 'admin') return '您好，管理员';
       if (this.isSpecialAdmin) return `您好，${this.studentName}管理员`;
-      return `欢迎回来，${this.studentName}同学`;
+      return `欢迎回来，同学`;
     },
     showSpecialNotice() {
       const specialMajors = [

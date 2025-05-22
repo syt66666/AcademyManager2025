@@ -525,6 +525,60 @@ export default {
 </script>
 
 <style scoped>
+.app-container {
+  /* 基础字体放大 */
+  font-size: 1.25rem; /* 默认16px → 20px */
+
+  /* 调整ElementUI组件字体 */
+  ::v-deep {
+    /* 表单项标签 */
+    .el-form-item__label {
+      font-size: 1.125rem !important; /* 18px */
+    }
+
+    /* 输入框文字 */
+    .el-input__inner,
+    .el-select .el-input__inner {
+      font-size: 1rem; /* 16px */
+    }
+
+    /* 表格文字 */
+    .el-table {
+      font-size: 1.125rem; /* 18px */
+      th > .cell { font-size: 1.125rem; }
+    }
+
+    /* 按钮文字 */
+    .el-button {
+      font-size: 1.125rem;
+      [class*=" el-icon-"], [class^=el-icon-] {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* 对话框标题 */
+    .el-dialog__title {
+      font-size: 1.5rem !important; /* 24px */
+    }
+  }
+}
+
+/* 调整特殊元素 */
+.table-title {
+  font-size: 1.75rem !important; /* 28px */
+}
+
+.credit-badge {
+  font-size: 1.125rem; /* 18px */
+}
+
+/* 展开面板文字调整 */
+.condition-panel {
+  font-size: 1.125rem;
+  .panel-header span {
+    font-size: 1.25rem;
+  }
+}
 /* ================= 全局样式变量 ================= */
 .app-container {
   --primary-color: #409eff;
