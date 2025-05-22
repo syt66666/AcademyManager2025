@@ -1,5 +1,32 @@
 <template>
   <div class="app-container">
+    <!-- 新增修读模式选择对话框 -->
+    <el-dialog
+      title="选择修读方式"
+      :visible.sync="dialogVisible"
+      width="30%"
+      :close-on-click-modal="false"
+    >
+      <el-radio-group v-model="selectedStudyMode">
+        <el-radio label="standard" border class="mode-radio">
+          <div class="mode-option">
+            <span class="mode-title">标准修读</span>
+            <span class="mode-desc">参加课程教学，完成课业要求</span>
+          </div>
+        </el-radio>
+        <el-radio label="activity" border class="mode-radio">
+          <div class="mode-option">
+            <span class="mode-title">活动置换</span>
+            <span class="mode-desc">通过实践活动置换课程学分</span>
+          </div>
+        </el-radio>
+      </el-radio-group>
+
+      <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="confirmEnroll">确 定</el-button>
+        </span>
+    </el-dialog>
     <!-- 查询表单 -->
     <el-form
       class="query-form"
@@ -112,11 +139,10 @@
               type="success"
               plain
               :disabled="scope.row.isEnrolled || scope.row.enrolledStudent >= scope.row.courseCapacity"
-              @click="handleEnroll(scope.row)"
+              @click="showModeDialog(scope.row)"
             >
               {{ scope.row.isEnrolled ? '已选' : '选课' }}
             </el-button>
-
             <el-button
               size="mini"
               type="danger"
@@ -126,6 +152,24 @@
             >
               退课
             </el-button>
+          </template>
+        </el-table-column>
+        <!-- 修改展开列代码 -->
+        <el-table-column type="expand" width="60">
+          <template slot-scope="{row}">
+            <!-- 修改可选链语法为传统写法 -->
+            <div class="condition-panel" v-if="row.replacementConditions && row.replacementConditions.length">
+              <div class="panel-header">
+                <i class="el-icon-notebook-2"></i>
+                <span>学分置换要求（{{ row.courseCode }}）</span>
+              </div>
+              <ul class="condition-list">
+                <li v-for="(item,index) in row.replacementConditions" :key="index">
+                  <el-tag size="mini" type="info">{{ index+1 }}</el-tag>
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -152,6 +196,9 @@ export default {
   name: "Course",
   data() {
     return {
+      dialogVisible: false,
+      selectedStudyMode: 'standard',
+      currentCourse: null,
       loading: true,
       total: 0,
       courseList: [],
@@ -175,6 +222,19 @@ export default {
     await this.getList();
   },
   methods: {
+    // 新增模式选择对话框控制
+    showModeDialog(row) {
+      this.currentCourse = row;
+      this.dialogVisible = true;
+    },
+    // 新增确认选课方法
+    confirmEnroll() {
+      if (!this.selectedStudyMode) {
+        this.$message.warning('请选择修读方式');
+        return;
+      }
+      this.handleEnroll(this.currentCourse, this.selectedStudyMode);
+    },
     // 全量加载选课记录（自动分页）
     async loadEnrollments() {
       try {
@@ -213,15 +273,23 @@ export default {
     },
 
     // 获取课程列表（自动同步状态）
+    // 修改后的getList方法
     async getList() {
       this.loading = true;
       try {
         const res = await listCourse(this.queryParams);
-        this.courseList = res.rows.map(course => ({
-          ...course,
-          courseCode: String(course.courseCode).trim(),
-          // enrolledStudent: Number(course.enrolledStudent) || 0
-        }));
+
+        // 添加固定置换规则
+        this.courseList = res.rows.map(course => {
+          // 为指定课程添加置换规则
+          const replacementRules = this.getStaticReplacementRules(course.courseCode);
+          console.log(replacementRules)
+          return {
+            ...course,
+            courseCode: String(course.courseCode).trim(),
+            replacementConditions: replacementRules
+          };
+        });
         this.total = res.total;
         this.markEnrolledCourses();
       } catch (error) {
@@ -232,6 +300,25 @@ export default {
       }
     },
 
+    // 新增静态规则配置方法
+    getStaticReplacementRules(courseCode) {
+      // 定义课程置换规则映射表
+      const replacementRules = {
+        'CS102': [
+          '完成至少3个科创项目实践',
+          '获得校级以上竞赛奖项',
+          '提交5000字实践报告'
+        ],
+        'CS101': [
+          '参加3次以上艺术工作坊',
+          '完成艺术作品创作',
+          '通过专家评审'
+        ]
+      }
+
+      // 返回对应课程的规则，没有则返回空数组
+      return replacementRules[courseCode] || [];
+    },
     // 强化版选课操作
     async handleEnroll(row) {
       try {
@@ -339,6 +426,60 @@ export default {
 </script>
 
 <style scoped>
+.app-container {
+  /* 基础字体放大 */
+  font-size: 1.25rem; /* 默认16px → 20px */
+
+  /* 调整ElementUI组件字体 */
+  ::v-deep {
+    /* 表单项标签 */
+    .el-form-item__label {
+      font-size: 1.125rem !important; /* 18px */
+    }
+
+    /* 输入框文字 */
+    .el-input__inner,
+    .el-select .el-input__inner {
+      font-size: 1rem; /* 16px */
+    }
+
+    /* 表格文字 */
+    .el-table {
+      font-size: 1.125rem; /* 18px */
+      th > .cell { font-size: 1.125rem; }
+    }
+
+    /* 按钮文字 */
+    .el-button {
+      font-size: 1.125rem;
+      [class*=" el-icon-"], [class^=el-icon-] {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* 对话框标题 */
+    .el-dialog__title {
+      font-size: 1.5rem !important; /* 24px */
+    }
+  }
+}
+
+/* 调整特殊元素 */
+.table-title {
+  font-size: 1.75rem !important; /* 28px */
+}
+
+.credit-badge {
+  font-size: 1.125rem; /* 18px */
+}
+
+/* 展开面板文字调整 */
+.condition-panel {
+  font-size: 1.125rem;
+  .panel-header span {
+    font-size: 1.25rem;
+  }
+}
 /* ================= 全局样式变量 ================= */
 .app-container {
   --primary-color: #409eff;
@@ -731,5 +872,40 @@ export default {
 /* 导入导出按钮特殊间距 */
 .action-bar {
   gap: 12px;
+}
+/* 新增模式选择样式 */
+.mode-radio {
+  width: 100%;
+  margin: 10px 0;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.mode-option {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+
+.mode-title {
+  font-weight: 600;
+  color: #2d3540;
+  margin-bottom: 5px;
+}
+
+.mode-desc {
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
+}
+
+::v-deep .el-radio__input {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+::v-deep .el-radio.is-bordered.is-checked {
+  border-color: #409EFF;
+  background: rgba(64, 158, 255, 0.05);
 }
 </style>

@@ -51,22 +51,6 @@
               <span v-if="semester.status === 'future'">⏳ 未开启</span>
             </div>
           </div>
-
-          <!-- 中间雷达图 -->
-<!--          <div class="radar-card">-->
-<!--            <div class="radar-header">-->
-<!--              <span class="chart-icon">📊</span>-->
-<!--              综合能力评估-->
-<!--              <span class="update-time">(最近更新: {{ lastUpdate }})</span>-->
-<!--            </div>-->
-<!--            <enhanced-radar-chart-->
-<!--              :data="radarData"-->
-<!--              :indicators="indicators"-->
-<!--              :title="''"-->
-<!--              style="height: 280px;"-->
-<!--            />-->
-<!--          </div>-->
-
           <!-- 下半部分学期卡片 -->
           <div
             v-for="(semester, index) in secondHalfSemesters"
@@ -506,12 +490,10 @@ export default {
 .semester-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: auto minmax(400px, 1fr) auto;/* 中间行高度设为雷达图高度 */
   grid-template-areas:
     "top1 top2 top3 top4"
-    "radar radar radar radar"
     "bottom1 bottom2 bottom3 bottom4";
-  gap: 1rem;
+  gap: 8rem 1rem;
 }
 
 /* 分配网格区域 */

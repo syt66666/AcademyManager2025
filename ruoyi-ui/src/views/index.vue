@@ -169,7 +169,7 @@ export default {
           icon: '🏆',
           value: 0,
           unit: '次参与',
-          ratio: 0,
+          ratio: 50,
           trend: 'up',
           highlight: false
         },
@@ -178,8 +178,8 @@ export default {
           icon: '🎨',
           value: 0,
           unit: '项成果',
-          ratio: 0,
-          trend: 'up',
+          ratio: 50,
+          trend: 'down',
           highlight: true
         },
         report: {
@@ -196,7 +196,7 @@ export default {
           icon: '👥',
           value: 0,
           unit: '次交流',
-          ratio: 0,
+          ratio: 100,
           trend: 'up',
           highlight: false
         }
@@ -281,10 +281,10 @@ export default {
 
     initGrowthData(studentData) {
       // 模拟数据，实际应替换为API数据
-      this.growthData.competition.value = studentData.competitionCount || 0;
-      this.growthData.activity.value = studentData.activityCount || 0;
-      this.growthData.report.value = studentData.lectureCount || 0;
-      this.growthData.mentorship.value = studentData.mentorMeetingCount || 0;
+      this.growthData.competition.value = studentData.competitionCount || 3;
+      this.growthData.activity.value = studentData.activityCount || 2;
+      this.growthData.report.value = studentData.lectureCount || 1;
+      this.growthData.mentorship.value = studentData.mentorMeetingCount || 2;
     },
 
     prepareRadarData() {
@@ -435,7 +435,7 @@ export default {
             type: 'line',
             smooth: true,
             symbol: 'circle',
-            data: [5, 8, 6, 10, 7, 12, 9],
+            data: [0, 1, 0, 0, 2, 0, 0],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: 'rgba(255,107,107,0.2)' },
@@ -448,7 +448,7 @@ export default {
             type: 'line',
             smooth: true,
             symbol: 'circle',
-            data: [3, 5, 8, 6, 4, 7, 5],
+            data: [1, 0, 0, 0, 0, 0, 1],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: 'rgba(78,205,196,0.2)' },
@@ -461,7 +461,7 @@ export default {
             type: 'line',
             smooth: true,
             symbol: 'circle',
-            data: [2, 4, 3, 5, 6, 4, 3],
+            data: [0, 0, 0, 1, 0, 0, 0],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: 'rgba(255,159,67,0.2)' },
@@ -474,7 +474,7 @@ export default {
             type: 'line',
             smooth: true,
             symbol: 'circle',
-            data: [4, 6, 5, 7, 8, 5, 6],
+            data: [0, 1, 0, 0, 0, 1, 0],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                 { offset: 0, color: 'rgba(95,39,205,0.2)' },
