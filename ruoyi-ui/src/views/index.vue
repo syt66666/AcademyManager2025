@@ -60,8 +60,11 @@
           <div class="card-content">
             <h3 class="card-title">{{ item.label }}</h3>
             <div class="data-section">
-              <span class="main-value">{{ item.value }}</span>
-              <span class="unit">{{ item.unit }}</span>
+              <template v-if="growthData[key].value !== undefined">
+                <span class="main-value">{{ growthData[key].value }}</span>
+                <span class="unit">{{ item.unit }}</span>
+              </template>
+              <el-skeleton v-else :rows="1" animated />
             </div>
             <div class="trend-section">
               <span :class="['trend', item.trend]">
@@ -134,7 +137,7 @@
 <script>
 import {getNickName, getStudent} from "@/api/system/student";
 import axios from "axios";
-import { getAbility } from "@/api/system/student";
+import { getAbility,getCountBySemester } from "@/api/system/student";
 import EnhancedRadarChart from '@/components/RadarChart/index.vue';
 import * as echarts from 'echarts';
 export default {
@@ -144,6 +147,7 @@ export default {
   },
   data() {
     return {
+      growthLoading: true,
       // 表单参数
       form: {},
       list: {},
@@ -245,8 +249,55 @@ export default {
     this.loadStudentData();
     this.loadAbilityData();
     this.initChart();
+    this.loadGrowthData();
   },
   methods: {
+    async loadGrowthData() {
+      try {
+        const response = await getCountBySemester(
+          '大一上', // 从store获取当前学期
+          this.userName // 使用当前用户ID
+
+        );
+        this.growthLoading = true;
+        if (response.code === 200) {
+          const data = response.data;
+          this.growthData = {
+            competition: {
+              ...this.growthData.competition,
+              value: data.competitionCount || 0,
+              ratio: this.calculateGrowthRatio(data.competitionCount)
+            },
+            activity: {
+              ...this.growthData.activity,
+              value: data.activityCount || 0,
+              ratio: this.calculateGrowthRatio(data.activityCount)
+            },
+            report: {
+              ...this.growthData.report,
+              value: data.lectureCount || 0,
+              ratio: this.calculateGrowthRatio(data.lectureCount)
+            },
+            mentorship: {
+              ...this.growthData.mentorship,
+              value: data.mentorshipCount || 0,
+              ratio: this.calculateGrowthRatio(data.mentorshipCount)
+            }
+          };
+        }
+      } catch (error) {
+        console.error('成长数据加载失败:', error);
+      }
+      finally {
+        this.growthLoading = false;
+      }
+    },
+
+// 计算增长比率（示例逻辑）
+    calculateGrowthRatio(currentValue) {
+      const lastSemesterValue = currentValue * 0.8; // 模拟上学期数据
+      return Math.round(((currentValue - lastSemesterValue) / lastSemesterValue) * 100);
+    },
     async loadStudentData() {
       try {
         if (this.userName === 'admin') return;
@@ -281,10 +332,10 @@ export default {
 
     initGrowthData(studentData) {
       // 模拟数据，实际应替换为API数据
-      this.growthData.competition.value = studentData.competitionCount || 3;
-      this.growthData.activity.value = studentData.activityCount || 2;
-      this.growthData.report.value = studentData.lectureCount || 1;
-      this.growthData.mentorship.value = studentData.mentorMeetingCount || 2;
+      this.growthData.competition.value = this.growthData.competition;
+      this.growthData.activity.value = this.growthData.activity;
+      this.growthData.report.value = this.growthData.report;
+      this.growthData.mentorship.value = this.growthData.mentorship;
     },
 
     prepareRadarData() {
