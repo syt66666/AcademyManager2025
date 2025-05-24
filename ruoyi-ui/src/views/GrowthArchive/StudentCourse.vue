@@ -117,7 +117,7 @@
           </template>
         </el-table-column>
         <el-table-column label="课程代码" align="center" prop="courseCode" min-width="160" />
-        <el-table-column label="课程名称" align="center" prop="courseName" min-width="200" />
+        <el-table-column label="课程名称" align="center" prop="courseName" min-width="150" />
         <el-table-column label="开课院系" align="center" prop="academy" min-width="120"/>
         <el-table-column label="授课教师" align="center" prop="teacherName" min-width="140" />
         <el-table-column label="学分值" align="center" prop="credit" min-width="80">
@@ -192,22 +192,55 @@
       title="选课学生列表"
       :visible.sync="dialogVisibleStudents"
       width="60%"
-      append-to-body>
+      append-to-body
+      class="student-dialog">
       <el-table
         :data="selectedStudents"
         border
-        v-loading="studentLoading">
-        <el-table-column prop="studentId" label="学号" width="180"></el-table-column>
-        <el-table-column prop="studentName" label="姓名"></el-table-column>
-        <el-table-column prop="academy" label="所属院系"></el-table-column>
+        v-loading="studentLoading"
+        class="enhanced-student-table"
+        :header-cell-style="{
+      'background': '#f5f7fa',
+      'color': '#2d3540',
+      'font-weight': '600'
+    }">
+        <el-table-column prop="studentId" label="学号" width="180">
+          <template slot-scope="{row}">
+            <span class="student-id">{{ row.studentId }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="studentName" label="姓名">
+          <template slot-scope="{row}">
+            <span class="student-name">{{ row.studentName }}</span>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="academy" label="所属院系">
+          <template slot-scope="{row}">
+            <el-tag type="info" size="mini">{{ row.academy }}</el-tag>
+          </template>
+        </el-table-column>
+
         <el-table-column prop="enrollmentTime" label="选课时间" width="180">
           <template slot-scope="{row}">
-            {{ parseTime(row.enrollmentTime) }}
+            <div class="enrollment-time">
+              <i class="el-icon-time"></i>
+              {{ parseTime(row.enrollmentTime) }}
+            </div>
           </template>
         </el-table-column>
       </el-table>
-      <div slot="footer">
-        <el-button @click="dialogVisibleStudents = false">关闭</el-button>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          icon="el-icon-download"
+          @click="handleExportStudents"
+          class="export-btn"
+          v-hasPermi="['system:course:export']">
+          导出名单
+        </el-button>
       </div>
     </el-dialog>
 
@@ -396,6 +429,25 @@ export default {
     this.getList();
   },
   methods: {
+    // 导出选课学生
+    handleExportStudents() {
+      if (this.selectedStudents.length === 0) {
+        this.$message.warning("没有可导出的数据");
+        return;
+      }
+
+      const courseCode = this.selectedStudents[0]?.courseCode;
+      if (!courseCode) {
+        this.$message.error("缺少课程代码参数");
+        return;
+      }
+
+      this.download('/system/enrollments/export', {
+        courseCode: courseCode
+      }, `选课名单_${courseCode}_${this.parseTime(new Date(), '{y}{m}{d}')}.xlsx`)
+
+      this.dialogVisibleStudents = false; // 导出后自动关闭对话框
+    },
     // 查看选课学生
     async handleViewStudents(row) {
       this.studentLoading = true;
@@ -582,6 +634,100 @@ export default {
 </script>
 
 <style scoped>
+/* 对话框整体样式 */
+.student-dialog {
+  ::v-deep .el-dialog {
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+
+    &__header {
+      border-bottom: 1px solid #ebeef5;
+      padding: 16px 24px;
+
+      .el-dialog__title {
+        font-size: 16px;
+        color: #2d3540;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+/* 表格美化 */
+.enhanced-student-table {
+  ::v-deep .el-table {
+    border-radius: 6px;
+
+    th {
+      background: #f5f7fa !important;
+      font-size: 14px;
+    }
+
+    td {
+      padding: 12px 0;
+      font-size: 14px;
+    }
+
+    .cell {
+      padding: 0 16px;
+    }
+  }
+}
+
+/* 学号样式 */
+.student-id {
+  font-family: Monaco, Consolas, monospace;
+  color: #409EFF;
+  font-weight: 500;
+}
+
+/* 姓名样式 */
+.student-name {
+  font-weight: 500;
+  color: #2d3540;
+}
+
+/* 选课时间 */
+.enrollment-time {
+  display: flex;
+  align-items: center;
+  color: #606266;
+
+  .el-icon-time {
+    margin-right: 6px;
+    color: #909399;
+    font-size: 14px;
+  }
+}
+
+/* 关闭按钮 */
+.close-btn {
+  padding: 9px 24px;
+  border-radius: 6px;
+  background-color: #409EFF;
+  color: white;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #66b1ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.2);
+  }
+}
+
+/* 加载状态 */
+::v-deep .el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.8);
+
+  .el-loading-spinner i {
+    color: #409EFF;
+  }
+
+  .el-loading-text {
+    color: #909399;
+    margin-top: 8px;
+  }
+}
 .app-container {
   /* 基础字体放大 */
   font-size: 1.25rem; /* 默认16px → 20px */

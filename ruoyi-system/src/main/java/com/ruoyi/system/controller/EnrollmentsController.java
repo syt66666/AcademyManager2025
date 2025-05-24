@@ -60,10 +60,10 @@ public class EnrollmentsController extends BaseController
 //    @PreAuthorize("@ss.hasPermi('system:enrollments:export')")
     @Log(title = "学生选课记录", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, Enrollments enrollments)
+    public void export(HttpServletResponse response, StuEnrollments enrollments)
     {
-        List<Enrollments> list = enrollmentsService.selectEnrollmentsList(enrollments);
-        ExcelUtil<Enrollments> util = new ExcelUtil<Enrollments>(Enrollments.class);
+        List<StuEnrollments> list = enrollmentsService.selectStuEnrollmentsList(enrollments);
+        ExcelUtil<StuEnrollments> util = new ExcelUtil<StuEnrollments>(StuEnrollments.class);
         util.exportExcel(response, list, "学生选课记录数据");
     }
 
