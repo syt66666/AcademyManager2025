@@ -2,13 +2,9 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.Enrollments;
+import com.ruoyi.system.domain.StuEnrollments;
 
-/**
- * 学生选课记录Mapper接口
- *
- * @author ruoyi
- * @date 2025-04-21
- */
+
 public interface EnrollmentsMapper
 {
     /**
@@ -18,7 +14,7 @@ public interface EnrollmentsMapper
      * @return 学生选课记录
      */
     public Enrollments selectEnrollmentsByEnrollmentId(Long enrollmentId);
-
+    public List<StuEnrollments> selectStudentEnrollmentsList(StuEnrollments enrollments);
     /**
      * 查询学生选课记录列表
      *

@@ -10,7 +10,14 @@
         <result property="courseCode"    column="course_code"    />
         <result property="enrollmentTime"    column="enrollment_time"    />
     </resultMap>
-
+    <resultMap type="StuEnrollments" id="StuEnrollmentsResult">
+        <result property="enrollmentId"    column="enrollment_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="courseCode"    column="course_code"    />
+        <result property="enrollmentTime"    column="enrollment_time"    />
+        <result property="studentName"    column="student_name"    />
+        <result property="academy"    column="academy"    />
+    </resultMap>
     <sql id="selectEnrollmentsVo">
         select enrollment_id, student_id, course_code, enrollment_time from enrollments
     </sql>
@@ -23,7 +30,15 @@
             <if test="enrollmentTime != null "> and enrollment_time = #{enrollmentTime}</if>
         </where>
     </select>
-
+    <select id="selectStudentEnrollmentsList" parameterType="StuEnrollments" resultMap="StuEnrollmentsResult">
+        select enrollment_id, s.student_id, course_code, enrollment_time,academy, student_name from enrollments e
+            join stu_info s on e.student_id = s.student_id
+        <where>
+            <if test="studentId != null "> and s.student_id = #{studentId}</if>
+            <if test="courseCode != null "> and course_code = #{courseCode}</if>
+            <if test="enrollmentTime != null "> and enrollment_time = #{enrollmentTime}</if>
+        </where>
+    </select>
     <select id="selectEnrollmentsByEnrollmentId" parameterType="Long" resultMap="EnrollmentsResult">
         <include refid="selectEnrollmentsVo"/>
         where enrollment_id = #{enrollmentId}

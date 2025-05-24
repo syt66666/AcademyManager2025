@@ -2,6 +2,8 @@ package com.ruoyi.system.controller;
 
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
+
+import com.ruoyi.system.domain.StuEnrollments;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,7 +47,13 @@ public class EnrollmentsController extends BaseController
         List<Enrollments> list = enrollmentsService.selectEnrollmentsList(enrollments);
         return getDataTable(list);
     }
-
+    @GetMapping("/list2")
+    public TableDataInfo list(StuEnrollments enrollments)
+    {
+        startPage();
+        List<StuEnrollments> list = enrollmentsService.selectStuEnrollmentsList(enrollments);
+        return getDataTable(list);
+    }
     /**
      * 导出学生选课记录列表
      */

@@ -3,6 +3,7 @@ package com.ruoyi.system.service.impl;
 import java.util.List;
 
 import com.ruoyi.system.domain.StuCourse;
+import com.ruoyi.system.domain.StuEnrollments;
 import com.ruoyi.system.mapper.StuCourseMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,7 +46,10 @@ public class EnrollmentsServiceImpl implements IEnrollmentsService {
     public List<Enrollments> selectEnrollmentsList(Enrollments enrollments) {
         return enrollmentsMapper.selectEnrollmentsList(enrollments);
     }
-
+    @Override
+    public List<StuEnrollments> selectStuEnrollmentsList(StuEnrollments enrollments) {
+        return enrollmentsMapper.selectStudentEnrollmentsList(enrollments);
+    }
     /**
      * 新增学生选课记录
      *

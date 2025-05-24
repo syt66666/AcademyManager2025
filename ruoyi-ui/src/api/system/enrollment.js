@@ -8,7 +8,13 @@ export function listEnrollments(query) {
     params: query
   })
 }
-
+export function listEnrollments2(query) {
+  return request({
+    url: '/system/enrollments/list2',
+    method: 'get',
+    params: query
+  })
+}
 // 查询学生选课记录详细
 export function getEnrollments(enrollmentId) {
   return request({

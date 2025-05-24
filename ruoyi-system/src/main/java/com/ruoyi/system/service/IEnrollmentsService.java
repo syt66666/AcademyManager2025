@@ -2,6 +2,7 @@ package com.ruoyi.system.service;
 
 import java.util.List;
 import com.ruoyi.system.domain.Enrollments;
+import com.ruoyi.system.domain.StuEnrollments;
 
 /**
  * 学生选课记录Service接口
@@ -26,7 +27,7 @@ public interface IEnrollmentsService
      * @return 学生选课记录集合
      */
     public List<Enrollments> selectEnrollmentsList(Enrollments enrollments);
-
+    public List<StuEnrollments> selectStuEnrollmentsList(StuEnrollments enrollments);
     /**
      * 新增学生选课记录
      *

@@ -165,6 +165,14 @@
               @click="handleDelete(scope.row)"
               v-hasPermi="['system:course:remove']"
             />
+            <el-button
+              v-if="scope.row.courseCategory === '特色课'"
+              size="mini"
+              type="text"
+              icon="el-icon-user"
+              class="action-icon view-icon"
+              @click="handleViewStudents(scope.row)">
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -178,6 +186,30 @@
         class="custom-pagination"
       />
     </el-card>
+
+    <!-- 学生选课信息对话框 -->
+    <el-dialog
+      title="选课学生列表"
+      :visible.sync="dialogVisibleStudents"
+      width="60%"
+      append-to-body>
+      <el-table
+        :data="selectedStudents"
+        border
+        v-loading="studentLoading">
+        <el-table-column prop="studentId" label="学号" width="180"></el-table-column>
+        <el-table-column prop="studentName" label="姓名"></el-table-column>
+        <el-table-column prop="academy" label="所属院系"></el-table-column>
+        <el-table-column prop="enrollmentTime" label="选课时间" width="180">
+          <template slot-scope="{row}">
+            {{ parseTime(row.enrollmentTime) }}
+          </template>
+        </el-table-column>
+      </el-table>
+      <div slot="footer">
+        <el-button @click="dialogVisibleStudents = false">关闭</el-button>
+      </div>
+    </el-dialog>
 
     <!-- 用户导入对话框 -->
     <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px">
@@ -278,11 +310,16 @@
 <script>
 import { listCourse, getCourse, delCourse, addCourse, updateCourse } from "@/api/system/course";
 import { getToken } from "@/utils/auth";
+import {listEnrollments, listEnrollments2} from "../../api/system/enrollment";
 
 export default {
   name: "Course",
   data() {
     return {
+      // 新增状态
+      dialogVisibleStudents: false,
+      selectedStudents: [],
+      studentLoading: false,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -359,6 +396,26 @@ export default {
     this.getList();
   },
   methods: {
+    // 查看选课学生
+    async handleViewStudents(row) {
+      this.studentLoading = true;
+      try {
+        const res = await listEnrollments2({
+          courseCode: row.courseCode
+        });
+
+        if (res.rows && res.rows.length) {
+          this.selectedStudents = res.rows;
+          this.dialogVisibleStudents = true;
+        } else {
+          this.$modal.msgInfo("当前课程暂无学生选课");
+        }
+      } catch (e) {
+        console.error("获取选课数据失败", e);
+      } finally {
+        this.studentLoading = false;
+      }
+    },
     calculateCourseHours() {
       if (typeof this.form.credit === 'number') {
         this.form.courseHours = this.form.credit * 12
