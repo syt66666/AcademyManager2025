@@ -227,4 +227,9 @@
             SUM(CASE WHEN audit_status = '未通过' THEN 1 ELSE 0 END) AS rejected
         FROM stu_mentorship_record
     </select>
+    <select id="getCountBySemester" resultType="Integer">
+        SELECT count(*)
+        FROM stu_mentorship_record
+        WHERE audit_status = '已通过' AND semester = #{semester} AND student_id = #{studentId}
+    </select>
 </mapper>

@@ -71,4 +71,8 @@ public interface StuLectureReportMapper {
     Map<String, Integer> countAuditStatus();
 
     int getStuLectureReportCount(String studentId);
+    Integer getCountBySemester(
+            @Param("semester") String semester,
+            @Param("studentId") String studentId
+    );
 }

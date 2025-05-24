@@ -97,3 +97,13 @@ export function getAbility(studentId) {
     method: 'get'
   })
 }
+export function getCountBySemester(semester, studentId) {
+  return request({
+    url: '/system/ability/count',
+    method: 'get',
+    params: {  // 查询参数通过 params 传递
+      semester: semester,
+      studentId: studentId
+    }
+  })
+}

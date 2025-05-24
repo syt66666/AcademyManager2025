@@ -1,11 +1,8 @@
 package com.ruoyi.system.service.impl;
 
-import com.ruoyi.system.domain.StuAbilityScore;
-import com.ruoyi.system.domain.StudentAbilityScore;
+import com.ruoyi.system.domain.*;
 import com.ruoyi.system.domain.dto.GpaResultDTO;
-import com.ruoyi.system.mapper.StuAbilityScoreMapper;
-import com.ruoyi.system.mapper.StuMajorMapper;
-import com.ruoyi.system.mapper.StuScoreMapper;
+import com.ruoyi.system.mapper.*;
 import com.ruoyi.system.service.IStuAbilityScoreService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +28,14 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
     private StuAbilityScoreMapper abilityMapper;
     @Autowired
     private StuMajorMapper majorMapper;
+    @Autowired
+    private StuCompetitionRecordMapper competitionMapper;
+    @Autowired
+    private StuActivityRecordMapper activityMapper;
+    @Autowired
+    private StuMentorshipRecordMapper mentorshipMapper;
+    @Autowired
+    private StuLectureReportMapper lectureMapper;
 
     @Value("${gpa.maxValue:5.0}")
     private BigDecimal maxGpa; // 系统配置最高GPA
@@ -75,6 +80,46 @@ public class StuAbilityScoreServiceImpl implements IStuAbilityScoreService {
         List<String> academy = majorMapper.selectDistinctMajorIdsByStudents(studentIds);
         System.out.println("academy:"+academy);
         majorMapper.updateRankedStudents(academy);
+    }
+
+    @Override
+    public SemesterStatistics selectCountBySemester(String semester, String studentId) {
+        // 清理参数（去除双引号和空格）
+        semester = semester.replace("\"", "").trim();
+        studentId = studentId.replace("\"", "").trim();
+
+        // 查询前三个统计值（使用原始 semester 值）
+        Integer competitionCount = competitionMapper.getCountBySemester(semester, studentId);
+        Integer activityCount = activityMapper.getCountBySemester(semester, studentId);
+        Integer mentorshipCount = mentorshipMapper.getCountBySemester(semester, studentId);
+
+        // 转换 semester 为数字格式（用于 lectureMapper）
+        String convertedSemester = convertSemesterToNumber(semester);
+        Integer lectureCount = lectureMapper.getCountBySemester(convertedSemester, studentId);
+
+        // 封装结果
+        SemesterStatistics stats = new SemesterStatistics();
+        stats.setCompetitionCount(competitionCount);
+        stats.setActivityCount(activityCount);
+        stats.setMentorshipCount(mentorshipCount);
+        stats.setLectureCount(lectureCount);
+
+        return stats;
+    }
+
+    // 学期名称转数字的辅助方法
+    private String convertSemesterToNumber(String semester) {
+        switch (semester) {
+            case "大一上": return "1";
+            case "大一下": return "2";
+            case "大二上": return "3";
+            case "大二下": return "4";
+            case "大三上": return "5";
+            case "大三下": return "6";
+            case "大四上": return "7";
+            case "大四下": return "8";
+            default: return semester; // 默认返回原值（或抛异常）
+        }
     }
 
     // 手动实现列表分片（兼容JDK8）
