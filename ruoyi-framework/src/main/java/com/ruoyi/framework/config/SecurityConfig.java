@@ -101,7 +101,7 @@ public class SecurityConfig
             .csrf(csrf -> csrf.disable())
             // 禁用HTTP响应标头
             .headers((headersCustomizer) -> {
-                headersCustomizer.frameOptions().deny();
+                headersCustomizer.frameOptions().disable();
             })
             // 认证失败处理类
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
