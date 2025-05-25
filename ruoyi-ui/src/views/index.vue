@@ -446,9 +446,10 @@ export default {
         report: '/GrowthArchive/ReportManagement',
         mentorship: '/GrowthArchive/MentorshipRecord'
       };
-      if (routes[type]) {
-        this.$router.push(routes[type]);
-      }
+      this.$router.push({
+        path: routes[type],
+        query: {semester: this.currentSemester.name}
+      })
     },
     toggleChat() {
       this.chatVisible = !this.chatVisible

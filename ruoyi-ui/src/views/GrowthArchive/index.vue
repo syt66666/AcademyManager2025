@@ -97,7 +97,6 @@
           >
             <div class="panel-header">
               <h3>{{ currentSemester.name }}成长记录</h3>
-              <span class="gpa">GPA: {{ currentSemester.gpa || '--' }}</span>
               <button class="close-btn" @click.stop="closePanel">×</button>
             </div>
 
@@ -113,7 +112,6 @@
                 </div>
                 <div class="module-info">
                   <h4>{{ module.label }}</h4>
-                  <p>{{ currentSemester.stats[key] }}</p>
                 </div>
               </div>
             </div>
