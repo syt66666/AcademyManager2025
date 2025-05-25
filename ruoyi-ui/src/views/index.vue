@@ -35,7 +35,7 @@
         <div class="card-header">
           <span class="header-icon">📊</span>
           <h3 class="header-title">综合能力评估</h3>
-          <span class="update-time">更新于 {{ lastUpdate }}</span>
+          <span class="update-time">  {{ currentSemester.name }} ({{ currentSemester.range }})</span>
         </div>
         <enhanced-radar-chart
           :data="radarData"
@@ -64,12 +64,12 @@
                 <span class="main-value">{{ growthData[key].value }}</span>
                 <span class="unit">{{ item.unit }}</span>
               </template>
-              <el-skeleton v-else :rows="1" animated />
+              <el-skeleton v-else :rows="1" animated/>
             </div>
             <div class="trend-section">
-              <span :class="['trend', item.trend]">
-                {{ trendIcon(item.trend) }} {{ item.ratio }}%
-              </span>
+    <span :class="['trend', item.trend]">
+      {{ trendIcon(item.trend) }} {{ formatRatio(item.ratio) }}
+    </span>
               <span class="trend-label">学期同比</span>
             </div>
           </div>
@@ -137,9 +137,10 @@
 <script>
 import {getNickName, getStudent} from "@/api/system/student";
 import axios from "axios";
-import { getAbility,getCountBySemester } from "@/api/system/student";
+import {getAbility, getCountBySemester} from "@/api/system/student";
 import EnhancedRadarChart from '@/components/RadarChart/index.vue';
 import * as echarts from 'echarts';
+
 export default {
   name: "DashboardPage",
   components: {
@@ -147,6 +148,10 @@ export default {
   },
   data() {
     return {
+      currentSemester: {
+        name: '',
+        range: ''
+      },
       growthLoading: true,
       // 表单参数
       form: {},
@@ -157,7 +162,7 @@ export default {
       specialty: '',
       specialClass: '',
       splitFlow: '',
-      nickName:'',
+      nickName: '',
       chatVisible: false,
       inputMessage: '',
       chatMessages: [],
@@ -216,6 +221,9 @@ export default {
       if (this.isSpecialAdmin) return `您好，${this.studentName}管理员`;
       return `欢迎回来，同学`;
     },
+    admissionYear() {
+      return this.userName?.substring(0, 4) || new Date().getFullYear()
+    },
     showSpecialNotice() {
       const specialMajors = [
         '土木工程（国际班）',
@@ -230,11 +238,11 @@ export default {
     },
     indicators() {
       return this.abilityData ? [
-        { name: '学业成绩', max: 100 },
-        { name: '科创竞赛', max: 100 },
-        { name: '文体活动', max: 100 },
-        { name: '讲座报告', max: 100 },
-        { name: '导师指导', max: 100 }
+        {name: '学业成绩', max: 100},
+        {name: '科创竞赛', max: 100},
+        {name: '文体活动', max: 100},
+        {name: '讲座报告', max: 100},
+        {name: '导师指导', max: 100}
       ] : [];
     },
     lastUpdate() {
@@ -249,54 +257,135 @@ export default {
     this.loadStudentData();
     this.loadAbilityData();
     this.initChart();
+    this.initSemesterInfo();
     this.loadGrowthData();
   },
   methods: {
-    async loadGrowthData() {
-      try {
-        const response = await getCountBySemester(
-          '大一上', // 从store获取当前学期
-          this.userName // 使用当前用户ID
+    // 获取学期索引对应的名称
+    getSemesterNameByIndex(index) {
+      return this.generateSemesterTime(index).name
+    },
 
-        );
-        this.growthLoading = true;
-        if (response.code === 200) {
-          const data = response.data;
-          this.growthData = {
-            competition: {
-              ...this.growthData.competition,
-              value: data.competitionCount || 0,
-              ratio: this.calculateGrowthRatio(data.competitionCount)
-            },
-            activity: {
-              ...this.growthData.activity,
-              value: data.activityCount || 0,
-              ratio: this.calculateGrowthRatio(data.activityCount)
-            },
-            report: {
-              ...this.growthData.report,
-              value: data.lectureCount || 0,
-              ratio: this.calculateGrowthRatio(data.lectureCount)
-            },
-            mentorship: {
-              ...this.growthData.mentorship,
-              value: data.mentorshipCount || 0,
-              ratio: this.calculateGrowthRatio(data.mentorshipCount)
-            }
-          };
-        }
-      } catch (error) {
-        console.error('成长数据加载失败:', error);
+    initSemesterInfo() {
+      const index = this.getCurrentSemesterIndex()
+      this.currentSemester = this.generateSemesterTime(index)
+      console.log(this.currentSemester)
+    },
+    // 根据当前时间计算学期索引
+    getCurrentSemesterIndex() {
+      const now = new Date()
+      const baseYear = parseInt(this.admissionYear)
+
+      let yearOffset = now.getFullYear() - baseYear
+      if (now.getMonth() < 8) {
+        yearOffset -= 1
       }
-      finally {
-        this.growthLoading = false;
+
+      const maxIndex = 7
+      const rawIndex = yearOffset * 2 + (now.getMonth() >= 8 || now.getMonth() < 2 ? 0 : 1)
+
+      return Math.min(rawIndex, maxIndex)
+    },
+    generateSemesterTime(index) {
+      const semesterNames = [
+        '大一上', '大一下',
+        '大二上', '大二下',
+        '大三上', '大三下',
+        '大四上', '大四下'
+      ]
+
+      const baseYear = parseInt(this.admissionYear)
+      const academicYearOffset = Math.floor(index / 2)
+      const isFirstSemester = index % 2 === 0
+
+      let timeRange
+      if (isFirstSemester) {
+        const startYear = baseYear + academicYearOffset
+        timeRange = `${startYear}.09-${startYear + 1}.01`
+      } else {
+        const startYear = baseYear + academicYearOffset
+        timeRange = `${startYear}.03-${startYear}.07`
+      }
+
+      return {
+        name: semesterNames[index],
+        range: timeRange
       }
     },
 
-// 计算增长比率（示例逻辑）
-    calculateGrowthRatio(currentValue) {
-      const lastSemesterValue = currentValue * 0.8; // 模拟上学期数据
-      return Math.round(((currentValue - lastSemesterValue) / lastSemesterValue) * 100);
+
+    // 重构后的加载成长数据方法
+    async loadGrowthData() {
+      try {
+        const currentIndex = this.getCurrentSemesterIndex()
+        const lastIndex = currentIndex > 0 ? currentIndex - 1 : null
+
+        // 获取当前学期数据
+        const currentRes = await getCountBySemester(
+          this.currentSemester.name,
+          this.userName
+        )
+
+        // 获取上学期数据
+        let lastRes = { data: {} }
+        if (lastIndex !== null) {
+          const lastSemesterName = this.getSemesterNameByIndex(lastIndex)
+          lastRes = await getCountBySemester(lastSemesterName, this.userName)
+        }
+
+        // 处理竞赛数据
+        this.processGrowthItem('competition', currentRes.data, lastRes.data)
+        // 处理其他数据项
+        this.processGrowthItem('activity', currentRes.data, lastRes.data)
+        this.processGrowthItem('report', currentRes.data, lastRes.data)
+        this.processGrowthItem('mentorship', currentRes.data, lastRes.data)
+
+      } catch (error) {
+        console.error('成长数据加载失败:', error)
+      }
+    },
+    // 统一处理数据项的方法
+    processGrowthItem(type, currentData, lastData) {
+      const currentValue = currentData[`${type}Count`] || 0
+      const lastValue = lastData[`${type}Count`] || 0
+
+      this.growthData[type].value = currentValue
+      this.growthData[type].ratio = this.calculateGrowthRatio(currentValue, lastValue)
+      this.growthData[type].trend = this.determineTrend(currentValue, lastValue)
+    },
+    // 重构后的计算方法
+    calculateGrowthRatio(currentValue, lastValue) {
+      // 处理边界情况
+      if (lastValue === 0) {
+        return currentValue === 0 ? 0 : Infinity // 新增数据标记
+      }
+
+      const ratio = ((currentValue - lastValue) / lastValue) * 100
+      return Math.round(ratio)
+    },
+
+    // 判断趋势方向
+    determineTrend(current, last) {
+      if (current === last) return 'flat'
+      if (last === 0 && current > 0) return 'up' // 新增数据
+      if (current === 0 && last > 0) return 'down' // 数据归零
+      return current > last ? 'up' : 'down'
+    },
+
+    // 格式化显示比率
+    formatRatio(value) {
+      if (value === Infinity) return '📈新增'
+      if (value === -Infinity) return '📉归零'
+      return Number.isFinite(value) ? `${Math.abs(value)}%` : '--'
+    },
+
+    // 趋势图标显示
+    trendIcon(trend) {
+      return {
+        up: '↑',
+        down: '↓',
+        flat: '→'
+      }[trend]
     },
     async loadStudentData() {
       try {
@@ -311,8 +400,6 @@ export default {
         this.major = data.major;
         this.splitFlow = data.divertForm;
 
-        // 初始化成长数据
-        this.initGrowthData(data);
       } catch (error) {
         console.error('学生数据加载失败:', error);
       }
@@ -328,14 +415,6 @@ export default {
       } catch (error) {
         console.error('能力数据加载失败:', error);
       }
-    },
-
-    initGrowthData(studentData) {
-      // 模拟数据，实际应替换为API数据
-      this.growthData.competition.value = this.growthData.competition;
-      this.growthData.activity.value = this.growthData.activity;
-      this.growthData.report.value = this.growthData.report;
-      this.growthData.mentorship.value = this.growthData.mentorship;
     },
 
     prepareRadarData() {
@@ -357,14 +436,6 @@ export default {
           value: [75, 60, 65, 70, 68]
         }
       ];
-    },
-
-    trendIcon(trend) {
-      return {
-        up: '↑',
-        down: '↓',
-        flat: '→'
-      }[trend];
     },
 
     handleCardClick(type) {
@@ -401,7 +472,7 @@ export default {
 
       try {
         const response = await // 修改axios请求为绝对路径
-          axios.post(process.env.VUE_APP_BASE_API+'/system/assistant/chat', {
+          axios.post(process.env.VUE_APP_BASE_API + '/system/assistant/chat', {
             message: question
           })
 
@@ -489,8 +560,8 @@ export default {
             data: [0, 1, 0, 0, 2, 0, 0],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: 'rgba(255,107,107,0.2)' },
-                { offset: 1, color: 'rgba(255,107,107,0.02)' }
+                {offset: 0, color: 'rgba(255,107,107,0.2)'},
+                {offset: 1, color: 'rgba(255,107,107,0.02)'}
               ])
             }
           },
@@ -502,8 +573,8 @@ export default {
             data: [1, 0, 0, 0, 0, 0, 1],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: 'rgba(78,205,196,0.2)' },
-                { offset: 1, color: 'rgba(78,205,196,0.02)' }
+                {offset: 0, color: 'rgba(78,205,196,0.2)'},
+                {offset: 1, color: 'rgba(78,205,196,0.02)'}
               ])
             }
           },
@@ -515,8 +586,8 @@ export default {
             data: [0, 0, 0, 1, 0, 0, 0],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: 'rgba(255,159,67,0.2)' },
-                { offset: 1, color: 'rgba(255,159,67,0.02)' }
+                {offset: 0, color: 'rgba(255,159,67,0.2)'},
+                {offset: 1, color: 'rgba(255,159,67,0.02)'}
               ])
             }
           },
@@ -528,8 +599,8 @@ export default {
             data: [0, 1, 0, 0, 0, 1, 0],
             areaStyle: {
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: 'rgba(95,39,205,0.2)' },
-                { offset: 1, color: 'rgba(95,39,205,0.02)' }
+                {offset: 0, color: 'rgba(95,39,205,0.2)'},
+                {offset: 1, color: 'rgba(95,39,205,0.02)'}
               ])
             }
           }
@@ -547,7 +618,7 @@ export default {
       for (let i = 6; i >= 0; i--) {
         const tempDate = new Date(date);
         tempDate.setDate(date.getDate() - i);
-        labels.push(`${tempDate.getMonth()+1}/${tempDate.getDate()}`);
+        labels.push(`${tempDate.getMonth() + 1}/${tempDate.getDate()}`);
       }
       return labels;
     }
@@ -704,10 +775,21 @@ export default {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.growth-card.competition { border-color: #ff6b6b; }
-.growth-card.activity { border-color: #4ecdc4; }
-.growth-card.report { border-color: #ff9f43; }
-.growth-card.mentorship { border-color: #5f27cd; }
+.growth-card.competition {
+  border-color: #ff6b6b;
+}
+
+.growth-card.activity {
+  border-color: #4ecdc4;
+}
+
+.growth-card.report {
+  border-color: #ff9f43;
+}
+
+.growth-card.mentorship {
+  border-color: #5f27cd;
+}
 
 .card-icon {
   font-size: 2.8rem;
@@ -755,9 +837,17 @@ export default {
   font-weight: 500;
 }
 
-.trend.up { color: #2ecc71; }
-.trend.down { color: #e74c3c; }
-.trend.flat { color: #f39c12; }
+.trend.up {
+  color: #2ecc71;
+}
+
+.trend.down {
+  color: #e74c3c;
+}
+
+.trend.flat {
+  color: #f39c12;
+}
 
 .trend-label {
   color: #718096;
@@ -802,6 +892,7 @@ export default {
     font-size: 1.6rem;
   }
 }
+
 /* 智能助手图标美化 */
 .chat-assistant {
   position: fixed;
@@ -833,8 +924,12 @@ export default {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* 对话框美化 */

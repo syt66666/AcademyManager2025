@@ -184,6 +184,7 @@ export default {
       const start = parseInt(this.admissionYear)
       return `${start}-${start + 4}`
     }
+
   },
   created() {
     this.semesters = Array.from({length: 8}, (_, index) => {
