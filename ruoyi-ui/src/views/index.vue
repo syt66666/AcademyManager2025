@@ -208,7 +208,7 @@ export default {
           { label: '导师指导', icon: '👥', path: '/GrowthArchive/GrowthArchive/MentorshipRecordAudit' }
         ],
         studentMgmt: [
-          { label: '学生管理', icon: '👩🎓', path: '/manage/students' },
+          { label: '学生管理', icon: '🎓', path: '/system/user' },
           { label: '课程管理', icon: '📖', path: '/GrowthArchive/GrowthArchive/StudentCourse' },
           { label: '成绩管理', icon: '📝', path: '/GrowthArchive/GrowthArchive/StudentScore' },
           { label: '分流统计', icon: '📊', path: '/test2/index' }

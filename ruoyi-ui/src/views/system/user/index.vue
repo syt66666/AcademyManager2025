@@ -2,17 +2,6 @@
   <div class="app-container">
     <el-row :gutter="20">
       <splitpanes :horizontal="this.$store.getters.device === 'mobile'" class="default-theme">
-        <!--部门数据-->
-        <!--  <pane size="16">
-          <el-col>
-            <div class="head-container">
-              <el-input v-model="deptName" placeholder="请输入部门名称" clearable size="small" prefix-icon="el-icon-search" style="margin-bottom: 20px" />
-            </div>
-            <div class="head-container">
-              <el-tree :data="deptOptions" :props="defaultProps" :expand-on-click-node="false" :filter-node-method="filterNode" ref="tree" node-key="id" default-expand-all highlight-current @node-click="handleNodeClick" />
-            </div>
-          </el-col>
-        </pane> -->
         <!--用户数据-->
         <pane size="84">
           <el-col>
