@@ -2,15 +2,32 @@
   <div class="dashboard-container">
     <!-- 左侧信息面板 -->
     <div class="left-panel">
+      <!-- 管理员欢迎卡片 -->
+      <div class="info-card" v-if="isAdmin">
+        <div class="admin-greeting">
+          <h1 class="greeting-text">{{ greetingText }}</h1>
+          <p class="greeting-subtext">大工书院精细化管理控制台</p>
+          <div class="system-info">
+            <div class="info-item">
+              <span class="info-label">所属书院</span>
+              <span class="info-value">求实书院</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">登录时间</span>
+              <span class="info-value">{{ new Date().toLocaleString() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- 学生信息卡片 -->
-      <div class="info-card">
+      <div class="info-card" v-if="!isAdmin">
         <div class="greeting-section">
           <h1 class="greeting-text">{{ greetingText }}</h1>
           <p class="greeting-subtext">大工书院祝您学业进步！🎓</p>
         </div>
 
-        <div class="user-info">
-          <div class="info-row">
+        <div class="user-info" v-if="!isAdmin">
+          <div class="info-row" >
             <span class="info-label">所属书院</span>
             <span class="info-value">{{ department }}</span>
           </div>
@@ -31,7 +48,7 @@
       </div>
 
       <!-- 能力雷达图 -->
-      <div class="radar-card">
+      <div class="radar-card" v-if="!isAdmin">
         <div class="card-header">
           <span class="header-icon">📊</span>
           <h3 class="header-title">综合能力评估</h3>
@@ -46,9 +63,43 @@
     </div>
 
     <!-- 右侧成长档案 -->
-    <div class="right-panel">
-      <h2 class="growth-title">成长档案概览</h2>
-      <div class="growth-grid">
+    <div class="right-panel" >
+      <!-- 管理员功能模块 -->
+      <div v-if="isAdmin" class="admin-modules">
+        <!-- 成长档案审核 -->
+        <div class="module-card">
+          <h3 class="module-title">📁 成长档案审核</h3>
+          <div class="module-grid">
+            <div
+              v-for="item in adminModules.growthAudit"
+              :key="item.path"
+              class="module-item"
+              @click="$router.push(item.path)"
+            >
+              <span class="item-icon">{{ item.icon }}</span>
+              <span class="item-label">{{ item.label }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 学生管理 -->
+        <div class="module-card">
+          <h3 class="module-title">👨🎓 学生管理</h3>
+          <div class="module-grid">
+            <div
+              v-for="item in adminModules.studentMgmt"
+              :key="item.path"
+              class="module-item"
+              @click="$router.push(item.path)"
+            >
+              <span class="item-icon">{{ item.icon }}</span>
+              <span class="item-label">{{ item.label }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <h2 class="growth-title" v-if="!isAdmin">成长档案概览</h2>
+      <div class="growth-grid" v-if="!isAdmin">
         <div
           v-for="(item, key) in growthData"
           :key="key"
@@ -76,7 +127,7 @@
         </div>
       </div>
       <!-- 新增折线图部分 -->
-      <div class="trend-chart">
+      <div class="trend-chart" v-if="!isAdmin">
         <div class="chart-header">
           <h3>月度活动趋势</h3>
           <span class="subtitle">近30天提交情况</span>
@@ -148,6 +199,21 @@ export default {
   },
   data() {
     return {
+      // 新增管理员模块数据
+      adminModules: {
+        growthAudit: [
+          { label: '科创竞赛', icon: '🏆', path: '/GrowthArchive/GrowthArchive/CompetitonRecordAudit' },
+          { label: '文体活动', icon: '🎨', path: '/GrowthArchive/GrowthArchive/ActivityRecordAudit' },
+          { label: '讲座报告', icon: '📚', path: '/GrowthArchive/GrowthArchive/ReportManagementAudit' },
+          { label: '导师指导', icon: '👥', path: '/GrowthArchive/GrowthArchive/MentorshipRecordAudit' }
+        ],
+        studentMgmt: [
+          { label: '学生管理', icon: '👩🎓', path: '/manage/students' },
+          { label: '课程管理', icon: '📖', path: '/GrowthArchive/GrowthArchive/StudentCourse' },
+          { label: '成绩管理', icon: '📝', path: '/GrowthArchive/GrowthArchive/StudentScore' },
+          { label: '分流统计', icon: '📊', path: '/test2/index' }
+        ]
+      },
       currentSemester: {
         name: '',
         range: ''
@@ -213,6 +279,9 @@ export default {
     };
   },
   computed: {
+    isAdmin() {
+      return this.userName === '10001'|| this.userName === '10002'|| this.userName === '10003'|| this.userName === '10004'|| this.userName === '10005'|| this.userName === '10006'|| this.userName === '10007'||  this.userName === 'admin';
+    },
     userName() {
       return this.$store.state.user.name;
     },
@@ -628,6 +697,115 @@ export default {
 </script>
 
 <style scoped>
+/* 管理员布局调整 */
+.dashboard-container.admin-layout {
+  grid-template-columns: 1fr 1fr; /* 等分两列 */
+}
+
+/* 管理员欢迎卡片 */
+.admin-greeting {
+  text-align: center;
+  padding: 30px 0;
+  height: 800px;
+}
+
+.admin-greeting .greeting-text {
+  font-size: 2.4rem;
+  margin-bottom: 15px;
+}
+
+.admin-greeting .greeting-subtext {
+  font-size: 1.2rem;
+  color: #4a5568;
+  margin-bottom: 40px;
+}
+
+.system-info {
+  display: grid;
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.info-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+}
+
+.info-item .info-label {
+  color: #718096;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.info-item .info-value {
+  font-size: 1.1rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+
+/* 新增管理员模块样式 */
+.admin-modules {
+  display: grid;
+  gap: 25px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.module-card {
+  background: white;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.module-title {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.module-item {
+  padding: 20px;
+  border-radius: 12px;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.module-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #fff;
+}
+
+.item-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.item-label {
+  font-size: 1rem;
+  color: #2d3748;
+  font-weight: 500;
+}
 .dashboard-container {
   display: grid;
   grid-template-columns: 1fr 1.8fr;
