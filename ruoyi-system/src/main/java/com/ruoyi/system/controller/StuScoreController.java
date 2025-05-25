@@ -36,7 +36,6 @@ public class StuScoreController extends BaseController
     /**
      * 查询成绩列表
      */
-    @PreAuthorize("@ss.hasPermi('system:score:list')")
     @GetMapping("/list")
     public TableDataInfo list(StuScore stuScore)
     {

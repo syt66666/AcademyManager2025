@@ -154,7 +154,7 @@
               :key="index"
               :class="['message', msg.role]"
             >
-              <div class="content">{{ msg.content }}</div>
+              <div class="content" style="white-space: pre-line; font-family: monospace;">{{ msg.content }}</div>
               <div class="time">{{ msg.time }}</div>
             </div>
             <div v-if="isLoading" class="loading">
@@ -208,7 +208,7 @@ export default {
           { label: '导师指导', icon: '👥', path: '/GrowthArchive/GrowthArchive/MentorshipRecordAudit' }
         ],
         studentMgmt: [
-          { label: '学生管理', icon: '🎓', path: '/system/user' },
+          { label: '学生管理', icon: '🎓', path: '/GrowthArchive/GrowthArchive/StudentInfo' },
           { label: '课程管理', icon: '📖', path: '/GrowthArchive/GrowthArchive/StudentCourse' },
           { label: '成绩管理', icon: '📝', path: '/GrowthArchive/GrowthArchive/StudentScore' },
           { label: '分流统计', icon: '📊', path: '/test2/index' }
@@ -1155,6 +1155,40 @@ export default {
   max-width: 80%;
   animation: messageAppear 0.3s ease;
 }
+.chat-container {
+  font-family: 'Microsoft YaHei', sans-serif;
+}
 
+.messages {
+  height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  background: #f8f9fa;
+}
+
+.message.user .content {
+  background: #e3f2fd;
+  padding: 8px 12px;
+  border-radius: 12px;
+  margin: 8px 0;
+  white-space: pre-line; /* 保留换行 */
+  font-family: inherit;
+}
+
+.message.assistant .content {
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 8px 12px;
+  border-radius: 12px;
+  margin: 8px 0;
+  white-space: pre-line; /* 保留换行 */
+  font-family: monospace; /* 等宽字体显示分隔线 */
+}
+
+.loading {
+  color: #666;
+  text-align: center;
+  padding: 10px;
+}
 </style>
 
