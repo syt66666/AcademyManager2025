@@ -678,8 +678,13 @@ export default {
       try {
         const filePaths = row.reportFeeling;
         const fileName = row.reportFeelingName || this.getFileName(filePaths);
+
+        // 构造请求 URL
+        const downloadUrl = `${process.env.VUE_APP_BASE_API}/common/download?fileName=${fileName}&delete=false`;
+
+        // 创建一个隐藏的 <a> 标签并触发下载
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
+        link.href = downloadUrl;
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
@@ -1758,7 +1763,6 @@ export default {
 
 /* 正常状态的链接样式 */
 .location-tag .link-style {
-  color: var(--el-color-primary); /* 使用 Element 主题色 */
   text-decoration: none;
   transition: all 0.2s; /* 添加悬流动画 */
 }

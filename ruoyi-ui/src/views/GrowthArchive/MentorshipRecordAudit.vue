@@ -630,9 +630,9 @@ export default {
       try {
         const filePaths = row.summaryFilePath;
         const fileName = row.summaryFileName || this.getFileName(filePaths);
+        const downloadUrl = `${process.env.VUE_APP_BASE_API}/common/download?fileName=${fileName}&delete=false`;
         const link = document.createElement('a');
-        link.href = `${process.env.VUE_APP_BASE_API}/profile/${filePaths}`;
-        // link.download = this.generateSummaryFileName();
+        link.href=downloadUrl;
         link.download = fileName;
         document.body.appendChild(link);
         link.click();
