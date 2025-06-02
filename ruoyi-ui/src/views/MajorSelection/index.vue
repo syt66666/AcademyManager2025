@@ -193,10 +193,10 @@ export default {
   computed: {
     // 将时间字符串转换为时间戳
     startTimestamp() {
-      return Date.parse('2023-09-01 08:00:00')
+      return Date.parse('2025-05-20 08:00:00')
     },
     endTimestamp() {
-      return Date.parse('2025-05-20 08:00:00')
+      return Date.parse('2025-06-10 08:00:00')
     },
     // 新增时间有效性计算
     isValidTime() {
@@ -702,7 +702,7 @@ export default {
       if (message.type === 'student_update') {
         // 查找匹配的专业
         const index = this.childMajors.findIndex(
-          m => m.majorId === message.majorId
+          m => m.majorName === message.majorName
         )
         if (index > -1) {
           // 使用 Vue.set 确保响应式更新

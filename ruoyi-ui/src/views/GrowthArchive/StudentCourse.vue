@@ -221,7 +221,13 @@
             <el-tag type="info" size="mini">{{ row.academy }}</el-tag>
           </template>
         </el-table-column>
-
+        <el-table-column prop="enrollmentTime" label="修读类型" width="180">
+          <template slot-scope="{row}">
+            <div class="enrollment-time">
+            活动置换
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="enrollmentTime" label="选课时间" width="180">
           <template slot-scope="{row}">
             <div class="enrollment-time">
@@ -230,6 +236,7 @@
             </div>
           </template>
         </el-table-column>
+
       </el-table>
 
       <div slot="footer" class="dialog-footer">
