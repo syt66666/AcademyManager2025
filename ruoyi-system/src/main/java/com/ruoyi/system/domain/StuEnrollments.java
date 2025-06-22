@@ -19,4 +19,6 @@ public class StuEnrollments {
     @Excel(name = "所属书院")
     private String academy;
     private Date enrollmentTime;
+    @Excel(name = "修读类型")
+    private Integer enrollmentType;
 }

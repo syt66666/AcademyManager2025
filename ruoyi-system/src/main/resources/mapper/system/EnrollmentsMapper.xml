@@ -9,17 +9,19 @@
         <result property="studentId"    column="student_id"    />
         <result property="courseCode"    column="course_code"    />
         <result property="enrollmentTime"    column="enrollment_time"    />
+        <result property="enrollmentType"    column="enrollment_type"    />
     </resultMap>
     <resultMap type="StuEnrollments" id="StuEnrollmentsResult">
         <result property="enrollmentId"    column="enrollment_id"    />
         <result property="studentId"    column="student_id"    />
         <result property="courseCode"    column="course_code"    />
         <result property="enrollmentTime"    column="enrollment_time"    />
+        <result property="enrollmentType"    column="enrollment_type"    />
         <result property="studentName"    column="student_name"    />
         <result property="academy"    column="academy"    />
     </resultMap>
     <sql id="selectEnrollmentsVo">
-        select enrollment_id, student_id, course_code, enrollment_time from enrollments
+        select enrollment_id, student_id, course_code, enrollment_time,enrollment_type from enrollments
     </sql>
 
     <select id="selectEnrollmentsList" parameterType="Enrollments" resultMap="EnrollmentsResult">
@@ -28,15 +30,17 @@
             <if test="studentId != null "> and student_id = #{studentId}</if>
             <if test="courseCode != null "> and course_code = #{courseCode}</if>
             <if test="enrollmentTime != null "> and enrollment_time = #{enrollmentTime}</if>
+             <if test="enrollmentType != null "> and enrollment_type = #{enrollmentType}</if>
         </where>
     </select>
     <select id="selectStudentEnrollmentsList" parameterType="StuEnrollments" resultMap="StuEnrollmentsResult">
-        select enrollment_id, s.student_id, course_code, enrollment_time,academy, student_name from enrollments e
+        select enrollment_id, s.student_id, course_code, enrollment_time,academy, student_name,enrollment_type from enrollments e
             join stu_info s on e.student_id = s.student_id
         <where>
             <if test="studentId != null "> and s.student_id = #{studentId}</if>
             <if test="courseCode != null "> and course_code = #{courseCode}</if>
             <if test="enrollmentTime != null "> and enrollment_time = #{enrollmentTime}</if>
+            <if test="enrollmentType != null "> and enrollment_type = #{enrollmentType}</if>
         </where>
     </select>
     <select id="selectEnrollmentsByEnrollmentId" parameterType="Long" resultMap="EnrollmentsResult">
@@ -50,11 +54,13 @@
             <if test="studentId != null">student_id,</if>
             <if test="courseCode != null">course_code,</if>
             <if test="enrollmentTime != null">enrollment_time,</if>
+            <if test="enrollmentType != null">enrollment_type,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null">#{studentId},</if>
             <if test="courseCode != null">#{courseCode},</if>
             <if test="enrollmentTime != null">#{enrollmentTime},</if>
+            <if test="enrollmentType != null">#{enrollmentType},</if>
         </trim>
     </insert>
 
@@ -64,6 +70,7 @@
             <if test="studentId != null">student_id = #{studentId},</if>
             <if test="courseCode != null">course_code = #{courseCode},</if>
             <if test="enrollmentTime != null">enrollment_time = #{enrollmentTime},</if>
+            <if test="enrollmentType != null">enrollment_type = #{enrollmentType},</if>
         </trim>
         where enrollment_id = #{enrollmentId}
     </update>

@@ -221,10 +221,10 @@
             <el-tag type="info" size="mini">{{ row.academy }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="enrollmentTime" label="修读类型" width="180">
+        <el-table-column prop="enrollmentType" label="修读类型" width="180">
           <template slot-scope="{row}">
-            <div class="enrollment-time">
-            活动置换
+            <div class="enrollment-type">
+              {{ row.enrollmentType===0?'正常修读':'活动修读' }}
             </div>
           </template>
         </el-table-column>

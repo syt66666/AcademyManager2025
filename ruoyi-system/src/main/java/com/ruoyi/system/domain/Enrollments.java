@@ -34,4 +34,10 @@ public class Enrollments extends BaseEntity {
     @Excel(name = "选课时间", readConverterExp = "默=认为当前时间戳")
     private Date enrollmentTime;
 
+    /**
+     * 选课类型（0为正常修读；1为活动置换）
+     */
+    @Excel(name = "选课类型")
+    private Integer enrollmentType;
+
 }
