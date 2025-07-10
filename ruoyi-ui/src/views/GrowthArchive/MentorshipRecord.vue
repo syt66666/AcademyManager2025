@@ -587,8 +587,6 @@ export default {
           this.$message.warning('无可用文档');
           return;
         }
-        console.log("我进来了0" + command.row.summaryFilePath)
-        console.log("我进来了0" + command.row.summaryFileName)
         const fileData = {
           url: `${process.env.VUE_APP_BASE_API}/profile/${filePath}`,
           type: this.getFileType(filePath),

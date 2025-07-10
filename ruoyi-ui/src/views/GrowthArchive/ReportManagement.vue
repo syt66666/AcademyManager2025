@@ -418,7 +418,11 @@
         class="native-pdf-preview"
       >
         <div v-if="currentDocument.type === 'pdf'" class="preview-container">
-          <VuePdfEmbed :source="currentDocument.url" />
+          <iframe
+            :src="`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=0`"
+            style="width: 100%; height: 75vh; border: none;"
+            @load="disablePdfInteractions"
+          ></iframe>
         </div>
         <div v-else-if="currentDocument.type === 'docx'" class="preview-container docx-preview">
           <div v-html="docxContent" class="docx-content"></div>
@@ -429,14 +433,14 @@
 </template>
 
 <script>
-import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
+// import VuePdfEmbed from 'vue-pdf-embed/dist/vue2-pdf-embed'
 import axios from "axios";
 import {addReport, listReport, updateReport, delReport, checkLectureUnique} from "@/api/student/lecture";
 import store from "@/store";
 
 export default {
   components: {
-    VuePdfEmbed
+    // VuePdfEmbed
   },
   data() {
     return {
@@ -506,7 +510,22 @@ export default {
     this.listReport();  // 在页面加载时获取数据
   },
   methods: {
+    disablePdfInteractions() {
+      const iframe = this.$refs.pdfIframe;
+      if (!iframe) return;
 
+      try {
+        const iframeDoc = iframe.contentDocument;
+        // 禁用文本选择
+        iframeDoc.body.style.userSelect = 'none';
+        // 移除所有点击处理器
+        iframeDoc.querySelectorAll('*').forEach(el => {
+          el.onclick = null;
+        });
+      } catch (e) {
+        console.warn('PDF安全策略限制:', e);
+      }
+    },
     // 处理文档操作命令
     handleDocCommand(command) {
       console.log(command.action)
