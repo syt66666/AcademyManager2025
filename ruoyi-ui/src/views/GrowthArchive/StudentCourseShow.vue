@@ -412,7 +412,6 @@ export default {
         this.enrolledCourseCodes = [...this.enrolledCourseCodes, row.courseCode];
         this.markEnrolledCourses();
         // row.enrolledStudent += 1;
-console.log(this.selectedStudyMode)
         // 提交请求
         await addEnrollments({
           studentId: store.state.user.name,
