@@ -24,7 +24,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
  * 活动信息 Controller
  */
 @RestController
-@RequestMapping("/system/activity")
+@RequestMapping("/system/activities")
 public class ActivitiesController extends BaseController
 {
     @Autowired
