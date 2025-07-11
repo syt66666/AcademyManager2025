@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ruoyi.system.mapper.ActivitiesMapper">
+
+    <!-- 查询活动列表 -->
+    <select id="selectActivitiesList" parameterType="com.ruoyi.system.domain.Activities" resultType="com.ruoyi.system.domain.Activities">
+        SELECT
+        activity_id AS activityId,
+        activity_name AS activityName,
+        created_at AS createdAt,
+        start_time AS startTime,
+        end_time AS endTime,
+        activity_deadline AS activityDeadline,
+        activity_location AS activityLocation,
+        activity_capacity AS activityCapacity,
+        activity_description AS activityDescription,
+        status,
+        organizer,
+        notes,
+        create_by,
+        create_time,
+        update_by,
+        update_time,
+        remark
+        FROM activities
+        <where>
+            <if test="activityName != null and activityName != ''">
+                AND activity_name LIKE CONCAT('%', #{activityName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="organizer != null and organizer != ''">
+                AND organizer LIKE CONCAT('%', #{organizer}, '%')
+            </if>
+            <!-- 可根据需要继续添加更多条件 -->
+        </where>
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据ID查询活动详情 -->
+    <select id="selectActivitiesById" parameterType="long" resultType="com.ruoyi.system.domain.Activities">
+        SELECT
+        activity_id AS activityId,
+        activity_name AS activityName,
+        created_at AS createdAt,
+        start_time AS startTime,
+        end_time AS endTime,
+        activity_deadline AS activityDeadline,
+        activity_location AS activityLocation,
+        activity_capacity AS activityCapacity,
+        activity_description AS activityDescription,
+        status,
+        organizer,
+        notes,
+        create_by,
+        create_time,
+        update_by,
+        update_time,
+        remark
+        FROM activities
+        WHERE activity_id = #{activityId}
+    </select>
+
+    <!-- 新增活动 -->
+    <insert id="insertActivities" parameterType="com.ruoyi.system.domain.Activities">
+        INSERT INTO activities (
+        activity_name,
+        created_at,
+        start_time,
+        end_time,
+        activity_deadline,
+        activity_location,
+        activity_capacity,
+        activity_description,
+        status,
+        organizer,
+        notes,
+        create_by,
+        create_time,
+        update_by,
+        update_time,
+        remark
+        ) VALUES (
+        #{activityName},
+        #{createdAt},
+        #{startTime},
+        #{endTime},
+        #{activityDeadline},
+        #{activityLocation},
+        #{activityCapacity},
+        #{activityDescription},
+        #{status},
+        #{organizer},
+        #{notes},
+        #{createBy},
+        #{createTime},
+        #{updateBy},
+        #{updateTime},
+        #{remark}
+        )
+    </insert>
+
+    <!-- 修改活动 -->
+    <update id="updateActivities" parameterType="com.ruoyi.system.domain.Activities">
+        UPDATE activities
+        SET
+        activity_name = #{activityName},
+        created_at = #{createdAt},
+        start_time = #{startTime},
+        end_time = #{endTime},
+        activity_deadline = #{activityDeadline},
+        activity_location = #{activityLocation},
+        activity_capacity = #{activityCapacity},
+        activity_description = #{activityDescription},
+        status = #{status},
+        organizer = #{organizer},
+        notes = #{notes},
+        update_by = #{updateBy},
+        update_time = #{updateTime},
+        remark = #{remark}
+        WHERE activity_id = #{activityId}
+    </update>
+
+    <!-- 批量删除活动 -->
+    <delete id="deleteActivitiesByIds" parameterType="long">
+        DELETE FROM activities
+        WHERE activity_id IN
+        <foreach collection="array" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 根据唯一性字段查询活动（根据实际唯一性字段调整，这里以活动名和开始时间为例） -->
+    <select id="selectActivitiesByUniqueField" parameterType="com.ruoyi.system.domain.Activities" resultType="com.ruoyi.system.domain.Activities">
+        SELECT
+        activity_id AS activityId,
+        activity_name AS activityName,
+        created_at AS createdAt,
+        start_time AS startTime,
+        end_time AS endTime,
+        activity_deadline AS activityDeadline,
+        activity_location AS activityLocation,
+        activity_capacity AS activityCapacity,
+        activity_description AS activityDescription,
+        status,
+        organizer,
+        notes,
+        create_by,
+        create_time,
+        update_by,
+        update_time,
+        remark
+        FROM activities
+        WHERE activity_name = #{activityName}
+        <if test="startTime != null">
+            AND start_time = #{startTime}
+        </if>
+        LIMIT 1
+    </select>
+
+</mapper>
