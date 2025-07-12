@@ -3,7 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.ruoyi.system.mapper.BookingsMapper">
-
     <!-- 查询预约列表 -->
     <select id="selectBookingsList" parameterType="com.ruoyi.system.domain.Bookings" resultType="com.ruoyi.system.domain.Bookings">
         SELECT
@@ -11,6 +10,12 @@
         student_id AS studentId,
         activity_id AS activityId,
         booked_at AS bookAt,
+        proof,
+        summary,
+        status,
+        reviewer,
+        review_comment AS reviewComment,
+        review_time AS reviewTime,
         create_by,
         create_time,
         update_by,
@@ -24,6 +29,9 @@
             <if test="activityId != null">
                 AND activity_id = #{activityId}
             </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
         </where>
         ORDER BY booked_at DESC
     </select>
@@ -35,6 +43,12 @@
         student_id AS studentId,
         activity_id AS activityId,
         booked_at AS bookAt,
+        proof,
+        summary,
+        status,
+        reviewer,
+        review_comment AS reviewComment,
+        review_time AS reviewTime,
         create_by,
         create_time,
         update_by,
@@ -50,6 +64,12 @@
         student_id,
         activity_id,
         booked_at,
+        proof,
+        summary,
+        status,
+        reviewer,
+        review_comment,
+        review_time,
         create_by,
         create_time,
         update_by,
@@ -59,6 +79,12 @@
         #{studentId},
         #{activityId},
         #{bookAt},
+        #{proof},
+        #{summary},
+        #{status},
+        #{reviewer},
+        #{reviewComment},
+        #{reviewTime},
         #{createBy},
         #{createTime},
         #{updateBy},
@@ -74,6 +100,12 @@
         student_id = #{studentId},
         activity_id = #{activityId},
         booked_at = #{bookAt},
+        proof = #{proof},
+        summary = #{summary},
+        status = #{status},
+        reviewer = #{reviewer},
+        review_comment = #{reviewComment},
+        review_time = #{reviewTime},
         update_by = #{updateBy},
         update_time = #{updateTime},
         remark = #{remark}
