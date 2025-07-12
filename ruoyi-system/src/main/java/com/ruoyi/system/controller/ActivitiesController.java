@@ -20,6 +20,8 @@ import com.ruoyi.system.service.IActivitiesService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * 活动信息 Controller
  */
@@ -45,14 +47,23 @@ public class ActivitiesController extends BaseController
     /**
      * 导出活动列表
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:export')")
-    @Log(title = "活动信息", businessType = BusinessType.EXPORT)
-    @GetMapping("/export")
-    public AjaxResult export(Activities activity)
+//    @PreAuthorize("@ss.hasPermi('system:activity:export')")
+//    @Log(title = "活动信息", businessType = BusinessType.EXPORT)
+//    @GetMapping("/export")
+//    public AjaxResult export(Activities activity)
+//    {
+//        List<Activities> list = activityService.selectActivityList(activity);
+//        ExcelUtil<Activities> util = new ExcelUtil<Activities>(Activities.class);
+//        return util.exportExcel(list, "activity");
+//    }
+    @PreAuthorize("@ss.hasPermi('system:activities:export')")
+    @Log(title = "导出数据", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, Activities activities)
     {
-        List<Activities> list = activityService.selectActivityList(activity);
+        List<Activities> list = activityService.selectActivityList(activities);
         ExcelUtil<Activities> util = new ExcelUtil<Activities>(Activities.class);
-        return util.exportExcel(list, "activity");
+        util.exportExcel(response, list, "导出数据");
     }
 
     /**
