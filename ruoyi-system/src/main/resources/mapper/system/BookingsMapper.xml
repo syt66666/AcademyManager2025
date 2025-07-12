@@ -92,10 +92,6 @@
         where booking_id = #{bookingId}
     </update>
 
-    <delete id="deleteBookingsById" parameterType="Long">
-        delete from bookings where booking_id = #{bookingId}
-    </delete>
-
     <delete id="deleteBookingsByIds" parameterType="String">
         delete from bookings where booking_id in
         <foreach item="bookingId" collection="array" open="(" separator="," close=")">

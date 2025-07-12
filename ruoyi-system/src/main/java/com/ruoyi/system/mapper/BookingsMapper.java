@@ -1,6 +1,9 @@
 package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.Bookings;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Component;
+
 import java.util.List;
 
 /**
@@ -8,6 +11,7 @@ import java.util.List;
  *
  * 提供对数据库中 bookings 表的增删改查操作方法定义
  */
+@Mapper
 public interface BookingsMapper {
     /**
      * 查询预约列表
