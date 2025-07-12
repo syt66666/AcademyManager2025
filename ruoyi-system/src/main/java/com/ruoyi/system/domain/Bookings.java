@@ -19,37 +19,22 @@ public class Bookings extends BaseEntity {
     /** 预约时间 */
     private LocalDateTime bookAt;
 
-    // ====== Getter and Setter ======
+    /** 证明材料 */
+    private String proof;
 
-    public Long getBookingId() {
-        return bookingId;
-    }
+    /** 学生总结 */
+    private String summary;
 
-    public void setBookingId(Long bookingId) {
-        this.bookingId = bookingId;
-    }
+    /** 预约状态"未提交、未通过、未审核、已通过" */
+    private enum status{notSubmitted,notPassed,notReviewed,passed};
 
-    public Long getStudentId() {
-        return studentId;
-    }
+    /** 审核人 */
+    private String reviewer;
 
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
-    }
+    /** 审核意见 */
+    private String reviewComment;
 
-    public Long getActivityId() {
-        return activityId;
-    }
-
-    public void setActivityId(Long activityId) {
-        this.activityId = activityId;
-    }
-
-    public LocalDateTime getBookAt() {
-        return bookAt;
-    }
-
-    public void setBookAt(LocalDateTime bookAt) {
-        this.bookAt = bookAt;
-    }
+    /** 审核时间 */
+    private LocalDateTime reviewTime;
 }
+
