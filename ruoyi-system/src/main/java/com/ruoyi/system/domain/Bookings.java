@@ -25,8 +25,8 @@ public class Bookings extends BaseEntity {
     /** 学生总结 */
     private String summary;
 
-    /** 预约状态"未提交、未通过、未审核、已通过" */
-    private enum status{notSubmitted,notPassed,notReviewed,passed};
+    /** 预约状态（未提交、未通过、未审核、已通过） */
+    private String status; // 正确的字段
 
     /** 审核人 */
     private String reviewer;
@@ -36,5 +36,35 @@ public class Bookings extends BaseEntity {
 
     /** 审核时间 */
     private LocalDateTime reviewTime;
-}
 
+    // getter/setter
+    public Long getBookingId() { return bookingId; }
+    public void setBookingId(Long bookingId) { this.bookingId = bookingId; }
+
+    public Long getStudentId() { return studentId; }
+    public void setStudentId(Long studentId) { this.studentId = studentId; }
+
+    public Long getActivityId() { return activityId; }
+    public void setActivityId(Long activityId) { this.activityId = activityId; }
+
+    public LocalDateTime getBookAt() { return bookAt; }
+    public void setBookAt(LocalDateTime bookAt) { this.bookAt = bookAt; }
+
+    public String getProof() { return proof; }
+    public void setProof(String proof) { this.proof = proof; }
+
+    public String getSummary() { return summary; }
+    public void setSummary(String summary) { this.summary = summary; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+
+    public String getReviewer() { return reviewer; }
+    public void setReviewer(String reviewer) { this.reviewer = reviewer; }
+
+    public String getReviewComment() { return reviewComment; }
+    public void setReviewComment(String reviewComment) { this.reviewComment = reviewComment; }
+
+    public LocalDateTime getReviewTime() { return reviewTime; }
+    public void setReviewTime(LocalDateTime reviewTime) { this.reviewTime = reviewTime; }
+}
