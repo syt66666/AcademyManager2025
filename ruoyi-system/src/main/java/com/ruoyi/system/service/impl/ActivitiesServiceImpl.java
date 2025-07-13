@@ -65,7 +65,12 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      */
     @Override
     public int updateActivity(Activities activity) {
-        return activitiesMapper.updateActivity(activity);
+        int result = activitiesMapper.updateActivity(activity);
+        if (result == 0) {
+            throw new ServiceException("数据出现错误，请刷新重试！");
+        }
+        return result;
+        //return activitiesMapper.updateActivity(activity);
     }
 
     /**
