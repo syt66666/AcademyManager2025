@@ -1,7 +1,10 @@
 package com.ruoyi.system.domain;
 
 import com.ruoyi.common.core.domain.BaseEntity;
+import com.ruoyi.system.utils.JpaJsonConverter;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 预约实体类
@@ -18,9 +21,11 @@ public class Bookings extends BaseEntity {
 
     /** 预约时间 */
     private LocalDateTime bookAt;
-
     /** 证明材料 */
-    private String proof;
+    //private String proof;
+    @Column(columnDefinition = "json")
+    @Convert(converter = JpaJsonConverter.class)
+    private List<String> proof;
 
     /** 学生总结 */
     private String summary;
@@ -50,8 +55,16 @@ public class Bookings extends BaseEntity {
     public LocalDateTime getBookAt() { return bookAt; }
     public void setBookAt(LocalDateTime bookAt) { this.bookAt = bookAt; }
 
-    public String getProof() { return proof; }
-    public void setProof(String proof) { this.proof = proof; }
+    /*public String getProof() { return proof; }
+    public void setProof(String proof) { this.proof = proof; }*/
+
+    public List<String> getProof() {
+        return proof;
+    }
+
+    public void setProof(List<String> proof) {
+        this.proof = proof;
+    }
 
     public String getSummary() { return summary; }
     public void setSummary(String summary) { this.summary = summary; }

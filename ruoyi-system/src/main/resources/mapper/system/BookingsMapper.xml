@@ -9,7 +9,8 @@
         <result property="studentId"      column="student_id"      />
         <result property="activityId"     column="activity_id"     />
         <result property="bookAt"         column="booked_at"       />
-        <result property="proof"          column="proof"           />
+<!--        <result property="proof"          column="proof"           />-->
+        <result property="proof" column="proof" typeHandler="com.ruoyi.common.mybatis.JsonStringListTypeHandler"/>
         <result property="summary"        column="summary"         />
         <result property="status"         column="status"          />
         <result property="reviewer"       column="reviewer"        />
@@ -67,7 +68,7 @@
             <if test="studentId != null">#{studentId},</if>
             <if test="activityId != null">#{activityId},</if>
             <if test="bookAt != null">#{bookAt},</if>
-            <if test="proof != null">#{proof},</if>
+            <if test="proof != null">#{proof, typeHandler=com.ruoyi.common.mybatis.JsonStringListTypeHandler},</if>
             <if test="summary != null">#{summary},</if>
             <if test="status != null">#{status},</if>
             <if test="reviewer != null">#{reviewer},</if>
@@ -82,7 +83,7 @@
             <if test="studentId != null">student_id = #{studentId},</if>
             <if test="activityId != null">activity_id = #{activityId},</if>
             <if test="bookAt != null">booked_at = #{bookAt},</if>
-            <if test="proof != null">proof = #{proof},</if>
+            <if test="proof != null">proof = #{proof, typeHandler=com.ruoyi.common.mybatis.JsonStringListTypeHandler},</if>
             <if test="summary != null">summary = #{summary},</if>
             <if test="status != null">status = #{status},</if>
             <if test="reviewer != null">reviewer = #{reviewer},</if>
