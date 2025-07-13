@@ -9,22 +9,6 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-<!--      <el-form-item label="活动开始时间" prop="startTime">-->
-<!--        <el-date-picker clearable-->
-<!--                        v-model="queryParams.startTime"-->
-<!--                        type="date"-->
-<!--                        value-format="yyyy-MM-dd"-->
-<!--                        placeholder="请选择活动开始时间">-->
-<!--        </el-date-picker>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="活动结束时间" prop="endTime">-->
-<!--        <el-date-picker clearable-->
-<!--                        v-model="queryParams.endTime"-->
-<!--                        type="date"-->
-<!--                        value-format="yyyy-MM-dd"-->
-<!--                        placeholder="请选择活动结束时间">-->
-<!--        </el-date-picker>-->
-<!--      </el-form-item>-->
       <el-form-item label="活动地点" prop="activityLocation">
         <el-input
           v-model="queryParams.activityLocation"
