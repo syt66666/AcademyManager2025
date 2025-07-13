@@ -17,7 +17,7 @@ export function getActivities(activityId) {
   })
 }
 
-// 新增【请填写功能名称】
+// 新增活动信息
 export function addActivities(data) {
   return request({
     url: '/system/activities',

@@ -1,6 +1,9 @@
 package com.ruoyi.system.controller;
 
 import java.util.List;
+
+import com.ruoyi.common.core.domain.model.LoginUser;
+import com.ruoyi.system.domain.StuCourse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import com.ruoyi.system.domain.Activities;
 import com.ruoyi.system.service.IActivitiesService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -47,15 +51,6 @@ public class ActivitiesController extends BaseController
     /**
      * 导出活动列表
      */
-//    @PreAuthorize("@ss.hasPermi('system:activity:export')")
-//    @Log(title = "活动信息", businessType = BusinessType.EXPORT)
-//    @GetMapping("/export")
-//    public AjaxResult export(Activities activity)
-//    {
-//        List<Activities> list = activityService.selectActivityList(activity);
-//        ExcelUtil<Activities> util = new ExcelUtil<Activities>(Activities.class);
-//        return util.exportExcel(list, "activity");
-//    }
     @PreAuthorize("@ss.hasPermi('system:activities:export')")
     @Log(title = "导出数据", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
@@ -107,5 +102,26 @@ public class ActivitiesController extends BaseController
     public AjaxResult remove(@PathVariable Integer[] activityIds)
     {
         return toAjax(activityService.deleteActivityByIds(activityIds));
+    }
+    /**
+     * 导入活动列表
+     */
+    @PreAuthorize("@ss.hasPermi('system:activity:import')")
+    @Log(title = "课程管理", businessType = BusinessType.IMPORT)
+    @PostMapping("/importData")
+    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
+    {
+        ExcelUtil<Activities> util = new ExcelUtil<Activities>(Activities.class);
+        List<Activities> userList = util.importExcel(file.getInputStream());
+        LoginUser loginUser = getLoginUser();
+        String operName = loginUser.getUsername();
+        String message = activityService.importActivity(userList, updateSupport, operName);
+        return AjaxResult.success(message);
+    }
+
+    @GetMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response) {
+        ExcelUtil<Activities> util = new ExcelUtil<>(Activities.class);
+        util.importTemplateExcel(response, "活动数据");
     }
 }
