@@ -582,7 +582,7 @@ export default {
       }, `course_${new Date().getTime()}.xlsx`)
     },
 
-    /** 导出模板操作 */
+    /** 导入模板操作 */
     importTemplate() {
   fetch(process.env.VUE_APP_BASE_API+'/system/course/importTemplate', {
     mode: 'cors', // 明确跨域模式
