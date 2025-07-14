@@ -355,7 +355,7 @@ export default {
     /** 报名活动 */
     handleSignUp(row) {
       // 后端API：用户报名活动
-      addBooking({activityId: row.activityId})
+      addBooking({activityId: row.activityId,studentId:this.$store.state.user.name})
         .then(response => {
           this.$message.success("报名成功！");
           row.signedUp = true; // 更新报名状态
