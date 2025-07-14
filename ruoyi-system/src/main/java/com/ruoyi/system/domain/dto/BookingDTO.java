@@ -16,7 +16,9 @@ public class BookingDTO {
     private Long bookingId;
 
     /** 学生id（外键） */
+    @Excel(name = "学生学号")
     private String studentId;
+    @Excel(name = "学生姓名")
     private String studentName;
     /** 活动id（外键） */
     private Long activityId;
@@ -40,18 +42,14 @@ public class BookingDTO {
     @Excel(name = "组织单位")
     private String organizer;
     /** 活动描述 */
-    @Excel(name = "活动描述")
     private String activityDescription;
     /** 注意事项 */
-    @Excel(name = "注意事项")
     private String notes;
 
     /** 预约时间 */
     private LocalDateTime bookAt;
+
     /** 证明材料 */
-//    @Column(columnDefinition = "json")
-//    @Convert(converter = JpaJsonConverter.class)
-//    private List<String> proof;
     @JsonProperty("proof")
     private List<ProofItem> proof = new ArrayList<>(); // 使用具体类型而非Object
 
@@ -73,8 +71,9 @@ public class BookingDTO {
     /** 学生总结 */
     private String summary;
 
-    /** 预约状态（未提交、未通过、未审核、已通过） */
-    private String status; // 正确的字段
+    /** 审核状态（未提交、未通过、未审核、已通过） */
+    @Excel(name = "审核状态")
+    private String status;
 
     /** 审核人 */
     private String reviewer;

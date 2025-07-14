@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 预约表 数据层接口
@@ -52,4 +53,6 @@ public interface BookingsMapper {
     List<BookingDTO> selectBookingsList2(BookingDTO bookings);
 
     List<BookingDTO> selectBookingsList3(BookingDTO bookings);
+
+    Map<String, Integer> countAuditStatus();
 }

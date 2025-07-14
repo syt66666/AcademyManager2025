@@ -20,8 +20,6 @@ import com.ruoyi.system.domain.AuditHistory;
 import com.ruoyi.system.service.IAuditHistoryService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
-
-
 @RestController
 @RequestMapping("/system/history")
 public class AuditHistoryController extends BaseController
