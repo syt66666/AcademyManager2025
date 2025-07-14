@@ -189,6 +189,7 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        studentId: this.$store.state.user.name,
         activityName: null,
         startTime: null,
         endTime: null,
