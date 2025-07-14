@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/system/bookings")
@@ -96,5 +97,10 @@ public class BookingsController extends BaseController {
         List<BookingDTO> list = bookingsService.selectBookingsList3(bookings);
         ExcelUtil<BookingDTO> util = new ExcelUtil<BookingDTO>(BookingDTO.class);
         util.exportExcel(response, list, "学生书院活动记录数据");
+    }
+    @GetMapping("/auditCount")
+    public AjaxResult getAuditStatusCount() {
+        Map<String, Integer> countMap = bookingsService.countAuditStatus();
+        return AjaxResult.success(countMap);
     }
 }

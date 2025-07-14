@@ -96,14 +96,8 @@
             <if test="studentName != null">and b.student_name like concat('%', #{studentName}, '%')</if>
             <if test="activityId != null">and b.activity_id = #{activityId}</if>
             <if test="activityName != null">and a.activity_name like concat('%', #{activityName}, '%')</if>
-            <if test="startTime != null and startTime != ''">
-                and a.start_time &gt;= #{startTime}
-            </if>
-            <if test="endTime != null and endTime != ''">
-                and a.end_time &lt;= #{endTime}
-            </if>
             <if test="status != null and status != ''">and b.status = #{status}</if>
-            <if test="reviewer != null and reviewer != ''">and b.reviewer like concat('%', #{reviewer}, '%')</if>
+            <if test="organizer != null and organizer != ''">and a.organizer like concat('%', #{organizer}, '%')</if>
         </where>
         ORDER BY
         CASE b.status
@@ -122,14 +116,8 @@
             <if test="studentName != null">and b.student_name like concat('%', #{studentName}, '%')</if>
             <if test="activityId != null">and b.activity_id = #{activityId}</if>
             <if test="activityName != null">and a.activity_name like concat('%', #{activityName}, '%')</if>
-            <if test="startTime != null and startTime != ''">
-                and a.start_time &gt;= #{startTime}
-            </if>
-            <if test="endTime != null and endTime != ''">
-                and a.end_time &lt;= #{endTime}
-            </if>
             <if test="status != null and status != ''">and b.status = #{status}</if>
-            <if test="reviewer != null and reviewer != ''">and b.reviewer like concat('%', #{reviewer}, '%')</if>
+            <if test="organizer != null and organizer != ''">and a.organizer like concat('%', #{organizer}, '%')</if>
             and b.status != '未提交'
         </where>
         ORDER BY
@@ -194,5 +182,10 @@
             #{bookingId}
         </foreach>
     </delete>
-
+    <select id="countAuditStatus" resultType="map">
+        SELECT SUM(CASE WHEN status = '未审核' THEN 1 ELSE 0 END) AS pending,
+               SUM(CASE WHEN status = '已通过' THEN 1 ELSE 0 END) AS approved,
+               SUM(CASE WHEN status = '未通过' THEN 1 ELSE 0 END) AS rejected
+        FROM bookings
+    </select>
 </mapper>

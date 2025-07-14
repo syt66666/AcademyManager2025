@@ -89,6 +89,14 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="组织单位" prop="organizer">
+        <el-input
+          v-model="queryParams.organizer"
+          placeholder="请输入组织单位"
+          clearable
+          @keyup.enter.native="handleQuery"
+        />
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
@@ -125,6 +133,7 @@
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
         <el-table-column label="活动名称" align="center" prop="activityName"/>
         <el-table-column label="活动地点" align="center" prop="activityLocation"/>
+        <el-table-column label="组织单位" align="center" prop="organizer"/>
         <!-- 证明材料 -->
         <el-table-column label="证明材料" width="160" align="center">
           <template v-slot="scope">
@@ -330,10 +339,11 @@
 </template>
 
 <script>
-import { listBookingsAudit, updateBooking } from "@/api/system/bookings";
+import { listBookingsAudit, updateBooking,getAuditCount} from "@/api/system/bookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
 import axios from "axios";
+
 
 export default {
   name: "ActivityAudit",
@@ -342,7 +352,6 @@ export default {
       // 数据加载状态
       loading: true,
       historyLoading: false,
-
       // 审核状态统计
       auditStats: {
         approved: 0,
@@ -384,6 +393,9 @@ export default {
         studentId: null,
         studentName: null,
         activityName: null,
+        startTime: null,
+        endTime: null,
+        organizer:null,
         status: null
       }
     };
@@ -402,17 +414,13 @@ export default {
         this.loading = false;
       });
     },
-
     // 获取审核统计
     async fetchAuditCount() {
       try {
-        // 这里应该是调用API获取统计数据
-        // 模拟数据
-        this.auditStats = {
-          approved: 12,
-          rejected: 5,
-          pending: 8
-        };
+        const {code, data} = await getAuditCount();
+        if (code === 200) {
+          this.auditStats = data;
+        }
       } catch (error) {
         console.error("获取统计数据失败:", error);
       }

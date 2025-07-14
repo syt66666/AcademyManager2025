@@ -4,6 +4,7 @@ import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.dto.BookingDTO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface IBookingsService {
 
@@ -44,4 +45,6 @@ public interface IBookingsService {
 
     List<BookingDTO> selectBookingsList2(BookingDTO bookings);
     List<BookingDTO> selectBookingsList3(BookingDTO bookings);
+
+    Map<String, Integer> countAuditStatus();
 }

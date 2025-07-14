@@ -66,3 +66,11 @@ export function deleteBookings(bookingIds) {
     method: 'delete'
   })
 }
+//查询不同审核状态数量
+export function getAuditCount(query) {
+  return request({
+    url: '/system/bookings/auditCount',
+    method: 'get',
+    params: query
+  })
+}

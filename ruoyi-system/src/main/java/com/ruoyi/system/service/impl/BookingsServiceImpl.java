@@ -18,9 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 预约服务实现类
@@ -150,5 +148,16 @@ public class BookingsServiceImpl implements IBookingsService {
     @Override
     public int deleteBookingsByIds(Long[] bookingIds) {
         return bookingsMapper.deleteBookingsByIds(bookingIds);
+    }
+    public Map<String, Integer> countAuditStatus() {
+        try {
+            return bookingsMapper.countAuditStatus();
+        } catch (Exception e) {
+            return new HashMap<String, Integer>() {{
+                put("pending", 0);
+                put("approved", 0);
+                put("rejected", 0);
+            }};
+        }
     }
 }
