@@ -1,0 +1,87 @@
+package com.ruoyi.system.domain.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ruoyi.common.annotation.Excel;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+@Data
+public class BookingDTO {
+    /** 主键id */
+    private Long bookingId;
+
+    /** 学生id（外键） */
+    private String studentId;
+
+    /** 活动id（外键） */
+    private Long activityId;
+    /** 活动名称 */
+    @Excel(name = "活动名称")
+    private String activityName;
+    /** 活动开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date startTime;
+
+    /** 活动结束时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "结束时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date endTime;
+
+    /** 活动地点 */
+    @Excel(name = "活动地点")
+    private String activityLocation;
+    /** 组织单位 */
+    @Excel(name = "组织单位")
+    private String organizer;
+    /** 活动描述 */
+    @Excel(name = "活动描述")
+    private String activityDescription;
+    /** 注意事项 */
+    @Excel(name = "注意事项")
+    private String notes;
+
+    /** 预约时间 */
+    private LocalDateTime bookAt;
+    /** 证明材料 */
+//    @Column(columnDefinition = "json")
+//    @Convert(converter = JpaJsonConverter.class)
+//    private List<String> proof;
+    @JsonProperty("proof")
+    private List<ProofItem> proof = new ArrayList<>(); // 使用具体类型而非Object
+
+    // 嵌套的ProofItem类
+    public static class ProofItem {
+        private String name;
+        private String url;
+
+        // 必须有无参构造函数
+        public ProofItem() {}
+
+        // getters和setters
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+    }
+
+    /** 学生总结 */
+    private String summary;
+
+    /** 预约状态（未提交、未通过、未审核、已通过） */
+    private String status; // 正确的字段
+
+    /** 审核人 */
+    private String reviewer;
+
+    /** 审核意见 */
+    private String reviewComment;
+
+    /** 审核时间 */
+    private LocalDateTime reviewTime;
+}

@@ -6,6 +6,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.system.domain.Bookings;
+import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.service.IBookingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +29,15 @@ public class BookingsController extends BaseController {
         List<Bookings> list = bookingsService.selectBookingsList(bookings);
         return getDataTable(list);
     }
-
+    /**
+     * 查询预约列表和对应活动信息
+     */
+    @GetMapping("/list2")
+    public TableDataInfo list2(BookingDTO bookings) {
+        startPage();
+        List<BookingDTO> list = bookingsService.selectBookingsList2(bookings);
+        return getDataTable(list);
+    }
     /**
      * 获取预约详情
      */

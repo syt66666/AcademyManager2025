@@ -3,18 +3,23 @@ package com.ruoyi.system.domain;
 import com.ruoyi.common.core.domain.BaseEntity;
 import com.ruoyi.system.utils.JpaJsonConverter;
 import jakarta.persistence.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 预约实体类
  */
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class Bookings extends BaseEntity {
     /** 主键id */
     private Long bookingId;
 
     /** 学生id（外键） */
-    private Long studentId;
+    private String studentId;
 
     /** 活动id（外键） */
     private Long activityId;
@@ -42,42 +47,4 @@ public class Bookings extends BaseEntity {
     /** 审核时间 */
     private LocalDateTime reviewTime;
 
-    // getter/setter
-    public Long getBookingId() { return bookingId; }
-    public void setBookingId(Long bookingId) { this.bookingId = bookingId; }
-
-    public Long getStudentId() { return studentId; }
-    public void setStudentId(Long studentId) { this.studentId = studentId; }
-
-    public Long getActivityId() { return activityId; }
-    public void setActivityId(Long activityId) { this.activityId = activityId; }
-
-    public LocalDateTime getBookAt() { return bookAt; }
-    public void setBookAt(LocalDateTime bookAt) { this.bookAt = bookAt; }
-
-    /*public String getProof() { return proof; }
-    public void setProof(String proof) { this.proof = proof; }*/
-
-    public List<String> getProof() {
-        return proof;
-    }
-
-    public void setProof(List<String> proof) {
-        this.proof = proof;
-    }
-
-    public String getSummary() { return summary; }
-    public void setSummary(String summary) { this.summary = summary; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public String getReviewer() { return reviewer; }
-    public void setReviewer(String reviewer) { this.reviewer = reviewer; }
-
-    public String getReviewComment() { return reviewComment; }
-    public void setReviewComment(String reviewComment) { this.reviewComment = reviewComment; }
-
-    public LocalDateTime getReviewTime() { return reviewTime; }
-    public void setReviewTime(LocalDateTime reviewTime) { this.reviewTime = reviewTime; }
 }

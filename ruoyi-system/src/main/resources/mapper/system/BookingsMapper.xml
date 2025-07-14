@@ -17,13 +17,53 @@
         <result property="reviewComment"  column="review_comment"  />
         <result property="reviewTime"     column="review_time"     />
     </resultMap>
-
+    <resultMap type="BookingDTO" id="SysBookingResult2">
+        <id     property="bookingId"      column="booking_id"      />
+        <result property="studentId"      column="student_id"      />
+        <result property="activityId"     column="activity_id"     />
+        <result property="activityName"   column="activity_name"   />
+        <result property="activityLocation" column="activity_location" />
+        <result property="startTime"      column="start_time"       />
+        <result property="endTime"       column="end_time"       />
+        <result property="activityDescription" column="activity_description" />
+        <result property="notes"         column="notes"         />
+        <result property="organizer"     column="organizer"       />
+        <result property="bookAt"         column="booked_at"       />
+        <result property="proof" column="proof" typeHandler="com.ruoyi.common.mybatis.JsonStringListTypeHandler"/>
+        <result property="summary"        column="summary"         />
+        <result property="status"         column="status"          />
+        <result property="reviewer"       column="reviewer"        />
+        <result property="reviewComment"  column="review_comment"  />
+        <result property="reviewTime"     column="review_time"     />
+    </resultMap>
     <sql id="selectBookingsVo">
         select booking_id, student_id, activity_id, booked_at, proof, summary, status, reviewer,
         review_comment, review_time
         from bookings
     </sql>
-
+    <sql id="selectBookingsVo2">
+        select
+        booking_id,
+        student_id,
+        b.activity_id,
+        a.activity_name,
+        a.activity_location,
+        a.start_time,
+        a.end_time,
+        a.activity_description,
+        a.notes,
+        a.organizer,
+        booked_at,
+        proof,
+        summary,
+        b.status,
+        reviewer,
+        review_comment,
+        review_time
+        from bookings b
+        left join activities a  <!-- 使用正确的表名 activities 并定义别名 a -->
+        on b.activity_id = a.activity_id  <!-- 使用一致的别名 -->
+    </sql>
     <select id="selectBookingsList" parameterType="Bookings" resultMap="SysBookingResult">
         <include refid="selectBookingsVo"/>
         <where>
@@ -45,7 +85,19 @@
         </where>
         order by booked_at desc
     </select>
-
+    <select id="selectBookingsList2" parameterType="BookingDTO" resultMap="SysBookingResult2">
+        <include refid="selectBookingsVo2"/>
+        <where>
+            <if test="studentId != null">and b.student_id = #{studentId}</if> <!-- 使用 b. -->
+            <if test="activityId != null">and b.activity_id = #{activityId}</if> <!-- 使用 b. -->
+            <if test="activityName != null">and a.activity_name = #{activityName}</if> <!-- 使用 a. -->
+            <if test="startTime != null and startTime != ''">and a.start_time = #{startTime}</if>
+            <if test="endTime != null and endTime != ''">and a.end_time = #{endTime}</if>
+            <if test="status != null and status != ''">and b.status = #{status}</if>
+            <if test="reviewer != null and reviewer != ''">and b.reviewer like concat('%', #{reviewer}, '%')</if>
+        </where>
+        order by booked_at desc
+    </select>
     <select id="selectBookingsById" parameterType="Long" resultMap="SysBookingResult">
         <include refid="selectBookingsVo"/>
         where booking_id = #{bookingId}

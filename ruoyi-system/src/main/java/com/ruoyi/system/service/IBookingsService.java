@@ -1,6 +1,8 @@
 package com.ruoyi.system.service;
 
 import com.ruoyi.system.domain.Bookings;
+import com.ruoyi.system.domain.dto.BookingDTO;
+
 import java.util.List;
 
 public interface IBookingsService {
@@ -39,4 +41,6 @@ public interface IBookingsService {
      * @return 删除结果（影响的行数）
      */
     int deleteBookingsByIds(Long[] bookingIds);
+
+    List<BookingDTO> selectBookingsList2(BookingDTO bookings);
 }
