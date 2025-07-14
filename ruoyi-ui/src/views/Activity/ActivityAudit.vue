@@ -357,7 +357,7 @@ export default {
       historyQueryParams: {
         pageNum: 1,
         pageSize: 5,
-        moduleType: 'activity',
+        moduleType: 5,
         moduleId: null
       },
 
@@ -639,9 +639,9 @@ export default {
 
     // 导出数据
     handleExport() {
-      this.download('system/activity/export', {
+      this.download('system/bookings/export', {
         ...this.queryParams
-      }, `activity_audit_${new Date().getTime()}.xlsx`);
+      }, `activity${new Date().getTime()}.xlsx`);
     },
 
     // 表格行样式

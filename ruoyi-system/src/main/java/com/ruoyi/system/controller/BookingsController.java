@@ -5,12 +5,16 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.system.domain.Bookings;
+import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.service.IBookingsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @RestController
@@ -70,6 +74,7 @@ public class BookingsController extends BaseController {
     @Log(title = "预约信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody Bookings bookings) {
+
         return toAjax(bookingsService.updateBookings(bookings));
     }
 
@@ -80,5 +85,16 @@ public class BookingsController extends BaseController {
     @DeleteMapping("/{bookingIds}")
     public AjaxResult remove(@PathVariable Long[] bookingIds) {
         return toAjax(bookingsService.deleteBookingsByIds(bookingIds));
+    }
+    /**
+     * 导出学生预约记录列表
+     */
+    @Log(title = "学生书院活动记录", businessType = BusinessType.EXPORT)
+    @PostMapping("/export")
+    public void export(HttpServletResponse response, BookingDTO bookings)
+    {
+        List<BookingDTO> list = bookingsService.selectBookingsList3(bookings);
+        ExcelUtil<BookingDTO> util = new ExcelUtil<BookingDTO>(BookingDTO.class);
+        util.exportExcel(response, list, "学生书院活动记录数据");
     }
 }
