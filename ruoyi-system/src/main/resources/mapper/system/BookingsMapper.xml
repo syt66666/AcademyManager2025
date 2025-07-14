@@ -16,6 +16,7 @@
         <result property="reviewer"       column="reviewer"        />
         <result property="reviewComment"  column="review_comment"  />
         <result property="reviewTime"     column="review_time"     />
+        <result property="signedUp"     column="signed_up"     />
     </resultMap>
     <resultMap type="BookingDTO" id="SysBookingResult2">
         <id     property="bookingId"      column="booking_id"      />
@@ -36,10 +37,11 @@
         <result property="reviewer"       column="reviewer"        />
         <result property="reviewComment"  column="review_comment"  />
         <result property="reviewTime"     column="review_time"     />
+        <result property="signedUp"     column="signed_up"     />
     </resultMap>
     <sql id="selectBookingsVo">
         select booking_id, student_id, activity_id, booked_at, proof, summary, status, reviewer,
-        review_comment, review_time
+        review_comment, review_time, signed_up
         from bookings
     </sql>
     <sql id="selectBookingsVo2">
@@ -158,6 +160,7 @@
             <if test="reviewer != null">reviewer,</if>
             <if test="reviewComment != null">review_comment,</if>
             <if test="reviewTime != null">review_time,</if>
+            <if test="signedUp != null">signed_up,</if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null">#{studentId},</if>
@@ -169,6 +172,7 @@
             <if test="reviewer != null">#{reviewer},</if>
             <if test="reviewComment != null">#{reviewComment},</if>
             <if test="reviewTime != null">#{reviewTime},</if>
+            <if test="signedUp != null">#{signedUp},</if>
         </trim>
     </insert>
 
@@ -184,6 +188,7 @@
             <if test="reviewer != null">reviewer = #{reviewer},</if>
             <if test="reviewComment != null">review_comment = #{reviewComment},</if>
             <if test="reviewTime != null">review_time = #{reviewTime},</if>
+            <if test="signedUp != null">signed_up = #{signedUp},</if>
         </trim>
         where booking_id = #{bookingId}
     </update>
