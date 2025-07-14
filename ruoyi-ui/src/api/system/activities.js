@@ -42,3 +42,23 @@ export function delActivities(activityId) {
     method: 'delete'
   })
 }
+
+export function signUpCapacity(activityId) {
+  return request({
+    url: '/system/activities/signUpCapacity',
+    method: 'post',
+    data: {
+      activityId: activityId
+    }
+  })
+}
+
+export function cancelSignUpCapacity(activityId) {
+  return request({
+    url: '/system/activities/cancelSignUpCapacity',
+    method: 'post',
+    data: {
+      activityId: activityId
+    }
+  })
+}

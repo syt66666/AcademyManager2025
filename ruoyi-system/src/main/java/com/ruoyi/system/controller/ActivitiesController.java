@@ -32,8 +32,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 @RestController
 @RequestMapping("/system/activities")
-public class ActivitiesController extends BaseController
-{
+public class ActivitiesController extends BaseController {
     @Autowired
     private IActivitiesService activityService;
 
@@ -41,8 +40,7 @@ public class ActivitiesController extends BaseController
      * 查询活动列表
      */
     @GetMapping("/list")
-    public TableDataInfo list(Activities activity)
-    {
+    public TableDataInfo list(Activities activity) {
         startPage();
         List<Activities> list = activityService.selectActivityList(activity);
         return getDataTable(list);
@@ -53,8 +51,7 @@ public class ActivitiesController extends BaseController
      */
     @Log(title = "导出数据", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, Activities activities)
-    {
+    public void export(HttpServletResponse response, Activities activities) {
         List<Activities> list = activityService.selectActivityList(activities);
         ExcelUtil<Activities> util = new ExcelUtil<Activities>(Activities.class);
         util.exportExcel(response, list, "导出数据");
@@ -64,8 +61,7 @@ public class ActivitiesController extends BaseController
      * 获取活动详细信息
      */
     @GetMapping(value = "/{activityId}")
-    public AjaxResult getInfo(@PathVariable("activityId") Integer activityId)
-    {
+    public AjaxResult getInfo(@PathVariable("activityId") Integer activityId) {
         return AjaxResult.success(activityService.selectActivityById(activityId));
     }
 
@@ -74,8 +70,7 @@ public class ActivitiesController extends BaseController
      */
     @Log(title = "活动信息", businessType = BusinessType.INSERT)
     @PostMapping
-    public AjaxResult add(@RequestBody Activities activity)
-    {
+    public AjaxResult add(@RequestBody Activities activity) {
         return toAjax(activityService.insertActivity(activity));
     }
 
@@ -84,8 +79,7 @@ public class ActivitiesController extends BaseController
      */
     @Log(title = "活动信息", businessType = BusinessType.UPDATE)
     @PutMapping
-    public AjaxResult edit(@RequestBody Activities activity)
-    {
+    public AjaxResult edit(@RequestBody Activities activity) {
         return toAjax(activityService.updateActivity(activity));
     }
 
@@ -94,17 +88,16 @@ public class ActivitiesController extends BaseController
      */
     @Log(title = "活动信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{activityIds}")
-    public AjaxResult remove(@PathVariable Integer[] activityIds)
-    {
+    public AjaxResult remove(@PathVariable Integer[] activityIds) {
         return toAjax(activityService.deleteActivityByIds(activityIds));
     }
+
     /**
      * 导入活动列表
      */
     @Log(title = "活动信息管理", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
-    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
-    {
+    public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception {
         ExcelUtil<Activities> util = new ExcelUtil<Activities>(Activities.class);
         List<Activities> userList = util.importExcel(file.getInputStream());
         LoginUser loginUser = getLoginUser();
@@ -121,20 +114,23 @@ public class ActivitiesController extends BaseController
 
     /**
      * 报名
+     *
      * @param params
      * @return
      */
     @PostMapping("/signUpCapacity")
     public AjaxResult signUpCapacity(@RequestBody Map<String, Integer> params) {
         Integer activityId = params.get("activityId");
-        int result = activityService.increaseCapacity(activityId);
+        int result = activityService.decreaseCapacity(activityId);
         return result > 0 ? AjaxResult.success("报名成功") : AjaxResult.error("报名失败");
     }
 
     @PostMapping("/cancelSignUpCapacity")
     public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Integer> params) {
         Integer activityId = params.get("activityId");
-        int result = activityService.decreaseCapacity(activityId);
+        int result = activityService.increaseCapacity(activityId);
         return result > 0 ? AjaxResult.success("取消报名成功") : AjaxResult.error("取消报名失败");
     }
 }
+
+
