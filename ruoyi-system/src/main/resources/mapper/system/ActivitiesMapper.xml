@@ -99,10 +99,10 @@
             <if test="organizer != null">organizer = #{organizer},</if>
             <if test="notes != null">notes = #{notes},</if>
             <if test="status != null">status = #{status},</if>
-            version = version + 1,
+#             version = version + 1,
         </trim>
         where activity_id = #{activityId}
-        and version = #{version}
+#         and version = #{version}
     </update>
 
     <delete id="deleteActivityById" parameterType="Integer">
@@ -116,4 +116,22 @@
         </foreach>
     </delete>
 
+    <update id="increaseCapacity" parameterType="Integer">
+        UPDATE activities
+        SET activity_capacity = activity_capacity + 1,
+            version = version +1
+        WHERE activity_id = #{activityId}
+          and version = #{version}
+    </update>
+
+    <update id="decreaseCapacity" parameterType="Integer">
+        UPDATE activities
+        SET activity_capacity = CASE
+                                    WHEN activity_capacity > 0 THEN activity_capacity - 1
+                                    ELSE 0
+            END,
+            version = version +1
+        WHERE activity_id = #{activityId}
+          and version = #{version}
+    </update>
 </mapper>

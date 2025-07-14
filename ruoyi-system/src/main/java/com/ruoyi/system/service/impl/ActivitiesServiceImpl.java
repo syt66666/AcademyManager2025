@@ -65,12 +65,12 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      */
     @Override
     public int updateActivity(Activities activity) {
-        int result = activitiesMapper.updateActivity(activity);
+        /*int result = activitiesMapper.updateActivity(activity);
         if (result == 0) {
             throw new ServiceException("数据出现错误，请刷新重试！");
         }
-        return result;
-        //return activitiesMapper.updateActivity(activity);
+        return result;*/
+        return activitiesMapper.updateActivity(activity);
     }
 
     /**
@@ -131,5 +131,34 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
         }
         return successMsg.toString();
+    }
+
+    /**
+     * 修改活动容量
+     */
+    @Override
+    public int increaseCapacity(Integer activityId) {
+        Activities activity = activitiesMapper.selectActivityById(activityId);
+        if (activity == null) {
+            throw new ServiceException("活动不存在！");
+        }
+        int result = activitiesMapper.increaseCapacity(activityId, activity.getVersion());
+        if (result == 0) {
+            throw new ServiceException("数据出现错误，请刷新重试！");
+        }
+        return result;
+    }
+
+    @Override
+    public int decreaseCapacity(Integer activityId) {
+        Activities activity = activitiesMapper.selectActivityById(activityId);
+        if (activity == null) {
+            throw new ServiceException("活动不存在！");
+        }
+        int result = activitiesMapper.decreaseCapacity(activityId, activity.getVersion());
+        if (result == 0) {
+            throw new ServiceException("数据出现错误，请刷新重试！");
+        }
+        return result;
     }
 }

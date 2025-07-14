@@ -53,4 +53,10 @@ public interface IActivitiesService {
     public int deleteActivityById(Integer activityId);
 
     String importActivity(List<Activities> userList, boolean updateSupport, String operName);
+
+    /**
+     * 在活动表中更新容量
+     */
+    int increaseCapacity(Integer activityId);
+    int decreaseCapacity(Integer activityId);
 }
