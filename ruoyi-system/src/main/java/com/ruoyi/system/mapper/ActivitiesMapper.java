@@ -3,6 +3,7 @@ package com.ruoyi.system.mapper;
 import java.util.List;
 import com.ruoyi.system.domain.Activities;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface ActivitiesMapper {
@@ -54,4 +55,9 @@ public interface ActivitiesMapper {
      */
     public int deleteActivityByIds(Integer[] activityIds);
 
+    /**
+     * 在活动表中更新容量
+     */
+    int increaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
+    int decreaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
 }

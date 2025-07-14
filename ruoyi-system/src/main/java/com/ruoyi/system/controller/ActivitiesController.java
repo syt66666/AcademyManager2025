@@ -1,6 +1,7 @@
 package com.ruoyi.system.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ruoyi.common.core.domain.model.LoginUser;
 import com.ruoyi.system.domain.StuCourse;
@@ -116,5 +117,24 @@ public class ActivitiesController extends BaseController
     public void importTemplate(HttpServletResponse response) {
         ExcelUtil<Activities> util = new ExcelUtil<>(Activities.class);
         util.importTemplateExcel(response, "活动数据");
+    }
+
+    /**
+     * 报名
+     * @param params
+     * @return
+     */
+    @PostMapping("/signUpCapacity")
+    public AjaxResult signUpCapacity(@RequestBody Map<String, Integer> params) {
+        Integer activityId = params.get("activityId");
+        int result = activityService.increaseCapacity(activityId);
+        return result > 0 ? AjaxResult.success("报名成功") : AjaxResult.error("报名失败");
+    }
+
+    @PostMapping("/cancelSignUpCapacity")
+    public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Integer> params) {
+        Integer activityId = params.get("activityId");
+        int result = activityService.decreaseCapacity(activityId);
+        return result > 0 ? AjaxResult.success("取消报名成功") : AjaxResult.error("取消报名失败");
     }
 }
