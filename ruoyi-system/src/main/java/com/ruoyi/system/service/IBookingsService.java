@@ -43,6 +43,14 @@ public interface IBookingsService {
      */
     int deleteBookingsByIds(Long[] bookingIds);
 
+    /**
+     * 根据活动ID和学生ID删除预约记录
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @return 删除结果（影响的行数）
+     */
+    int deleteBookingsByActivityAndStudent(Long activityId, String studentId);
+
     List<BookingDTO> selectBookingsList2(BookingDTO bookings);
     List<BookingDTO> selectBookingsList3(BookingDTO bookings);
 

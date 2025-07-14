@@ -149,6 +149,12 @@ public class BookingsServiceImpl implements IBookingsService {
     public int deleteBookingsByIds(Long[] bookingIds) {
         return bookingsMapper.deleteBookingsByIds(bookingIds);
     }
+
+
+    @Override
+    public int deleteBookingsByActivityAndStudent(Long activityId, String studentId) {
+        return bookingsMapper.deleteBookingsByActivityAndStudent(activityId, studentId);
+    }
     public Map<String, Integer> countAuditStatus() {
         try {
             return bookingsMapper.countAuditStatus();

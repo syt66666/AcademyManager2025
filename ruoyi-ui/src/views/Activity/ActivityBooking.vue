@@ -227,7 +227,7 @@
 
 <script>
 import { listActivities, signUpActivity, cancelSignUp,signUpCapacity,cancelSignUpCapacity } from "@/api/system/activities";
-import { addBooking, deleteBookings } from "@/api/system/bookings";
+import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 
 export default {
@@ -385,7 +385,8 @@ export default {
             row.activityCapacity++
             row.signedUp = false; // 更新报名状态
 
-            deleteBookings({activityId: row.activityId})
+            // 使用新方法删除预约记录
+            deleteBookingsByActivityAndStudent(row.activityId, this.$store.state.user.id)
             //this.getList();
           })
           .catch(error => {

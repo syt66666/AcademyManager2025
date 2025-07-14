@@ -88,6 +88,15 @@ public class BookingsController extends BaseController {
         return toAjax(bookingsService.deleteBookingsByIds(bookingIds));
     }
     /**
+     * 根据活动ID和学生ID删除预约记录
+     */
+    @Log(title = "预约信息", businessType = BusinessType.DELETE)
+    @DeleteMapping("/byActivityAndStudent")
+    public AjaxResult removeByActivityAndStudent(@RequestParam Long activityId,
+                                                 @RequestParam String studentId) {
+        return toAjax(bookingsService.deleteBookingsByActivityAndStudent(activityId, studentId));
+    }
+    /**
      * 导出学生预约记录列表
      */
     @Log(title = "学生书院活动记录", businessType = BusinessType.EXPORT)

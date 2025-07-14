@@ -60,10 +60,20 @@ export function updateBooking(data) {
 /**
  * 批量删除预约
  */
-export function deleteBookings(bookingIds) {
+export function deleteBookings(bookingId) {
   return request({
     url: '/system/bookings/' + bookingId,
     method: 'delete'
+  })
+}
+/**
+ * 根据活动ID和学生ID删除预约
+ */
+export function deleteBookingsByActivityAndStudent(activityId, studentId) {
+  return request({
+    url: '/system/bookings/byActivityAndStudent',
+    method: 'delete',
+    params: { activityId, studentId }
   })
 }
 //查询不同审核状态数量

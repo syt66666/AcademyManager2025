@@ -187,6 +187,11 @@
             #{bookingId}
         </foreach>
     </delete>
+    <delete id="deleteBookingsByActivityAndStudent">
+        DELETE FROM bookings
+        WHERE activity_id = #{activityId}
+          AND student_id = #{studentId}
+    </delete>
     <select id="countAuditStatus" resultType="map">
         SELECT SUM(CASE WHEN status = '未审核' THEN 1 ELSE 0 END) AS pending,
                SUM(CASE WHEN status = '已通过' THEN 1 ELSE 0 END) AS approved,

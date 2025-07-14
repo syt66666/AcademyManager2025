@@ -4,6 +4,7 @@ import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.dto.BookingDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Component;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,14 @@ public interface BookingsMapper {
      * @return 删除结果
      */
     int deleteBookingsByIds(Long[] bookingIds);
+    /**
+     * 根据活动ID和学生ID删除预约记录
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @return 删除结果
+     */
+    int deleteBookingsByActivityAndStudent(@Param("activityId") Long activityId,
+                                           @Param("studentId") String studentId);
 
     List<BookingDTO> selectBookingsList2(BookingDTO bookings);
 
