@@ -60,4 +60,6 @@ public class Activities extends BaseEntity {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
 
+    //乐观锁控制
+    private Integer version;
 }
