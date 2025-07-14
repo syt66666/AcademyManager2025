@@ -226,8 +226,9 @@
 </template>
 
 <script>
-import { listActivities, signUpActivity, cancelSignUp } from "@/api/system/activities";
+import { addBooking, deleteBookings } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
+import {listActivities} from "@/api/system/activities";
 
 export default {
   name: "Activities",
@@ -354,7 +355,7 @@ export default {
     /** 报名活动 */
     handleSignUp(row) {
       // 后端API：用户报名活动
-      signUpActivity({activityId: row.activityId})
+      addBooking({activityId: row.activityId})
         .then(response => {
           this.$message.success("报名成功！");
           row.signedUp = true; // 更新报名状态
@@ -372,7 +373,7 @@ export default {
         type: "warning"
       }).then(() => {
         // 后端API：取消活动报名
-        cancelSignUp({activityId: row.activityId})
+        deleteBookings({activityId: row.activityId})
           .then(response => {
             this.$message.info("已取消报名");
             row.signedUp = false; // 更新报名状态
