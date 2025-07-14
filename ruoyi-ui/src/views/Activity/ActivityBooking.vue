@@ -226,9 +226,9 @@
 </template>
 
 <script>
+import { listActivities, signUpActivity, cancelSignUp,signUpCapacity,cancelSignUpCapacity } from "@/api/system/activities";
 import { addBooking, deleteBookings } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
-import {listActivities} from "@/api/system/activities";
 
 export default {
   name: "Activities",
@@ -355,10 +355,15 @@ export default {
     /** 报名活动 */
     handleSignUp(row) {
       // 后端API：用户报名活动
-      addBooking({activityId: row.activityId,studentId:this.$store.state.user.id})
+
+      signUpCapacity(row.activityId)
+
         .then(response => {
           this.$message.success("报名成功！");
+
           row.signedUp = true; // 更新报名状态
+          addBooking({activityId: row.activityId,studentId:this.$store.state.user.id})
+          this.getList();
         })
         .catch(error => {
           this.$message.error(error.msg || "报名失败");
@@ -373,10 +378,15 @@ export default {
         type: "warning"
       }).then(() => {
         // 后端API：取消活动报名
-        deleteBookings({activityId: row.activityId})
+        cancelSignUpCapacity(row.activityId)
+
           .then(response => {
             this.$message.info("已取消报名");
+
             row.signedUp = false; // 更新报名状态
+
+            deleteBookings({activityId: row.activityId})
+            this.getList();
           })
           .catch(error => {
             this.$message.error(error.msg || "取消失败");
