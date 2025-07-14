@@ -51,4 +51,6 @@ public interface IActivitiesService {
      * @return 结果
      */
     public int deleteActivityById(Integer activityId);
+
+    String importActivity(List<Activities> userList, boolean updateSupport, String operName);
 }

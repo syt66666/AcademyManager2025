@@ -1,10 +1,10 @@
 package com.ruoyi.system.domain;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
-
-import java.util.Date;
+import com.ruoyi.system.utils.JpaJsonConverter;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 预约实体类
@@ -14,42 +14,33 @@ public class Bookings extends BaseEntity {
     private Long bookingId;
 
     /** 学生id（外键） */
-    @Excel(name = "学生ID")
     private Long studentId;
 
     /** 活动id（外键） */
-    @Excel(name = "活动ID")
     private Long activityId;
 
     /** 预约时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "预约时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
-    private Date bookAt;
-
+    private LocalDateTime bookAt;
     /** 证明材料 */
-    @Excel(name = "证明材料")
-    private String proof;
+    //private String proof;
+    @Column(columnDefinition = "json")
+    @Convert(converter = JpaJsonConverter.class)
+    private List<String> proof;
 
     /** 学生总结 */
-    @Excel(name = "学生总结")
     private String summary;
 
     /** 预约状态（未提交、未通过、未审核、已通过） */
-    @Excel(name = "预约状态")
-    private String status;
+    private String status; // 正确的字段
 
     /** 审核人 */
-    @Excel(name = "审核人")
     private String reviewer;
 
     /** 审核意见 */
-    @Excel(name = "审核意见")
     private String reviewComment;
 
     /** 审核时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "审核时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
-    private Date reviewTime;
+    private LocalDateTime reviewTime;
 
     // getter/setter
     public Long getBookingId() { return bookingId; }
@@ -61,11 +52,19 @@ public class Bookings extends BaseEntity {
     public Long getActivityId() { return activityId; }
     public void setActivityId(Long activityId) { this.activityId = activityId; }
 
-    public Date getBookAt() { return bookAt; }
-    public void setBookAt(Date bookAt) { this.bookAt = bookAt; }
+    public LocalDateTime getBookAt() { return bookAt; }
+    public void setBookAt(LocalDateTime bookAt) { this.bookAt = bookAt; }
 
-    public String getProof() { return proof; }
-    public void setProof(String proof) { this.proof = proof; }
+    /*public String getProof() { return proof; }
+    public void setProof(String proof) { this.proof = proof; }*/
+
+    public List<String> getProof() {
+        return proof;
+    }
+
+    public void setProof(List<String> proof) {
+        this.proof = proof;
+    }
 
     public String getSummary() { return summary; }
     public void setSummary(String summary) { this.summary = summary; }
@@ -79,6 +78,6 @@ public class Bookings extends BaseEntity {
     public String getReviewComment() { return reviewComment; }
     public void setReviewComment(String reviewComment) { this.reviewComment = reviewComment; }
 
-    public Date getReviewTime() { return reviewTime; }
-    public void setReviewTime(Date reviewTime) { this.reviewTime = reviewTime; }
+    public LocalDateTime getReviewTime() { return reviewTime; }
+    public void setReviewTime(LocalDateTime reviewTime) { this.reviewTime = reviewTime; }
 }
