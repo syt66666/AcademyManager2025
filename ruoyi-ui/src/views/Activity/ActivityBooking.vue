@@ -360,10 +360,10 @@ export default {
 
         .then(response => {
           this.$message.success("报名成功！");
-
+          row.activityCapacity--
           row.signedUp = true; // 更新报名状态
           addBooking({activityId: row.activityId,studentId:this.$store.state.user.id})
-          this.getList();
+          //this.getList();
         })
         .catch(error => {
           this.$message.error(error.msg || "报名失败");
@@ -382,11 +382,11 @@ export default {
 
           .then(response => {
             this.$message.info("已取消报名");
-
+            row.activityCapacity++
             row.signedUp = false; // 更新报名状态
 
             deleteBookings({activityId: row.activityId})
-            this.getList();
+            //this.getList();
           })
           .catch(error => {
             this.$message.error(error.msg || "取消失败");
