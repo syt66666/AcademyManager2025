@@ -391,6 +391,7 @@ export default {
 <style scoped>
 .app-container {
   padding: 20px;
+  margin-left: 100px;
 }
 
 /* 详情弹窗样式 */

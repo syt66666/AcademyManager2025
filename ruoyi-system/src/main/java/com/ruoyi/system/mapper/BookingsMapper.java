@@ -1,6 +1,7 @@
 package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.Bookings;
+import com.ruoyi.system.domain.dto.BookingDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Component;
 
@@ -47,4 +48,6 @@ public interface BookingsMapper {
      * @return 删除结果
      */
     int deleteBookingsByIds(Long[] bookingIds);
+
+    List<BookingDTO> selectBookingsList2(BookingDTO bookings);
 }

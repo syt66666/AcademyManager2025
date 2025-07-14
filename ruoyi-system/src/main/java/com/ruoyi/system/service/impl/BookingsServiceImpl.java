@@ -1,6 +1,7 @@
 package com.ruoyi.system.service.impl;
 
 import com.ruoyi.system.domain.Bookings;
+import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.mapper.BookingsMapper;
 import com.ruoyi.system.service.IBookingsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,10 @@ public class BookingsServiceImpl implements IBookingsService {
     @Override
     public List<Bookings> selectBookingsList(Bookings bookings) {
         return bookingsMapper.selectBookingsList(bookings);
+    }
+    @Override
+    public List<BookingDTO> selectBookingsList2(BookingDTO bookings) {
+        return bookingsMapper.selectBookingsList2(bookings);
     }
 
     /**
