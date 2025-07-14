@@ -17,7 +17,7 @@ public class BookingDTO {
 
     /** 学生id（外键） */
     private String studentId;
-
+    private String studentName;
     /** 活动id（外键） */
     private Long activityId;
     /** 活动名称 */

@@ -34,7 +34,9 @@ public class BookingsServiceImpl implements IBookingsService {
     public List<BookingDTO> selectBookingsList2(BookingDTO bookings) {
         return bookingsMapper.selectBookingsList2(bookings);
     }
-
+    public List<BookingDTO> selectBookingsList3(BookingDTO bookings) {
+        return bookingsMapper.selectBookingsList3(bookings);
+    }
     /**
      * 根据预约ID查询预约详情
      * @param bookingId 预约ID

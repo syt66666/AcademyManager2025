@@ -39,6 +39,15 @@ public class BookingsController extends BaseController {
         return getDataTable(list);
     }
     /**
+     * 管理员查询预约列表和对应活动信息不包含未提交的信息
+     */
+    @GetMapping("/list3")
+    public TableDataInfo list3(BookingDTO bookings) {
+        startPage();
+        List<BookingDTO> list = bookingsService.selectBookingsList3(bookings);
+        return getDataTable(list);
+    }
+    /**
      * 获取预约详情
      */
     @GetMapping("/{bookingId}")

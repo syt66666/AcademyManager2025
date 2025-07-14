@@ -121,10 +121,10 @@
             {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
           </template>
         </el-table-column>
-        <el-table-column label="学生学号" align="center" prop="studentId" width="150"/>
-        <el-table-column label="学生姓名" align="center" prop="studentName" width="120"/>
-        <el-table-column label="活动名称" align="center" prop="activityName" width="180"/>
-
+        <el-table-column label="学生学号" align="center" prop="studentId"/>
+        <el-table-column label="学生姓名" align="center" prop="studentName"/>
+        <el-table-column label="活动名称" align="center" prop="activityName"/>
+        <el-table-column label="活动地点" align="center" prop="activityLocation"/>
         <!-- 证明材料 -->
         <el-table-column label="证明材料" width="160" align="center">
           <template v-slot="scope">
@@ -330,7 +330,7 @@
 </template>
 
 <script>
-import { listBookingsWithActivity, updateBooking, getBooking } from "@/api/system/bookings";
+import { listBookingsAudit, updateBooking } from "@/api/system/bookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
 import axios from "axios";
@@ -383,7 +383,8 @@ export default {
         pageSize: 10,
         studentId: null,
         studentName: null,
-        activityName: null
+        activityName: null,
+        status: null
       }
     };
   },
@@ -395,13 +396,8 @@ export default {
     // 获取活动列表
     getList() {
       this.loading = true;
-      listBookingsWithActivity(this.queryParams).then(response => {
-        this.activityList = response.rows.map(item => {
-          return {
-            ...item,
-            status: this.formatAuditStatus(item.status)
-          };
-        });
+      listBookingsAudit(this.queryParams).then(response => {
+        this.activityList = response.rows; // 直接使用后端返回的状态字符串
         this.total = response.total;
         this.loading = false;
       });
@@ -431,17 +427,6 @@ export default {
       };
       this.queryParams.status = statusMap[type];
       this.getList();
-    },
-
-    // 格式化审核状态
-    formatAuditStatus(status) {
-      const statusMap = {
-        0: "未审核",
-        1: "已通过",
-        2: "未通过",
-        3: "未提交"
-      };
-      return statusMap[status] || "未审核";
     },
 
     // 处理证明材料操作
@@ -526,7 +511,6 @@ export default {
           const result = await this.parseDocx(response.data);
           this.docxContent = result.html;
         }
-
         this.docPreviewVisible = true;
       } catch (error) {
         this.$message.error(`预览失败: ${error.message}`);
@@ -601,8 +585,8 @@ export default {
     handleAudit(row, status) {
       const isApproved = status === '通过';
       const statusMapping = {
-        '通过': 1,
-        '拒绝': 2,
+        '通过': '已通过',
+        '拒绝': '未通过',
       };
 
       this.$prompt(
@@ -677,4 +661,8 @@ export default {
   }
 };
 </script>
-
+<style scoped>
+.app-container {
+  margin-left: 100px;
+}
+</style>

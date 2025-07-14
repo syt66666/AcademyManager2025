@@ -32,7 +32,6 @@ public class AuditHistoryController extends BaseController
     /**
      * 查询统一审核历史记录列表
      */
-    @PreAuthorize("@ss.hasPermi('system:history:list')")
     @GetMapping("/list")
     public TableDataInfo list(AuditHistory auditHistory)
     {

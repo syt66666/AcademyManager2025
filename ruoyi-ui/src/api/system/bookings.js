@@ -17,7 +17,13 @@ export function listBookingsWithActivity(query) {
     params: query
   })
 }
-
+export function listBookingsAudit(query) {
+  return request({
+    url: '/system/bookings/list3',
+    method: 'get',
+    params: query
+  })
+}
 /**
  * 查询预约详细
  */

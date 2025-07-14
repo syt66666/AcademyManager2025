@@ -50,4 +50,6 @@ public interface BookingsMapper {
     int deleteBookingsByIds(Long[] bookingIds);
 
     List<BookingDTO> selectBookingsList2(BookingDTO bookings);
+
+    List<BookingDTO> selectBookingsList3(BookingDTO bookings);
 }

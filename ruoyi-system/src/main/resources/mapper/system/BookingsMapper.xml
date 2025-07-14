@@ -20,6 +20,7 @@
     <resultMap type="BookingDTO" id="SysBookingResult2">
         <id     property="bookingId"      column="booking_id"      />
         <result property="studentId"      column="student_id"      />
+        <result property="studentName"      column="student_name"      />
         <result property="activityId"     column="activity_id"     />
         <result property="activityName"   column="activity_name"   />
         <result property="activityLocation" column="activity_location" />
@@ -44,7 +45,8 @@
     <sql id="selectBookingsVo2">
         select
         booking_id,
-        student_id,
+        b.student_id,
+        s.student_name,
         b.activity_id,
         a.activity_name,
         a.activity_location,
@@ -61,8 +63,10 @@
         review_comment,
         review_time
         from bookings b
-        left join activities a  <!-- 使用正确的表名 activities 并定义别名 a -->
-        on b.activity_id = a.activity_id  <!-- 使用一致的别名 -->
+        left join activities a
+        on b.activity_id = a.activity_id
+        left join stu_info s
+        on b.student_id = s.student_id
     </sql>
     <select id="selectBookingsList" parameterType="Bookings" resultMap="SysBookingResult">
         <include refid="selectBookingsVo"/>
@@ -88,15 +92,54 @@
     <select id="selectBookingsList2" parameterType="BookingDTO" resultMap="SysBookingResult2">
         <include refid="selectBookingsVo2"/>
         <where>
-            <if test="studentId != null">and b.student_id = #{studentId}</if> <!-- 使用 b. -->
-            <if test="activityId != null">and b.activity_id = #{activityId}</if> <!-- 使用 b. -->
-            <if test="activityName != null">and a.activity_name = #{activityName}</if> <!-- 使用 a. -->
-            <if test="startTime != null and startTime != ''">and a.start_time = #{startTime}</if>
-            <if test="endTime != null and endTime != ''">and a.end_time = #{endTime}</if>
+            <if test="studentId != null">and b.student_id = #{studentId}</if>
+            <if test="studentName != null">and b.student_name like concat('%', #{studentName}, '%')</if>
+            <if test="activityId != null">and b.activity_id = #{activityId}</if>
+            <if test="activityName != null">and a.activity_name like concat('%', #{activityName}, '%')</if>
+            <if test="startTime != null and startTime != ''">
+                and a.start_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                and a.end_time &lt;= #{endTime}
+            </if>
             <if test="status != null and status != ''">and b.status = #{status}</if>
             <if test="reviewer != null and reviewer != ''">and b.reviewer like concat('%', #{reviewer}, '%')</if>
         </where>
-        order by booked_at desc
+        ORDER BY
+        CASE b.status
+        WHEN '未提交' THEN 1
+        WHEN '未通过' THEN 2
+        WHEN '未审核' THEN 3
+        WHEN '已通过' THEN 4
+        ELSE 5
+        END,
+        booked_at DESC
+    </select>
+    <select id="selectBookingsList3" parameterType="BookingDTO" resultMap="SysBookingResult2">
+        <include refid="selectBookingsVo2"/>
+        <where>
+            <if test="studentId != null">and b.student_id = #{studentId}</if>
+            <if test="studentName != null">and b.student_name like concat('%', #{studentName}, '%')</if>
+            <if test="activityId != null">and b.activity_id = #{activityId}</if>
+            <if test="activityName != null">and a.activity_name like concat('%', #{activityName}, '%')</if>
+            <if test="startTime != null and startTime != ''">
+                and a.start_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                and a.end_time &lt;= #{endTime}
+            </if>
+            <if test="status != null and status != ''">and b.status = #{status}</if>
+            <if test="reviewer != null and reviewer != ''">and b.reviewer like concat('%', #{reviewer}, '%')</if>
+            and b.status != '未提交'
+        </where>
+        ORDER BY
+        CASE b.status
+        WHEN '未通过' THEN 1
+        WHEN '未审核' THEN 2
+        WHEN '已通过' THEN 3
+        ELSE 4
+        END,
+        booked_at DESC
     </select>
     <select id="selectBookingsById" parameterType="Long" resultMap="SysBookingResult">
         <include refid="selectBookingsVo"/>
