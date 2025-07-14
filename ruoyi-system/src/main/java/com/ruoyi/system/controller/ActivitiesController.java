@@ -39,7 +39,6 @@ public class ActivitiesController extends BaseController
     /**
      * 查询活动列表
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:list')")
     @GetMapping("/list")
     public TableDataInfo list(Activities activity)
     {
@@ -51,7 +50,6 @@ public class ActivitiesController extends BaseController
     /**
      * 导出活动列表
      */
-    @PreAuthorize("@ss.hasPermi('system:activities:export')")
     @Log(title = "导出数据", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, Activities activities)
@@ -64,7 +62,6 @@ public class ActivitiesController extends BaseController
     /**
      * 获取活动详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:query')")
     @GetMapping(value = "/{activityId}")
     public AjaxResult getInfo(@PathVariable("activityId") Integer activityId)
     {
@@ -74,7 +71,6 @@ public class ActivitiesController extends BaseController
     /**
      * 新增活动
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:add')")
     @Log(title = "活动信息", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody Activities activity)
@@ -85,7 +81,6 @@ public class ActivitiesController extends BaseController
     /**
      * 修改活动
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:edit')")
     @Log(title = "活动信息", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody Activities activity)
@@ -96,7 +91,6 @@ public class ActivitiesController extends BaseController
     /**
      * 删除活动
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:remove')")
     @Log(title = "活动信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{activityIds}")
     public AjaxResult remove(@PathVariable Integer[] activityIds)
@@ -106,8 +100,7 @@ public class ActivitiesController extends BaseController
     /**
      * 导入活动列表
      */
-    @PreAuthorize("@ss.hasPermi('system:activity:import')")
-    @Log(title = "课程管理", businessType = BusinessType.IMPORT)
+    @Log(title = "活动信息管理", businessType = BusinessType.IMPORT)
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
     {
