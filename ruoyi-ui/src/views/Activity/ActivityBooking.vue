@@ -360,7 +360,11 @@ export default {
     /** 报名活动 */
     handleSignUp(row) {
       // 后端API：用户报名活动
-
+      this.$confirm("确定要报名吗？", "确认", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
       signUpCapacity(row.activityId)
 
         .then(response => {
@@ -373,6 +377,8 @@ export default {
         .catch(error => {
           this.$message.error(error.msg || "报名失败");
         });
+      }).catch(() => {
+      });
     },
 
     /** 取消报名 */
