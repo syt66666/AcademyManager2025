@@ -89,19 +89,24 @@
       <el-table-column label="活动名称" align="center" prop="activityName"/>
       <el-table-column label="活动地点" align="center" prop="activityLocation"/>
       <el-table-column label="活动容量" align="center" prop="activityTotalCapacity"/>
-      <el-table-column label="开始时间" align="center" prop="startTime" width="180">
+      <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          <span>{{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="报名截止时间" align="center" prop="activityDeadline" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动开始时间" align="center" prop="startTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动结束时间" align="center" prop="endTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
       <el-table-column label="组织单位" align="center" prop="organizer"/>
@@ -166,13 +171,21 @@
         <el-form-item label="活动名称" prop="activityName">
           <el-input v-model="form.activityName" placeholder="请输入活动名称"/>
         </el-form-item>
+        <!-- 报名开始时间 -->
+        <el-form-item label="报名开始时间" prop="activityStart">
+          <el-date-picker clearable
+                          v-model="form.activityStart"
+                          type="datetime"
+                          value-format="yyyy-MM-dd HH:mm:ss"
+                          placeholder="请选择活动报名开始时间">
+          </el-date-picker>
+        </el-form-item>
         <!-- 报名截止时间 -->
         <el-form-item label="报名截止时间" prop="activityDeadline">
           <el-date-picker clearable
                           v-model="form.activityDeadline"
                           type="datetime"
                           value-format="yyyy-MM-dd HH:mm:ss"
-                          :picker-options="deadlineOptions"
                           placeholder="请选择活动报名截止时间">
           </el-date-picker>
         </el-form-item>
@@ -183,7 +196,6 @@
                           v-model="form.startTime"
                           type="datetime"
                           value-format="yyyy-MM-dd HH:mm:ss"
-                          :picker-options="startTimeOptions"
                           placeholder="请选择活动开始时间">
           </el-date-picker>
         </el-form-item>
@@ -194,7 +206,6 @@
                           v-model="form.endTime"
                           type="datetime"
                           value-format="yyyy-MM-dd HH:mm:ss"
-                          :picker-options="endTimeOptions"
                           placeholder="请选择活动结束时间">
           </el-date-picker>
         </el-form-item>
@@ -294,6 +305,7 @@ export default {
         activityLocation: null,
         activityCapacity: null,
         activityTotalCapacity: null,
+        activityStart:null,
         activityDeadline: null,
         activityDescription: null,
         status: null,
@@ -324,17 +336,14 @@ export default {
         activityName: [
           {required: true, message: "活动名称不能为空", trigger: "blur"}
         ],
-        startTime: [
-          {required: true, message: "开始时间不能为空", trigger: "blur"}
-        ],
-        endTime: [
-          {required: true, message: "结束时间不能为空", trigger: "blur"}
-        ],
         activityLocation: [
           {required: true, message: "活动地点不能为空", trigger: "blur"}
         ],
         activityTotalCapacity: [
           {required: true, message: "活动容量不能为空", trigger: "blur"}
+        ],
+        activityStart: [
+          {required: true, message: "报名开始时间不能为空", trigger: "blur"}
         ],
         activityDeadline: [
           {required: true, message: "报名截止时间不能为空", trigger: "blur"}
@@ -342,6 +351,45 @@ export default {
         organizer: [
           {required: true, message: "组织单位不能为空", trigger: "blur"}
         ],
+        startTime: [
+          { required: true, message: "开始时间不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.activityDeadline && value) {
+                const deadline = new Date(this.form.activityDeadline).getTime();
+                const start = new Date(value).getTime();
+                if (start - deadline < 1000) {
+                  callback(new Error("开始时间必须晚于报名截止时间"));
+                } else {
+                  callback();
+                }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
+        ],
+        endTime: [
+          { required: true, message: "结束时间不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.startTime && value) {
+                const start = new Date(this.form.startTime).getTime();
+                const end = new Date(value).getTime();
+                // 检查结束时间是否在开始时间后（至少1秒）
+                if (end - start < 1000) {
+                  callback(new Error("结束时间必须晚于开始时间"));
+                } else {
+                  callback();
+                }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
+        ]
       }
     };
   },
@@ -349,52 +397,6 @@ export default {
     this.getList();
   },
   methods: {
-    // 时间选择器限制规则
-    deadlineOptions: {
-      disabledDate: (time) => {
-        // 当前时间
-        const now = new Date();
-        // 如果开始时间已设置，则报名截止时间不能晚于开始时间
-        if (this.form.startTime) {
-          const startTime = new Date(this.form.startTime);
-          return time.getTime() > startTime.getTime() ||
-            time.getTime() < now.setHours(0,0,0,0); // 不能选择今天以前的时间
-        }
-        // 只能选择今天及以后的时间
-        return time.getTime() < now.setHours(0,0,0,0);
-      }
-    },
-    startTimeOptions: {
-      disabledDate: (time) => {
-        const now = new Date();
-        // 如果报名截止时间已设置，则开始时间必须晚于报名截止时间
-        if (this.form.activityDeadline) {
-          const deadline = new Date(this.form.activityDeadline);
-          return time.getTime() <= deadline.getTime() ||
-            time.getTime() < now.setHours(0,0,0,0);
-        }
-        // 如果结束时间已设置，则开始时间不能晚于结束时间
-        if (this.form.endTime) {
-          const endTime = new Date(this.form.endTime);
-          return time.getTime() > endTime.getTime();
-        }
-        // 只能选择今天及以后的时间
-        return time.getTime() < now.setHours(0,0,0,0);
-      }
-    },
-    endTimeOptions: {
-      disabledDate: (time) => {
-        const now = new Date();
-        // 如果开始时间已设置，则结束时间必须晚于开始时间
-        if (this.form.startTime) {
-          const startTime = new Date(this.form.startTime);
-          return time.getTime() <= startTime.getTime() ||
-            time.getTime() < now.setHours(0,0,0,0);
-        }
-        // 只能选择今天及以后的时间
-        return time.getTime() < now.setHours(0,0,0,0);
-      }
-    },
     /** 导入模板操作 */
     importTemplate() {
       fetch(process.env.VUE_APP_BASE_API + '/system/activities/importTemplate', {
@@ -456,6 +458,7 @@ export default {
         activityLocation: null,
         activityCapacity: null,
         activityTotalCapacity: null,
+        activityStart:null,
         activityDeadline: null,
         activityDescription: null,
         status: null,

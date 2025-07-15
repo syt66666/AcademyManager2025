@@ -11,6 +11,7 @@
         <result property="endTime"             column="end_time"             />
         <result property="activityLocation"    column="activity_location"    />
         <result property="activityCapacity"    column="activity_capacity"    />
+        <result property="activityStart"    column="activity_start"    />
         <result property="activityDeadline"    column="activity_deadline"    />
         <result property="activityDescription" column="activity_description" />
         <result property="organizer"           column="organizer"            />
@@ -22,7 +23,7 @@
     </resultMap>
 
     <sql id="selectActivitiesVo">
-        select activity_id, activity_name, start_time, end_time, activity_location, activity_capacity,
+        select activity_id, activity_name, start_time, end_time, activity_location, activity_capacity,activity_start,
                activity_deadline, activity_description, organizer, notes, status, created_at, version,activity_total_capacity
         from activities
     </sql>
@@ -30,24 +31,16 @@
     <select id="selectActivityList" parameterType="Activities" resultMap="SysActivityResult">
         <include refid="selectActivitiesVo"/>
         <where>
-            <if test="activityName != null  and activityName != ''">
-                and activity_name like concat('%', #{activityName}, '%')
+            <if test="activityName != null  and activityName != ''">and activity_name like concat('%', #{activityName},
+                '%')
             </if>
-            <if test="startTime != null ">
-                and start_time &gt;= #{startTime}
+            <if test="startTime != null ">and start_time = #{startTime}</if>
+            <if test="endTime != null ">and end_time = #{endTime}</if>
+            <if test="activityLocation != null  and activityLocation != ''">and activity_location like concat('%',
+                #{activityLocation}, '%')
             </if>
-            <if test="endTime != null ">
-                and end_time &lt;= #{endTime}
-            </if>
-            <if test="activityLocation != null  and activityLocation != ''">
-                and activity_location like concat('%', #{activityLocation}, '%')
-            </if>
-            <if test="organizer != null  and organizer != ''">
-                and organizer like concat('%', #{organizer}, '%')
-            </if>
-            <if test="status != null  and status != ''">
-                and status = #{status}
-            </if>
+            <if test="organizer != null  and organizer != ''">and organizer like concat('%', #{organizer}, '%')</if>
+            <if test="status != null  and status != ''">and status = #{status}</if>
         </where>
         order by created_at desc
     </select>
@@ -65,6 +58,7 @@
             <if test="endTime != null">end_time,</if>
             <if test="activityLocation != null">activity_location,</if>
             <if test="activityCapacity != null">activity_capacity,</if>
+            <if test="activityStart != null">activity_start,</if>
             <if test="activityDeadline != null">activity_deadline,</if>
             <if test="activityDescription != null">activity_description,</if>
             <if test="organizer != null">organizer,</if>
@@ -79,6 +73,7 @@
             <if test="endTime != null">#{endTime},</if>
             <if test="activityLocation != null">#{activityLocation},</if>
             <if test="activityCapacity != null">#{activityCapacity},</if>
+            <if test="activityStart != null">#{activityStart},</if>
             <if test="activityDeadline != null">#{activityDeadline},</if>
             <if test="activityDescription != null">#{activityDescription},</if>
             <if test="organizer != null">#{organizer},</if>
@@ -97,6 +92,7 @@
             <if test="endTime != null">end_time = #{endTime},</if>
             <if test="activityLocation != null">activity_location = #{activityLocation},</if>
             <if test="activityCapacity != null">activity_capacity = #{activityCapacity},</if>
+            <if test="activityStart != null">activity_start = #{activityStart},</if>
             <if test="activityDeadline != null">activity_deadline = #{activityDeadline},</if>
             <if test="activityDescription != null">activity_description = #{activityDescription},</if>
             <if test="organizer != null">organizer = #{organizer},</if>
@@ -116,6 +112,7 @@
             <if test="endTime != null">end_time = #{endTime},</if>
             <if test="activityLocation != null">activity_location = #{activityLocation},</if>
             <if test="activityCapacity != null">activity_capacity = #{activityCapacity},</if>
+            <if test="activityStart != null">activity_start = #{activityStart},</if>
             <if test="activityDeadline != null">activity_deadline = #{activityDeadline},</if>
             <if test="activityDescription != null">activity_description = #{activityDescription},</if>
             <if test="organizer != null">organizer = #{organizer},</if>
