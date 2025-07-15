@@ -34,8 +34,8 @@ public class Activities extends BaseEntity {
     @Excel(name = "活动地点")
     private String activityLocation;
 
-    /** 活动容量 */
-    @Excel(name = "活动容量")
+    /** 活动剩余容量 */
+    @Excel(name = "活动剩余容量")
     private Integer activityCapacity;
 
     /** 报名截止时间 */
@@ -62,4 +62,8 @@ public class Activities extends BaseEntity {
 
     //乐观锁控制
     private Integer version;
+
+    /** 活动容量 */
+    @Excel(name = "活动容量")
+    private Integer activityTotalCapacity;
 }

@@ -55,7 +55,7 @@
       </el-table-column>
 
       <!-- 报名状态列 -->
-      <el-table-column label="报名状态" align="center" width="100">
+      <el-table-column label="报名状态" align="center" >
         <template slot-scope="scope">
           <el-tag :type="getSignStatusTag(scope.row)" effect="plain">
             {{ getSignStatusText(scope.row) }}
@@ -63,26 +63,31 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="活动容量" align="center" prop="activityCapacity" width="90" />
-      <el-table-column label="开始时间" align="center" prop="startTime" width="170">
+      <el-table-column label="活动剩余容量" align="center">
+        <template #default="scope">
+          {{ scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+        </template>
+      </el-table-column>
+
+      <el-table-column label="开始时间" align="center" prop="startTime" >
         <template slot-scope="scope">
           <span>{{ formatDateTime(scope.row.startTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" width="170">
+      <el-table-column label="结束时间" align="center" prop="endTime" >
         <template slot-scope="scope">
           <span>{{ formatDateTime(scope.row.endTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="报名截止" align="center" prop="activityDeadline" width="170">
+      <el-table-column label="报名截止" align="center" prop="activityDeadline" >
         <template slot-scope="scope">
           <span>{{ formatDateTime(scope.row.activityDeadline) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="组织单位" align="center" prop="organizer" width="130" />
+      <el-table-column label="组织单位" align="center" prop="organizer"  />
 
       <!-- 操作列 -->
-      <el-table-column label="操作" align="center" width="180" fixed="right">
+      <el-table-column label="操作" align="center"  fixed="right">
         <template slot-scope="scope">
           <!-- 详情按钮 -->
           <el-button
