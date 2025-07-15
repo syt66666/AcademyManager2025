@@ -18,10 +18,10 @@
         />
       </el-form-item>
 
-      <el-form-item label="组织者" prop="organizer">
+      <el-form-item label="组织单位" prop="organizer">
         <el-input
           v-model="queryParams.organizer"
-          placeholder="请输入组织者"
+          placeholder="请输入组织单位"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -31,7 +31,6 @@
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
-
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
@@ -77,7 +76,14 @@
     <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange">
 
       <el-table-column type="selection" width="55" align="center" />
-
+      <!-- 序号列 -->
+      <el-table-column label="序号" width="80" align="center">
+        <template v-slot="scope">
+              <span class="index-badge">
+                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+              </span>
+        </template>
+      </el-table-column>
       <el-table-column label="活动名称" align="center" prop="activityName" />
       <el-table-column label="活动地点" align="center" prop="activityLocation" />
       <el-table-column label="活动容量" align="center" prop="activityCapacity" />
@@ -96,7 +102,7 @@
           <span>{{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="组织者" align="center" prop="organizer" />
+      <el-table-column label="组织单位" align="center" prop="organizer" />
       <el-table-column label="活动状态" align="center" prop="status" />
 
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
@@ -176,8 +182,8 @@
                           placeholder="请选择活动报名截止时间">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="组织者" prop="organizer">
-          <el-input v-model="form.organizer" placeholder="请输入组织者" />
+        <el-form-item label="组织单位" prop="organizer">
+          <el-input v-model="form.organizer" placeholder="请输入组织单位" />
         </el-form-item>
         <el-form-item label="活动描述" prop="activityDescription">
           <el-input v-model="form.activityDescription" type="textarea" placeholder="请输入内容" />
@@ -306,7 +312,7 @@ export default {
           { required: true, message: "报名截止时间不能为空", trigger: "blur" }
         ],
         organizer: [
-          { required: true, message: "组织者不能为空", trigger: "blur" }
+          { required: true, message: "组织单位不能为空", trigger: "blur" }
         ],
       }
     };
