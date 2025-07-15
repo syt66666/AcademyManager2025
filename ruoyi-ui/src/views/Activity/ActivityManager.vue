@@ -288,7 +288,7 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 【请填写功能名称】表格数据
+      // 活动表格数据
       activitiesList: [],
       // 弹出层标题
       title: "",
@@ -346,7 +346,24 @@ export default {
           {required: true, message: "报名开始时间不能为空", trigger: "blur"}
         ],
         activityDeadline: [
-          {required: true, message: "报名截止时间不能为空", trigger: "blur"}
+          {required: true, message: "报名截止时间不能为空", trigger: "blur"},
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.activityStart && value) {
+                const start = new Date(this.form.activityStart).getTime();
+                const deadline = new Date(value).getTime();
+                // 检查截止时间是否在开始时间后（至少1秒）
+                if (deadline - start < 1000) {
+                  callback(new Error("报名截止时间必须晚于报名开始时间"));
+                } else {
+                  callback();
+                }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
         ],
         organizer: [
           {required: true, message: "组织单位不能为空", trigger: "blur"}
@@ -377,7 +394,6 @@ export default {
               if (this.form.startTime && value) {
                 const start = new Date(this.form.startTime).getTime();
                 const end = new Date(value).getTime();
-                // 检查结束时间是否在开始时间后（至少1秒）
                 if (end - start < 1000) {
                   callback(new Error("结束时间必须晚于开始时间"));
                 } else {
