@@ -47,7 +47,4 @@ public class Bookings extends BaseEntity {
     /** 审核时间 */
     private LocalDateTime reviewTime;
 
-    /** 预约状态 */
-    private Boolean signedUp;
-
 }

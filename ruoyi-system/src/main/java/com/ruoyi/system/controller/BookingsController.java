@@ -15,6 +15,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -111,5 +113,24 @@ public class BookingsController extends BaseController {
     public AjaxResult getAuditStatusCount() {
         Map<String, Integer> countMap = bookingsService.countAuditStatus();
         return AjaxResult.success(countMap);
+    }
+
+    /**
+     * 检查学生是否预约了指定活动
+     */
+    @GetMapping("/checkBooking")
+    public AjaxResult checkBookingSimple(@RequestParam Long activityId,
+                                         @RequestParam String studentId) {
+        boolean isBooked = bookingsService.checkIfBooked(activityId, studentId);
+        return AjaxResult.success(Collections.singletonMap("isBooked", isBooked));
+    }
+
+    /**
+     * 根据学号返回所有预约的活动
+     */
+    @GetMapping("/activities/{studentId}")
+    public AjaxResult getBookedActivities(@PathVariable String studentId) {
+        List<Long> activityIds = bookingsService.getBookedActivityIds(studentId);
+        return AjaxResult.success(activityIds);
     }
 }

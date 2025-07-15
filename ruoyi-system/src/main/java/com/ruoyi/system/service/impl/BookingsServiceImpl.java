@@ -166,4 +166,19 @@ public class BookingsServiceImpl implements IBookingsService {
             }};
         }
     }
+
+    @Override
+    public boolean checkIfBooked(Long activityId, String studentId) {
+        return bookingsMapper.checkIfBooked(activityId, studentId);
+    }
+
+    /**
+     * 根据学号查所有预约的活动
+     * @param studentId
+     * @return
+     */
+    @Override
+    public List<Long> getBookedActivityIds(String studentId) {
+        return bookingsMapper.selectActivityIdsByStudentId(studentId);
+    }
 }
