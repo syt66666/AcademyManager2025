@@ -65,7 +65,7 @@
 
       <el-table-column label="活动剩余容量" align="center">
         <template #default="scope">
-          {{ scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
         </template>
       </el-table-column>
 
