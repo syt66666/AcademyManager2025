@@ -413,6 +413,34 @@ export default {
     this.getList();
   },
   methods: {
+    /** 计算活动状态 */
+    calculateStatus() {
+      // 获取当前时间（使用服务器时间更准确，这里先用客户端时间）
+      const now = new Date().getTime();
+      const startSign = new Date(this.form.activityStart).getTime();
+      const deadline = new Date(this.form.activityDeadline).getTime();
+      const startActivity = new Date(this.form.startTime).getTime();
+      const endActivity = new Date(this.form.endTime).getTime();
+
+      // 检查时间点是否有效
+      if (!isNaN(startSign) && !isNaN(deadline) &&
+        !isNaN(startActivity) && !isNaN(endActivity)) {
+
+        if (now < startSign) {
+          this.form.status = '未开始';
+        } else if (now <= deadline) {
+          this.form.status = '可报名';
+        } else if (now < startActivity) {
+          this.form.status = '不可报名';
+        } else if (now <= endActivity) {
+          this.form.status = '进行中';
+        } else {
+          this.form.status = '已结束';
+        }
+      } else {
+        this.form.status = '未开始';
+      }
+    },
     /** 导入模板操作 */
     importTemplate() {
       fetch(process.env.VUE_APP_BASE_API + '/system/activities/importTemplate', {
@@ -522,6 +550,8 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          // 计算活动状态
+          this.calculateStatus();
           if (this.form.activityId != null) {
             updateActivities2(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
