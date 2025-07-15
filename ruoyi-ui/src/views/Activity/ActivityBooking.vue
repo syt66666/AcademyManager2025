@@ -359,10 +359,7 @@ export default {
 
     /** 报名活动 */
     handleSignUp(row) {
-      // 后端API：用户报名活动
-
       signUpCapacity(row.activityId)
-
         .then(response => {
           this.$message.success("报名成功！");
           row.activityCapacity--
@@ -384,7 +381,6 @@ export default {
       }).then(() => {
         // 后端API：取消活动报名
         cancelSignUpCapacity(row.activityId)
-
           .then(response => {
             this.$message.info("已取消报名");
             row.activityCapacity++

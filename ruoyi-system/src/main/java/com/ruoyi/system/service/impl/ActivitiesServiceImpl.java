@@ -72,7 +72,10 @@ public class ActivitiesServiceImpl implements IActivitiesService {
         return result;*/
         return activitiesMapper.updateActivity(activity);
     }
-
+    @Override
+    public int updateActivity2(Activities activity) {
+        return activitiesMapper.updateActivity2(activity);
+    }
     /**
      * 批量删除活动
      *

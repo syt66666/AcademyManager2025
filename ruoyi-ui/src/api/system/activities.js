@@ -34,7 +34,14 @@ export function updateActivities(data) {
     data: data
   })
 }
-
+// 修改活动信息
+export function updateActivities2(data) {
+  return request({
+    url: '/system/activities/updateActivity',
+    method: 'post',
+    data: data
+  })
+}
 // 删除活动信息
 export function delActivities(activityId) {
   return request({

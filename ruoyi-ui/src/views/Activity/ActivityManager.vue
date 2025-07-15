@@ -88,7 +88,7 @@
       </el-table-column>
       <el-table-column label="活动名称" align="center" prop="activityName"/>
       <el-table-column label="活动地点" align="center" prop="activityLocation"/>
-      <el-table-column label="活动容量" align="center" prop="activityCapacity"/>
+      <el-table-column label="活动容量" align="center" prop="activityTotalCapacity"/>
       <el-table-column label="开始时间" align="center" prop="startTime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -127,14 +127,24 @@
       <!-- 活动描述+注意事项 -->
       <el-table-column type="expand" width="60" align="center">
         <template slot-scope="props">
-          <div class="expand-container">
-            <div class="expand-row">
-              <div class="expand-label">活动描述:</div>
-              <div class="expand-content">{{ props.row.activityDescription }}</div>
+          <div class="expand-layout">
+            <!-- 左侧活动描述 -->
+            <div class="expand-section">
+              <div class="section-header">活动描述</div>
+              <div class="section-content scrollable">
+                {{ props.row.activityDescription || "无描述信息" }}
+              </div>
             </div>
-            <div class="expand-row">
-              <div class="expand-label">注意事项:</div>
-              <div class="expand-content">{{ props.row.notes }}</div>
+
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+
+            <!-- 右侧注意事项 -->
+            <div class="expand-section">
+              <div class="section-header">注意事项</div>
+              <div class="section-content scrollable">
+                {{ props.row.notes || "无注意事项" }}
+              </div>
             </div>
           </div>
         </template>
@@ -156,35 +166,44 @@
         <el-form-item label="活动名称" prop="activityName">
           <el-input v-model="form.activityName" placeholder="请输入活动名称"/>
         </el-form-item>
-        <el-form-item label="开始时间" prop="startTime">
-          <el-date-picker clearable
-                          v-model="form.startTime"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动开始时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="结束时间" prop="endTime">
-          <el-date-picker clearable
-                          v-model="form.endTime"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动结束时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="活动地点" prop="activityLocation">
-          <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
-        </el-form-item>
-        <el-form-item label="活动容量" prop="activityCapacity">
-          <el-input v-model="form.activityCapacity" placeholder="请输入活动容量"/>
-        </el-form-item>
+        <!-- 报名截止时间 -->
         <el-form-item label="报名截止时间" prop="activityDeadline">
           <el-date-picker clearable
                           v-model="form.activityDeadline"
                           type="datetime"
                           value-format="yyyy-MM-dd HH:mm:ss"
+                          :picker-options="deadlineOptions"
                           placeholder="请选择活动报名截止时间">
           </el-date-picker>
+        </el-form-item>
+
+        <!-- 开始时间 -->
+        <el-form-item label="开始时间" prop="startTime">
+          <el-date-picker clearable
+                          v-model="form.startTime"
+                          type="datetime"
+                          value-format="yyyy-MM-dd HH:mm:ss"
+                          :picker-options="startTimeOptions"
+                          placeholder="请选择活动开始时间">
+          </el-date-picker>
+        </el-form-item>
+
+        <!-- 结束时间 -->
+        <el-form-item label="结束时间" prop="endTime">
+          <el-date-picker clearable
+                          v-model="form.endTime"
+                          type="datetime"
+                          value-format="yyyy-MM-dd HH:mm:ss"
+                          :picker-options="endTimeOptions"
+                          placeholder="请选择活动结束时间">
+          </el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="活动地点" prop="activityLocation">
+          <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
+        </el-form-item>
+        <el-form-item label="活动容量" prop="activityTotalCapacity">
+          <el-input v-model="form.activityTotalCapacity" placeholder="请输入活动容量"/>
         </el-form-item>
         <el-form-item label="组织单位" prop="organizer">
           <el-input v-model="form.organizer" placeholder="请输入组织单位"/>
@@ -237,7 +256,7 @@
 </template>
 
 <script>
-import {listActivities, getActivities, delActivities, addActivities, updateActivities} from "@/api/system/activities";
+import {listActivities, getActivities, delActivities, addActivities, updateActivities2} from "@/api/system/activities";
 import {getToken} from "@/utils/auth";
 
 export default {
@@ -268,17 +287,19 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        activityId: null,
         activityName: null,
         startTime: null,
         endTime: null,
         activityLocation: null,
         activityCapacity: null,
+        activityTotalCapacity: null,
         activityDeadline: null,
         activityDescription: null,
         status: null,
         createdAt: null,
         organizer: null,
-        notes: null
+        notes: null,
       },
       // 用户导入参数
       upload: {
@@ -297,6 +318,7 @@ export default {
       },
       // 表单参数
       form: {},
+
       // 表单校验
       rules: {
         activityName: [
@@ -311,7 +333,7 @@ export default {
         activityLocation: [
           {required: true, message: "活动地点不能为空", trigger: "blur"}
         ],
-        activityCapacity: [
+        activityTotalCapacity: [
           {required: true, message: "活动容量不能为空", trigger: "blur"}
         ],
         activityDeadline: [
@@ -327,6 +349,52 @@ export default {
     this.getList();
   },
   methods: {
+    // 时间选择器限制规则
+    deadlineOptions: {
+      disabledDate: (time) => {
+        // 当前时间
+        const now = new Date();
+        // 如果开始时间已设置，则报名截止时间不能晚于开始时间
+        if (this.form.startTime) {
+          const startTime = new Date(this.form.startTime);
+          return time.getTime() > startTime.getTime() ||
+            time.getTime() < now.setHours(0,0,0,0); // 不能选择今天以前的时间
+        }
+        // 只能选择今天及以后的时间
+        return time.getTime() < now.setHours(0,0,0,0);
+      }
+    },
+    startTimeOptions: {
+      disabledDate: (time) => {
+        const now = new Date();
+        // 如果报名截止时间已设置，则开始时间必须晚于报名截止时间
+        if (this.form.activityDeadline) {
+          const deadline = new Date(this.form.activityDeadline);
+          return time.getTime() <= deadline.getTime() ||
+            time.getTime() < now.setHours(0,0,0,0);
+        }
+        // 如果结束时间已设置，则开始时间不能晚于结束时间
+        if (this.form.endTime) {
+          const endTime = new Date(this.form.endTime);
+          return time.getTime() > endTime.getTime();
+        }
+        // 只能选择今天及以后的时间
+        return time.getTime() < now.setHours(0,0,0,0);
+      }
+    },
+    endTimeOptions: {
+      disabledDate: (time) => {
+        const now = new Date();
+        // 如果开始时间已设置，则结束时间必须晚于开始时间
+        if (this.form.startTime) {
+          const startTime = new Date(this.form.startTime);
+          return time.getTime() <= startTime.getTime() ||
+            time.getTime() < now.setHours(0,0,0,0);
+        }
+        // 只能选择今天及以后的时间
+        return time.getTime() < now.setHours(0,0,0,0);
+      }
+    },
     /** 导入模板操作 */
     importTemplate() {
       fetch(process.env.VUE_APP_BASE_API + '/system/activities/importTemplate', {
@@ -387,12 +455,14 @@ export default {
         endTime: null,
         activityLocation: null,
         activityCapacity: null,
+        activityTotalCapacity: null,
         activityDeadline: null,
         activityDescription: null,
         status: null,
         createdAt: null,
         organizer: null,
-        notes: null
+        notes: null,
+        version: 0
       };
       this.resetForm("form");
     },
@@ -434,7 +504,7 @@ export default {
       this.$refs["form"].validate(valid => {
         if (valid) {
           if (this.form.activityId != null) {
-            updateActivities(this.form).then(response => {
+            updateActivities2(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
@@ -474,5 +544,44 @@ export default {
 <style scoped>
 .app-container {
   margin-left: 100px;
+}
+/* 左右布局容器 */
+.expand-layout {
+  display: flex;
+  padding: 15px;
+}
+
+/* 分区样式 */
+.expand-section {
+  flex: 1;
+  padding: 0 15px;
+}
+
+/* 分区头部样式 */
+.section-header {
+  font-weight: bold;
+  color: #409EFF;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+/* 分区内容样式 */
+.section-content {
+  line-height: 1.6;
+  color: #606266;
+}
+
+/* 可滚动区域 */
+.scrollable {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 分区间的分隔线 */
+.divider {
+  width: 1px;
+  background-color: #EBEEF5;
+  margin: 0 10px;
 }
 </style>

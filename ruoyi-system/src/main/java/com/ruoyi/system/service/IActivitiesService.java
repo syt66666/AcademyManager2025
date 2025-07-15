@@ -59,4 +59,6 @@ public interface IActivitiesService {
      */
     int increaseCapacity(Integer activityId);
     int decreaseCapacity(Integer activityId);
+
+    int updateActivity2(Activities activity);
 }

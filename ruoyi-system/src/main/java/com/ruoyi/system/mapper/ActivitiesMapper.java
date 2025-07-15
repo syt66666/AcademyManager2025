@@ -60,4 +60,6 @@ public interface ActivitiesMapper {
      */
     int increaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
     int decreaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
+
+    int updateActivity2(Activities activity);
 }
