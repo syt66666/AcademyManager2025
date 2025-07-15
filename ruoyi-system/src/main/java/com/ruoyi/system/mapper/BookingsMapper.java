@@ -64,4 +64,15 @@ public interface BookingsMapper {
     List<BookingDTO> selectBookingsList3(BookingDTO bookings);
 
     Map<String, Integer> countAuditStatus();
+
+    /**
+     * 检查学生是否预约了指定活动
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @return 是否已预约
+     */
+    boolean checkIfBooked(@Param("activityId") Long activityId,
+                          @Param("studentId") String studentId);
+
+    List<Long> selectActivityIdsByStudentId(@Param("studentId") String studentId);
 }

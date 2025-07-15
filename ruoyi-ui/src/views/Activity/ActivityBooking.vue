@@ -63,9 +63,9 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="活动剩余容量" align="center">
+      <el-table-column label="活动容量剩余情况" align="center">
         <template #default="scope">
-          {{ scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
         </template>
       </el-table-column>
 
@@ -359,7 +359,14 @@ export default {
 
     /** 报名活动 */
     handleSignUp(row) {
+      // 后端API：用户报名活动
+      this.$confirm("确定要报名吗？", "确认", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
       signUpCapacity(row.activityId)
+
         .then(response => {
           this.$message.success("报名成功！");
           row.activityCapacity--
@@ -370,6 +377,8 @@ export default {
         .catch(error => {
           this.$message.error(error.msg || "报名失败");
         });
+      }).catch(() => {
+      });
     },
 
     /** 取消报名 */
@@ -381,6 +390,7 @@ export default {
       }).then(() => {
         // 后端API：取消活动报名
         cancelSignUpCapacity(row.activityId)
+
           .then(response => {
             this.$message.info("已取消报名");
             row.activityCapacity++
