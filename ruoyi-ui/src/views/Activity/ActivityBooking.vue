@@ -320,12 +320,23 @@ export default {
 
     /** 获取报名状态文本 */
     getSignStatusText(row) {
-      // 假设后端返回了报名状态，这里用 signedUp 表示
+      // 已报名的情况优先
       if (row.signedUp) return "已报名";
 
+      // 当前时间状态（未开始/进行中才可能报名）
       const status = this.getActivityStatusText(row);
-      return ["未开始", "进行中"].includes(status) ? "可报名" : "不可报名";
+
+      // 判断是否还有剩余容量
+      const hasCapacity = row.activityCapacity > 0;
+
+      // 只有同时满足时间 + 容量 才能报名
+      if (["未开始", "进行中"].includes(status) && hasCapacity) {
+        return "可报名";
+      }
+
+      return "不可报名";
     },
+
 
     /** 获取报名状态标签类型 */
     getSignStatusTag(row) {
