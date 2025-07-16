@@ -232,7 +232,7 @@
 
 <script>
 import { listActivities, signUpActivity, cancelSignUp,signUpCapacity,cancelSignUpCapacity } from "@/api/system/activities";
-import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
+import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent,updateBooking,listBookings2,checkBookingSimple} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 
 export default {
@@ -251,7 +251,9 @@ export default {
         activityName: null,
         activityLocation: null,
         organizer: null,
-        status: null
+        status: null,
+        bookingId: null,
+
       }
     };
   },
@@ -259,15 +261,32 @@ export default {
     this.getList();
   },
   methods: {
-    /** 查询活动列表 */
-    getList() {
+    /** 查询活动列表和预约列表 */
+    async getList() {
       this.loading = true;
-      // 后端API：获取活动列表
-      listActivities(this.queryParams).then(response => {
-        this.activitiesList = response.rows;
+      try {
+        // 1. 获取活动列表
+        const response = await listActivities(this.queryParams);
+        this.activitiesList = response.rows.map(activity => ({
+          ...activity,
+          isBooked: false // 提前让 isBooked 成为响应式属性
+        }));
+
         this.total = response.total;
+
+        // 2. 并行检查所有活动的报名状态
+        const checkPromises = this.activitiesList.map(activity =>
+         checkBookingSimple(activity.activityId, this.$store.state.user.id).then(res => {
+           activity.isBooked = res.data.isBooked;
+         })
+        );
+
+        await Promise.all(checkPromises);
+      } catch (error) {
+        console.error("获取数据失败:", error);
+      } finally {
         this.loading = false;
-      });
+      }
     },
 
     /** 处理搜索 */
@@ -319,9 +338,9 @@ export default {
     },
 
     /** 获取报名状态文本 */
-    getSignStatusText(row) {
-      // 已报名的情况优先
-      if (row.signedUp) return "已报名";
+   getSignStatusText(row) {
+     if (row.isBooked) return "已报名";  // 直接使用 isBooked 状态
+
 
       // 当前时间状态（未开始/进行中才可能报名）
       const status = this.getActivityStatusText(row);
@@ -369,54 +388,51 @@ export default {
     },
 
     /** 报名活动 */
-    handleSignUp(row) {
-      // 后端API：用户报名活动
-      this.$confirm("确定要报名吗？", "确认", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      }).then(() => {
-      signUpCapacity(row.activityId)
+   // 报名成功时
+   handleSignUp(row) {
+     this.$confirm("确定要报名吗？", "确认", {
+       confirmButtonText: "确定",
+       cancelButtonText: "取消",
+       type: "warning"
+     }).then(() => {
+       signUpCapacity(row.activityId)
+         .then(() => {
+           this.$message.success("报名成功！");
+           row.isBooked = true;  // 手动更新状态
+           return addBooking({
+             activityId: row.activityId,
+             studentId: this.$store.state.user.id
+           });
+         })
+         .then(() => this.getList())
+         .catch(error => {
+           this.$message.error(error.msg || "报名失败");
+         });
+     });
+   },
 
-        .then(response => {
-          this.$message.success("报名成功！");
-          row.activityCapacity--
-          row.signedUp = true; // 更新报名状态
-          addBooking({activityId: row.activityId,studentId:this.$store.state.user.id})
-          //this.getList();
-        })
-        .catch(error => {
-          this.$message.error(error.msg || "报名失败");
-        });
-      }).catch(() => {
-      });
-    },
-
-    /** 取消报名 */
-    handleCancel(row) {
-      this.$confirm("确定要取消报名吗？取消后如需参加需重新报名。", "确认取消", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      }).then(() => {
-        // 后端API：取消活动报名
-        cancelSignUpCapacity(row.activityId)
-
-          .then(response => {
-            this.$message.info("已取消报名");
-            row.activityCapacity++
-            row.signedUp = false; // 更新报名状态
-
-            // 使用新方法删除预约记录
-            deleteBookingsByActivityAndStudent(row.activityId, this.$store.state.user.id)
-            //this.getList();
-          })
-          .catch(error => {
-            this.$message.error(error.msg || "取消失败");
-          });
-      }).catch(() => {
-      });
-    }
+   // 取消报名时
+   handleCancel(row) {
+     this.$confirm("确定要取消报名吗？", "确认取消", {
+       confirmButtonText: "确定",
+       cancelButtonText: "取消",
+       type: "warning"
+     }).then(() => {
+       cancelSignUpCapacity(row.activityId)
+         .then(() => {
+           this.$message.info("已取消报名");
+           row.isBooked = false;  // 手动更新状态
+           return deleteBookingsByActivityAndStudent(
+             row.activityId,
+             this.$store.state.user.id
+           );
+         })
+         .then(() => this.getList())
+         .catch(error => {
+           this.$message.error(error.msg || "取消失败");
+         });
+     });
+   }
   }
 };
 </script>
