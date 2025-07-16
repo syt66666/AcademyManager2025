@@ -152,4 +152,71 @@
         WHERE activity_id = #{activityId}
           and version = #{version}
     </update>
+
+
+    <!-- 更新为可报名状态 -->
+    <update id="updateStatusToAvailable" parameterType="String">
+        <![CDATA[
+        UPDATE activities
+        SET status = '可报名'
+        WHERE status IN ('未开始', '已截止')
+          AND #{now} >= activity_start
+          AND #{now} <= activity_deadline
+        ]]>
+    </update>
+
+    <!-- 更新为已截止状态 -->
+    <update id="updateStatusToClosed" parameterType="String">
+        <![CDATA[
+        UPDATE activities
+        SET status = '已截止'
+        WHERE status IN ('未开始', '可报名')
+          AND #{now} > activity_deadline
+          AND #{now} < start_time
+        ]]>
+    </update>
+
+    <!-- 更新为进行中状态 -->
+    <update id="updateStatusToOngoing" parameterType="String">
+        <![CDATA[
+        UPDATE activities
+        SET status = '进行中'
+        WHERE status IN ('未开始', '可报名', '已截止')
+          AND #{now} >= start_time
+          AND #{now} <= end_time
+        ]]>
+    </update>
+
+    <!-- 更新为已结束状态 -->
+    <update id="updateStatusToEnded" parameterType="String">
+        <![CDATA[
+        UPDATE activities
+        SET status = '已结束'
+        WHERE status != '已结束'
+          AND #{now} > end_time
+        ]]>
+    </update>
+
+    <!-- 查询状态不一致的活动 -->
+    <select id="selectInconsistentStatus" resultType="Activities" parameterType="String">
+        <![CDATA[
+        SELECT * FROM activities
+        WHERE status != (
+            CASE
+                WHEN #{now} < activity_start THEN '未开始'
+            WHEN #{now} BETWEEN activity_start AND activity_deadline THEN '可报名'
+            WHEN #{now} > activity_deadline AND #{now} < start_time THEN '已截止'
+            WHEN #{now} BETWEEN start_time AND end_time THEN '进行中'
+            ELSE '已结束'
+            END
+            )
+        ]]>
+    </select>
+
+    <!-- 纠正活动状态 -->
+    <update id="correctActivityStatus">
+        UPDATE activities
+        SET status = #{status}
+        WHERE activity_id = #{activityId}
+    </update>
 </mapper>

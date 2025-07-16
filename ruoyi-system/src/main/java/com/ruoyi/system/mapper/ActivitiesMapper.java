@@ -62,4 +62,48 @@ public interface ActivitiesMapper {
     int decreaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
 
     int updateActivity2(Activities activity);
+
+    /**
+     * 更新为可报名状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToAvailable(@Param("now") String now);
+
+    /**
+     * 更新为已截止状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToClosed(@Param("now") String now);
+
+    /**
+     * 更新为进行中状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToOngoing(@Param("now") String now);
+
+    /**
+     * 更新为已结束状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToEnded(@Param("now") String now);
+
+    /**
+     * 查询状态不一致的活动
+     * @param now 当前时间
+     * @return 不一致的活动列表
+     */
+    List<Activities> selectInconsistentStatus(@Param("now") String now);
+
+    /**
+     * 纠正活动状态
+     * @param activityId 活动ID
+     * @param status 正确状态
+     * @return 更新行数
+     */
+    int correctActivityStatus(@Param("activityId") Long activityId,
+                              @Param("status") String status);
 }

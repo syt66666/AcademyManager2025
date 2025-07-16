@@ -1,5 +1,8 @@
 package com.ruoyi.quartz.task;
 
+import com.ruoyi.common.utils.DateUtils;
+import com.ruoyi.system.mapper.ActivitiesMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.ruoyi.common.utils.StringUtils;
 
@@ -11,6 +14,8 @@ import com.ruoyi.common.utils.StringUtils;
 @Component("ryTask")
 public class RyTask
 {
+    @Autowired
+    ActivitiesMapper activityMapper;
     public void ryMultipleParams(String s, Boolean b, Long l, Double d, Integer i)
     {
         System.out.println(StringUtils.format("执行多参方法： 字符串类型{}，布尔类型{}，长整型{}，浮点型{}，整形{}", s, b, l, d, i));
@@ -24,5 +29,14 @@ public class RyTask
     public void ryNoParams()
     {
         System.out.println("执行无参方法");
+    }
+
+    public void updateActivity()
+    {
+        String now = DateUtils.getTime();
+        activityMapper.updateStatusToAvailable(now);
+        activityMapper.updateStatusToClosed(now);
+        activityMapper.updateStatusToOngoing(now);
+        activityMapper.updateStatusToEnded(now);
     }
 }
