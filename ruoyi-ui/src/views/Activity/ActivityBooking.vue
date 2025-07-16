@@ -26,12 +26,13 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="活动状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择活动状态" clearable>
-          <el-option label="未开始" value="0" />
-          <el-option label="已截止" value="1" />
-          <el-option label="进行中" value="2" />
-          <el-option label="已结束" value="3" />
+      <el-form-item label="状态筛选" prop="status">
+        <el-select v-model="queryParams.status" placeholder="请选择活动状态" clearable @change="handleStatusFilterChange">
+          <el-option label="报名未开始" value="未开始" />
+          <el-option label="报名进行中" value="可报名" />
+          <el-option label="报名已截止" value="已截止" />
+          <el-option label="活动进行中" value="进行中" />
+          <el-option label="活动已结束" value="已结束" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -312,6 +313,11 @@ export default {
       this.queryParams.pageNum = 1;
       this.getList();
     },
+    /** 搜索报名状态 */
+      handleStatusFilterChange() {
+        this.queryParams.pageNum = 1;
+        this.getList(); // 执行查询
+      },
 
     /** 重置搜索 */
     resetQuery() {
