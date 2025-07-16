@@ -26,6 +26,15 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="活动状态" prop="status">
+        <el-select v-model="queryParams.status" clearable>
+          <el-option label="未开始" value="未开始"/>
+          <el-option label="可报名" value="可报名"/>
+          <el-option label="已截止" value="已截止"/>
+          <el-option label="进行中" value="进行中"/>
+          <el-option label="已结束" value="已结束"/>
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -86,54 +95,57 @@
               </span>
         </template>
       </el-table-column>
-      <el-table-column label="活动名称" align="center" prop="activityName"/>
-      <el-table-column label="活动地点" align="center" prop="activityLocation"/>
-      <el-table-column label="活动容量" align="center" prop="activityTotalCapacity"/>
-      <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180">
+      <el-table-column label="活动信息" width="380">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          <div class="activity-info">
+            <div class="activity-name">{{ scope.row.activityName }}</div>
+            <div class="activity-meta">
+              <span><i class="el-icon-location-outline"></i>{{ scope.row.activityLocation }}</span>
+              <span><i class="el-icon-user"></i>{{ scope.row.activityTotalCapacity }}人</span>
+              <span><i class="el-icon-office-building"></i>{{ scope.row.organizer }}</span>
+            </div>
+          </div>
         </template>
       </el-table-column>
-      <el-table-column label="报名截止时间" align="center" prop="activityDeadline" width="180">
+
+      <el-table-column label="时间安排" width="280">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          <div class="time-schedule">
+            <div><span class="time-label">报名:</span>
+              {{ parseTime(scope.row.activityStart, '{m}-{d} {h}:{i}') }} 至
+              {{ parseTime(scope.row.activityDeadline, '{m}-{d} {h}:{i}') }}
+            </div>
+            <div><span class="time-label">活动:</span>
+              {{ parseTime(scope.row.startTime, '{m}-{d} {h}:{i}') }} 至
+              {{ parseTime(scope.row.endTime, '{m}-{d} {h}:{i}') }}
+            </div>
+          </div>
         </template>
       </el-table-column>
-      <el-table-column label="活动开始时间" align="center" prop="startTime" width="180">
+
+      <el-table-column label="状态" prop="status" >
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          <el-tag :type="statusTagType(scope.row.status)">
+            {{ scope.row.status }}
+          </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="活动结束时间" align="center" prop="endTime" width="180">
+      <el-table-column label="操作" >
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="组织单位" align="center" prop="organizer"/>
-      <el-table-column label="活动状态" align="center" prop="status"/>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-          >修改
-          </el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-          >删除
-          </el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-user"
-            class="action-icon view-icon"
-            @click="handleViewStudents(scope.row)">
-          </el-button>
+          <el-button-group class="compact-btns">
+            <el-tooltip content="查看学生" placement="top">
+              <el-button icon="el-icon-user" @click="handleViewStudents(scope.row)"/>
+            </el-tooltip>
+            <el-tooltip content="导出名单" placement="top">
+              <el-button icon="el-icon-download" @click="handleExportStudents(scope.row)"/>
+            </el-tooltip>
+            <el-tooltip content="编辑活动" placement="top">
+              <el-button icon="el-icon-edit" @click="handleUpdate(scope.row)"/>
+            </el-tooltip>
+            <el-tooltip content="删除活动" placement="top">
+              <el-button icon="el-icon-delete" @click="handleDelete(scope.row)"/>
+            </el-tooltip>
+          </el-button-group>
         </template>
       </el-table-column>
       <!-- 活动描述+注意事项 -->
@@ -238,9 +250,9 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
-    <!-- 学生选课信息对话框 -->
+    <!-- 学生预约活动对话框 -->
     <el-dialog
-      title="选课学生列表"
+      title="预约活动学生列表"
       :visible.sync="dialogVisibleStudents"
       width="60%"
       append-to-body
@@ -289,8 +301,7 @@
           type="primary"
           icon="el-icon-download"
           @click="handleExportStudents"
-          class="export-btn"
-          v-hasPermi="['system:course:export']">
+          class="export-btn">
           导出名单
         </el-button>
       </div>
@@ -481,6 +492,15 @@ export default {
     this.getList();
   },
   methods: {
+    statusTagType(status) {
+      const map = {
+        '可报名': 'success',
+        '进行中': 'warning',
+        '已结束': 'info',
+        '未开始': ''
+      }
+      return map[status] || 'info';
+    },
     // 导出选课学生
     handleExportStudents() {
       if (this.selectedStudents.length === 0) {
@@ -543,7 +563,7 @@ export default {
         } else if (now <= deadline) {
           this.form.status = '可报名';
         } else if (now < startActivity) {
-          this.form.status = '不可报名';
+          this.form.status = '已截止';
         } else if (now <= endActivity) {
           this.form.status = '进行中';
         } else {
