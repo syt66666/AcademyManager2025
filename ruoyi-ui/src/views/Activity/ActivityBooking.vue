@@ -46,7 +46,7 @@
       <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
 
       <!-- 活动状态列 -->
-      <el-table-column label="活动状态" align="center" width="100">
+      <el-table-column label="活动状态" align="center" width="120">
         <template slot-scope="scope">
           <el-tag :type="getActivityStatusTag(scope.row)">
             {{ getActivityStatusText(scope.row) }}
@@ -68,21 +68,30 @@
           {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
         </template>
       </el-table-column>
+      <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180" >
+        <template slot-scope="scope">
+          <span>{{ formatDateTime(scope.row.activityStart) }}</span>
+        </template>
+      </el-table-column>
 
-      <el-table-column label="开始时间" align="center" prop="startTime" >
+      <el-table-column label="报名截止时间" align="center" prop="activityDeadline" width="180" >
+        <template slot-scope="scope">
+          <span>{{ formatDateTime(scope.row.activityDeadline) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="活动开始时间" align="center" prop="startTime" width="180" >
         <template slot-scope="scope">
           <span>{{ formatDateTime(scope.row.startTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" >
+
+      <el-table-column label="活动结束时间" align="center" prop="endTime" width="180" >
         <template slot-scope="scope">
           <span>{{ formatDateTime(scope.row.endTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="报名截止" align="center" prop="activityDeadline" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.activityDeadline) }}</span>
-        </template>
+
       </el-table-column>
       <el-table-column label="组织单位" align="center" prop="organizer"  />
 
@@ -183,20 +192,27 @@
           <span class="detail-value">{{ currentActivity.activityCapacity }}人</span>
         </div>
 
-        <div class="detail-item">
-          <span class="detail-label">开始时间：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</span>
-        </div>
+         <div class="detail-item">
+           <span class="detail-label">报名截止：</span>
+           <span class="detail-value">{{ formatDateTime(currentActivity.activityStart) }}</span>
+         </div>
 
-        <div class="detail-item">
-          <span class="detail-label">结束时间：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</span>
-        </div>
 
         <div class="detail-item">
           <span class="detail-label">报名截止：</span>
           <span class="detail-value">{{ formatDateTime(currentActivity.activityDeadline) }}</span>
         </div>
+
+        <div class="detail-item">
+          <span class="detail-label">活动开始时间：</span>
+          <span class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">活动结束时间：</span>
+          <span class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</span>
+        </div>
+
 
         <el-divider></el-divider>
 
@@ -312,11 +328,12 @@ export default {
       const start = new Date(row.startTime);
       const end = new Date(row.endTime);
       const deadline = new Date(row.activityDeadline);
-
-      if (now < deadline && now < start) return "未开始";
-      if (now >= deadline && now < start) return "已截止";
-      if (now >= start && now <= end) return "进行中";
-      if (now > end) return "已结束";
+      const activityStart = new Date(row.activityStart);
+      if (now< activityStart) return "报名未开始"
+      if (now < deadline && now >=activityStart) return "报名进行中";
+      if (now >= deadline && now < start) return "报名已截止";
+      if (now >= start && now <= end) return "活动进行中";
+      if (now > end) return "活动已结束";
       return row.status || "未知";
     },
 
@@ -324,13 +341,13 @@ export default {
     getActivityStatusTag(row) {
       const status = this.getActivityStatusText(row);
       switch (status) {
-        case "未开始":
+        case "报名未开始":
           return "info";
-        case "进行中":
+        case "报名进行中":
           return "success";
-        case "已截止":
+        case "报名已截止":
           return "warning";
-        case "已结束":
+        case "活动已结束":
           return "";
         default:
           return "danger";
@@ -342,14 +359,14 @@ export default {
      if (row.isBooked) return "已报名";  // 直接使用 isBooked 状态
 
 
-      // 当前时间状态（未开始/进行中才可能报名）
+      // 当前时间状态（报名进行中才可报名）
       const status = this.getActivityStatusText(row);
 
       // 判断是否还有剩余容量
       const hasCapacity = row.activityCapacity > 0;
 
       // 只有同时满足时间 + 容量 才能报名
-      if (["未开始", "进行中"].includes(status) && hasCapacity) {
+      if (["报名进行中"].includes(status) && hasCapacity) {
         return "可报名";
       }
 
@@ -378,7 +395,7 @@ export default {
     /** 是否显示取消按钮 */
     showCancelButton(row) {
       return this.getSignStatusText(row) === "已报名" &&
-        ["未开始", "进行中"].includes(this.getActivityStatusText(row));
+        ["报名进行中"].includes(this.getActivityStatusText(row));
     },
 
     /** 查看详情 */
