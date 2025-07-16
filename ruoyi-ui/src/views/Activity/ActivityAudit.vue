@@ -655,6 +655,7 @@ export default {
         updateBooking(auditData).then(response => {
           this.$message.success(`已${status}审核`);
           this.getList(); // 刷新列表
+          this.fetchAuditCount();
         }).catch(error => {
           this.$message.error(`${status}审核失败: ${error.message || ''}`);
         });
@@ -723,6 +724,7 @@ export default {
   transition: transform 0.3s, box-shadow 0.3s;
   cursor: pointer;
   overflow: hidden;
+  margin-bottom: 20px;
 }
 
 .status-card:hover {
