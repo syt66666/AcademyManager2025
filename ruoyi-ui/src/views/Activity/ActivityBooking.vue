@@ -45,29 +45,7 @@
       <el-table-column label="活动名称" align="center" prop="activityName" width="180" />
       <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
 
-      <!-- 活动状态列 -->
-      <el-table-column label="活动状态" align="center" width="120">
-        <template slot-scope="scope">
-          <el-tag :type="getActivityStatusTag(scope.row)">
-            {{ getActivityStatusText(scope.row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
 
-      <!-- 报名状态列 -->
-      <el-table-column label="报名状态" align="center" >
-        <template slot-scope="scope">
-          <el-tag :type="getSignStatusTag(scope.row)" effect="plain">
-            {{ getSignStatusText(scope.row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="活动容量剩余情况" align="center">
-        <template #default="scope">
-          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
-        </template>
-      </el-table-column>
       <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180" >
         <template slot-scope="scope">
           <span>{{ formatDateTime(scope.row.activityStart) }}</span>
@@ -92,11 +70,32 @@
         </template>
       </el-table-column>
 
-      </el-table-column>
       <el-table-column label="组织单位" align="center" prop="organizer"  />
+      <!-- 活动状态列 -->
+      <el-table-column label="活动状态" align="center" width="120">
+        <template slot-scope="scope">
+          <el-tag :type="getActivityStatusTag(scope.row)">
+            {{ getActivityStatusText(scope.row) }}
+          </el-tag>
+        </template>
+      </el-table-column>
 
+
+      <el-table-column label="活动容量剩余情况" align="center">
+        <template #default="scope">
+          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+        </template>
+      </el-table-column>
+      <!-- 报名状态列 -->
+      <el-table-column label="报名状态" align="center" >
+        <template slot-scope="scope">
+          <el-tag :type="getSignStatusTag(scope.row)" effect="plain">
+            {{ getSignStatusText(scope.row) }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <!-- 操作列 -->
-      <el-table-column label="操作" align="center"  fixed="right">
+      <el-table-column  align="center">
         <template slot-scope="scope">
           <!-- 详情按钮 -->
           <el-button
@@ -105,7 +104,10 @@
             icon="el-icon-view"
             @click="handleDetail(scope.row)"
           >详情</el-button>
-
+        </template>
+      </el-table-column>
+      <el-table-column label="报名操作" align="center"  fixed="right">
+        <template slot-scope="scope">
           <!-- 报名/取消按钮 -->
           <el-button
             v-if="showSignUpButton(scope.row)"
@@ -123,25 +125,25 @@
             icon="el-icon-close"
             style="color: #F56C6C"
             @click="handleCancel(scope.row)"
-          >取消</el-button>
+          >取消报名</el-button>
         </template>
       </el-table-column>
 
-      <!-- 展开详情 -->
-      <el-table-column type="expand" width="60" align="center">
-        <template slot-scope="props">
-          <div class="expand-container">
-            <div class="expand-row">
-              <div class="expand-label">活动描述：</div>
-              <div class="expand-content">{{ props.row.activityDescription }}</div>
-            </div>
-            <div class="expand-row">
-              <div class="expand-label">注意事项：</div>
-              <div class="expand-content">{{ props.row.notes }}</div>
-            </div>
-          </div>
-        </template>
-      </el-table-column>
+<!--      &lt;!&ndash; 展开详情 &ndash;&gt;-->
+<!--      <el-table-column type="expand" width="60" align="center">-->
+<!--        <template slot-scope="props">-->
+<!--          <div class="expand-container">-->
+<!--            <div class="expand-row">-->
+<!--              <div class="expand-label">活动描述：</div>-->
+<!--              <div class="expand-content">{{ props.row.activityDescription }}</div>-->
+<!--            </div>-->
+<!--            <div class="expand-row">-->
+<!--              <div class="expand-label">注意事项：</div>-->
+<!--              <div class="expand-content">{{ props.row.notes }}</div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
     </el-table>
 
     <!-- 分页 -->
