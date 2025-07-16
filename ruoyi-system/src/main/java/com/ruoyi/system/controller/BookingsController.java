@@ -109,6 +109,14 @@ public class BookingsController extends BaseController {
         ExcelUtil<BookingDTO> util = new ExcelUtil<BookingDTO>(BookingDTO.class);
         util.exportExcel(response, list, "学生书院活动记录数据");
     }
+    @Log(title = "学生书院活动记录", businessType = BusinessType.EXPORT)
+    @PostMapping("/export2")
+    public void export2(HttpServletResponse response, BookingDTO bookings)
+    {
+        List<BookingDTO> list = bookingsService.selectBookingsList2(bookings);
+        ExcelUtil<BookingDTO> util = new ExcelUtil<BookingDTO>(BookingDTO.class);
+        util.exportExcel(response, list, "学生书院活动记录数据");
+    }
     @GetMapping("/auditCount")
     public AjaxResult getAuditStatusCount() {
         Map<String, Integer> countMap = bookingsService.countAuditStatus();

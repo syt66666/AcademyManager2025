@@ -127,6 +127,13 @@
             @click="handleDelete(scope.row)"
           >删除
           </el-button>
+          <el-button
+            size="mini"
+            type="text"
+            icon="el-icon-user"
+            class="action-icon view-icon"
+            @click="handleViewStudents(scope.row)">
+          </el-button>
         </template>
       </el-table-column>
       <!-- 活动描述+注意事项 -->
@@ -231,7 +238,63 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+    <!-- 学生选课信息对话框 -->
+    <el-dialog
+      title="选课学生列表"
+      :visible.sync="dialogVisibleStudents"
+      width="60%"
+      append-to-body
+      class="student-dialog">
+      <el-table
+        :data="selectedStudents"
+        border
+        v-loading="studentLoading"
+        class="enhanced-student-table"
+        :header-cell-style="{
+      'background': '#f5f7fa',
+      'color': '#2d3540',
+      'font-weight': '600'
+    }">
+        <el-table-column label="序号" width="80" align="center">
+          <template v-slot="scope">
+              <span class="index-badge">
+                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+              </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="studentId" label="学号" width="180">
+          <template slot-scope="{row}">
+            <span class="student-id">{{ row.studentId }}</span>
+          </template>
+        </el-table-column>
 
+        <el-table-column prop="studentName" label="姓名">
+          <template slot-scope="{row}">
+            <span class="student-name">{{ row.studentName }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="bookedAt" label="预约时间" width="180">
+          <template slot-scope="{row}">
+            <div class="booked_at">
+              <i class="el-icon-time"></i>
+              {{ parseTime(row.bookedAt) }}
+            </div>
+          </template>
+        </el-table-column>
+
+      </el-table>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button
+          type="primary"
+          icon="el-icon-download"
+          @click="handleExportStudents"
+          class="export-btn"
+          v-hasPermi="['system:course:export']">
+          导出名单
+        </el-button>
+      </div>
+    </el-dialog>
     <!-- 用户导入对话框 -->
     <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px">
       <el-upload
@@ -269,11 +332,16 @@
 <script>
 import {listActivities, getActivities, delActivities, addActivities, updateActivities2} from "@/api/system/activities";
 import {getToken} from "@/utils/auth";
+import {listBookingsWithActivity} from "@/api/system/bookings";
 
 export default {
   name: "Activities",
   data() {
     return {
+      // 新增状态
+      dialogVisibleStudents: false,
+      selectedStudents: [],
+      studentLoading: false,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -413,6 +481,50 @@ export default {
     this.getList();
   },
   methods: {
+    // 导出选课学生
+    handleExportStudents() {
+      if (this.selectedStudents.length === 0) {
+        this.$message.warning("没有可导出的数据");
+        return;
+      }
+
+      const activityId = this.selectedStudents[0]?.activityId;
+      const activityName = this.selectedStudents[0]?.activityName;
+
+      if (!activityId) {
+        this.$message.error("缺少活动ID参数");
+        return;
+      }
+
+      this.download('/system/bookings/export2', {
+        activityId: activityId
+      }, `预约活动名单_${activityName}_${this.parseTime(new Date(), '{y}{m}{d}')}.xlsx`)
+
+      this.dialogVisibleStudents = false; // 导出后自动关闭对话框
+    },
+    // 查看选课学生
+    async handleViewStudents(row) {
+      this.studentLoading = true;
+      try {
+        const res = await listBookingsWithActivity({
+          activityId: row.activityId // 使用当前行的活动ID，而不是硬编码的6
+        });
+
+        if (res.rows && res.rows.length) {
+          this.selectedStudents = res.rows;
+          this.dialogVisibleStudents = true;
+        } else {
+          // 使用正确的消息提示方法
+          this.$message.info("当前活动暂无学生预约");
+        }
+      } catch (e) {
+        console.error("获取学生预约活动数据失败", e);
+        // 添加错误提示
+        this.$message.error("获取学生预约活动数据失败，请稍后再试");
+      } finally {
+        this.studentLoading = false;
+      }
+    },
     /** 计算活动状态 */
     calculateStatus() {
       // 获取当前时间（使用服务器时间更准确，这里先用客户端时间）
