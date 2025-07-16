@@ -445,7 +445,7 @@ export default {
        confirmButtonText: "确定",
        cancelButtonText: "取消",
        type: "warning"
-     }).then(() => {
+     }).then((res) => {if (res.code === 200 && res.success){
        signUpCapacity(row.activityId)
          .then(() => {
            this.$message.success("报名成功！");
@@ -454,7 +454,7 @@ export default {
              activityId: row.activityId,
              studentId: this.$store.state.user.id
            });
-         })
+         })}
          .then(() => this.getList())
          .catch(error => {
            this.$message.error(error.msg || "报名失败,请刷新界面重试");
