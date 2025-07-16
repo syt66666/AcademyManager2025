@@ -49,7 +49,7 @@ export function delActivities(activityId) {
     method: 'delete'
   })
 }
-
+//报名容量变化
 export function signUpCapacity(activityId) {
   return request({
     url: '/system/activities/signUpCapacity',
@@ -59,7 +59,7 @@ export function signUpCapacity(activityId) {
     }
   })
 }
-
+//取消报名容量变化
 export function cancelSignUpCapacity(activityId) {
   return request({
     url: '/system/activities/cancelSignUpCapacity',
@@ -69,3 +69,4 @@ export function cancelSignUpCapacity(activityId) {
     }
   })
 }
+
