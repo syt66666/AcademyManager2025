@@ -78,11 +78,17 @@ public class ActivitiesController extends BaseController {
      * 修改活动
      */
     @Log(title = "活动信息", businessType = BusinessType.UPDATE)
-    @PutMapping
     public AjaxResult edit(@RequestBody Activities activity) {
         return toAjax(activityService.updateActivity(activity));
     }
-
+    /**
+     * 修改活动
+     */
+    @Log(title = "活动信息", businessType = BusinessType.UPDATE)
+    @PostMapping("/updateActivity")
+    public AjaxResult edit2(@RequestBody Activities activity) {
+        return toAjax(activityService.updateActivity2(activity));
+    }
     /**
      * 删除活动
      */

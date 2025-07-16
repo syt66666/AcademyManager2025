@@ -6,7 +6,7 @@
       <div class="info-card" v-if="isAdmin">
         <div class="admin-greeting">
           <h1 class="greeting-text">{{ greetingText }}</h1>
-          <p class="greeting-subtext">大工书院精细化管理控制台</p>
+          <p class="greeting-subtext">书院学生管理系统控制台</p>
           <div class="system-info">
             <div class="info-item">
               <span class="info-label">所属书院</span>

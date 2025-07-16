@@ -18,10 +18,10 @@
         />
       </el-form-item>
 
-      <el-form-item label="组织者" prop="organizer">
+      <el-form-item label="组织单位" prop="organizer">
         <el-input
           v-model="queryParams.organizer"
-          placeholder="请输入组织者"
+          placeholder="请输入组织单位"
           clearable
           @keyup.enter.native="handleQuery"
         />
@@ -31,7 +31,6 @@
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
       </el-form-item>
     </el-form>
-
     <el-row :gutter="10" class="mb8">
       <el-col :span="1.5">
         <el-button
@@ -40,7 +39,8 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-        >新增</el-button>
+        >新增
+        </el-button>
       </el-col>
 
       <el-col :span="1.5">
@@ -51,7 +51,8 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-        >删除</el-button>
+        >删除
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -60,7 +61,8 @@
           icon="el-icon-edit"
           size="mini"
           @click="handleImport"
-        >导入</el-button>
+        >导入
+        </el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -69,36 +71,46 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-        >导出</el-button>
+        >导出
+        </el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
     <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange">
-
-      <el-table-column type="selection" width="55" align="center" />
-
-      <el-table-column label="活动名称" align="center" prop="activityName" />
-      <el-table-column label="活动地点" align="center" prop="activityLocation" />
-      <el-table-column label="活动容量" align="center" prop="activityCapacity" />
-      <el-table-column label="开始时间" align="center" prop="startTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+      <el-table-column type="selection" width="55" align="center"/>
+      <el-table-column label="序号" width="80" align="center">
+        <template v-slot="scope">
+              <span class="index-badge">
+                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+              </span>
         </template>
       </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" width="180">
+      <el-table-column label="活动名称" align="center" prop="activityName"/>
+      <el-table-column label="活动地点" align="center" prop="activityLocation"/>
+      <el-table-column label="活动容量" align="center" prop="activityTotalCapacity"/>
+      <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180">
         <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          <span>{{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="报名截止时间" align="center" prop="activityDeadline">
+      <el-table-column label="报名截止时间" align="center" prop="activityDeadline" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="组织者" align="center" prop="organizer" />
-      <el-table-column label="活动状态" align="center" prop="status" />
-
+      <el-table-column label="活动开始时间" align="center" prop="startTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动结束时间" align="center" prop="endTime" width="180">
+        <template slot-scope="scope">
+          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="组织单位" align="center" prop="organizer"/>
+      <el-table-column label="活动状态" align="center" prop="status"/>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -106,32 +118,45 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-          >修改</el-button>
+          >修改
+          </el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-          >删除</el-button>
+          >删除
+          </el-button>
         </template>
       </el-table-column>
       <!-- 活动描述+注意事项 -->
       <el-table-column type="expand" width="60" align="center">
         <template slot-scope="props">
-          <div class="expand-container">
-            <div class="expand-row">
-              <div class="expand-label">活动描述:</div>
-              <div class="expand-content">{{ props.row.activityDescription }}</div>
+          <div class="expand-layout">
+            <!-- 左侧活动描述 -->
+            <div class="expand-section">
+              <div class="section-header">活动描述</div>
+              <div class="section-content scrollable">
+                {{ props.row.activityDescription || "无描述信息" }}
+              </div>
             </div>
-            <div class="expand-row">
-              <div class="expand-label">注意事项:</div>
-              <div class="expand-content">{{ props.row.notes }}</div>
+
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+
+            <!-- 右侧注意事项 -->
+            <div class="expand-section">
+              <div class="section-header">注意事项</div>
+              <div class="section-content scrollable">
+                {{ props.row.notes || "无注意事项" }}
+              </div>
             </div>
           </div>
         </template>
       </el-table-column>
     </el-table>
 
+    <!--分页-->
     <pagination
       v-show="total>0"
       :total="total"
@@ -144,30 +169,18 @@
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="活动名称" prop="activityName">
-          <el-input v-model="form.activityName" placeholder="请输入活动名称" />
+          <el-input v-model="form.activityName" placeholder="请输入活动名称"/>
         </el-form-item>
-        <el-form-item label="开始时间" prop="startTime">
+        <!-- 报名开始时间 -->
+        <el-form-item label="报名开始时间" prop="activityStart">
           <el-date-picker clearable
-                          v-model="form.startTime"
+                          v-model="form.activityStart"
                           type="datetime"
                           value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动开始时间">
+                          placeholder="请选择活动报名开始时间">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="结束时间" prop="endTime">
-          <el-date-picker clearable
-                          v-model="form.endTime"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动结束时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="活动地点" prop="activityLocation">
-          <el-input v-model="form.activityLocation" placeholder="请输入活动地点" />
-        </el-form-item>
-        <el-form-item label="活动容量" prop="activityCapacity">
-          <el-input v-model="form.activityCapacity" placeholder="请输入活动容量" />
-        </el-form-item>
+        <!-- 报名截止时间 -->
         <el-form-item label="报名截止时间" prop="activityDeadline">
           <el-date-picker clearable
                           v-model="form.activityDeadline"
@@ -176,14 +189,41 @@
                           placeholder="请选择活动报名截止时间">
           </el-date-picker>
         </el-form-item>
-        <el-form-item label="组织者" prop="organizer">
-          <el-input v-model="form.organizer" placeholder="请输入组织者" />
+
+        <!-- 开始时间 -->
+        <el-form-item label="开始时间" prop="startTime">
+          <el-date-picker clearable
+                          v-model="form.startTime"
+                          type="datetime"
+                          value-format="yyyy-MM-dd HH:mm:ss"
+                          placeholder="请选择活动开始时间">
+          </el-date-picker>
+        </el-form-item>
+
+        <!-- 结束时间 -->
+        <el-form-item label="结束时间" prop="endTime">
+          <el-date-picker clearable
+                          v-model="form.endTime"
+                          type="datetime"
+                          value-format="yyyy-MM-dd HH:mm:ss"
+                          placeholder="请选择活动结束时间">
+          </el-date-picker>
+        </el-form-item>
+
+        <el-form-item label="活动地点" prop="activityLocation">
+          <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
+        </el-form-item>
+        <el-form-item label="活动容量" prop="activityTotalCapacity">
+          <el-input v-model="form.activityTotalCapacity" placeholder="请输入活动容量"/>
+        </el-form-item>
+        <el-form-item label="组织单位" prop="organizer">
+          <el-input v-model="form.organizer" placeholder="请输入组织单位"/>
         </el-form-item>
         <el-form-item label="活动描述" prop="activityDescription">
-          <el-input v-model="form.activityDescription" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.activityDescription" type="textarea" placeholder="请输入内容"/>
         </el-form-item>
         <el-form-item label="注意事项" prop="notes">
-          <el-input v-model="form.notes" type="textarea" placeholder="请输入内容" />
+          <el-input v-model="form.notes" type="textarea" placeholder="请输入内容"/>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -191,6 +231,7 @@
         <el-button @click="cancel">取 消</el-button>
       </div>
     </el-dialog>
+
     <!-- 用户导入对话框 -->
     <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px">
       <el-upload
@@ -211,7 +252,8 @@
           <em>点击上传</em>
         </div>
         <div class="el-upload__tip" slot="tip">
-          <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的用户数据
+          <el-checkbox v-model="upload.updateSupport"/>
+          是否更新已经存在的用户数据
           <el-link type="info" style="font-size:12px" @click="importTemplate">下载模板</el-link>
         </div>
         <div class="el-upload__tip" style="color:red" slot="tip">提示：仅允许导入“xls”或“xlsx”格式文件！</div>
@@ -225,7 +267,7 @@
 </template>
 
 <script>
-import { listActivities, getActivities, delActivities, addActivities, updateActivities } from "@/api/system/activities";
+import {listActivities, getActivities, delActivities, addActivities, updateActivities2} from "@/api/system/activities";
 import {getToken} from "@/utils/auth";
 
 export default {
@@ -246,7 +288,7 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 【请填写功能名称】表格数据
+      // 活动表格数据
       activitiesList: [],
       // 弹出层标题
       title: "",
@@ -256,17 +298,20 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        activityId: null,
         activityName: null,
         startTime: null,
         endTime: null,
         activityLocation: null,
         activityCapacity: null,
+        activityTotalCapacity: null,
+        activityStart:null,
         activityDeadline: null,
         activityDescription: null,
         status: null,
         createdAt: null,
         organizer: null,
-        notes: null
+        notes: null,
       },
       // 用户导入参数
       upload: {
@@ -279,35 +324,88 @@ export default {
         // 是否更新已经存在的用户数据
         updateSupport: 0,
         // 设置上传的请求头部
-        headers: { Authorization: "Bearer " + getToken() },
+        headers: {Authorization: "Bearer " + getToken()},
         // 上传的地址
         url: process.env.VUE_APP_BASE_API + "/system/activities/importData"
       },
       // 表单参数
       form: {},
+
       // 表单校验
       rules: {
         activityName: [
-          { required: true, message: "活动名称不能为空", trigger: "blur" }
-        ],
-        startTime: [
-          { required: true, message: "开始时间不能为空", trigger: "blur" }
-        ],
-        endTime: [
-          { required: true, message: "结束时间不能为空", trigger: "blur" }
+          {required: true, message: "活动名称不能为空", trigger: "blur"}
         ],
         activityLocation: [
-          { required: true, message: "活动地点不能为空", trigger: "blur" }
+          {required: true, message: "活动地点不能为空", trigger: "blur"}
         ],
-        activityCapacity: [
-          { required: true, message: "活动容量不能为空", trigger: "blur" }
+        activityTotalCapacity: [
+          {required: true, message: "活动容量不能为空", trigger: "blur"}
+        ],
+        activityStart: [
+          {required: true, message: "报名开始时间不能为空", trigger: "blur"}
         ],
         activityDeadline: [
-          { required: true, message: "报名截止时间不能为空", trigger: "blur" }
+          {required: true, message: "报名截止时间不能为空", trigger: "blur"},
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.activityStart && value) {
+                const start = new Date(this.form.activityStart).getTime();
+                const deadline = new Date(value).getTime();
+                // 检查截止时间是否在开始时间后（至少1秒）
+                if (deadline - start < 1000) {
+                  callback(new Error("报名截止时间必须晚于报名开始时间"));
+                } else {
+                  callback();
+                }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
         ],
         organizer: [
-          { required: true, message: "组织者不能为空", trigger: "blur" }
+          {required: true, message: "组织单位不能为空", trigger: "blur"}
         ],
+        startTime: [
+          { required: true, message: "开始时间不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.activityDeadline && value) {
+                const deadline = new Date(this.form.activityDeadline).getTime();
+                const start = new Date(value).getTime();
+                if (start - deadline < 1000) {
+                  callback(new Error("开始时间必须晚于报名截止时间"));
+                } else {
+                  callback();
+                }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
+        ],
+        endTime: [
+          { required: true, message: "结束时间不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              if (this.form.startTime && value) {
+                const start = new Date(this.form.startTime).getTime();
+                const end = new Date(value).getTime();
+                if (end - start < 1000) {
+                  callback(new Error("结束时间必须晚于开始时间"));
+                } else {
+                  callback();
+                }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
+        ]
       }
     };
   },
@@ -315,9 +413,37 @@ export default {
     this.getList();
   },
   methods: {
+    /** 计算活动状态 */
+    calculateStatus() {
+      // 获取当前时间（使用服务器时间更准确，这里先用客户端时间）
+      const now = new Date().getTime();
+      const startSign = new Date(this.form.activityStart).getTime();
+      const deadline = new Date(this.form.activityDeadline).getTime();
+      const startActivity = new Date(this.form.startTime).getTime();
+      const endActivity = new Date(this.form.endTime).getTime();
+
+      // 检查时间点是否有效
+      if (!isNaN(startSign) && !isNaN(deadline) &&
+        !isNaN(startActivity) && !isNaN(endActivity)) {
+
+        if (now < startSign) {
+          this.form.status = '未开始';
+        } else if (now <= deadline) {
+          this.form.status = '可报名';
+        } else if (now < startActivity) {
+          this.form.status = '不可报名';
+        } else if (now <= endActivity) {
+          this.form.status = '进行中';
+        } else {
+          this.form.status = '已结束';
+        }
+      } else {
+        this.form.status = '未开始';
+      }
+    },
     /** 导入模板操作 */
     importTemplate() {
-      fetch(process.env.VUE_APP_BASE_API+'/system/activities/importTemplate', {
+      fetch(process.env.VUE_APP_BASE_API + '/system/activities/importTemplate', {
         mode: 'cors', // 明确跨域模式
         headers: new Headers({'Content-Type': 'application/json'})
       })
@@ -345,7 +471,7 @@ export default {
       this.upload.open = false;
       this.upload.isUploading = false;
       this.$refs.upload.clearFiles();
-      this.$alert(response.msg, "导入结果", { dangerouslyUseHTMLString: true });
+      this.$alert(response.msg, "导入结果", {dangerouslyUseHTMLString: true});
       this.getList();
     },
     // 提交上传文件
@@ -375,12 +501,15 @@ export default {
         endTime: null,
         activityLocation: null,
         activityCapacity: null,
+        activityTotalCapacity: null,
+        activityStart:null,
         activityDeadline: null,
         activityDescription: null,
         status: null,
         createdAt: null,
         organizer: null,
-        notes: null
+        notes: null,
+        version: 0
       };
       this.resetForm("form");
     },
@@ -398,7 +527,7 @@ export default {
     handleSelectionChange(selection) {
       this.ids = selection.map(item => item.activityId)
       this.names = selection.map(item => item.activityName)
-      this.single = selection.length!==1
+      this.single = selection.length !== 1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
@@ -421,8 +550,10 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          // 计算活动状态
+          this.calculateStatus();
           if (this.form.activityId != null) {
-            updateActivities(this.form).then(response => {
+            updateActivities2(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
@@ -441,12 +572,13 @@ export default {
     handleDelete(row) {
       const activityIds = row.activityId || this.ids;
       const activityNames = row.activityName || this.names;
-      this.$modal.confirm('是否确认删除活动名称为"' + activityNames + '"的数据项？').then(function() {
+      this.$modal.confirm('是否确认删除活动名称为"' + activityNames + '"的数据项？').then(function () {
         return delActivities(activityIds);
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
-      }).catch(() => {});
+      }).catch(() => {
+      });
     },
     /** 导出按钮操作 */
     handleExport() {
@@ -461,5 +593,44 @@ export default {
 <style scoped>
 .app-container {
   margin-left: 100px;
+}
+/* 左右布局容器 */
+.expand-layout {
+  display: flex;
+  padding: 15px;
+}
+
+/* 分区样式 */
+.expand-section {
+  flex: 1;
+  padding: 0 15px;
+}
+
+/* 分区头部样式 */
+.section-header {
+  font-weight: bold;
+  color: #409EFF;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+/* 分区内容样式 */
+.section-content {
+  line-height: 1.6;
+  color: #606266;
+}
+
+/* 可滚动区域 */
+.scrollable {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 分区间的分隔线 */
+.divider {
+  width: 1px;
+  background-color: #EBEEF5;
+  margin: 0 10px;
 }
 </style>

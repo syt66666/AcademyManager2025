@@ -34,6 +34,14 @@
 
     <!-- 活动列表 -->
     <el-table v-loading="loading" :data="activitiesList">
+      <!-- 序号列 -->
+      <el-table-column label="序号" width="80" align="center">
+        <template v-slot="scope">
+              <span class="index-badge">
+                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+              </span>
+        </template>
+      </el-table-column>
       <el-table-column label="活动名称" align="center" prop="activityName" />
       <el-table-column label="活动地点" align="center" prop="activityLocation" />
       <el-table-column label="开始时间" align="center" prop="startTime" width="180">

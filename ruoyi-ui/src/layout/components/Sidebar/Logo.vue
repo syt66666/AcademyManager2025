@@ -35,7 +35,7 @@ export default {
   },
   data() {
     return {
-      title: '大工书院精细化管理系统',
+      title: '书院学生管理系统',
       logo: logoImg // 将导入的图片绑定到 data 中的 logo
     }
   }

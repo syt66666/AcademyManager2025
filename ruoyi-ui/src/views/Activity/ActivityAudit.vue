@@ -124,9 +124,12 @@
         :header-cell-style="headerStyle"
         :row-class-name="tableRowClassName"
       >
-        <el-table-column label="序号" width="70" align="center">
-          <template slot-scope="scope">
-            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        <!-- 序号列 -->
+        <el-table-column label="序号" width="80" align="center">
+          <template v-slot="scope">
+              <span class="index-badge">
+                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+              </span>
           </template>
         </el-table-column>
         <el-table-column label="学生学号" align="center" prop="studentId"/>
