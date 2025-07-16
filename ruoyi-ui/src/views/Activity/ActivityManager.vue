@@ -1,58 +1,60 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="活动名称" prop="activityName">
-        <el-input
-          v-model="queryParams.activityName"
-          placeholder="请输入活动名称"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="活动地点" prop="activityLocation">
-        <el-input
-          v-model="queryParams.activityLocation"
-          placeholder="请输入活动地点"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-
-      <el-form-item label="组织单位" prop="organizer">
-        <el-input
-          v-model="queryParams.organizer"
-          placeholder="请输入组织单位"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="活动状态" prop="status">
-        <el-select v-model="queryParams.status" clearable>
-          <el-option label="未开始" value="未开始"/>
-          <el-option label="可报名" value="可报名"/>
-          <el-option label="已截止" value="已截止"/>
-          <el-option label="进行中" value="进行中"/>
-          <el-option label="已结束" value="已结束"/>
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
+    <!-- 查询区域优化 -->
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="80px" class="query-form">
+      <div class="query-row">
+        <el-form-item label="活动名称" prop="activityName">
+          <el-input
+            v-model="queryParams.activityName"
+            placeholder="请输入活动名称"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="活动地点" prop="activityLocation">
+          <el-input
+            v-model="queryParams.activityLocation"
+            placeholder="请输入活动地点"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="组织单位" prop="organizer">
+          <el-input
+            v-model="queryParams.organizer"
+            placeholder="请输入组织单位"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+      </div>
+      <div class="query-row">
+        <el-form-item label="活动状态" prop="status">
+          <el-select v-model="queryParams.status" clearable class="status-select">
+            <el-option label="未开始" value="未开始"/>
+            <el-option label="可报名" value="可报名"/>
+            <el-option label="已截止" value="已截止"/>
+            <el-option label="进行中" value="进行中"/>
+            <el-option label="已结束" value="已结束"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </div>
     </el-form>
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+
+    <!-- 按钮区域 -->
+    <div class="button-bar">
+      <el-button-group>
         <el-button
           type="primary"
           plain
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-        >新增
-        </el-button>
-      </el-col>
-
-      <el-col :span="1.5">
+        >新增</el-button>
         <el-button
           type="danger"
           plain
@@ -60,114 +62,138 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-        >删除
-        </el-button>
-      </el-col>
-      <el-col :span="1.5">
+        >删除</el-button>
         <el-button
           type="success"
           plain
-          icon="el-icon-edit"
+          icon="el-icon-upload"
           size="mini"
           @click="handleImport"
-        >导入
-        </el-button>
-      </el-col>
-      <el-col :span="1.5">
+        >导入</el-button>
         <el-button
           type="warning"
           plain
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-        >导出
-        </el-button>
-      </el-col>
+        >导出</el-button>
+      </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    </div>
 
-    <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center"/>
-      <el-table-column label="序号" width="80" align="center">
+    <!-- 表格美化 -->
+    <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="enhanced-table">
+      <el-table-column type="selection" width="45" align="center"/>
+      <el-table-column label="序号" width="70" align="center">
         <template v-slot="scope">
-              <span class="index-badge">
-                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-              </span>
+          <span class="index-badge">
+            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+          </span>
         </template>
       </el-table-column>
+
       <el-table-column label="活动信息" width="380">
         <template slot-scope="scope">
           <div class="activity-info">
             <div class="activity-name">{{ scope.row.activityName }}</div>
             <div class="activity-meta">
-              <span><i class="el-icon-location-outline"></i>{{ scope.row.activityLocation }}</span>
-              <span><i class="el-icon-user"></i>{{ scope.row.activityTotalCapacity }}人</span>
-              <span><i class="el-icon-office-building"></i>{{ scope.row.organizer }}</span>
+              <span><i class="el-icon-location-outline"></i> {{ scope.row.activityLocation }}</span>
+              <span><i class="el-icon-user"></i> {{ scope.row.activityTotalCapacity }}人</span>
+              <span><i class="el-icon-office-building"></i> {{ scope.row.organizer }}</span>
             </div>
           </div>
         </template>
       </el-table-column>
 
-      <el-table-column label="时间安排" width="280">
+      <el-table-column label="时间安排" width="300">
         <template slot-scope="scope">
           <div class="time-schedule">
-            <div><span class="time-label">报名:</span>
-              {{ parseTime(scope.row.activityStart, '{m}-{d} {h}:{i}') }} 至
+            <div class="time-period">
+              <el-tag size="mini" type="info">报名</el-tag>
+              {{ parseTime(scope.row.activityStart, '{m}-{d} {h}:{i}') }}
+              至
               {{ parseTime(scope.row.activityDeadline, '{m}-{d} {h}:{i}') }}
             </div>
-            <div><span class="time-label">活动:</span>
-              {{ parseTime(scope.row.startTime, '{m}-{d} {h}:{i}') }} 至
+            <div class="time-period">
+              <el-tag size="mini" type="info">活动</el-tag>
+              {{ parseTime(scope.row.startTime, '{m}-{d} {h}:{i}') }}
+              至
               {{ parseTime(scope.row.endTime, '{m}-{d} {h}:{i}') }}
             </div>
           </div>
         </template>
       </el-table-column>
 
-      <el-table-column label="状态" prop="status" >
+      <el-table-column label="活动状态" >
         <template slot-scope="scope">
-          <el-tag :type="statusTagType(scope.row.status)">
+          <el-tag :type="statusTagType(scope.row.status)" effect="dark" class="status-tag">
             {{ scope.row.status }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" >
+
+      <el-table-column label="操作">
         <template slot-scope="scope">
-          <el-button-group class="compact-btns">
-            <el-tooltip content="查看学生" placement="top">
-              <el-button icon="el-icon-user" @click="handleViewStudents(scope.row)"/>
-            </el-tooltip>
-            <el-tooltip content="导出名单" placement="top">
-              <el-button icon="el-icon-download" @click="handleExportStudents(scope.row)"/>
-            </el-tooltip>
-            <el-tooltip content="编辑活动" placement="top">
-              <el-button icon="el-icon-edit" @click="handleUpdate(scope.row)"/>
-            </el-tooltip>
-            <el-tooltip content="删除活动" placement="top">
-              <el-button icon="el-icon-delete" @click="handleDelete(scope.row)"/>
-            </el-tooltip>
+          <el-button-group class="action-buttons">
+            <el-button
+              size="mini"
+              icon="el-icon-user"
+              @click="handleViewStudents(scope.row)"
+              class="action-button view-button">
+              学生
+            </el-button>
+            <el-button
+              size="mini"
+              icon="el-icon-download"
+              @click="handleExportStudents(scope.row)"
+              class="action-button export-button">
+              导出
+            </el-button>
+            <el-button
+              size="mini"
+              icon="el-icon-edit"
+              @click="handleUpdate(scope.row)"
+              class="action-button edit-button">
+              编辑
+            </el-button>
+            <el-button
+              size="mini"
+              icon="el-icon-delete"
+              @click="handleDelete(scope.row)"
+              class="action-button delete-button">
+              删除
+            </el-button>
           </el-button-group>
         </template>
       </el-table-column>
+
       <!-- 活动描述+注意事项 -->
       <el-table-column type="expand" width="60" align="center">
         <template slot-scope="props">
-          <div class="expand-layout">
-            <!-- 左侧活动描述 -->
+          <div class="expand-content">
             <div class="expand-section">
-              <div class="section-header">活动描述</div>
-              <div class="section-content scrollable">
-                {{ props.row.activityDescription || "无描述信息" }}
+              <div class="section-header">
+                <i class="el-icon-document"></i>
+                <span>活动描述</span>
+              </div>
+              <div class="section-content">
+                <div class="content-box">
+                  {{ props.row.activityDescription || "无描述信息" }}
+                </div>
               </div>
             </div>
 
-            <!-- 分隔线 -->
             <div class="divider"></div>
 
-            <!-- 右侧注意事项 -->
             <div class="expand-section">
-              <div class="section-header">注意事项</div>
-              <div class="section-content scrollable">
-                {{ props.row.notes || "无注意事项" }}
+              <div class="section-header">
+                <i class="el-icon-warning"></i>
+                <span>注意事项</span>
+              </div>
+              <div class="section-content">
+                <div class="content-box">
+                  {{ props.row.notes || "无注意事项" }}
+                </div>
               </div>
             </div>
           </div>
@@ -175,7 +201,7 @@
       </el-table-column>
     </el-table>
 
-    <!--分页-->
+    <!-- 分页 -->
     <pagination
       v-show="total>0"
       :total="total"
@@ -228,7 +254,6 @@
                           placeholder="请选择活动结束时间">
           </el-date-picker>
         </el-form-item>
-
         <el-form-item label="活动地点" prop="activityLocation">
           <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
         </el-form-item>
@@ -494,12 +519,13 @@ export default {
   methods: {
     statusTagType(status) {
       const map = {
-        '可报名': 'success',
-        '进行中': 'warning',
-        '已结束': 'info',
-        '未开始': ''
+        '未开始': '',         // 默认蓝色（适合未开始状态）
+        '可报名': 'success',  // 绿色（表示可以报名）
+        '已截止': 'danger',   // 红色（表示已截止不可报名）
+        '进行中': 'warning',  // 黄色（表示活动正在进行中）
+        '已结束': 'info'      // 灰色（表示活动已结束）
       }
-      return map[status] || 'info';
+      return map[status] || 'info'; // 默认使用灰色
     },
     // 导出选课学生
     handleExportStudents() {
@@ -728,9 +754,6 @@ export default {
 </script>
 
 <style scoped>
-.app-container {
-  margin-left: 100px;
-}
 /* 左右布局容器 */
 .expand-layout {
   display: flex;
@@ -769,5 +792,194 @@ export default {
   width: 1px;
   background-color: #EBEEF5;
   margin: 0 10px;
+}
+   /* 整体布局优化 */
+ .app-container {
+   margin-left: 100px;
+   padding: 20px;
+   background: #fff;
+   border-radius: 8px;
+   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+ }
+
+/* 查询表单 */
+.query-form {
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.query-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.query-row .el-form-item {
+  margin-bottom: 0;
+  margin-right: 15px;
+}
+
+/* 按钮区域 */
+.button-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 0 5px;
+}
+
+.el-button-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* 表格样式优化 */
+.enhanced-table {
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 6px;
+  border: 1px solid #ebeef5;
+}
+
+.index-badge {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  border-radius: 50%;
+  background-color: #f0f4ff;
+  color: #409EFF;
+}
+
+.activity-info {
+  padding: 5px 0;
+}
+
+.activity-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #303133;
+}
+
+.activity-meta {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  color: #606266;
+}
+
+.activity-meta span {
+  margin: 2px 0;
+  display: flex;
+  align-items: center;
+}
+
+.activity-meta i {
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.time-schedule {
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.time-period {
+  margin: 5px 0;
+  line-height: 1.5;
+}
+
+.time-label {
+  font-weight: 500;
+  color: #409EFF;
+}
+
+.status-tag {
+  font-weight: 600;
+  padding: 0 10px;
+  height: 28px;
+  line-height: 28px;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.view-button { background: #f0f9eb; border-color: #e1f3d8; color: #67c23a; }
+.export-button { background: #f0f7ff; border-color: #d9ecff; color: #409eff; }
+.edit-button { background: #f4f4f5; border-color: #d3d4d6; color: #909399; }
+.delete-button { background: #fef0f0; border-color: #fde2e2; color: #f56c6c; }
+
+/* 扩展内容样式 */
+.expand-content {
+  display: flex;
+  padding: 15px 0;
+  background: #fafafa;
+}
+
+.expand-section {
+  flex: 1;
+  padding: 0 20px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #409EFF;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.section-header i {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.content-box {
+  background: #fff;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #ebeef5;
+  line-height: 1.6;
+  color: #606266;
+  font-size: 13px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.divider {
+  width: 1px;
+  background-color: #ebeef5;
+  margin: 0 20px;
+}
+
+/* 学生对话框 */
+.student-dialog .student-id {
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.student-dialog .student-name {
+  font-weight: 500;
+}
+
+.student-dialog .booked_at {
+  color: #909399;
+  font-size: 13px;
 }
 </style>
