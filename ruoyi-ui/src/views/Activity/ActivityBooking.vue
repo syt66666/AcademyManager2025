@@ -45,8 +45,34 @@
       <el-table-column label="活动名称" align="center" prop="activityName" width="180" />
       <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
 
+
+      <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180" >
+        <template slot-scope="scope">
+          <span>{{ formatDateTime(scope.row.activityStart) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="报名截止时间" align="center" prop="activityDeadline" width="180" >
+        <template slot-scope="scope">
+          <span>{{ formatDateTime(scope.row.activityDeadline) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="活动开始时间" align="center" prop="startTime" width="180" >
+        <template slot-scope="scope">
+          <span>{{ formatDateTime(scope.row.startTime) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="活动结束时间" align="center" prop="endTime" width="180" >
+        <template slot-scope="scope">
+          <span>{{ formatDateTime(scope.row.endTime) }}</span>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="组织单位" align="center" prop="organizer"  />
       <!-- 活动状态列 -->
-      <el-table-column label="活动状态" align="center" width="100">
+      <el-table-column label="活动状态" align="center" width="120">
         <template slot-scope="scope">
           <el-tag :type="getActivityStatusTag(scope.row)">
             {{ getActivityStatusText(scope.row) }}
@@ -54,6 +80,12 @@
         </template>
       </el-table-column>
 
+
+      <el-table-column label="活动容量剩余情况" align="center">
+        <template #default="scope">
+          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+        </template>
+      </el-table-column>
       <!-- 报名状态列 -->
       <el-table-column label="报名状态" align="center" >
         <template slot-scope="scope">
@@ -62,32 +94,8 @@
           </el-tag>
         </template>
       </el-table-column>
-
-      <el-table-column label="活动容量剩余情况" align="center">
-        <template #default="scope">
-          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
-        </template>
-      </el-table-column>
-
-      <el-table-column label="开始时间" align="center" prop="startTime" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.startTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.endTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="报名截止" align="center" prop="activityDeadline" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.activityDeadline) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="组织单位" align="center" prop="organizer"  />
-
       <!-- 操作列 -->
-      <el-table-column label="操作" align="center"  fixed="right">
+      <el-table-column  align="center">
         <template slot-scope="scope">
           <!-- 详情按钮 -->
           <el-button
@@ -96,7 +104,10 @@
             icon="el-icon-view"
             @click="handleDetail(scope.row)"
           >详情</el-button>
-
+        </template>
+      </el-table-column>
+      <el-table-column label="报名操作" align="center"  fixed="right">
+        <template slot-scope="scope">
           <!-- 报名/取消按钮 -->
           <el-button
             v-if="showSignUpButton(scope.row)"
@@ -114,25 +125,25 @@
             icon="el-icon-close"
             style="color: #F56C6C"
             @click="handleCancel(scope.row)"
-          >取消</el-button>
+          >取消报名</el-button>
         </template>
       </el-table-column>
 
-      <!-- 展开详情 -->
-      <el-table-column type="expand" width="60" align="center">
-        <template slot-scope="props">
-          <div class="expand-container">
-            <div class="expand-row">
-              <div class="expand-label">活动描述：</div>
-              <div class="expand-content">{{ props.row.activityDescription }}</div>
-            </div>
-            <div class="expand-row">
-              <div class="expand-label">注意事项：</div>
-              <div class="expand-content">{{ props.row.notes }}</div>
-            </div>
-          </div>
-        </template>
-      </el-table-column>
+<!--      &lt;!&ndash; 展开详情 &ndash;&gt;-->
+<!--      <el-table-column type="expand" width="60" align="center">-->
+<!--        <template slot-scope="props">-->
+<!--          <div class="expand-container">-->
+<!--            <div class="expand-row">-->
+<!--              <div class="expand-label">活动描述：</div>-->
+<!--              <div class="expand-content">{{ props.row.activityDescription }}</div>-->
+<!--            </div>-->
+<!--            <div class="expand-row">-->
+<!--              <div class="expand-label">注意事项：</div>-->
+<!--              <div class="expand-content">{{ props.row.notes }}</div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--        </template>-->
+<!--      </el-table-column>-->
     </el-table>
 
     <!-- 分页 -->
@@ -183,20 +194,27 @@
           <span class="detail-value">{{ currentActivity.activityCapacity }}人</span>
         </div>
 
-        <div class="detail-item">
-          <span class="detail-label">开始时间：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</span>
-        </div>
+         <div class="detail-item">
+           <span class="detail-label">报名截止：</span>
+           <span class="detail-value">{{ formatDateTime(currentActivity.activityStart) }}</span>
+         </div>
 
-        <div class="detail-item">
-          <span class="detail-label">结束时间：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</span>
-        </div>
 
         <div class="detail-item">
           <span class="detail-label">报名截止：</span>
           <span class="detail-value">{{ formatDateTime(currentActivity.activityDeadline) }}</span>
         </div>
+
+        <div class="detail-item">
+          <span class="detail-label">活动开始时间：</span>
+          <span class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">活动结束时间：</span>
+          <span class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</span>
+        </div>
+
 
         <el-divider></el-divider>
 
@@ -232,7 +250,7 @@
 
 <script>
 import { listActivities, signUpActivity, cancelSignUp,signUpCapacity,cancelSignUpCapacity } from "@/api/system/activities";
-import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
+import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent,updateBooking,listBookings2,checkBookingSimple} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 
 export default {
@@ -251,7 +269,9 @@ export default {
         activityName: null,
         activityLocation: null,
         organizer: null,
-        status: null
+        status: null,
+        bookingId: null,
+
       }
     };
   },
@@ -259,15 +279,32 @@ export default {
     this.getList();
   },
   methods: {
-    /** 查询活动列表 */
-    getList() {
+    /** 查询活动列表和预约列表 */
+    async getList() {
       this.loading = true;
-      // 后端API：获取活动列表
-      listActivities(this.queryParams).then(response => {
-        this.activitiesList = response.rows;
+      try {
+        // 1. 获取活动列表
+        const response = await listActivities(this.queryParams);
+        this.activitiesList = response.rows.map(activity => ({
+          ...activity,
+          isBooked: false // 提前让 isBooked 成为响应式属性
+        }));
+
         this.total = response.total;
+
+        // 2. 并行检查所有活动的报名状态
+        const checkPromises = this.activitiesList.map(activity =>
+         checkBookingSimple(activity.activityId, this.$store.state.user.id).then(res => {
+           activity.isBooked = res.data.isBooked;
+         })
+        );
+
+        await Promise.all(checkPromises);
+      } catch (error) {
+        console.error("获取数据失败:", error);
+      } finally {
         this.loading = false;
-      });
+      }
     },
 
     /** 处理搜索 */
@@ -293,11 +330,12 @@ export default {
       const start = new Date(row.startTime);
       const end = new Date(row.endTime);
       const deadline = new Date(row.activityDeadline);
-
-      if (now < deadline && now < start) return "未开始";
-      if (now >= deadline && now < start) return "已截止";
-      if (now >= start && now <= end) return "进行中";
-      if (now > end) return "已结束";
+      const activityStart = new Date(row.activityStart);
+      if (now< activityStart) return "报名未开始"
+      if (now < deadline && now >=activityStart) return "报名进行中";
+      if (now >= deadline && now < start) return "报名已截止";
+      if (now >= start && now <= end) return "活动进行中";
+      if (now > end) return "活动已结束";
       return row.status || "未知";
     },
 
@@ -305,13 +343,13 @@ export default {
     getActivityStatusTag(row) {
       const status = this.getActivityStatusText(row);
       switch (status) {
-        case "未开始":
+        case "报名未开始":
           return "info";
-        case "进行中":
+        case "报名进行中":
           return "success";
-        case "已截止":
+        case "报名已截止":
           return "warning";
-        case "已结束":
+        case "活动已结束":
           return "";
         default:
           return "danger";
@@ -319,13 +357,24 @@ export default {
     },
 
     /** 获取报名状态文本 */
-    getSignStatusText(row) {
-      // 假设后端返回了报名状态，这里用 signedUp 表示
-      if (row.signedUp) return "已报名";
+   getSignStatusText(row) {
+     if (row.isBooked) return "已报名";  // 直接使用 isBooked 状态
 
+
+      // 当前时间状态（报名进行中才可报名）
       const status = this.getActivityStatusText(row);
-      return ["未开始", "进行中"].includes(status) ? "可报名" : "不可报名";
+
+      // 判断是否还有剩余容量
+      const hasCapacity = row.activityCapacity > 0;
+
+      // 只有同时满足时间 + 容量 才能报名
+      if (["报名进行中"].includes(status) && hasCapacity) {
+        return "可报名";
+      }
+
+      return "不可报名";
     },
+
 
     /** 获取报名状态标签类型 */
     getSignStatusTag(row) {
@@ -348,7 +397,7 @@ export default {
     /** 是否显示取消按钮 */
     showCancelButton(row) {
       return this.getSignStatusText(row) === "已报名" &&
-        ["未开始", "进行中"].includes(this.getActivityStatusText(row));
+        ["报名进行中"].includes(this.getActivityStatusText(row));
     },
 
     /** 查看详情 */
@@ -358,54 +407,51 @@ export default {
     },
 
     /** 报名活动 */
-    handleSignUp(row) {
-      // 后端API：用户报名活动
-      this.$confirm("确定要报名吗？", "确认", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      }).then(() => {
-      signUpCapacity(row.activityId)
+   // 报名成功时
+   handleSignUp(row) {
+     this.$confirm("确定要报名吗？", "确认", {
+       confirmButtonText: "确定",
+       cancelButtonText: "取消",
+       type: "warning"
+     }).then(() => {
+       signUpCapacity(row.activityId)
+         .then(() => {
+           this.$message.success("报名成功！");
+           row.isBooked = true;  // 手动更新状态
+           return addBooking({
+             activityId: row.activityId,
+             studentId: this.$store.state.user.id
+           });
+         })
+         .then(() => this.getList())
+         .catch(error => {
+           this.$message.error(error.msg || "报名失败");
+         });
+     });
+   },
 
-        .then(response => {
-          this.$message.success("报名成功！");
-          row.activityCapacity--
-          row.signedUp = true; // 更新报名状态
-          addBooking({activityId: row.activityId,studentId:this.$store.state.user.id})
-          //this.getList();
-        })
-        .catch(error => {
-          this.$message.error(error.msg || "报名失败");
-        });
-      }).catch(() => {
-      });
-    },
-
-    /** 取消报名 */
-    handleCancel(row) {
-      this.$confirm("确定要取消报名吗？取消后如需参加需重新报名。", "确认取消", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      }).then(() => {
-        // 后端API：取消活动报名
-        cancelSignUpCapacity(row.activityId)
-
-          .then(response => {
-            this.$message.info("已取消报名");
-            row.activityCapacity++
-            row.signedUp = false; // 更新报名状态
-
-            // 使用新方法删除预约记录
-            deleteBookingsByActivityAndStudent(row.activityId, this.$store.state.user.id)
-            //this.getList();
-          })
-          .catch(error => {
-            this.$message.error(error.msg || "取消失败");
-          });
-      }).catch(() => {
-      });
-    }
+   // 取消报名时
+   handleCancel(row) {
+     this.$confirm("确定要取消报名吗？", "确认取消", {
+       confirmButtonText: "确定",
+       cancelButtonText: "取消",
+       type: "warning"
+     }).then(() => {
+       cancelSignUpCapacity(row.activityId)
+         .then(() => {
+           this.$message.info("已取消报名");
+           row.isBooked = false;  // 手动更新状态
+           return deleteBookingsByActivityAndStudent(
+             row.activityId,
+             this.$store.state.user.id
+           );
+         })
+         .then(() => this.getList())
+         .catch(error => {
+           this.$message.error(error.msg || "取消失败");
+         });
+     });
+   }
   }
 };
 </script>

@@ -84,3 +84,21 @@ export function getAuditCount(query) {
     params: query
   })
 }
+/**
+ * 查询预约详细
+ */
+export function listBookings2(query) {
+  return request({
+    url: '/system/bookings/list2',
+    method: 'get',
+    params: query
+  })
+}
+
+export function checkBookingSimple(activityId, studentId) {
+  return request({
+    url: '/system/bookings/checkBooking',
+    method: 'get',
+    params: { activityId, studentId }
+  })
+}

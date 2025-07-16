@@ -698,6 +698,11 @@ export default {
         ...this.queryParams
       }, `activities_${new Date().getTime()}.xlsx`)
     }
+  },
+  watch: {
+    'form.activityTotalCapacity'(newVal) {
+      this.form.activityCapacity = newVal;
+    }
   }
 };
 </script>
