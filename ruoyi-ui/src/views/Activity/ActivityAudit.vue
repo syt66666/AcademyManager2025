@@ -104,16 +104,14 @@
     </el-form>
 
     <!-- 操作栏 -->
-    <el-row class="action-bar">
-      <el-col :span="24" class="action-container">
-        <el-button
-          type="success"
-          icon="el-icon-download"
-          class="action-btn export-btn"
-          @click="handleExport"
-        >数据导出</el-button>
-      </el-col>
-    </el-row>
+    <div class="button-bar">
+      <el-button
+        type="success"
+        icon="el-icon-download"
+        class="action-btn export-btn"
+        @click="handleExport"
+      >数据导出</el-button>
+    </div>
 
     <!-- 表格区域 -->
     <el-card class="table-container">
@@ -198,43 +196,53 @@
             <el-tag
               v-if="scope.row.status === '未审核'"
               type="warning"
+              effect="dark"
             >未审核</el-tag>
             <el-tag
               v-else-if="scope.row.status === '已通过'"
               type="success"
+              effect="dark"
             >已通过</el-tag>
             <el-tag
               v-else-if="scope.row.status === '未通过'"
               type="danger"
+              effect="dark"
             >未通过</el-tag>
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width" width="180">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template slot-scope="scope">
-            <el-button
-              size="mini"
-              type="success"
-              icon="el-icon-check"
-              @click="handleAudit(scope.row, '通过')"
-              v-if="scope.row.status !== '已通过'"
-              circle
-            ></el-button>
-            <el-button
-              size="mini"
-              type="danger"
-              icon="el-icon-close"
-              @click="handleAudit(scope.row, '拒绝')"
-              v-if="scope.row.status !== '未通过'"
-              circle
-            ></el-button>
-            <el-button
-              size="mini"
-              type="info"
-              icon="el-icon-notebook-2"
-              @click="showAuditHistory(scope.row)"
-              circle
-            ></el-button>
+            <div class="action-container">
+              <el-button-group class="action-buttons">
+                <el-button
+                  size="mini"
+                  type="success"
+                  icon="el-icon-check"
+                  @click="handleAudit(scope.row, '通过')"
+                  :disabled="scope.row.status === '已通过'"
+                  circle
+                  class="action-button approve-button"
+                ></el-button>
+                <el-button
+                  size="mini"
+                  type="danger"
+                  icon="el-icon-close"
+                  @click="handleAudit(scope.row, '拒绝')"
+                  :disabled="scope.row.status === '未通过'"
+                  circle
+                  class="action-button reject-button"
+                ></el-button>
+                <el-button
+                  size="mini"
+                  type="info"
+                  icon="el-icon-notebook-2"
+                  @click="showAuditHistory(scope.row)"
+                  circle
+                  class="action-button history-button"
+                ></el-button>
+              </el-button-group>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -249,24 +257,26 @@
     </el-card>
 
     <!-- 图片预览对话框 -->
-    <el-dialog :visible.sync="previewVisible" title="证明材料预览" width="60%">
+    <el-dialog :visible.sync="previewVisible" title="证明材料预览" width="60%" class="preview-dialog">
       <div style="text-align: center; margin-bottom: 20px;">
         <img
           :src="previewImages[currentPreviewIndex]"
           style="max-width: 100%; display: block; margin: 0 auto;"
           alt="证明材料预览"
         />
-        <el-button
-          icon="el-icon-arrow-left"
-          :disabled="currentPreviewIndex === 0"
-          @click="currentPreviewIndex--"
-        ></el-button>
-        <span style="margin: 0 20px;">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
-        <el-button
-          icon="el-icon-arrow-right"
-          :disabled="currentPreviewIndex === previewImages.length - 1"
-          @click="currentPreviewIndex++"
-        ></el-button>
+        <div class="preview-controls">
+          <el-button
+            icon="el-icon-arrow-left"
+            :disabled="currentPreviewIndex === 0"
+            @click="currentPreviewIndex--"
+          ></el-button>
+          <span class="preview-count">{{ currentPreviewIndex + 1 }} / {{ previewImages.length }}</span>
+          <el-button
+            icon="el-icon-arrow-right"
+            :disabled="currentPreviewIndex === previewImages.length - 1"
+            @click="currentPreviewIndex++"
+          ></el-button>
+        </div>
       </div>
 
       <div slot="footer">
@@ -284,7 +294,7 @@
       :visible.sync="docPreviewVisible"
       title="学生总结预览"
       width="80%"
-      class="native-pdf-preview"
+      class="preview-dialog native-pdf-preview"
     >
       <div v-if="currentDocument.type === 'pdf'" class="preview-container">
         <iframe
@@ -304,13 +314,29 @@
       :visible.sync="historyVisible"
       width="70%"
       append-to-body
+      class="history-dialog"
     >
       <el-table
         v-loading="historyLoading"
         :data="auditHistoryList"
         border
         style="margin-top: 15px;"
+        class="history-table"
       >
+        <el-table-column label="审核前状态" align="center" prop="auditStatusBefore">
+          <template slot-scope="{row}">
+            <el-tag :type="getStatusTagType(row.auditStatusBefore)" size="mini">
+              {{ row.auditStatusBefore || '-' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="审核后状态" align="center" prop="auditStatusAfter">
+          <template slot-scope="{row}">
+            <el-tag :type="getStatusTagType(row.auditStatusAfter)" size="mini">
+              {{ row.auditStatusAfter }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="操作类型" align="center" prop="auditAction" width="120"/>
         <el-table-column label="审核人" align="center" prop="auditorId" width="120"/>
         <el-table-column label="审核时间" align="center" prop="auditTime" width="160">
@@ -408,6 +434,14 @@ export default {
     this.fetchAuditCount();
   },
   methods: {
+    getStatusTagType(status) {
+      const statusMap = {
+        '已通过': 'success',
+        '未通过': 'danger',
+        '未审核': 'warning'
+      };
+      return statusMap[status] || 'info';
+    },
     // 获取活动列表
     getList() {
       this.loading = true;
@@ -672,8 +706,263 @@ export default {
   }
 };
 </script>
+
 <style scoped>
+/* 整体布局优化 */
 .app-container {
   margin-left: 100px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 统计看板样式 */
+.status-card {
+  border-radius: 8px;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.status-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.pending {
+  background: linear-gradient(145deg, #f0f9ff, #e6f7ff);
+  border-top: 4px solid #409EFF;
+}
+
+.approved {
+  background: linear-gradient(145deg, #f0fff4, #e6fff1);
+  border-top: 4px solid #67C23A;
+}
+
+.rejected {
+  background: linear-gradient(145deg, #fff6f6, #ffeded);
+  border-top: 4px solid #F56C6C;
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+}
+
+.card-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-size: 28px;
+}
+
+.pending .card-icon {
+  background: rgba(64, 158, 255, 0.15);
+  color: #409EFF;
+}
+
+.approved .card-icon {
+  background: rgba(103, 194, 58, 0.15);
+  color: #67C23A;
+}
+
+.rejected .card-icon {
+  background: rgba(245, 108, 108, 0.15);
+  color: #F56C6C;
+}
+
+.card-info .title {
+  font-size: 16px;
+  color: #606266;
+  margin-bottom: 5px;
+}
+
+.card-info .count {
+  font-size: 28px;
+  font-weight: bold;
+  color: #303133;
+}
+
+/* 查询表单样式 */
+.custom-query-form {
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.custom-query-form .el-form-item {
+  margin-bottom: 0;
+  margin-right: 15px;
+}
+
+/* 按钮区域 */
+.button-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.action-btn {
+  border-radius: 4px;
+  padding: 8px 15px;
+}
+
+.export-btn {
+  background: #f0f9eb;
+  border-color: #e1f3d8;
+  color: #67c23a;
+}
+
+.export-btn:hover {
+  background: #e1f3d8;
+  border-color: #67c23a;
+  color: #67c23a;
+}
+
+/* 表格容器 */
+.table-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* 表格样式 */
+.enhanced-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.enhanced-table::before {
+  display: none;
+}
+
+.enhanced-table th {
+  background-color: #f5f7fa !important;
+}
+
+.enhanced-table .el-table__body tr:hover > td {
+  background-color: #f5f7fa !important;
+}
+
+.striped-row {
+  background-color: #fafafa;
+}
+
+.index-badge {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  border-radius: 50%;
+  background-color: #f0f4ff;
+  color: #409EFF;
+  font-weight: 500;
+}
+
+/* 操作按钮 - 新增样式 */
+.action-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 按钮禁用样式 */
+.action-button.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.approve-button {
+  background: #f0f9eb;
+  border-color: #e1f3d8;
+  color: #67c23a;
+}
+
+.approve-button:hover {
+  background: #e1f3d8;
+  border-color: #67c23a;
+  color: #67c23a;
+}
+
+.reject-button {
+  background: #fef0f0;
+  border-color: #fde2e2;
+  color: #f56c6c;
+}
+
+.reject-button:hover {
+  background: #fde2e2;
+  border-color: #f56c6c;
+  color: #f56c6c;
+}
+
+.history-button {
+  background: #f4f4f5;
+  border-color: #d3d4d6;
+  color: #909399;
+}
+
+.history-button:hover {
+  background: #e9e9eb;
+  border-color: #909399;
+  color: #909399;
+}
+
+/* 对话框样式 */
+.preview-dialog {
+  border-radius: 8px;
+}
+
+.preview-controls {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-count {
+  margin: 0 15px;
+  font-weight: 500;
+}
+
+.history-dialog {
+  border-radius: 8px;
+}
+
+.history-table {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.history-table th {
+  background-color: #f5f7fa !important;
+}
+
+.operation-info {
+  font-size: 13px;
+  color: #909399;
 }
 </style>
