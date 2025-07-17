@@ -69,17 +69,18 @@
         </el-table-column>
         <el-table-column label="活动名称" align="center" prop="activityName" />
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
-        <el-table-column label="开始时间" align="center" prop="startTime" width="180">
+        <el-table-column label="组织单位" align="center" prop="organizer" />
+        <el-table-column label="开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="结束时间" align="center" prop="endTime" width="180">
+        <el-table-column label="结束时间" align="center" prop="endTime">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="组织单位" align="center" prop="organizer" />
+
         <el-table-column label="材料提交" align="center" class-name="small-padding fixed-width" width="120">
           <template slot-scope="scope">
             <el-button
