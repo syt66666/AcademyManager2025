@@ -1,103 +1,141 @@
 <template>
   <div class="app-container">
-    <!-- 搜索区域 -->
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="活动名称" prop="activityName">
-        <el-input
-          v-model="queryParams.activityName"
-          placeholder="请输入活动名称"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="活动地点" prop="activityLocation">
-        <el-input
-          v-model="queryParams.activityLocation"
-          placeholder="请输入活动地点"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="组织单位" prop="organizer">
-        <el-input
-          v-model="queryParams.organizer"
-          placeholder="请输入组织单位"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <!-- 搜索区域 - 美化 -->
+    <div class="search-card">
+      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
+        <div class="search-row">
+          <el-form-item label="活动名称" prop="activityName">
+            <el-input
+              v-model="queryParams.activityName"
+              placeholder="请输入活动名称"
+              clearable
+              prefix-icon="el-icon-search"
+              class="search-input"
+            />
+          </el-form-item>
+          <el-form-item label="活动地点" prop="activityLocation">
+            <el-input
+              v-model="queryParams.activityLocation"
+              placeholder="请输入活动地点"
+              clearable
+              prefix-icon="el-icon-location-outline"
+              class="search-input"
+            />
+          </el-form-item>
+          <el-form-item label="组织单位" prop="organizer">
+            <el-input
+              v-model="queryParams.organizer"
+              placeholder="请输入组织单位"
+              clearable
+              prefix-icon="el-icon-office-building"
+              class="search-input"
+            />
+          </el-form-item>
+          <el-form-item class="search-actions">
+            <el-button-group class="action-buttons">
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleQuery"
+                class="search-button"
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetQuery"
+                class="refresh-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
+        </div>
+      </el-form>
+    </div>
 
     <!-- 活动列表 -->
-    <el-table v-loading="loading" :data="activitiesList">
-      <!-- 序号列 -->
-      <el-table-column label="序号" width="80" align="center">
-        <template v-slot="scope">
-              <span class="index-badge">
-                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-              </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动名称" align="center" prop="activityName" />
-      <el-table-column label="活动地点" align="center" prop="activityLocation" />
-      <el-table-column label="开始时间" align="center" prop="startTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="结束时间" align="center" prop="endTime" width="180">
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="组织单位" align="center" prop="organizer" />
-      <el-table-column label="材料提交" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
-          <el-button
-            v-if="scope.row.status === '未提交'"
-            type="primary"
-            size="mini"
-            @click="openUploadDialog(scope.row)"
-          >提交材料</el-button>
-          <el-button
-            v-if="scope.row.status === '未通过'"
-            type="warning"
-            size="mini"
-            @click="openUploadDialog(scope.row)"
-          >重新提交</el-button>
-          <span v-if="scope.row.status === '未审核' || scope.row.status === '已通过'">
-            {{ scope.row.status }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column type="expand" width="60" align="center">
-        <template slot-scope="props">
-          <div class="expand-container">
-            <div class="expand-row">
-              <div class="expand-label">活动描述:</div>
-              <div class="expand-content">{{ props.row.activityDescription }}</div>
+    <div class="table-card">
+      <el-table
+        v-loading="loading"
+        :data="activitiesList"
+        style="width: 100%"
+        class="modern-table"
+        :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
+      >
+        <!-- 序号列 -->
+        <el-table-column label="序号" width="80" align="center">
+          <template v-slot="scope">
+            <span class="index-badge">
+              {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动名称" align="center" prop="activityName" />
+        <el-table-column label="活动地点" align="center" prop="activityLocation" />
+        <el-table-column label="开始时间" align="center" prop="startTime" width="180">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="结束时间" align="center" prop="endTime" width="180">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="组织单位" align="center" prop="organizer" />
+        <el-table-column label="材料提交" align="center" class-name="small-padding fixed-width" width="120">
+          <template slot-scope="scope">
+            <el-button
+              v-if="scope.row.status === '未提交'"
+              type="primary"
+              size="mini"
+              class="upload-button"
+              @click="openUploadDialog(scope.row)"
+            ><i class="el-icon-upload"></i> 提交</el-button>
+            <el-button
+              v-if="scope.row.status === '未通过'"
+              type="warning"
+              size="mini"
+              class="reupload-button"
+              @click="openUploadDialog(scope.row)"
+            ><i class="el-icon-refresh-left"></i> 重新提交</el-button>
+            <el-tag
+              v-if="scope.row.status === '未审核'"
+              type="warning"
+              effect="light"
+              class="status-tag"
+            >待审核</el-tag>
+            <el-tag
+              v-if="scope.row.status === '已通过'"
+              type="success"
+              effect="light"
+              class="status-tag"
+            >已通过</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column type="expand" width="60" align="center">
+          <template slot-scope="props">
+            <div class="expand-card">
+              <div class="expand-row">
+                <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
+                <div class="expand-content">{{ props.row.activityDescription }}</div>
+              </div>
+              <div class="expand-row">
+                <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
+                <div class="expand-content">{{ props.row.notes }}</div>
+              </div>
             </div>
-            <div class="expand-row">
-              <div class="expand-label">注意事项:</div>
-              <div class="expand-content">{{ props.row.notes }}</div>
-            </div>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
+          </template>
+        </el-table-column>
+      </el-table>
 
-    <!-- 分页 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+      <!-- 分页 -->
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+        class="custom-pagination"
+      />
+    </div>
 
     <!-- 文件上传对话框 -->
     <el-dialog
@@ -437,46 +475,174 @@ export default {
 </script>
 
 <style scoped>
+/* 全局样式 */
 .app-container {
   margin-left: 100px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
+/* 搜索卡片样式 */
+.search-card {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-input {
+  width: 200px;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 6px rgba(64, 158, 255, 0.2);
+}
+
+/* 表格卡片样式 */
+.table-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.modern-table {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #ebeef5;
+}
+
+.modern-table th {
+  background-color: #f5f7fa !important;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 按钮样式 */
+.search-button {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.4);
+}
+
+.refresh-button {
+  background-color: #f0f2f5;
+  border: none;
+  padding: 8px 15px;
+  color: #606266;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.refresh-button:hover {
+  background-color: #e4e7ed;
+  color: #333;
+}
+
+/* 材料提交按钮样式 */
+.upload-button {
+  background-color: #409EFF;
+  color: #fff;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.upload-button:hover {
+  background-color: #64b5ff;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
+}
+
+.reupload-button {
+  background-color: #f39c12;
+  color: #fff;
+  border: none;
+  padding: 5px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.reupload-button:hover {
+  background-color: #f4a726;
+  box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+}
+
+.status-tag {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+/* 扩展卡片 */
+.expand-card {
+  background: #f9fafc;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 5px;
+  border-left: 3px solid #409EFF;
+}
+
+.expand-row {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.expand-label {
+  font-weight: 600;
+  min-width: 100px;
+  color: #409EFF;
+  display: flex;
+  align-items: center;
+}
+
+.expand-label i {
+  margin-right: 8px;
+}
+
+.expand-content {
+  flex: 1;
+  color: #606266;
+  line-height: 1.6;
+}
+
+/* 分页样式 */
+.custom-pagination {
+  padding: 15px 0 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* 上传对话框样式 */
 .section {
   margin-bottom: 30px;
+  padding: 15px;
+  background: #f9fafc;
+  border-radius: 8px;
 }
 
 .section h3 {
   margin-bottom: 15px;
   color: #409EFF;
   font-weight: 600;
-}
-
-.expand-container {
-  padding: 15px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-}
-
-.expand-row {
-  display: flex;
-  margin-bottom: 10px;
-}
-
-.expand-label {
-  font-weight: bold;
-  min-width: 80px;
-  color: #606266;
-}
-
-.expand-content {
-  flex: 1;
-  color: #909399;
-}
-
-.el-upload__tip {
-  margin-top: 10px;
-  color: #909399;
-  font-size: 12px;
 }
 
 .dialog-footer {
