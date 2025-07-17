@@ -1,155 +1,150 @@
 <template>
   <div class="app-container">
     <!-- 搜索区域 -->
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="活动名称" prop="activityName">
-        <el-input
-          v-model="queryParams.activityName"
-          placeholder="请输入活动名称"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="活动地点" prop="activityLocation">
-        <el-input
-          v-model="queryParams.activityLocation"
-          placeholder="请输入活动地点"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="组织者" prop="organizer">
-        <el-input
-          v-model="queryParams.organizer"
-          placeholder="请输入组织者"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="状态筛选" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择活动状态" clearable @change="handleStatusFilterChange">
-          <el-option label="报名未开始" value="未开始" />
-          <el-option label="报名进行中" value="可报名" />
-          <el-option label="报名已截止" value="已截止" />
-          <el-option label="活动进行中" value="进行中" />
-          <el-option label="活动已结束" value="已结束" />
-        </el-select>
-      </el-form-item>
-      <el-form-item  prop="onlyAvailable">
-        <el-checkbox v-model="queryParams.onlyAvailable" @change="handleOnlyAvailableChange">
-          只显示可报名活动
-        </el-checkbox>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="80px" class="query-form">
+      <div class="query-row">
+        <el-form-item label="活动名称" prop="activityName">
+          <el-input
+            v-model="queryParams.activityName"
+            placeholder="请输入活动名称"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="活动地点" prop="activityLocation">
+          <el-input
+            v-model="queryParams.activityLocation"
+            placeholder="请输入活动地点"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="组织单位" prop="organizer">
+          <el-input
+            v-model="queryParams.organizer"
+            placeholder="请输入组织单位"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+      </div>
+      <div class="query-row">
+        <el-form-item label="活动状态" prop="status">
+          <el-select v-model="queryParams.status" clearable class="status-select">
+            <el-option label="报名未开始" value="未开始"/>
+            <el-option label="报名进行中" value="可报名"/>
+            <el-option label="报名已截止" value="已截止"/>
+            <el-option label="活动进行中" value="进行中"/>
+            <el-option label="活动已结束" value="已结束"/>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-checkbox v-model="queryParams.onlyAvailable" @change="handleOnlyAvailableChange">
+            只显示可报名活动
+          </el-checkbox>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        </el-form-item>
+      </div>
     </el-form>
 
     <!-- 活动列表 -->
-    <el-table v-loading="loading" :data="activitiesList" style="width: 100%">
-      <el-table-column label="活动名称" align="center" prop="activityName" width="180" />
+    <el-table v-loading="loading" :data="activitiesList" style="width: 100%" class="enhanced-table">
+      <el-table-column label="序号" width="70" align="center">
+        <template v-slot="scope">
+          <span class="index-badge">
+            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动名称" align="center" prop="activityName" width="180">
+        <template slot-scope="scope">
+          <div class="activity-name">{{ scope.row.activityName }}</div>
+        </template>
+      </el-table-column>
       <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
-
-
-      <el-table-column label="报名开始时间" align="center" prop="activityStart" width="180" >
+      <el-table-column label="组织单位" align="center" prop="organizer" width="120"/>
+      <el-table-column label="报名时间" align="center" >
         <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.activityStart) }}</span>
+          <div class="time-range">
+            <i class="el-icon-time"></i> {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动时间" align="center" >
+        <template slot-scope="scope">
+          <div class="time-range">
+            <i class="el-icon-date"></i> {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
+          </div>
         </template>
       </el-table-column>
 
-      <el-table-column label="报名截止时间" align="center" prop="activityDeadline" width="180" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.activityDeadline) }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="活动开始时间" align="center" prop="startTime" width="180" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.startTime) }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="活动结束时间" align="center" prop="endTime" width="180" >
-        <template slot-scope="scope">
-          <span>{{ formatDateTime(scope.row.endTime) }}</span>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="组织单位" align="center" prop="organizer"  />
       <!-- 活动状态列 -->
-      <el-table-column label="活动状态" align="center" width="120">
+      <el-table-column label="活动状态" align="center" width="100">
         <template slot-scope="scope">
-          <el-tag :type="getActivityStatusTag(scope.row)">
+          <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
             {{ getActivityStatusText(scope.row) }}
           </el-tag>
         </template>
       </el-table-column>
 
-
-      <el-table-column label="报名人数" align="center">
+      <el-table-column label="报名人数" align="center" width="80">
         <template #default="scope">
-          {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+          <span :class="{
+            'capacity-high': (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity > 0.8,
+            'capacity-medium': (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity > 0.5 && (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity <= 0.8,
+            'capacity-low': (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity <= 0.5
+          }">
+            {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+          </span>
         </template>
       </el-table-column>
+
       <!-- 报名状态列 -->
-      <el-table-column label="报名状态" align="center" >
-        <template slot-scope="scope">
-          <el-tag :type="getSignStatusTag(scope.row)" effect="plain">
-            {{ getSignStatusText(scope.row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <!-- 操作列 -->
-      <el-table-column  align="center">
-        <template slot-scope="scope">
-          <!-- 详情按钮 -->
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-view"
-            @click="handleDetail(scope.row)"
-          >详情</el-button>
-        </template>
-      </el-table-column>
-      <el-table-column label="报名操作" align="center"  fixed="right">
-        <template slot-scope="scope">
-          <!-- 报名/取消按钮 -->
-          <el-button
-            v-if="showSignUpButton(scope.row)"
-            size="mini"
-            type="text"
-            icon="el-icon-check"
-            style="color: #67C23A"
-            @click="handleSignUp(scope.row)"
-          >报名</el-button>
-
-          <el-button
-            v-if="showCancelButton(scope.row)"
-            size="mini"
-            type="text"
-            icon="el-icon-close"
-            style="color: #F56C6C"
-            @click="handleCancel(scope.row)"
-          >取消报名</el-button>
-        </template>
-      </el-table-column>
-
-<!--      &lt;!&ndash; 展开详情 &ndash;&gt;-->
-<!--      <el-table-column type="expand" width="60" align="center">-->
-<!--        <template slot-scope="props">-->
-<!--          <div class="expand-container">-->
-<!--            <div class="expand-row">-->
-<!--              <div class="expand-label">活动描述：</div>-->
-<!--              <div class="expand-content">{{ props.row.activityDescription }}</div>-->
-<!--            </div>-->
-<!--            <div class="expand-row">-->
-<!--              <div class="expand-label">注意事项：</div>-->
-<!--              <div class="expand-content">{{ props.row.notes }}</div>-->
-<!--            </div>-->
-<!--          </div>-->
+<!--      <el-table-column label="报名状态" align="center" width="120">-->
+<!--        <template slot-scope="scope">-->
+<!--          <el-tag :type="getSignStatusTag(scope.row)" effect="plain">-->
+<!--            {{ getSignStatusText(scope.row) }}-->
+<!--          </el-tag>-->
 <!--        </template>-->
 <!--      </el-table-column>-->
+
+      <!-- 操作列 -->
+      <el-table-column label="操作" align="center" fixed="right" width="150">
+        <template slot-scope="scope">
+          <div class="action-buttons">
+            <!-- 详情按钮 -->
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-view"
+              @click="handleDetail(scope.row)"
+              class="action-button detail-button"
+            >详情</el-button>
+
+            <!-- 报名/取消按钮 -->
+            <el-button
+              v-if="showSignUpButton(scope.row)"
+              size="mini"
+              type="text"
+              icon="el-icon-check"
+              @click="handleSignUp(scope.row)"
+              class="action-button signup-button"
+            >报名</el-button>
+
+            <el-button
+              v-if="showCancelButton(scope.row)"
+              size="mini"
+              type="text"
+              icon="el-icon-close"
+              @click="handleCancel(scope.row)"
+              class="action-button cancel-button"
+            >取消</el-button>
+          </div>
+        </template>
+      </el-table-column>
     </el-table>
 
     <!-- 分页 -->
@@ -159,109 +154,114 @@
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
+      class="custom-pagination"
     />
 
     <!-- 活动详情弹窗 -->
     <el-dialog
       :title="currentActivity.activityName"
       :visible.sync="detailVisible"
-      width="600px"
+      width="700px"
       :close-on-click-modal="false"
+      class="activity-detail-dialog"
     >
       <div class="activity-detail">
-        <div class="detail-item">
-          <span class="detail-label">活动状态：</span>
-          <el-tag :type="getActivityStatusTag(currentActivity)" size="medium">
+        <div class="detail-header">
+          <el-tag :type="getActivityStatusTag(currentActivity)" size="medium" class="status-tag">
             {{ getActivityStatusText(currentActivity) }}
           </el-tag>
-        </div>
-
-        <div class="detail-item">
-          <span class="detail-label">报名状态：</span>
-          <el-tag :type="getSignStatusTag(currentActivity)" size="medium" effect="light">
+          <el-tag :type="getSignStatusTag(currentActivity)" size="medium" effect="light" class="sign-tag">
             {{ getSignStatusText(currentActivity) }}
           </el-tag>
         </div>
 
         <el-divider></el-divider>
 
-        <div class="detail-item">
-          <span class="detail-label">活动地点：</span>
-          <span class="detail-value">{{ currentActivity.activityLocation }}</span>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
+            <div class="detail-value">{{ currentActivity.activityLocation }}</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
+            <div class="detail-value">{{ currentActivity.organizer }}</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-user"></i> 活动容量：</div>
+            <div class="detail-value">
+              <span :class="{
+                'capacity-high': (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity > 0.8,
+                'capacity-medium': (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity > 0.5 && (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity <= 0.8,
+                'capacity-low': (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity <= 0.5
+              }">
+                {{ currentActivity.activityTotalCapacity - currentActivity.activityCapacity }}/{{ currentActivity.activityTotalCapacity }}人
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名开始：</div>
+            <div class="detail-value">{{ formatDateTime(currentActivity.activityStart) }}</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名截止：</div>
+            <div class="detail-value">{{ formatDateTime(currentActivity.activityDeadline) }}</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 活动开始：</div>
+            <div class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</div>
+          </div>
+
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 活动结束：</div>
+            <div class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</div>
+          </div>
         </div>
-
-        <div class="detail-item">
-          <span class="detail-label">组织单位：</span>
-          <span class="detail-value">{{ currentActivity.organizer }}</span>
-        </div>
-
-        <div class="detail-item">
-          <span class="detail-label">活动容量：</span>
-          <span class="detail-value">{{ currentActivity.activityCapacity }}人</span>
-        </div>
-
-         <div class="detail-item">
-           <span class="detail-label">报名截止：</span>
-           <span class="detail-value">{{ formatDateTime(currentActivity.activityStart) }}</span>
-         </div>
-
-
-        <div class="detail-item">
-          <span class="detail-label">报名截止：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.activityDeadline) }}</span>
-        </div>
-
-        <div class="detail-item">
-          <span class="detail-label">活动开始时间：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</span>
-        </div>
-
-        <div class="detail-item">
-          <span class="detail-label">活动结束时间：</span>
-          <span class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</span>
-        </div>
-
 
         <el-divider></el-divider>
 
         <div class="detail-section">
-          <h4 class="section-title">活动描述</h4>
+          <h4 class="section-title"><i class="el-icon-document"></i> 活动描述</h4>
           <div class="section-content">{{ currentActivity.activityDescription }}</div>
         </div>
 
         <div class="detail-section">
-          <h4 class="section-title">注意事项</h4>
+          <h4 class="section-title"><i class="el-icon-warning"></i> 注意事项</h4>
           <div class="section-content">{{ currentActivity.notes }}</div>
         </div>
+      </div>
 
-        <div v-if="showSignUpButton(currentActivity)" class="detail-actions">
-          <el-button
-            type="success"
-            icon="el-icon-check"
-            @click="handleSignUp(currentActivity)"
-          >立即报名</el-button>
-        </div>
-
-        <div v-if="showCancelButton(currentActivity)" class="detail-actions">
-          <el-button
-            type="danger"
-            icon="el-icon-close"
-            @click="handleCancel(currentActivity)"
-          >取消报名</el-button>
-        </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="detailVisible = false" class="close-btn">关闭</el-button>
+        <el-button
+          v-if="showSignUpButton(currentActivity)"
+          type="success"
+          icon="el-icon-check"
+          @click="handleSignUp(currentActivity)"
+        >立即报名</el-button>
+        <el-button
+          v-if="showCancelButton(currentActivity)"
+          type="danger"
+          icon="el-icon-close"
+          @click="handleCancel(currentActivity)"
+        >取消报名</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { listActivities, signUpActivity, cancelSignUp,signUpCapacity,cancelSignUpCapacity } from "@/api/system/activities";
-import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent,updateBooking,listBookings2,checkBookingSimple} from "@/api/system/bookings";
+import { listActivities, signUpCapacity, cancelSignUpCapacity } from "@/api/system/activities";
+import { addBooking, deleteBookingsByActivityAndStudent } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
-import activitiesList from "core-js/internals/array-iteration";
+import { checkBookingSimple } from "@/api/system/bookings";
 
 export default {
-  name: "Activities",
+  name: "ActivitiesSignUp",
   data() {
     return {
       loading: true,
@@ -277,7 +277,6 @@ export default {
         activityLocation: null,
         organizer: null,
         status: null,
-        bookingId: null,
         onlyAvailable: false,
       }
     };
@@ -326,17 +325,23 @@ export default {
       }
     },
 
-
     /** 处理搜索 */
     handleQuery() {
       this.queryParams.pageNum = 1;
       this.getList();
     },
+
     /** 搜索报名状态 */
-      handleStatusFilterChange() {
-        this.queryParams.pageNum = 1;
-        this.getList(); // 执行查询
-      },
+    handleStatusFilterChange() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+
+    /** 处理只显示可报名活动 */
+    handleOnlyAvailableChange() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
 
     /** 重置搜索 */
     resetQuery() {
@@ -356,8 +361,9 @@ export default {
       const end = new Date(row.endTime);
       const deadline = new Date(row.activityDeadline);
       const activityStart = new Date(row.activityStart);
-      if (now< activityStart) return "报名未开始"
-      if (now < deadline && now >=activityStart) return "报名进行中";
+
+      if (now < activityStart) return "报名未开始";
+      if (now < deadline && now >= activityStart) return "报名进行中";
       if (now >= deadline && now < start) return "报名已截止";
       if (now >= start && now <= end) return "活动进行中";
       if (now > end) return "活动已结束";
@@ -368,31 +374,22 @@ export default {
     getActivityStatusTag(row) {
       const status = this.getActivityStatusText(row);
       switch (status) {
-        case "报名未开始":
-          return "info";
-        case "报名进行中":
-          return "success";
-        case "报名已截止":
-          return "warning";
-        case "活动已结束":
-          return "";
-        default:
-          return "danger";
+        case "报名未开始": return "info";
+        case "报名进行中": return "success";
+        case "报名已截止": return "warning";
+        case "活动进行中": return "primary";
+        case "活动已结束": return "";
+        default: return "danger";
       }
     },
 
     /** 获取报名状态文本 */
-   getSignStatusText(row) {
-     if (row.isBooked) return "已报名";  // 直接使用 isBooked 状态
+    getSignStatusText(row) {
+      if (row.isBooked) return "已报名";
 
-
-      // 当前时间状态（报名进行中才可报名）
       const status = this.getActivityStatusText(row);
-
-      // 判断是否还有剩余容量
       const hasCapacity = row.activityCapacity > 0;
 
-      // 只有同时满足时间 + 容量 才能报名
       if (["报名进行中"].includes(status) && hasCapacity) {
         return "可报名";
       }
@@ -400,17 +397,13 @@ export default {
       return "不可报名";
     },
 
-
     /** 获取报名状态标签类型 */
     getSignStatusTag(row) {
       const status = this.getSignStatusText(row);
       switch (status) {
-        case "已报名":
-          return "success";
-        case "可报名":
-          return "warning";
-        default:
-          return "info";
+        case "已报名": return "success";
+        case "可报名": return "warning";
+        default: return "info";
       }
     },
 
@@ -430,134 +423,243 @@ export default {
       this.currentActivity = Object.assign({}, row);
       this.detailVisible = true;
     },
-    /**
-     * 只查看
-     */
-    handleOnlyAvailableChange() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    }
-    ,
-      // 报名成功时
-        handleSignUp(row) {
-          this.$confirm("确定要报名吗？", "确认", {
-            confirmButtonText: "确定",
-            cancelButtonText: "取消",
-            type: "warning"
-          }).then(() => {
-            signUpCapacity(row.activityId,row.version)
-              .then(() => {
-                this.$message.success("报名成功！");
-                row.isBooked = true;  // 手动更新状态
-                return addBooking({
-                  activityId: row.activityId,
-                  studentId: this.$store.state.user.name
-                });
-              })
-              .then(() => this.getList())
-              .catch(error => {
-                this.$message.error(error.msg || "报名失败,请刷新界面重试");
-              });
+
+    /** 报名活动 */
+    handleSignUp(row) {
+      this.$confirm("确定要报名吗？", "确认", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        signUpCapacity(row.activityId, row.version)
+          .then(() => {
+            this.$message.success("报名成功！");
+            row.isBooked = true;
+            return addBooking({
+              activityId: row.activityId,
+              studentId: this.$store.state.user.name
+            });
+          })
+          .then(() => this.getList())
+          .catch(error => {
+            this.$message.error(error.msg || "报名失败,请刷新界面重试");
           });
-        },
+      });
+    },
 
-
-   // 取消报名时
-   handleCancel(row) {
-     this.$confirm("确定要取消报名吗？", "确认取消", {
-       confirmButtonText: "确定",
-       cancelButtonText: "取消",
-       type: "warning"
-     }).then(() => {
-       cancelSignUpCapacity(row.activityId,row.version)
-         .then(() => {
-           this.$message.info("已取消报名");
-           row.isBooked = false;  // 手动更新状态
-           return deleteBookingsByActivityAndStudent(
-             row.activityId,
-             this.$store.state.user.name
-           );
-         })
-         .then(() => this.getList())
-         .catch(error => {
-           this.$message.error(error.msg || "取消失败");
-         });
-     });
-   }
+    /** 取消报名 */
+    handleCancel(row) {
+      this.$confirm("确定要取消报名吗？", "确认取消", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
+        cancelSignUpCapacity(row.activityId, row.version)
+          .then(() => {
+            this.$message.info("已取消报名");
+            row.isBooked = false;
+            return deleteBookingsByActivityAndStudent(
+              row.activityId,
+              this.$store.state.user.name
+            );
+          })
+          .then(() => this.getList())
+          .catch(error => {
+            this.$message.error(error.msg || "取消失败");
+          });
+      });
+    }
   }
 };
 </script>
 
 <style scoped>
+/* 全局样式 */
 .app-container {
-  padding: 20px;
   margin-left: 100px;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
 }
 
-/* 详情弹窗样式 */
-.activity-detail {
-  padding: 10px 20px;
+/* 查询表单 */
+.query-form {
+  padding: 15px;
+  background: #f5f7fa;
+  border-radius: 6px;
+  margin-bottom: 15px;
+}
+
+.query-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.query-row .el-form-item {
+  margin-bottom: 0;
+  margin-right: 15px;
+}
+
+/* 表格样式优化 */
+.enhanced-table {
+  width: 100%;
+  margin-top: 15px;
+  border-radius: 6px;
+  border: 1px solid #ebeef5;
+}
+
+.activity-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.time-range {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #606266;
+}
+
+.time-range i {
+  margin-right: 5px;
+  color: #909399;
+}
+
+.status-tag {
+  font-weight: 600;
+  padding: 0 10px;
+  height: 28px;
+  line-height: 28px;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.detail-button { color: #409EFF; }
+.signup-button { color: #67C23A; }
+.cancel-button { color: #F56C6C; }
+
+.capacity-high {
+  color: #F56C6C;
+  font-weight: 500;
+}
+
+.capacity-medium {
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.capacity-low {
+  color: #67C23A;
+  font-weight: 500;
+}
+
+/* 活动详情弹窗 */
+.activity-detail-dialog ::v-deep .el-dialog {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.activity-detail-dialog ::v-deep .el-dialog__header {
+  background: linear-gradient(120deg, #409EFF, #64b5ff);
+  padding: 15px 20px;
+}
+
+.activity-detail-dialog ::v-deep .el-dialog__title {
+  color: white;
+  font-weight: 600;
+}
+
+.activity-detail-dialog ::v-deep .el-dialog__headerbtn {
+  top: 15px;
+}
+
+.activity-detail-dialog ::v-deep .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+}
+
+.detail-header {
+  margin-bottom: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
 }
 
 .detail-item {
   display: flex;
-  margin-bottom: 15px;
-  line-height: 32px;
+  align-items: flex-start;
 }
 
 .detail-label {
-  width: 80px;
-  font-weight: bold;
+  width: 100px;
+  flex-shrink: 0;
+  font-weight: 500;
   color: #606266;
+  display: flex;
+  align-items: center;
+}
+
+.detail-label i {
+  margin-right: 6px;
+  color: #409EFF;
 }
 
 .detail-value {
-  flex: 1;
+  flex-grow: 1;
   color: #303133;
 }
 
 .detail-section {
-  margin: 20px 0;
+  margin-top: 20px;
 }
 
 .section-title {
-  color: #409EFF;
   margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px dashed #EBEEF5;
+  color: #409EFF;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.section-title i {
+  margin-right: 8px;
 }
 
 .section-content {
-  line-height: 1.8;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 4px;
+  line-height: 1.7;
   color: #606266;
-  padding: 0 10px;
+  border-left: 3px solid #409EFF;
 }
 
-.detail-actions {
-  margin-top: 30px;
+.dialog-footer {
   text-align: center;
+  padding: 15px 0 5px;
 }
 
-/* 表格展开详情样式 */
-.expand-container {
-  padding: 10px 40px;
-}
-
-.expand-row {
-  display: flex;
-  margin-bottom: 15px;
-}
-
-.expand-label {
-  width: 80px;
-  font-weight: bold;
-  color: #606266;
-}
-
-.expand-content {
-  flex: 1;
-  line-height: 1.6;
-  color: #303133;
-  white-space: pre-line;
+.close-btn {
+  width: 120px;
+  padding: 10px 0;
 }
 </style>
