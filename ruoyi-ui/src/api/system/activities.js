@@ -50,22 +50,24 @@ export function delActivities(activityId) {
   })
 }
 //报名容量变化
-export function signUpCapacity(activityId) {
+export function signUpCapacity(activityId,version) {
   return request({
     url: '/system/activities/signUpCapacity',
     method: 'post',
     data: {
-      activityId: activityId
+      activityId: activityId,
+      version: version
     }
   })
 }
 //取消报名容量变化
-export function cancelSignUpCapacity(activityId) {
+export function cancelSignUpCapacity(activityId,version) {
   return request({
     url: '/system/activities/cancelSignUpCapacity',
     method: 'post',
     data: {
-      activityId: activityId
+      activityId: activityId,
+      version: version
     }
   })
 }

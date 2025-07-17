@@ -124,10 +124,10 @@
             <if test="notes != null">notes = #{notes},</if>
             <if test="status != null">status = #{status},</if>
             <if test="activityTotalCapacity != null">activity_total_capacity = #{activityTotalCapacity},</if>
-#             version = version + 1,
+             version = version + 1,
         </trim>
         where activity_id = #{activityId}
-#         and version = #{version}
+         and version = #{version}
     </update>
     <update id="updateActivity2" parameterType="Activities">
         update activities

@@ -35,6 +35,11 @@
           <el-option label="活动已结束" value="已结束" />
         </el-select>
       </el-form-item>
+      <el-form-item  prop="onlyAvailable">
+        <el-checkbox v-model="queryParams.onlyAvailable" @change="handleOnlyAvailableChange">
+          只显示可报名活动
+        </el-checkbox>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -82,7 +87,7 @@
       </el-table-column>
 
 
-      <el-table-column label="活动容量剩余情况" align="center">
+      <el-table-column label="报名人数" align="center">
         <template #default="scope">
           {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
         </template>
@@ -253,6 +258,7 @@
 import { listActivities, signUpActivity, cancelSignUp,signUpCapacity,cancelSignUpCapacity } from "@/api/system/activities";
 import {addBooking, deleteBookings, deleteBookingsByActivityAndStudent,updateBooking,listBookings2,checkBookingSimple} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
+import activitiesList from "core-js/internals/array-iteration";
 
 export default {
   name: "Activities",
@@ -272,7 +278,7 @@ export default {
         organizer: null,
         status: null,
         bookingId: null,
-
+        onlyAvailable: false,
       }
     };
   },
@@ -286,27 +292,40 @@ export default {
       try {
         // 1. 获取活动列表
         const response = await listActivities(this.queryParams);
-        this.activitiesList = response.rows.map(activity => ({
+        let activityList = response.rows.map(activity => ({
           ...activity,
-          isBooked: false // 提前让 isBooked 成为响应式属性
+          isBooked: false
         }));
 
         this.total = response.total;
 
-        // 2. 并行检查所有活动的报名状态
-        const checkPromises = this.activitiesList.map(activity =>
-         checkBookingSimple(activity.activityId, this.$store.state.user.id).then(res => {
-           activity.isBooked = res.data.isBooked;
-         })
+        // 2. 查询每个活动是否已报名
+        const checkPromises = activityList.map(activity =>
+          checkBookingSimple(activity.activityId, this.$store.state.user.id).then(res => {
+            activity.isBooked = res.data.isBooked;
+          })
         );
-
         await Promise.all(checkPromises);
+
+        // ✅ 3. 若勾选了只显示可报名活动，进行筛选：
+        if (this.queryParams.onlyAvailable) {
+          activityList = activityList.filter(activity => {
+            const notBooked = !activity.isBooked;
+            const hasCapacity = activity.activityCapacity > 0;
+            const isOngoing = this.getActivityStatusText(activity) === "报名进行中";
+            return notBooked && hasCapacity && isOngoing;
+          });
+        }
+
+        this.activitiesList = activityList;
+
       } catch (error) {
         console.error("获取数据失败:", error);
       } finally {
         this.loading = false;
       }
     },
+
 
     /** 处理搜索 */
     handleQuery() {
@@ -411,30 +430,37 @@ export default {
       this.currentActivity = Object.assign({}, row);
       this.detailVisible = true;
     },
+    /**
+     * 只查看
+     */
+    handleOnlyAvailableChange() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    }
+    ,
+      // 报名成功时
+        handleSignUp(row) {
+          this.$confirm("确定要报名吗？", "确认", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          }).then(() => {
+            signUpCapacity(row.activityId,row.version)
+              .then(() => {
+                this.$message.success("报名成功！");
+                row.isBooked = true;  // 手动更新状态
+                return addBooking({
+                  activityId: row.activityId,
+                  studentId: this.$store.state.user.id
+                });
+              })
+              .then(() => this.getList())
+              .catch(error => {
+                this.$message.error(error.msg || "报名失败,请刷新界面重试");
+              });
+          });
+        },
 
-    /** 报名活动 */
-   // 报名成功时
-   handleSignUp(row) {
-     this.$confirm("确定要报名吗？", "确认", {
-       confirmButtonText: "确定",
-       cancelButtonText: "取消",
-       type: "warning"
-     }).then(() => {
-       signUpCapacity(row.activityId)
-         .then(() => {
-           this.$message.success("报名成功！");
-           row.isBooked = true;  // 手动更新状态
-           return addBooking({
-             activityId: row.activityId,
-             studentId: this.$store.state.user.id
-           });
-         })
-         .then(() => this.getList())
-         .catch(error => {
-           this.$message.error(error.msg || "报名失败");
-         });
-     });
-   },
 
    // 取消报名时
    handleCancel(row) {
@@ -443,7 +469,7 @@ export default {
        cancelButtonText: "取消",
        type: "warning"
      }).then(() => {
-       cancelSignUpCapacity(row.activityId)
+       cancelSignUpCapacity(row.activityId,row.version)
          .then(() => {
            this.$message.info("已取消报名");
            row.isBooked = false;  // 手动更新状态

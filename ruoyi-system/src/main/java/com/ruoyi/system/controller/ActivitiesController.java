@@ -127,14 +127,16 @@ public class ActivitiesController extends BaseController {
     @PostMapping("/signUpCapacity")
     public AjaxResult signUpCapacity(@RequestBody Map<String, Integer> params) {
         Integer activityId = params.get("activityId");
-        int result = activityService.decreaseCapacity(activityId);
+        Integer version = params.get("version"); // 获取请求体中的 version
+        int result = activityService.decreaseCapacity(activityId,version);
         return result > 0 ? AjaxResult.success("报名成功") : AjaxResult.error("报名失败");
     }
 
     @PostMapping("/cancelSignUpCapacity")
     public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Integer> params) {
         Integer activityId = params.get("activityId");
-        int result = activityService.increaseCapacity(activityId);
+        Integer version = params.get("version");
+        int result = activityService.increaseCapacity(activityId,version);
         return result > 0 ? AjaxResult.success("取消报名成功") : AjaxResult.error("取消报名失败");
     }
 }

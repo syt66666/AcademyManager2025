@@ -140,12 +140,12 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      * 修改活动容量
      */
     @Override
-    public int increaseCapacity(Integer activityId) {
+    public int increaseCapacity(Integer activityId,Integer version) {
         Activities activity = activitiesMapper.selectActivityById(activityId);
         if (activity == null) {
             throw new ServiceException("活动不存在！");
         }
-        int result = activitiesMapper.increaseCapacity(activityId, activity.getVersion());
+        int result = activitiesMapper.increaseCapacity(activityId, version);
         if (result == 0) {
             throw new ServiceException("数据出现错误，请刷新重试！");
         }
@@ -153,12 +153,12 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     }
 
     @Override
-    public int decreaseCapacity(Integer activityId) {
+    public int decreaseCapacity(Integer activityId,Integer version) {
         Activities activity = activitiesMapper.selectActivityById(activityId);
         if (activity == null) {
             throw new ServiceException("活动不存在！");
         }
-        int result = activitiesMapper.decreaseCapacity(activityId, activity.getVersion());
+        int result = activitiesMapper.decreaseCapacity(activityId, version);
         if (result == 0) {
             throw new ServiceException("数据出现错误，请刷新重试！");
         }
