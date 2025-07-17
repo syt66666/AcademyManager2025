@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.ActivitySubscriptionMapper">
+
+    <resultMap type="ActivitySubscription" id="ActivitySubscriptionResult">
+        <result property="subscriptionId"    column="subscription_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="activityId"    column="activity_id"    />
+        <result property="subscribedAt"    column="subscribed_at"    />
+        <result property="unsubscribedAt"    column="unsubscribed_at"    />
+    </resultMap>
+
+    <sql id="selectActivitySubscriptionVo">
+        select subscription_id, student_id, activity_id, subscribed_at, unsubscribed_at from activity_subscription
+    </sql>
+
+    <select id="selectActivitySubscriptionList" parameterType="ActivitySubscription" resultMap="ActivitySubscriptionResult">
+        <include refid="selectActivitySubscriptionVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="activityId != null "> and activity_id = #{activityId}</if>
+            <if test="subscribedAt != null "> and subscribed_at = #{subscribedAt}</if>
+            <if test="unsubscribedAt != null "> and unsubscribed_at = #{unsubscribedAt}</if>
+        </where>
+    </select>
+
+    <select id="selectActivitySubscriptionBySubscriptionId" parameterType="Long" resultMap="ActivitySubscriptionResult">
+        <include refid="selectActivitySubscriptionVo"/>
+        where subscription_id = #{subscriptionId}
+    </select>
+
+    <insert id="insertActivitySubscription" parameterType="ActivitySubscription" useGeneratedKeys="true" keyProperty="subscriptionId">
+        insert into activity_subscription
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="activityId != null">activity_id,</if>
+            <if test="subscribedAt != null">subscribed_at,</if>
+            <if test="unsubscribedAt != null">unsubscribed_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="activityId != null">#{activityId},</if>
+            <if test="subscribedAt != null">#{subscribedAt},</if>
+            <if test="unsubscribedAt != null">#{unsubscribedAt},</if>
+        </trim>
+    </insert>
+
+    <update id="updateActivitySubscription" parameterType="ActivitySubscription">
+        update activity_subscription
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="activityId != null">activity_id = #{activityId},</if>
+            <if test="subscribedAt != null">subscribed_at = #{subscribedAt},</if>
+            <if test="unsubscribedAt != null">unsubscribed_at = #{unsubscribedAt},</if>
+        </trim>
+        where subscription_id = #{subscriptionId}
+    </update>
+
+    <delete id="deleteActivitySubscriptionBySubscriptionId" parameterType="Long">
+        delete from activity_subscription where subscription_id = #{subscriptionId}
+    </delete>
+
+    <delete id="deleteActivitySubscriptionBySubscriptionIds" parameterType="String">
+        delete from activity_subscription where subscription_id in
+        <foreach item="subscriptionId" collection="array" open="(" separator="," close=")">
+            #{subscriptionId}
+        </foreach>
+    </delete>
+</mapper>
