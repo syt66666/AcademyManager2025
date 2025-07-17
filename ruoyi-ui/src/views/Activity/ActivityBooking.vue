@@ -301,7 +301,7 @@ export default {
 
         // 2. 查询每个活动是否已报名
         const checkPromises = activityList.map(activity =>
-          checkBookingSimple(activity.activityId, this.$store.state.user.id).then(res => {
+          checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
             activity.isBooked = res.data.isBooked;
           })
         );
@@ -451,7 +451,7 @@ export default {
                 row.isBooked = true;  // 手动更新状态
                 return addBooking({
                   activityId: row.activityId,
-                  studentId: this.$store.state.user.id
+                  studentId: this.$store.state.user.name
                 });
               })
               .then(() => this.getList())
@@ -475,7 +475,7 @@ export default {
            row.isBooked = false;  // 手动更新状态
            return deleteBookingsByActivityAndStudent(
              row.activityId,
-             this.$store.state.user.id
+             this.$store.state.user.name
            );
          })
          .then(() => this.getList())
