@@ -26,36 +26,43 @@
             <i class="el-icon-star-on"></i>
             <span>我的订阅</span>
           </div>
-          <div v-if="subscribedActivities.length === 0" class="empty-subscription">
-            <i class="el-icon-info"></i>
-            <p>暂无订阅活动</p>
+          <div class="subscription-container">
+            <div v-if="subscribedActivities.length === 0" class="empty-subscription">
+              <i class="el-icon-info"></i>
+              <p>暂无订阅活动</p>
+            </div>
+            <el-scrollbar class="subscription-scroll">
+              <el-timeline v-if="subscribedActivities.length > 0">
+                <el-timeline-item
+                  v-for="activity in subscribedActivities"
+                  :key="activity.subscriptionId"
+                  :timestamp="formatDate(activity.startTime)"
+                  placement="top"
+                >
+                  <el-card shadow="hover" class="activity-card">
+                    <h4 class="activity-title">{{ activity.activityName }}</h4>
+                    <div class="activity-info">
+                      <div><i class="el-icon-time"></i> {{ formatDate(activity.startTime) }} -
+                        {{ formatDate(activity.endTime) }}
+                      </div>
+                      <div><i class="el-icon-tickets"></i> {{ formatDate(activity.activityStart) }} -
+                        {{ formatDate(activity.activityDeadline) }}
+                      </div>
+                    </div>
+                    <div class="activity-actions">
+                      <el-tag type="success" size="mini" class="tag-subscribed">已订阅</el-tag>
+                      <el-button
+                        size="mini"
+                        class="unsubscribe-btn"
+                        @click="unsubscribe(activity.subscriptionId)"
+                      >取消订阅
+                      </el-button>
+                    </div>
+                  </el-card>
+                </el-timeline-item>
+              </el-timeline>
+            </el-scrollbar>
           </div>
-          <el-scrollbar class="subscription-scroll">
-            <el-timeline v-if="subscribedActivities.length > 0">
-              <el-timeline-item
-                v-for="activity in subscribedActivities"
-                :key="activity.subscriptionId"
-                :timestamp="formatDate(activity.startTime)"
-                placement="top"
-              >
-                <el-card shadow="hover" class="activity-card">
-                  <h4 class="activity-title">{{ activity.activityName }}</h4>
-                  <div class="activity-info">
-                    <div><i class="el-icon-time"></i> {{ formatDate(activity.startTime) }} - {{ formatDate(activity.endTime) }}</div>
-                    <div><i class="el-icon-tickets"></i> {{ formatDate(activity.activityStart) }} - {{ formatDate(activity.activityDeadline) }}</div>
-                  </div>
-                  <div class="activity-actions">
-                    <el-tag type="success" size="mini" class="tag-subscribed">已订阅</el-tag>
-                    <el-button
-                      size="mini"
-                      class="unsubscribe-btn"
-                      @click="unsubscribe(activity.subscriptionId)"
-                    >取消订阅</el-button>
-                  </div>
-                </el-card>
-              </el-timeline-item>
-            </el-timeline>
-          </el-scrollbar>
         </el-card>
       </el-col>
 
@@ -109,7 +116,8 @@
             <el-table-column label="报名时间" width="200">
               <template slot-scope="{ row }">
                 <div class="time-range">
-                  <i class="el-icon-time"></i> {{ formatDate(row.activityStart) }} 至 {{ formatDate(row.activityDeadline) }}
+                  <i class="el-icon-time"></i> {{ formatDate(row.activityStart) }} 至
+                  {{ formatDate(row.activityDeadline) }}
                 </div>
               </template>
             </el-table-column>
@@ -255,7 +263,7 @@ import Pagination from "@/components/Pagination";
 
 export default {
   name: "ActivityDashboard",
-  components: { Pagination },
+  components: {Pagination},
   data() {
     return {
       calendarDate: new Date(),
@@ -396,7 +404,7 @@ export default {
         });
       }
 
-      addSubscription({ studentId, activityId })
+      addSubscription({studentId, activityId})
         .then(response => {
           if (response.code === 200) {
             this.$message.success("订阅成功");
@@ -503,9 +511,56 @@ export default {
 </script>
 
 <style scoped>
+/* 修改订阅区域样式 */
+.subscribed-card {
+  .expanded-subscription {
+    min-height: 250px; /* 最小高度保持 */
+  }
+
+  /* 新增：固定高度的容器 */
+  .subscription-container {
+    height: 180px; /* 固定高度 */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .subscription-scroll {
+    flex: 1; /* 占据剩余空间 */
+    overflow: hidden; /* 隐藏原生滚动条 */
+  }
+
+  /* 无订阅内容时的样式 */
+  .empty-subscription {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 0;
+    color: #909399;
+
+    i {
+      font-size: 40px;
+      margin-bottom: 10px;
+      color: #dcdfe6;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
+
+  .activity-card {
+    margin-bottom: 12px;
+    border-radius: 6px;
+    border: 1px solid #ebeef5;
+  }
+}
 /* 全局样式 */
 .app-container {
   padding: 20px;
+  margin-top: 50px;
   margin-left: 100px;
   background-color: #f5f7fa;
   min-height: calc(100vh - 50px);
