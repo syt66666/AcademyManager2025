@@ -1,36 +1,40 @@
 <template>
   <div class="app-container">
     <!-- 搜索区域 -->
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="80px" class="query-form">
+    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="auto" class="query-form">
       <div class="query-row">
-        <el-form-item label="活动名称" prop="activityName">
+        <el-form-item label="活动名称" prop="activityName" class="search-item">
           <el-input
             v-model="queryParams.activityName"
             placeholder="请输入活动名称"
             clearable
+            prefix-icon="el-icon-search"
             @keyup.enter.native="handleQuery"
+            class="search-input"
           />
         </el-form-item>
-        <el-form-item label="活动地点" prop="activityLocation">
-          <el-input
-            v-model="queryParams.activityLocation"
-            placeholder="请输入活动地点"
-            clearable
-            @keyup.enter.native="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="组织单位" prop="organizer">
+<!--        <el-form-item label="活动地点" prop="activityLocation" class="search-item">-->
+<!--          <el-input-->
+<!--            v-model="queryParams.activityLocation"-->
+<!--            placeholder="请输入活动地点"-->
+<!--            clearable-->
+<!--            prefix-icon="el-icon-location-outline"-->
+<!--            @keyup.enter.native="handleQuery"-->
+<!--            class="search-input"-->
+<!--          />-->
+<!--        </el-form-item>-->
+        <el-form-item label="组织单位" prop="organizer" class="search-item">
           <el-input
             v-model="queryParams.organizer"
             placeholder="请输入组织单位"
             clearable
+            prefix-icon="el-icon-office-building"
             @keyup.enter.native="handleQuery"
+            class="search-input"
           />
         </el-form-item>
-      </div>
-      <div class="query-row">
-        <el-form-item label="活动状态" prop="status">
-          <el-select v-model="queryParams.status" clearable class="status-select">
+        <el-form-item label="活动状态" prop="status" class="search-item">
+          <el-select v-model="queryParams.status" clearable class="status-select" placeholder="全部状态">
             <el-option label="报名未开始" value="未开始"/>
             <el-option label="报名进行中" value="可报名"/>
             <el-option label="报名已截止" value="已截止"/>
@@ -38,14 +42,16 @@
             <el-option label="活动已结束" value="已结束"/>
           </el-select>
         </el-form-item>
-        <el-form-item>
+        <el-form-item class="search-item">
           <el-checkbox v-model="queryParams.onlyAvailable" @change="handleOnlyAvailableChange">
-            只显示可报名活动
+            <span class="checkbox-label">只显示可报名活动</span>
           </el-checkbox>
         </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        <el-form-item class="search-item">
+          <el-button-group class="action-buttons">
+            <el-button type="primary" icon="el-icon-search" @click="handleQuery" class="search-button">搜索</el-button>
+            <el-button icon="el-icon-refresh" @click="resetQuery" class="refresh-button">重置</el-button>
+          </el-button-group>
         </el-form-item>
       </div>
     </el-form>
@@ -90,15 +96,22 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="报名人数" align="center" width="80">
+      <el-table-column label="报名人数" align="center" width="100">
         <template #default="scope">
-          <span :class="{
-            'capacity-high': (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity > 0.8,
-            'capacity-medium': (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity > 0.5 && (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity <= 0.8,
-            'capacity-low': (scope.row.activityTotalCapacity - scope.row.activityCapacity) / scope.row.activityTotalCapacity <= 0.5
-          }">
-            {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
-          </span>
+          <div class="participants">
+            <el-progress
+              :percentage="calculateCapacityPercentage(scope.row)"
+              :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+              :show-text="false"
+              :stroke-width="10"
+              class="progress-bar"
+            />
+            <div class="count">
+                <span :class="getCapacityClass(scope.row)">
+                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                </span>
+            </div>
+          </div>
         </template>
       </el-table-column>
 
@@ -124,16 +137,27 @@
               class="action-button detail-button"
             >详情</el-button>
 
-            <!-- 报名/取消按钮 -->
+            <!-- 报名按钮 - 三种状态 -->
             <el-button
               v-if="showSignUpButton(scope.row)"
               size="mini"
               type="text"
               icon="el-icon-check"
               @click="handleSignUp(scope.row)"
-              class="action-button signup-button"
-            >报名</el-button>
+              :disabled="isSignUpDisabled(scope.row)"
+              :class="[
+          'action-button',
+          'signup-button',
+          {
+            'disabled-button': isSignUpDisabled(scope.row),
+            'full-button': isCapacityFull(scope.row) && isSignUpAllowed(scope.row)
+          }
+        ]"
+            >
+              {{ getSignUpButtonText(scope.row) }}
+            </el-button>
 
+            <!-- 取消按钮 -->
             <el-button
               v-if="showCancelButton(scope.row)"
               size="mini"
@@ -235,19 +259,22 @@
         </div>
       </div>
 
+      <!-- 底部按钮 -->
       <div slot="footer" class="dialog-footer">
         <el-button @click="detailVisible = false" class="close-btn">关闭</el-button>
         <el-button
           v-if="showSignUpButton(currentActivity)"
           type="success"
-          icon="el-icon-check"
+          icon="el-icon-circle-check"
           @click="handleSignUp(currentActivity)"
+          class="action-button"
         >立即报名</el-button>
         <el-button
           v-if="showCancelButton(currentActivity)"
           type="danger"
-          icon="el-icon-close"
+          icon="el-icon-circle-close"
           @click="handleCancel(currentActivity)"
+          class="action-button"
         >取消报名</el-button>
       </div>
     </el-dialog>
@@ -285,6 +312,50 @@ export default {
     this.getList();
   },
   methods: {
+    /** 判断报名按钮是否禁用 */
+    isSignUpDisabled(row) {
+      // 如果容量已满或活动状态不允许报名，则禁用按钮
+      return this.isCapacityFull(row) || !this.isSignUpAllowed(row);
+    },
+
+    /** 检查容量是否已满 */
+    isCapacityFull(row) {
+      return row.activityCapacity <= 0;
+    },
+
+    /** 检查活动状态是否允许报名 */
+    isSignUpAllowed(row) {
+      return this.getActivityStatusText(row) === "报名进行中";
+    },
+
+    /** 获取报名按钮文本 */
+    getSignUpButtonText(row) {
+      if (this.isSignUpAllowed(row) && this.isCapacityFull(row)) {
+        return "已满";
+      }
+      return "报名";
+    },
+    /** 新增方法：计算容量百分比 */
+    calculateCapacityPercentage(row) {
+      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
+      const used = row.activityTotalCapacity - row.activityCapacity;
+      return Math.round((used / row.activityTotalCapacity) * 100);
+    },
+
+    /** 新增方法：获取进度条颜色 */
+    getProgressColor(percentage) {
+      if (percentage >= 80) return '#f87171';
+      if (percentage >= 50) return '#fbbf24';
+      return '#4ade80';
+    },
+
+    /** 新增方法：获取容量文字样式类 */
+    getCapacityClass(row) {
+      const percentage = this.calculateCapacityPercentage(row);
+      if (percentage >= 80) return 'capacity-high';
+      if (percentage >= 50) return 'capacity-medium';
+      return 'capacity-low';
+    },
     /** 查询活动列表和预约列表 */
     async getList() {
       this.loading = true;
@@ -409,7 +480,7 @@ export default {
 
     /** 是否显示报名按钮 */
     showSignUpButton(row) {
-      return this.getSignStatusText(row) === "可报名";
+      return this.getSignStatusText(row) !== "已报名";
     },
 
     /** 是否显示取消按钮 */
@@ -474,6 +545,94 @@ export default {
 </script>
 
 <style scoped>
+/* 禁用状态按钮样式 */
+.disabled-button {
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+/* 已满状态按钮样式 */
+.full-button {
+  color: #F56C6C !important;
+  background-color: rgba(245, 108, 108, 0.1) !important;
+}
+
+/* 不可报名状态按钮样式 */
+.disabled-button.signup-button:not(.full-button) {
+  color: #909399 !important;
+  background-color: rgba(144, 147, 153, 0.1) !important;
+}
+/* 查询表单 - 紧凑布局 */
+.query-form {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  border: 1px solid #ebeef5;
+}
+
+.query-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-item {
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+.search-input {
+  transition: all 0.3s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+}
+
+.status-select {
+  min-width: 140px;
+}
+
+.checkbox-label {
+  font-size: 14px;
+  color: #606266;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.search-button {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border: none;
+  padding: 9px 18px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(64, 158, 255, 0.4);
+}
+
+.refresh-button {
+  background-color: #f0f2f5;
+  border: none;
+  padding: 9px 18px;
+  color: #606266;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.refresh-button:hover {
+  background-color: #e4e7ed;
+  color: #333;
+}
 /* 全局样式 */
 .app-container {
   margin-left: 100px;
