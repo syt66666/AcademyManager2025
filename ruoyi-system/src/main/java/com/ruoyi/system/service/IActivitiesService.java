@@ -57,8 +57,8 @@ public interface IActivitiesService {
     /**
      * 在活动表中更新容量
      */
-    int increaseCapacity(Integer activityId);
-    int decreaseCapacity(Integer activityId);
+    int increaseCapacity(Integer activityId,Integer version);
+    int decreaseCapacity(Integer activityId,Integer version);
 
     int updateActivity2(Activities activity);
 }

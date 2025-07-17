@@ -438,28 +438,29 @@ export default {
       this.getList();
     }
     ,
-     // 报名成功时
-       handleSignUp(row) {
-         this.$confirm("确定要报名吗？", "确认", {
-           confirmButtonText: "确定",
-           cancelButtonText: "取消",
-           type: "warning"
-         }).then(() => {
-           signUpCapacity(row.activityId)
-             .then(() => {
-               this.$message.success("报名成功！");
-               row.isBooked = true;  // 手动更新状态
-               return addBooking({
-                 activityId: row.activityId,
-                 studentId: this.$store.state.user.id
-               });
-             })
-             .then(() => this.getList())
-             .catch(error => {
-               this.$message.error(error.msg || "报名失败,请刷新界面重试");
-             });
-         });
-       },
+      // 报名成功时
+        handleSignUp(row) {
+          this.$confirm("确定要报名吗？", "确认", {
+            confirmButtonText: "确定",
+            cancelButtonText: "取消",
+            type: "warning"
+          }).then(() => {
+            signUpCapacity(row.activityId,row.version)
+              .then(() => {
+                this.$message.success("报名成功！");
+                row.isBooked = true;  // 手动更新状态
+                return addBooking({
+                  activityId: row.activityId,
+                  studentId: this.$store.state.user.id
+                });
+              })
+              .then(() => this.getList())
+              .catch(error => {
+                this.$message.error(error.msg || "报名失败,请刷新界面重试");
+              });
+          });
+        },
+
 
    // 取消报名时
    handleCancel(row) {
@@ -468,7 +469,7 @@ export default {
        cancelButtonText: "取消",
        type: "warning"
      }).then(() => {
-       cancelSignUpCapacity(row.activityId)
+       cancelSignUpCapacity(row.activityId,row.version)
          .then(() => {
            this.$message.info("已取消报名");
            row.isBooked = false;  // 手动更新状态
