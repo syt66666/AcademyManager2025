@@ -10,19 +10,32 @@
         <result property="activityId"    column="activity_id"    />
         <result property="subscribedAt"    column="subscribed_at"    />
         <result property="unsubscribedAt"    column="unsubscribed_at"    />
+        <result property="activityName"        column="activity_name"        />
+        <result property="startTime"           column="start_time"           />
+        <result property="endTime"             column="end_time"             />
+        <result property="activityLocation"    column="activity_location"    />
+        <result property="activityCapacity"    column="activity_capacity"    />
+        <result property="activityStart"    column="activity_start"    />
+        <result property="activityDeadline"    column="activity_deadline"    />
+        <result property="activityDescription" column="activity_description" />
+        <result property="organizer"           column="organizer"            />
+        <result property="notes"               column="notes"                />
+        <result property="status"              column="status"               />
+        <result property="createdAt"           column="created_at"           />
+        <result property="activityTotalCapacity"    column="activity_total_capacity"    />
+        <result property="version"             column="version"/>
     </resultMap>
 
     <sql id="selectActivitySubscriptionVo">
-        select subscription_id, student_id, activity_id, subscribed_at, unsubscribed_at from activity_subscription
+        select * from activity_subscription a1
+        left join activities a2 on a1.activity_id = a2.activity_id
     </sql>
 
     <select id="selectActivitySubscriptionList" parameterType="ActivitySubscription" resultMap="ActivitySubscriptionResult">
         <include refid="selectActivitySubscriptionVo"/>
         <where>
             <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
-            <if test="activityId != null "> and activity_id = #{activityId}</if>
-            <if test="subscribedAt != null "> and subscribed_at = #{subscribedAt}</if>
-            <if test="unsubscribedAt != null "> and unsubscribed_at = #{unsubscribedAt}</if>
+            <if test="activityId != null "> and a1.activity_id = #{activityId}</if>
         </where>
     </select>
 

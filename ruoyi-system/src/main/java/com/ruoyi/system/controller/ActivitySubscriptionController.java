@@ -37,7 +37,7 @@ public class ActivitySubscriptionController extends BaseController
     /**
      * 查询用户活动订阅列表
      */
-    @PreAuthorize("@ss.hasPermi('system:subscription:list')")
+//    @PreAuthorize("@ss.hasPermi('system:subscription:list')")
     @GetMapping("/list")
     public TableDataInfo list(ActivitySubscription activitySubscription)
     {
@@ -49,7 +49,7 @@ public class ActivitySubscriptionController extends BaseController
     /**
      * 导出用户活动订阅列表
      */
-    @PreAuthorize("@ss.hasPermi('system:subscription:export')")
+//    @PreAuthorize("@ss.hasPermi('system:subscription:export')")
     @Log(title = "用户活动订阅", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, ActivitySubscription activitySubscription)
@@ -62,7 +62,7 @@ public class ActivitySubscriptionController extends BaseController
     /**
      * 获取用户活动订阅详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:subscription:query')")
+//    @PreAuthorize("@ss.hasPermi('system:subscription:query')")
     @GetMapping(value = "/{subscriptionId}")
     public AjaxResult getInfo(@PathVariable("subscriptionId") Long subscriptionId)
     {
@@ -72,7 +72,7 @@ public class ActivitySubscriptionController extends BaseController
     /**
      * 新增用户活动订阅
      */
-    @PreAuthorize("@ss.hasPermi('system:subscription:add')")
+//    @PreAuthorize("@ss.hasPermi('system:subscription:add')")
     @Log(title = "用户活动订阅", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody ActivitySubscription activitySubscription)
@@ -83,7 +83,7 @@ public class ActivitySubscriptionController extends BaseController
     /**
      * 修改用户活动订阅
      */
-    @PreAuthorize("@ss.hasPermi('system:subscription:edit')")
+//    @PreAuthorize("@ss.hasPermi('system:subscription:edit')")
     @Log(title = "用户活动订阅", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody ActivitySubscription activitySubscription)
@@ -94,7 +94,7 @@ public class ActivitySubscriptionController extends BaseController
     /**
      * 删除用户活动订阅
      */
-    @PreAuthorize("@ss.hasPermi('system:subscription:remove')")
+//    @PreAuthorize("@ss.hasPermi('system:subscription:remove')")
     @Log(title = "用户活动订阅", businessType = BusinessType.DELETE)
     @DeleteMapping("/{subscriptionIds}")
     public AjaxResult remove(@PathVariable Long[] subscriptionIds)

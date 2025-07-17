@@ -19,7 +19,7 @@
           </el-calendar>
         </el-card>
 
-        <!-- 已订阅活动 - 更多空间 -->
+        <!-- 已订阅活动 -->
         <el-card class="subscribed-card expanded-subscription">
           <div slot="header">
             <span>我的订阅</span>
@@ -30,18 +30,19 @@
           <el-timeline v-else>
             <el-timeline-item
               v-for="activity in subscribedActivities"
-              :key="activity.activityId"
+              :key="activity.subscriptionId"
               :timestamp="formatDate(activity.startTime)"
               placement="top"
             >
               <el-card shadow="hover">
                 <h4>{{ activity.activityName }}</h4>
-                <p>{{ activity.activityDescription }}</p>
+                <p>活动时间：{{ formatDate(activity.startTime) }} 至 {{ formatDate(activity.endTime) }}</p>
+                <p>报名时间：{{ formatDate(activity.activityStart) }} 至 {{ formatDate(activity.activityDeadline) }}</p>
                 <el-tag type="success" size="mini">已订阅</el-tag>
                 <el-button
                   size="mini"
                   class="unsubscribe-btn"
-                  @click="unsubscribe(activity.activityId)"
+                  @click="unsubscribe(activity.subscriptionId)"
                 >取消订阅</el-button>
               </el-card>
             </el-timeline-item>
@@ -98,7 +99,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="100">
+            <el-table-column label="操作" width="150">
               <template slot-scope="{ row }">
                 <el-button
                   v-if="!row.subscribed"
@@ -204,6 +205,11 @@
 
 <script>
 import { listActivities } from "@/api/system/activities";
+import {
+  listSubscription,
+  addSubscription,
+  delSubscription
+} from "@/api/system/subscription";
 import Pagination from "@/components/Pagination";
 
 export default {
@@ -286,6 +292,9 @@ export default {
               status: this.calculateStatus(activity, now)
             };
           });
+
+          // 更新订阅状态
+          this.updateSubscriptionStatus();
         } else {
           this.$message.error("获取活动列表失败: " + response.msg);
         }
@@ -308,55 +317,68 @@ export default {
       return activity.status || '未开始';
     },
 
+    // 获取已订阅活动
     fetchSubscribed() {
-      const subscriptions = JSON.parse(localStorage.getItem('activitySubscriptions') || '[]');
+      const studentId = this.$store.state.user.name; // 从Vuex获取当前用户学号
 
-      this.subscribedActivities = this.activityList
-        .filter(a => subscriptions.includes(a.activityId))
-        .map(activity => {
-          return {
-            activityId: activity.activityId,
-            activityName: activity.activityName,
-            activityDescription: activity.activityDescription,
-            startTime: activity.startTime
-          };
-        });
-    },
-
-    subscribeActivity(id) {
-      const subscriptions = JSON.parse(localStorage.getItem('activitySubscriptions') || '[]');
-
-      if (!subscriptions.includes(id)) {
-        subscriptions.push(id);
-        localStorage.setItem('activitySubscriptions', JSON.stringify(subscriptions));
-
-        const activity = this.activityList.find(a => a.activityId === id);
-        if (activity) {
-          activity.subscribed = true;
-          this.subscribedActivities = [...this.subscribedActivities, {
-            activityId: activity.activityId,
-            activityName: activity.activityName,
-            activityDescription: activity.activityDescription,
-            startTime: activity.startTime
-          }];
-
-          this.$message.success("订阅成功");
+      listSubscription({ studentId }).then(response => {
+        if (response.code === 200) {
+          this.subscribedActivities = response.rows;
+          console.log("已订阅活动:", this.subscribedActivities);
+          // 更新活动列表中的订阅状态
+          this.updateSubscriptionStatus();
         }
-      } else {
-        this.$message.warning("您已订阅此活动");
-      }
+      }).catch(error => {
+        console.error("获取订阅活动失败:", error);
+      });
     },
 
-    unsubscribe(id) {
-      let subscriptions = JSON.parse(localStorage.getItem('activitySubscriptions') || '[]');
-      subscriptions = subscriptions.filter(subId => subId !== id);
-      localStorage.setItem('activitySubscriptions', JSON.stringify(subscriptions));
+    // 更新活动列表中的订阅状态
+    updateSubscriptionStatus() {
+      this.activityList.forEach(activity => {
+        // 检查活动是否在订阅列表中
+        const subscribed = this.subscribedActivities.some(
+          sub => sub.activityId === activity.activityId
+        );
+        activity.subscribed = subscribed;
+      });
+    },
 
-      this.subscribedActivities = this.subscribedActivities.filter(a => a.activityId !== id);
-      const activity = this.activityList.find(a => a.activityId === id);
-      if (activity) activity.subscribed = false;
+    // 订阅活动
+    subscribeActivity(activityId) {
+      const studentId = this.$store.state.user.name;
 
-      this.$message.success("已取消订阅");
+      addSubscription({
+        studentId,
+        activityId
+      }).then(response => {
+        if (response.code === 200) {
+          this.$message.success("订阅成功");
+          // 重新获取订阅列表
+          this.fetchSubscribed();
+        } else {
+          this.$message.error("订阅失败: " + response.msg);
+        }
+      }).catch(error => {
+        console.error("订阅活动异常:", error);
+        this.$message.error("订阅失败");
+      });
+    },
+
+    // 取消订阅
+    unsubscribe(subscriptionId) {
+      delSubscription(subscriptionId).then(response => {
+        if (response.code === 200) {
+          this.$message.success("已取消订阅");
+          // 重新获取订阅列表
+          this.fetchSubscribed();
+        } else {
+          this.$message.error("取消订阅失败: " + response.msg);
+        }
+      }).catch(error => {
+        console.error("取消订阅异常:", error);
+        this.$message.error("取消订阅失败");
+      });
     },
 
     // 查看详情 - 打开弹窗
@@ -367,7 +389,7 @@ export default {
 
     handleDateClick(dateData) {
       const date = dateData.day;
-      this.filterDateRange = [date, date];
+      this.filterDateRange = [date, null];
       this.fetchActivities();
     },
 

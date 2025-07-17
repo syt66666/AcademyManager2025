@@ -2,17 +2,13 @@ package com.ruoyi.system.domain;
 
 import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 
-/**
- * 用户活动订阅对象 activity_subscription
- *
- * @author ruoyi
- * @date 2025-07-17
- */
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class ActivitySubscription extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
@@ -37,61 +33,57 @@ public class ActivitySubscription extends BaseEntity
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "取消订阅时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date unsubscribedAt;
+    /** 活动名称 */
+    @Excel(name = "活动名称")
+    private String activityName;
 
-    public void setSubscriptionId(Long subscriptionId)
-    {
-        this.subscriptionId = subscriptionId;
-    }
+    /** 活动开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date startTime;
 
-    public Long getSubscriptionId()
-    {
-        return subscriptionId;
-    }
-    public void setStudentId(String studentId)
-    {
-        this.studentId = studentId;
-    }
+    /** 活动结束时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "结束时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date endTime;
 
-    public String getStudentId()
-    {
-        return studentId;
-    }
-    public void setActivityId(Long activityId)
-    {
-        this.activityId = activityId;
-    }
+    /** 活动地点 */
+    @Excel(name = "活动地点")
+    private String activityLocation;
 
-    public Long getActivityId()
-    {
-        return activityId;
-    }
-    public void setSubscribedAt(Date subscribedAt)
-    {
-        this.subscribedAt = subscribedAt;
-    }
+    /** 活动剩余容量 */
+    @Excel(name = "活动剩余容量")
+    private Integer activityCapacity;
+    /** 报名开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "报名开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date activityStart;
+    /** 报名截止时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "报名截止时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date activityDeadline;
 
-    public Date getSubscribedAt()
-    {
-        return subscribedAt;
-    }
-    public void setUnsubscribedAt(Date unsubscribedAt)
-    {
-        this.unsubscribedAt = unsubscribedAt;
-    }
+    /** 组织单位 */
+    @Excel(name = "组织单位")
+    private String organizer;
+    /** 活动描述 */
+    @Excel(name = "活动描述")
+    private String activityDescription;
+    /** 注意事项 */
+    @Excel(name = "注意事项")
+    private String notes;
 
-    public Date getUnsubscribedAt()
-    {
-        return unsubscribedAt;
-    }
+    /** 活动状态 */
+    private String status;
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-                .append("subscriptionId", getSubscriptionId())
-                .append("studentId", getStudentId())
-                .append("activityId", getActivityId())
-                .append("subscribedAt", getSubscribedAt())
-                .append("unsubscribedAt", getUnsubscribedAt())
-                .toString();
-    }
+    /** 创建时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date createdAt;
+
+    //乐观锁控制
+    private Integer version;
+
+    /** 活动容量 */
+    @Excel(name = "活动容量")
+    private Integer activityTotalCapacity;
 }

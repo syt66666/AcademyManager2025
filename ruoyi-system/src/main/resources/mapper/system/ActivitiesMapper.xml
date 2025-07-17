@@ -35,19 +35,23 @@
                 and activity_name like concat('%', #{activityName}, '%')
             </if>
             <!-- 修改时间筛选条件 -->
-            <if test="startTime != null and endTime != null">
-                and (
-                (start_time &gt;= #{startTime} and start_time &lt;= #{endTime}) OR
-                (end_time &gt;= #{startTime} and end_time &lt;= #{endTime}) OR
-                (start_time &lt;= #{startTime} and end_time &gt;= #{endTime})
-                )
-            </if>
-            <if test="startTime != null and endTime == null">
-                and start_time &gt;= #{startTime}
-            </if>
-            <if test="endTime != null and startTime == null">
-                and end_time &lt;= #{endTime}
-            </if>
+            <choose>
+                <when test="startTime != null and endTime != null">
+                    and (
+                    (start_time &gt;= #{startTime} and start_time &lt;= #{endTime}) OR
+                    (end_time &gt;= #{startTime} and end_time &lt;= #{endTime}) OR
+                    (start_time &lt;= #{startTime} and end_time &gt;= #{endTime})
+                    )
+                </when>
+                <when test="startTime != null">
+                    <!-- 使用范围查询提高性能 -->
+                    and start_time &gt;= #{startTime}
+                    and start_time &lt; DATE_ADD(#{startTime}, INTERVAL 1 DAY)
+                </when>
+                <when test="endTime != null">
+                    and end_time &lt;= #{endTime}
+                </when>
+            </choose>
             <if test="activityLocation != null  and activityLocation != ''">
                 and activity_location like concat('%', #{activityLocation}, '%')
             </if>
