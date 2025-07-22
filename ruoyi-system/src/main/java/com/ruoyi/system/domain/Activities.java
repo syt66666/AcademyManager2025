@@ -20,14 +20,24 @@ public class Activities extends BaseEntity {
     @Excel(name = "活动名称")
     private String activityName;
 
+    /** 报名开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "报名开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date activityStart;
+
+    /** 报名截止时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "报名截止时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date activityDeadline;
+
     /** 活动开始时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "活动开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date startTime;
 
     /** 活动结束时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "结束时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "活动结束时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
 
     /** 活动地点 */
@@ -35,23 +45,20 @@ public class Activities extends BaseEntity {
     private String activityLocation;
 
     /** 活动剩余容量 */
-    @Excel(name = "活动剩余容量")
     private Integer activityCapacity;
-    /** 报名开始时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "报名开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
-    private Date activityStart;
-    /** 报名截止时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "报名截止时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
-    private Date activityDeadline;
 
     /** 组织单位 */
     @Excel(name = "组织单位")
     private String organizer;
+
+    /** 活动容量 */
+    @Excel(name = "活动容量")
+    private Integer activityTotalCapacity;
+
     /** 活动描述 */
     @Excel(name = "活动描述")
     private String activityDescription;
+
     /** 注意事项 */
     @Excel(name = "注意事项")
     private String notes;
@@ -66,7 +73,4 @@ public class Activities extends BaseEntity {
     //乐观锁控制
     private Integer version;
 
-    /** 活动容量 */
-    @Excel(name = "活动容量")
-    private Integer activityTotalCapacity;
 }
