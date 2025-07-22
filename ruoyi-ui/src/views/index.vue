@@ -183,6 +183,7 @@
         </div>
 
         <!-- 报名按钮 -->
+        <!-- 报名按钮 -->
         <div class="signup-status">
           <el-button
             type="primary"
@@ -195,7 +196,7 @@
           </el-button>
 
           <el-alert
-            v-if="isSignedUp"
+            v-if="selectedActivity.isBooked"
             title="您已成功报名该活动"
             type="success"
             :closable="false"
@@ -217,7 +218,7 @@
 
 <script>
 import { listActivities, signUpCapacity } from "@/api/system/activities";
-import { addBooking } from "@/api/system/bookings";
+import {addBooking, checkBookingSimple} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 
 export default {
@@ -281,20 +282,10 @@ export default {
     showSignUpButton() {
       if (!this.selectedActivity) return false;
       return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
-        !this.isSignedUp &&
+        !this.selectedActivity.isBooked && // 使用活动对象的isBooked属性
         this.selectedActivity.activityCapacity > 0;
     },
 
-    // 显示报名表单的条件
-    showSignUpFormComputed() {
-      return this.showSignUpForm && this.showSignUpButton;
-    },
-
-    // 用户是否已报名
-    isSignedUp() {
-      // 实际应用中需要检查该用户是否已报名
-      return false; // 简化处理
-    }
   },
   created() {
     this.fetchActivities();
@@ -309,12 +300,13 @@ export default {
         if (response.code === 200) {
           this.activityList = response.rows;
 
-          // 计算活动状态
+          // 计算活动状态并初始化isBooked属性
           const now = new Date();
           this.activityList = this.activityList.map(activity => {
             return {
               ...activity,
-              status: this.calculateStatus(activity, now)
+              status: this.calculateStatus(activity, now),
+              isBooked: false // 初始化为未报名状态
             };
           });
         } else {
@@ -326,8 +318,13 @@ export default {
       } finally {
         this.loading = false;
       }
+      const checkPromises = this.activityList.map(activity =>
+        checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
+          activity.isBooked = res.data.isBooked;
+        })
+      );
+      await Promise.all(checkPromises);
     },
-
     // 计算活动状态
     calculateStatus(activity, now) {
       const startTime = new Date(activity.startTime);
@@ -364,12 +361,6 @@ export default {
       end.setHours(23, 59, 59, 999);
 
       return date >= start && date <= end;
-    },
-
-    // 处理事件点击
-    handleEventClick(activity) {
-      this.selectedActivity = { ...activity };
-      this.showSignUpForm = false;
     },
 
     // 格式化日期时间
@@ -515,13 +506,16 @@ export default {
         await addBooking({
           activityId: this.selectedActivity.activityId,
           studentId: this.$store.state.user.name,
-          // 移除signupData
         });
 
         // 3. 更新活动状态
-        const updatedActivity = { ...this.selectedActivity };
-        updatedActivity.activityCapacity = Math.max(updatedActivity.activityCapacity - 1, 0);
-        updatedActivity.version = updatedActivity.version + 1;
+        const updatedActivity = {
+          ...this.selectedActivity,
+          activityCapacity: Math.max(this.selectedActivity.activityCapacity - 1, 0),
+          version: this.selectedActivity.version + 1,
+          isBooked: true // 标记为已报名
+        };
+
         this.selectedActivity = updatedActivity;
 
         // 4. 更新活动列表
@@ -531,13 +525,17 @@ export default {
         }
 
         this.$message.success("报名成功！");
-        this.isSignedUp = true; // 更新报名状态
 
       } catch (error) {
         console.error("报名失败:", error);
         this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
       }
-    }
+    },
+
+    // 处理事件点击
+    handleEventClick(activity) {
+      this.selectedActivity = { ...activity };
+    },
   }
 };
 </script>
