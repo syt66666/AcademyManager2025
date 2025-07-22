@@ -34,7 +34,6 @@
             <if test="activityName != null  and activityName != ''">
                 and activity_name like concat('%', #{activityName}, '%')
             </if>
-            <!-- 修改时间筛选条件 -->
             <choose>
                 <when test="startTime != null and endTime != null">
                     and (
@@ -44,7 +43,6 @@
                     )
                 </when>
                 <when test="startTime != null">
-                    <!-- 使用范围查询提高性能 -->
                     and start_time &gt;= #{startTime}
                     and start_time &lt; DATE_ADD(#{startTime}, INTERVAL 1 DAY)
                 </when>

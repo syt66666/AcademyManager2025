@@ -54,6 +54,9 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      */
     @Override
     public int insertActivity(Activities activity) {
+        if(activity.getActivityCapacity()==null){
+            activity.setActivityCapacity(activity.getActivityTotalCapacity());
+        }
         return activitiesMapper.insertActivity(activity);
     }
 

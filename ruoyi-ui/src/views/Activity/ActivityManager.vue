@@ -19,14 +19,6 @@
             @keyup.enter.native="handleQuery"
           />
         </el-form-item>
-        <el-form-item label="组织单位" prop="organizer">
-          <el-input
-            v-model="queryParams.organizer"
-            placeholder="请输入组织单位"
-            clearable
-            @keyup.enter.native="handleQuery"
-          />
-        </el-form-item>
       </div>
       <div class="query-row">
         <el-form-item label="活动状态" prop="status">
@@ -98,7 +90,7 @@
             <div class="activity-name">{{ scope.row.activityName }}</div>
             <div class="activity-meta">
               <span><i class="el-icon-location-outline"></i> {{ scope.row.activityLocation }}</span>
-              <span><i class="el-icon-user"></i> {{ scope.row.activityTotalCapacity }}人</span>
+              <span><i class="el-icon-user"></i> {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}人</span>
               <span><i class="el-icon-office-building"></i> {{ scope.row.organizer }}</span>
             </div>
           </div>
@@ -236,7 +228,7 @@
         </el-form-item>
 
         <!-- 开始时间 -->
-        <el-form-item label="开始时间" prop="startTime">
+        <el-form-item label="活动开始时间" prop="startTime">
           <el-date-picker clearable
                           v-model="form.startTime"
                           type="datetime"
@@ -246,7 +238,7 @@
         </el-form-item>
 
         <!-- 结束时间 -->
-        <el-form-item label="结束时间" prop="endTime">
+        <el-form-item label="活动结束时间" prop="endTime">
           <el-date-picker clearable
                           v-model="form.endTime"
                           type="datetime"
@@ -264,9 +256,9 @@
             controls-position="right"
           />
         </el-form-item>
-        <el-form-item label="组织单位" prop="organizer">
-          <el-input v-model="form.organizer" placeholder="请输入组织单位"/>
-        </el-form-item>
+<!--        <el-form-item label="组织单位" prop="organizer">-->
+<!--          <el-input v-model="form.organizer" placeholder="请输入组织单位"/>-->
+<!--        </el-form-item>-->
         <el-form-item label="活动描述" prop="activityDescription">
           <el-input v-model="form.activityDescription" type="textarea" placeholder="请输入内容"/>
         </el-form-item>
@@ -373,6 +365,7 @@
 import {listActivities, getActivities, delActivities, addActivities, updateActivities2} from "@/api/system/activities";
 import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
+import {getNickName} from "@/api/system/student";
 
 export default {
   name: "Activities",
@@ -643,10 +636,14 @@ export default {
     /** 查询活动列表 */
     getList() {
       this.loading = true;
-      listActivities(this.queryParams).then(response => {
-        this.activitiesList = response.rows;
-        this.total = response.total;
-        this.loading = false;
+      getNickName().then(nickName => {
+        this.queryParams.organizer = nickName.msg; // 更新组织者
+        // 🔽 确保在 organizer 更新后调用列表接口
+        listActivities(this.queryParams).then(response => {
+          this.activitiesList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+        });
       });
     },
     // 取消按钮
@@ -709,26 +706,42 @@ export default {
       });
     },
     /** 提交按钮 */
-    submitForm() {
-      this.$refs["form"].validate(valid => {
-        if (valid) {
-          // 计算活动状态
-          this.calculateStatus();
-          if (this.form.activityId != null) {
-            updateActivities2(this.form).then(response => {
-              this.$modal.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
-            });
-          } else {
-            addActivities(this.form).then(response => {
-              this.$modal.msgSuccess("新增成功");
-              this.open = false;
-              this.getList();
-            });
-          }
+    /** 提交按钮 */
+    async submitForm() {
+      try {
+        // 1. 先确保获取组织者名称
+        const result = await getNickName(); // 等待异步操作完成
+        this.form.organizer = result.msg;
+
+        console.log("提交表单数据：", JSON.parse(JSON.stringify(this.form)));
+
+        // 2. 验证表单
+        const valid = await new Promise((resolve) => {
+          this.$refs.form.validate(resolve);
+        });
+
+        if (!valid) return; // 验证不通过则停止
+
+        // 3. 计算活动状态
+        this.calculateStatus();
+
+        // 4. 根据情况执行新增/修改
+        if (this.form.activityId != null) {
+          await updateActivities2(this.form);  // 等待更新完成
+          this.$modal.msgSuccess("修改成功");
+        } else {
+          await addActivities(this.form);  // 等待新增完成
+          this.$modal.msgSuccess("新增成功");
         }
-      });
+
+        // 5. 关闭弹窗并刷新列表
+        this.open = false;
+        await this.getList();  // 如果需要等待刷新完成
+
+      } catch (error) {
+        console.error("表单提交失败:", error);
+        this.$modal.msgError(`操作失败: ${error.message || '未知错误'}`);
+      }
     },
     /** 删除按钮操作 */
     handleDelete(row) {

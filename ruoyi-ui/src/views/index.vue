@@ -6,7 +6,10 @@
       <el-tab-pane label="日历视图" name="calendar">
         <el-calendar v-model="calendarDate" class="calendar-view">
           <template #dateCell="{ data }">
-            <div class="calendar-cell">
+            <div 
+              v-if="isCurrentMonth(data.day)" 
+              class="calendar-cell"
+            >
               <div class="date-header">
                 <span>{{ data.day.split('-')[2] }}</span>
               </div>
@@ -43,6 +46,9 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <div v-else class="calendar-cell empty-cell">
+              <!-- 非当月日期显示为空 -->
             </div>
           </template>
         </el-calendar>
@@ -209,7 +215,7 @@
 
       <div v-else class="no-activity-selected">
         <i class="el-icon-info"></i>
-        <p>请从左侧选择活动查看详情</p>
+        <p>请从上侧选择活动查看详情</p>
       </div>
     </div>
   </div>
@@ -290,6 +296,22 @@ export default {
   created() {
     this.fetchActivities();
     this.generateGanttDays();
+  },
+  mounted() {
+    this.hideEmptyCalendarRows();
+  },
+  watch: {
+    calendarDate() {
+      this.$nextTick(() => {
+        this.hideEmptyCalendarRows();
+      });
+    },
+    activeView(newView) {
+      // 当切换到甘特图视图时，清除选中的活动
+      if (newView === 'gantt') {
+        this.selectedActivity = null;
+      }
+    }
   },
   methods: {
     // 获取活动列表
@@ -536,6 +558,37 @@ export default {
     handleEventClick(activity) {
       this.selectedActivity = { ...activity };
     },
+
+    // 判断日期是否属于当前月份
+    isCurrentMonth(dateString) {
+      const date = new Date(dateString);
+      const currentDate = new Date(this.calendarDate);
+      
+      return date.getMonth() === currentDate.getMonth() && 
+             date.getFullYear() === currentDate.getFullYear();
+    },
+
+    // 隐藏多余的空行
+    hideEmptyCalendarRows() {
+      this.$nextTick(() => {
+        const calendarTable = document.querySelector('.calendar-view .el-calendar-table tbody');
+        if (calendarTable) {
+          const rows = calendarTable.querySelectorAll('tr');
+          rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const hasCurrentMonthCell = Array.from(cells).some(cell => 
+              cell.classList.contains('is-current-month')
+            );
+            
+            if (!hasCurrentMonthCell) {
+              row.classList.add('hide-row');
+            } else {
+              row.classList.remove('hide-row');
+            }
+          });
+        }
+      });
+    },
   }
 };
 </script>
@@ -545,118 +598,401 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  margin-left: 200px;
+  margin-left: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 0;
+  min-height: 100vh;
+  position: relative;
+  left: 200px;
+  width: calc(100% - 200px);
 }
 
 .view-tabs {
   flex: 1;
-  margin-bottom: 20px;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 0;
+  padding: 15px;
+  box-shadow: none;
+  border: none;
+
+  .el-tabs__header {
+    margin: 0 0 15px 0;
+  }
+
+  .el-tabs__nav-wrap {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  .el-tabs__nav {
+    border: none;
+  }
+
+  .el-tabs__item {
+    color: rgba(255, 255, 255, 0.8);
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    margin: 0 2px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &.is-active {
+      color: white;
+      background: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .el-tabs__active-bar {
+    display: none;
+  }
 }
 
 .calendar-view {
   height: 600px;
+  overflow: visible;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 0;
+  padding: 15px;
+  box-shadow: none;
 
   .calendar-cell {
-    height: 100px;
-    overflow-y: auto;
-    padding: 5px;
-    border: 1px solid #eee;
-    border-radius: 4px;
+    height: calc(100% - 2px);
+    width: calc(100% - 2px);
+    max-height: 98px;
+    overflow: hidden;
+    padding: 4px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    box-sizing: border-box;
+    position: relative;
+    margin: 1px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.95);
+    }
 
     .date-header {
       font-weight: bold;
-      margin-bottom: 5px;
+      margin: 0;
+      min-width: 28px;
+      text-align: center;
+      padding: 3px 6px;
+      line-height: 1.2;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px;
+      font-size: 11px;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
 
     .events-container {
-      max-height: 80px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
       overflow-y: auto;
+      max-height: calc(100% - 30px);
     }
 
     .calendar-event {
-      padding: 4px;
-      margin-bottom: 4px;
-      background-color: #f5f7fa;
-      border-radius: 4px;
-      font-size: 12px;
+      display: flex;
+      align-items: center;
+      padding: 2px 4px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 6px;
+      font-size: 10px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: all 0.3s ease;
+      min-width: 0;
+      height: 18px;
+      overflow: hidden;
+      color: white;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+        border-radius: 6px;
+        pointer-events: none;
+      }
 
       &:hover {
-        background-color: #e4e7ed;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
       }
 
       .event-summary {
         display: flex;
-        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        flex: 1;
+        z-index: 1;
 
         .event-name {
-          font-weight: bold;
+          font-weight: 600;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 50px;
+          font-size: 9px;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .event-org {
-          flex: 1;
-          margin: 0 5px;
-          color: #666;
-          white-space: nowrap;
+          color: rgba(255, 255, 255, 0.8);
           overflow: hidden;
           text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 35px;
+          font-size: 8px;
         }
 
         .detail-btn {
-          padding: 2px 5px;
-          font-size: 12px;
+          padding: 1px 4px;
+          font-size: 8px;
+          margin-left: auto;
+          background: rgba(255, 255, 255, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          color: white;
+          border-radius: 3px;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+          }
 
           &.disabled-btn {
-            color: #999;
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
             cursor: not-allowed;
+            border-color: rgba(255, 255, 255, 0.1);
           }
         }
       }
 
       .event-time-range {
-        font-size: 11px;
-        color: #409eff;
-        margin-top: 2px;
+        display: none; /* 隐藏时间范围以保持一行紧凑显示 */
       }
     }
   }
 }
 
-.gantt-container {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+/* 日历视图内显示"详细/已截止"按钮 */
+.calendar-view .detail-btn {
+  display: inline-block;
+}
+
+/* 美化今天的日期 */
+.calendar-view .el-calendar__day.is-today {
+  .calendar-cell {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
+    border: 2px solid #ffc107;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
+    
+    .date-header {
+      background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
+      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
+    }
+  }
+}
+
+/* 美化周末日期 */
+.calendar-view .el-calendar__day.is-weekend {
+  .calendar-cell {
+    background: linear-gradient(135deg, rgba(255, 87, 34, 0.05) 0%, rgba(255, 87, 34, 0.02) 100%);
+  }
+}
+
+/* 美化月份标题 */
+.calendar-view .el-calendar__header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+  padding: 15px 20px;
+  margin-bottom: 0;
+  
+  .el-calendar__title {
+    font-size: 18px;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .el-calendar__button-group {
+    .el-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+      }
+    }
+  }
+}
+
+/* 美化星期标题 */
+.calendar-view .el-calendar__body {
+  .el-calendar-table {
+    thead {
+      th {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        color: #495057;
+        font-weight: 600;
+        border: none;
+        padding: 12px 0;
+      }
+    }
+  }
+}
+
+/* 隐藏非当月日期的单元格 */
+.calendar-view .empty-cell {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* 隐藏非当月日期 */
+.calendar-view .el-calendar-table td:not(.is-current-month) {
+  display: none;
+}
+
+/* 确保当月日期正常显示 */
+.calendar-view .el-calendar-table td.is-current-month {
+  display: table-cell;
+}
+
+/* 隐藏多余的空行 - 通过JavaScript动态处理 */
+.calendar-view .el-calendar-table tbody tr.hide-row {
+  display: none !important;
+}
+
+/* 确保日历表格完整显示 */
+.calendar-view .el-calendar__body {
+  overflow: visible;
+  height: auto;
+  padding: 0;
+}
+
+.calendar-view .el-calendar-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.calendar-view .el-calendar-table tbody {
+  display: table-row-group;
+}
+
+.calendar-view .el-calendar-table tr {
+  display: table-row;
+  height: 100px;
+}
+
+.calendar-view .el-calendar-table td {
+  display: table-cell;
+  vertical-align: top;
+  height: 100px;
+  padding: 0;
+  position: relative;
+  box-sizing: border-box;
   overflow: hidden;
+}
+
+.calendar-view .el-calendar-table td .cell {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 确保日历单元格完全包含在表格单元格内 */
+.calendar-view .el-calendar-table td * {
+  box-sizing: border-box;
+}
+
+.gantt-container {
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  box-shadow: none;
 
   .gantt-header {
-    background: #f5f7fa;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
     .gantt-timeline {
       display: flex;
-      border-bottom: 1px solid #ebeef5;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 
       .gantt-date-cell {
         flex: 1;
         text-align: center;
-        padding: 8px 0;
-        border-right: 1px solid #ebeef5;
+        padding: 12px 0;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        transition: all 0.3s ease;
 
         &:last-child {
           border-right: none;
         }
 
         &.today {
-          background-color: #ecf5ff;
-          border-bottom: 2px solid #409eff;
+          background: rgba(255, 193, 7, 0.2);
+          border-bottom: 2px solid #ffc107;
+        }
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
         }
 
         .date {
           font-weight: bold;
           font-size: 18px;
+          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .weekday {
-          color: #606266;
+          color: rgba(255, 255, 255, 0.8);
           font-size: 12px;
         }
       }
@@ -666,29 +1002,35 @@ export default {
   .gantt-body {
     .gantt-activity {
       display: flex;
-      border-bottom: 1px solid #ebeef5;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
 
       &:last-child {
         border-bottom: none;
       }
 
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+
       .activity-label {
         width: 200px;
-        padding: 10px;
-        background: #f9fafc;
-        border-right: 1px solid #ebeef5;
+        padding: 12px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
         display: flex;
         flex-direction: column;
         justify-content: center;
 
         .activity-name {
-          font-weight: bold;
+          font-weight: 600;
           margin-bottom: 4px;
+          color: #495057;
         }
 
         .activity-org {
           font-size: 12px;
-          color: #666;
+          color: #6c757d;
         }
       }
 
@@ -698,7 +1040,7 @@ export default {
 
         .gantt-cell {
           flex: 1;
-          border-right: 1px solid #ebeef5;
+          border-right: 1px solid rgba(255, 255, 255, 0.2);
           position: relative;
 
           &:last-child {
@@ -710,41 +1052,59 @@ export default {
             display: flex;
             justify-content: center;
             align-items: center;
-            background-color: #ecf5ff;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
 
             &:hover {
-              background-color: #d9ecff;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+              background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
             }
 
             &.in-progress {
-              background-color: #f0f9eb;
+              background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
               border-top: 2px solid #67c23a;
               border-bottom: 2px solid #67c23a;
 
               &:hover {
-                background-color: #e1f3d8;
+                background: linear-gradient(135deg, #5daf34 0%, #7bc855 100%);
+                box-shadow: 0 4px 16px rgba(103, 194, 58, 0.4);
               }
             }
 
             &.not-started {
-              background-color: #f5f5f5;
-              opacity: 0.7;
+              background: linear-gradient(135deg, #909399 0%, #b1b3b8 100%);
+              opacity: 0.8;
 
               &:hover {
-                background-color: #e6e6e6;
+                background: linear-gradient(135deg, #82848a 0%, #a6a9ad 100%);
+                opacity: 1;
               }
             }
 
             .detail-btn {
-              font-size: 12px;
-              padding: 4px 8px;
+              font-size: 10px;
+              padding: 2px 6px;
+              background: rgba(255, 255, 255, 0.2);
+              border: 1px solid rgba(255, 255, 255, 0.3);
+              color: white;
+              border-radius: 3px;
+              transition: all 0.2s ease;
+
+              &:hover {
+                background: rgba(255, 255, 255, 0.3);
+                border-color: rgba(255, 255, 255, 0.5);
+              }
 
               &.disabled-btn {
-                color: #999;
+                background: rgba(255, 255, 255, 0.1);
+                color: rgba(255, 255, 255, 0.5);
                 cursor: not-allowed;
+                border-color: rgba(255, 255, 255, 0.1);
               }
             }
           }
@@ -755,54 +1115,104 @@ export default {
 }
 
 .detail-section {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
+  border: none;
+  border-radius: 0;
   padding: 20px;
-  background: #fff;
-  margin-top: 20px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  margin: 0;
+  box-shadow: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
 
   .activity-detail {
     .detail-header {
       display: flex;
       align-items: center;
       margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid rgba(102, 126, 234, 0.1);
 
       h2 {
         margin: 0 15px 0 0;
-        font-size: 22px;
+        font-size: 24px;
+        font-weight: 600;
+        color: #2c3e50;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      .status-tag {
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
     }
 
     .detail-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 15px;
+      gap: 20px;
 
       .detail-item {
         display: flex;
         align-items: center;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.7);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
 
         .detail-label {
-          font-weight: bold;
+          font-weight: 600;
           width: 120px;
-          color: #606266;
+          color: #495057;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          i {
+            color: #667eea;
+            font-size: 16px;
+          }
         }
 
         .detail-value {
           flex: 1;
+          font-weight: 500;
 
           .capacity-high {
-            color: #f56c6c;
-            font-weight: bold;
+            color: #e74c3c;
+            font-weight: 600;
+            background: rgba(231, 76, 60, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
           }
 
           .capacity-medium {
-            color: #e6a23c;
+            color: #f39c12;
+            font-weight: 600;
+            background: rgba(243, 156, 18, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
           }
 
           .capacity-low {
-            color: #67c23a;
+            color: #27ae60;
+            font-weight: 600;
+            background: rgba(39, 174, 96, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
           }
         }
       }
@@ -814,19 +1224,26 @@ export default {
       .section-title {
         display: flex;
         align-items: center;
-        color: #303133;
-        margin-bottom: 10px;
+        color: #2c3e50;
+        margin-bottom: 12px;
+        font-weight: 600;
+        font-size: 16px;
 
         i {
           margin-right: 8px;
+          color: #667eea;
+          font-size: 18px;
         }
       }
 
       .section-content {
         line-height: 1.6;
-        padding: 10px 15px;
-        background: #f9f9f9;
-        border-radius: 4px;
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #495057;
+        font-weight: 500;
       }
     }
 
@@ -844,18 +1261,38 @@ export default {
     }
 
     .signup-status {
-      margin-top: 30px;
+      margin-top: 24px;
       display: flex;
       justify-content: center;
 
       .signup-button {
         width: 200px;
-        height: 40px;
+        height: 44px;
         font-size: 16px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        border-radius: 22px;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+          background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        &:active {
+          transform: translateY(0);
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
       }
 
       .signup-alert {
         margin-top: 20px;
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       }
     }
   }
@@ -866,16 +1303,23 @@ export default {
     justify-content: center;
     align-items: center;
     height: 200px;
-    color: #909399;
+    color: #6c757d;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
 
     i {
       font-size: 50px;
       margin-bottom: 15px;
+      color: #667eea;
     }
 
     p {
       font-size: 16px;
+      font-weight: 500;
     }
   }
 }
 </style>
+
+
