@@ -147,7 +147,7 @@
               icon="el-icon-download"
               @click="handleExportStudents(scope.row)"
               class="action-button export-button">
-              导出
+              审核
             </el-button>
             <el-button
               size="mini"
@@ -258,7 +258,11 @@
           <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
         </el-form-item>
         <el-form-item label="活动容量" prop="activityTotalCapacity">
-          <el-input v-model="form.activityTotalCapacity" placeholder="请输入活动容量"/>
+          <el-input-number
+            v-model="form.activityTotalCapacity"
+            :min="1"
+            controls-position="right"
+          />
         </el-form-item>
         <el-form-item label="组织单位" prop="organizer">
           <el-input v-model="form.organizer" placeholder="请输入组织单位"/>
@@ -444,8 +448,8 @@ export default {
           {required: true, message: "活动地点不能为空", trigger: "blur"}
         ],
         activityTotalCapacity: [
-          {required: true, message: "活动容量不能为空", trigger: "blur"}
-        ],
+          { required: true, message: "活动容量不能为空", trigger: "blur" }
+          ],
         activityStart: [
           {required: true, message: "报名开始时间不能为空", trigger: "blur"}
         ],
