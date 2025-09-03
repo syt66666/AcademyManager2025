@@ -1320,6 +1320,67 @@ export default {
     }
   }
 }
+
+/* 细节优化：滚动条美化、过渡动画、响应式布局与可达性增强 */
+/* 滚动条美化（仅影响事件列表，不影响全局） */
+.calendar-view .events-container::-webkit-scrollbar {
+  width: 6px;
+}
+.calendar-view .events-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+.calendar-view .events-container::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.35);
+  border-radius: 6px;
+}
+.calendar-view .events-container:hover::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.55);
+}
+
+/* 入场动画，使元素更灵动 */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.calendar-view .calendar-event {
+  animation: fadeSlideIn 0.2s ease both;
+}
+.gantt-container .activity-bar {
+  animation: fadeSlideIn 0.25s ease both;
+}
+
+/* 焦点可达性优化（键盘导航时有清晰的可见焦点） */
+.calendar-view .detail-btn:focus,
+.gantt-container .detail-btn:focus,
+.detail-section .signup-button:focus {
+  outline: 2px solid rgba(102, 126, 234, 0.6);
+  outline-offset: 2px;
+}
+
+/* 标签激活时的轻微放大反馈 */
+.view-tabs .el-tabs__item.is-active {
+  transform: translateY(-1px);
+}
+
+/* 响应式：较小屏幕下信息布局更紧凑 */
+@media (max-width: 1200px) {
+  .detail-section .activity-detail .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .gantt-container .gantt-body .gantt-activity .activity-label {
+    width: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .view-tabs { padding: 10px; }
+  .calendar-view { padding: 10px; }
+  .detail-section { padding: 16px; }
+  .detail-section .activity-detail .detail-header h2 { font-size: 20px; }
+  .detail-section .activity-detail .signup-status .signup-button {
+    width: 100%;
+  }
+}
 </style>
 
 
