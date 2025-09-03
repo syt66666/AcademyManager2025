@@ -106,6 +106,20 @@
     <!-- 操作栏 -->
     <div class="button-bar">
       <el-button
+        type="primary"
+        icon="el-icon-check"
+        class="action-btn"
+        :disabled="selectedRows.length === 0"
+        @click="handleBatchAudit('通过')"
+      >批量通过</el-button>
+      <el-button
+        type="danger"
+        icon="el-icon-close"
+        class="action-btn"
+        :disabled="selectedRows.length === 0"
+        @click="handleBatchAudit('拒绝')"
+      >批量拒绝</el-button>
+      <el-button
         type="success"
         icon="el-icon-download"
         class="action-btn export-btn"
@@ -118,10 +132,14 @@
       <el-table
         v-loading="loading"
         :data="activityList"
+        ref="activityTable"
         class="enhanced-table"
         :header-cell-style="headerStyle"
         :row-class-name="tableRowClassName"
+        row-key="bookingId"
+        @selection-change="onSelectionChange"
       >
+        <el-table-column type="selection" width="55" align="center"/>
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
@@ -217,21 +235,11 @@
               <el-button-group class="action-buttons">
                 <el-button
                   size="mini"
-                  type="success"
-                  icon="el-icon-check"
-                  @click="handleAudit(scope.row, '通过')"
-                  :disabled="scope.row.status === '已通过'"
+                  type="primary"
+                  icon="el-icon-finished"
+                  @click="openAuditDialog(scope.row)"
                   circle
-                  class="action-button approve-button"
-                ></el-button>
-                <el-button
-                  size="mini"
-                  type="danger"
-                  icon="el-icon-close"
-                  @click="handleAudit(scope.row, '拒绝')"
-                  :disabled="scope.row.status === '未通过'"
-                  circle
-                  class="action-button reject-button"
+                  class="action-button"
                 ></el-button>
                 <el-button
                   size="mini"
@@ -255,6 +263,107 @@
         @pagination="getList"
       />
     </el-card>
+
+    <!-- 审核详情对话框 -->
+    <el-dialog
+      :visible.sync="auditDialogVisible"
+      :title="auditDialogTitle"
+      width="70%"
+      append-to-body
+    >
+      <div v-if="currentBooking" class="audit-content">
+        <div class="audit-header">
+          <div class="header-left">
+            <div class="title-row">
+              <span class="student-name">{{ currentBooking.studentName || '-' }}</span>
+              <el-tag size="mini" :type="getStatusTagType(currentBooking.status)">{{ currentBooking.status || '-' }}</el-tag>
+            </div>
+            <div class="sub-row">
+              <span>学号：{{ currentBooking.studentId || '-' }}</span>
+              <span class="divider">|</span>
+              <span>活动：{{ currentBooking.activityName || '-' }}</span>
+              <span class="divider">|</span>
+              <span>单位：{{ currentBooking.organizer || '-' }}</span>
+            </div>
+          </div>
+          <div class="header-right">
+            <el-button size="mini" @click="showAuditHistory(currentBooking)"><i class="el-icon-notebook-2"></i> 审核历史</el-button>
+          </div>
+        </div>
+
+        <el-skeleton :loading="auditLoading" animated :rows="3">
+          <template slot="template">
+            <el-skeleton-item variant="h3" style="width: 30%"></el-skeleton-item>
+            <el-skeleton-item variant="image" style="width: 100%; height: 120px; margin-top: 10px"/>
+            <el-skeleton-item variant="text" style="width: 50%; margin-top: 10px"/>
+          </template>
+          <template>
+            <div class="audit-grid">
+              <div class="section">
+                <h3>图片材料</h3>
+                <div v-if="auditImages && auditImages.length" class="proof-grid">
+                  <div
+                    v-for="(img, idx) in auditImages"
+                    :key="idx"
+                    class="proof-card"
+                  >
+                    <el-image
+                      :src="img"
+                      :preview-src-list="auditImages"
+                      fit="cover"
+                      class="proof-thumb"
+                    />
+                    <div class="proof-overlay">
+                      <el-button
+                        size="mini"
+                        circle
+                        icon="el-icon-view"
+                        @click.stop="handleProofPreview([auditImagePaths[idx]])"
+                      />
+                      <el-button
+                        size="mini"
+                        circle
+                        icon="el-icon-download"
+                        @click.stop="downloadSingleFile(img)"
+                      />
+                    </div>
+                  </div>
+                  <div class="proof-actions">
+                    <el-button size="small" icon="el-icon-view" @click="handleProofPreview(auditImagePaths)">预览全部</el-button>
+                    <el-button size="small" icon="el-icon-download" type="primary" @click="downloadProofFiles(auditImagePaths)">全部下载</el-button>
+                  </div>
+                </div>
+                <div v-else class="empty-tip">暂无图片材料</div>
+              </div>
+
+              <div class="section">
+                <h3>文档材料</h3>
+                <div v-if="auditSummary" class="doc-card">
+                  <div class="doc-left">
+                    <i :class="['file-icon', getDocIconClass(auditSummary)]"></i>
+                    <div class="file-meta">
+                      <div class="file-name" :title="getFileName(auditSummary)">{{ getFileName(auditSummary) }}</div>
+                      <el-tag size="mini" type="info">{{ getFileType(auditSummary).toUpperCase() }}</el-tag>
+                    </div>
+                  </div>
+                  <div class="doc-actions">
+                    <el-button size="mini" icon="el-icon-view" @click="handleSummaryCommand({ action: 'preview', file: auditSummary })">预览</el-button>
+                    <el-button size="mini" icon="el-icon-download" type="primary" @click="downloadSummaryFile(auditSummary)">下载</el-button>
+                  </div>
+                </div>
+                <div v-else class="empty-tip">暂无文档材料</div>
+              </div>
+            </div>
+          </template>
+        </el-skeleton>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="auditDialogVisible = false">取 消</el-button>
+        <el-button :loading="actionLoading" type="danger" @click="rejectCurrent">拒 绝</el-button>
+        <el-button :loading="actionLoading" type="primary" @click="approveCurrent">通 过</el-button>
+      </span>
+    </el-dialog>
 
     <!-- 图片预览对话框 -->
     <el-dialog :visible.sync="previewVisible" title="证明材料预览" width="60%" class="preview-dialog">
@@ -368,7 +477,7 @@
 </template>
 
 <script>
-import { listBookingsAudit, updateBooking,getAuditCount} from "@/api/system/bookings";
+import { listBookingsAudit, updateBooking, getAuditCount, getBooking } from "@/api/system/bookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
 import axios from "axios";
@@ -414,6 +523,17 @@ export default {
       // 表格数据
       activityList: [],
       total: 0,
+      selectedRows: [],
+
+      // 审核弹窗
+      auditDialogVisible: false,
+      auditDialogTitle: '审核材料',
+      currentBooking: null,
+      auditImagePaths: [],
+      auditImages: [],
+      auditSummary: null,
+      auditLoading: false,
+      actionLoading: false,
 
       // 查询参数
       queryParams: {
@@ -434,6 +554,154 @@ export default {
     this.fetchAuditCount();
   },
   methods: {
+    async openAuditDialog(row) {
+      this.currentBooking = row;
+      this.auditDialogTitle = `审核材料 - ${row.studentName || ''}`;
+      this.auditDialogVisible = true;
+      // 拉取材料详情（与学生端一致接口）
+      try {
+        this.auditLoading = true;
+        const res = await this.$options.methods._getBookingDetail.call(this, row.bookingId);
+        const data = res && res.data ? res.data : {};
+        this.auditImagePaths = Array.isArray(data.proof) ? data.proof : [];
+        this.auditImages = this.auditImagePaths.map(p => `${process.env.VUE_APP_BASE_API}${p}`);
+        this.auditSummary = data.summary || null;
+      } catch (e) {
+        this.auditImagePaths = [];
+        this.auditImages = [];
+        this.auditSummary = null;
+      } finally {
+        this.auditLoading = false;
+      }
+    },
+
+    async approveCurrent() {
+      if (!this.currentBooking) return;
+      const payload = {
+        bookingId: this.currentBooking.bookingId,
+        status: '已通过',
+        reviewComment: '系统审核通过'
+      };
+      try {
+        this.actionLoading = true;
+        await this.$options.methods._updateSingleBooking.call(this, payload);
+        this.$message.success('审核通过');
+        this.auditDialogVisible = false;
+        this.getList();
+        this.fetchAuditCount();
+      } catch (e) {
+        this.$message.error('审核通过失败');
+      } finally {
+        this.actionLoading = false;
+      }
+    },
+
+    async rejectCurrent() {
+      if (!this.currentBooking) return;
+      try {
+        const { value } = await this.$prompt('请输入拒绝原因', '审核拒绝', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: /.+/,
+          inputErrorMessage: '拒绝原因不能为空'
+        });
+        const payload = {
+          bookingId: this.currentBooking.bookingId,
+          status: '未通过',
+          reviewComment: value
+        };
+        this.actionLoading = true;
+        await this.$options.methods._updateSingleBooking.call(this, payload);
+        this.$message.success('已拒绝');
+        this.auditDialogVisible = false;
+        this.getList();
+        this.fetchAuditCount();
+      } catch (e) {
+        if (e !== 'cancel') this.$message.error('拒绝失败');
+      } finally {
+        this.actionLoading = false;
+      }
+    },
+
+    // 分离出获取详情，便于单测与复用
+    _getBookingDetail(bookingId) {
+      return getBooking(bookingId);
+    },
+    onSelectionChange(selection) {
+      this.selectedRows = selection || [];
+    },
+
+    async handleBatchAudit(actionLabel) {
+      const isApproved = actionLabel === '通过';
+      const statusMapping = {
+        '通过': '已通过',
+        '拒绝': '未通过'
+      };
+
+      if (!this.selectedRows || this.selectedRows.length === 0) {
+        this.$message.warning('请先选择需要审核的记录');
+        return;
+      }
+
+      try {
+        const promptOptions = {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消'
+        };
+        if (!isApproved) {
+          promptOptions.inputPattern = /.+/;
+          promptOptions.inputErrorMessage = '拒绝原因不能为空';
+          promptOptions.inputPlaceholder = '请输入拒绝原因';
+        }
+
+        const result = await this.$prompt(
+          isApproved ? '确认批量通过审核吗？' : '请输入拒绝原因（将应用于所有选中记录）',
+          '批量审核确认',
+          promptOptions
+        );
+
+        const reviewComment = isApproved ? '系统批量审核通过' : result.value;
+
+        const loading = this.$loading({
+          lock: true,
+          text: '正在批量处理...',
+          spinner: 'el-icon-loading'
+        });
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const row of this.selectedRows) {
+          const payload = {
+            bookingId: row.bookingId,
+            status: statusMapping[actionLabel],
+            reviewComment
+          };
+          try {
+            await this.$options.methods._updateSingleBooking.call(this, payload);
+            successCount++;
+          } catch (e) {
+            failCount++;
+          }
+        }
+
+        loading.close();
+        this.$message.success(`批量完成：成功 ${successCount} 条，失败 ${failCount} 条`);
+        this.getList();
+        this.fetchAuditCount();
+        this.$refs.activityTable && this.$refs.activityTable.clearSelection();
+      } catch (e) {
+        if (e !== 'cancel') {
+          this.$message.error('批量审核失败');
+        } else {
+          this.$message.info('已取消操作');
+        }
+      }
+    },
+
+    async _updateSingleBooking(payload) {
+      return updateBooking(payload);
+    },
     getStatusTagType(status) {
       const statusMap = {
         '已通过': 'success',
@@ -562,6 +830,19 @@ export default {
       } finally {
         loading.close();
       }
+    },
+
+    // 文档辅助：获取文件名
+    getFileName(filePath) {
+      if (!filePath) return '';
+      const parts = (filePath + '').split('/');
+      return parts[parts.length - 1];
+    },
+    // 文档辅助：获取图标类
+    getDocIconClass(filePath) {
+      const type = this.getFileType(filePath);
+      const map = { pdf: 'icon-pdf', docx: 'icon-doc', doc: 'icon-doc', other: 'icon-file' };
+      return map[type] || 'icon-file';
     },
 
     // 获取文件类型
@@ -966,5 +1247,133 @@ export default {
 .operation-info {
   font-size: 13px;
   color: #909399;
+}
+
+/* 审核对话框材料区域样式，保持与学生端一致 */
+.section {
+  margin-bottom: 30px;
+  padding: 15px;
+  background: #f9fafc;
+  border-radius: 8px;
+}
+.section h3 {
+  margin-bottom: 15px;
+  color: #409EFF;
+  font-weight: 600;
+}
+.audit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 1200px) {
+  .audit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.proof-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+.proof-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+  width: 150px;
+  height: 150px;
+  background: #fff;
+}
+.proof-thumb {
+  width: 100%;
+  height: 100%;
+}
+.proof-overlay {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  gap: 6px;
+}
+.proof-actions {
+  width: 100%;
+  margin-top: 10px;
+}
+.empty-tip {
+  color: #909399;
+}
+
+/* 审核弹窗头部信息区 */
+.audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px 0;
+}
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+.sub-row {
+  margin-top: 6px;
+  color: #606266;
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+}
+.divider {
+  color: #dcdfe6;
+}
+.student-name {
+  color: #409EFF;
+}
+.hover-zoom:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* 文档卡片样式 */
+.doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fff;
+}
+.doc-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+}
+.icon-pdf { background: #f56c6c; }
+.icon-doc { background: #409EFF; }
+.icon-file { background: #909399; }
+.file-meta .file-name {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-actions {
+  display: flex;
+  gap: 8px;
 }
 </style>
