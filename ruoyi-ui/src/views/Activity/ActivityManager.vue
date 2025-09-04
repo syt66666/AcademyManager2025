@@ -881,21 +881,28 @@ export default {
   background-color: #EBEEF5;
   margin: 0 10px;
 }
-   /* 整体布局优化 */
- .app-container {
-   margin-left: 100px;
-   padding: 20px;
-   background: #fff;
-   border-radius: 8px;
-   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
- }
+/* 整体布局 */
+.app-container {
+  margin-left: 100px;
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
 
 /* 查询表单 */
 .query-form {
-  padding: 15px;
-  background: #f5f7fa;
-  border-radius: 6px;
-  margin-bottom: 15px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.query-form:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .query-row {
@@ -915,7 +922,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 24px;
   padding: 0 5px;
 }
 
@@ -927,20 +934,42 @@ export default {
 /* 表格样式优化 */
 .enhanced-table {
   width: 100%;
-  margin-top: 15px;
-  border-radius: 6px;
-  border: 1px solid #ebeef5;
+  margin-top: 24px;
+  border-radius: 12px;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.enhanced-table th {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.enhanced-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
+}
+
+.enhanced-table tr:hover td {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
 .index-badge {
   display: inline-block;
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
   text-align: center;
   border-radius: 50%;
-  background-color: #f0f4ff;
-  color: #409EFF;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 
 .activity-info {
@@ -996,10 +1025,12 @@ export default {
 
 .activity-type-tag {
   font-weight: 500;
-  padding: 0 8px;
-  height: 24px;
-  line-height: 24px;
-  font-size: 12px;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 操作按钮 */

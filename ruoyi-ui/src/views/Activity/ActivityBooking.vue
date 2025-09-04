@@ -166,9 +166,7 @@
           </div>
         </template>
       </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
+          <!-- 分页 -->
     <pagination
       v-show="total>0"
       :total="total"
@@ -177,6 +175,9 @@
       @pagination="getList"
       class="custom-pagination"
     />
+    </el-table>
+
+
 
     <!-- 活动详情弹窗 -->
     <el-dialog
@@ -663,21 +664,28 @@ export default {
   background-color: #e4e7ed;
   color: #333;
 }
-/* 全局样式 */
+/* 整体布局 */
 .app-container {
   margin-left: 100px;
   padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
 /* 查询表单 */
 .query-form {
-  padding: 15px;
-  background: #f5f7fa;
-  border-radius: 6px;
-  margin-bottom: 15px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.query-form:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .query-row {
@@ -695,9 +703,43 @@ export default {
 /* 表格样式优化 */
 .enhanced-table {
   width: 100%;
-  margin-top: 15px;
-  border-radius: 6px;
-  border: 1px solid #ebeef5;
+  margin-top: 24px;
+  border-radius: 12px;
+  border: 1px solid #e4e7ed;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.enhanced-table th {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.enhanced-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
+}
+
+.enhanced-table tr:hover td {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+}
+
+/* 序号徽章 */
+.index-badge {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 
 .activity-name {

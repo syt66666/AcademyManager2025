@@ -170,61 +170,6 @@
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation"/>
         <el-table-column label="组织单位" align="center" prop="organizer"/>
-        <!-- 证明材料 -->
-        <el-table-column label="证明材料" width="160" align="center">
-          <template v-slot="scope">
-            <el-dropdown
-              trigger="click"
-              @command="handleProofCommand"
-              :disabled="!scope.row.proof || scope.row.proof.length === 0"
-            >
-              <el-button
-                type="primary"
-                size="mini"
-                plain
-                :disabled="!scope.row.proof || scope.row.proof.length === 0"
-              >
-                <i class="el-icon-picture"></i> 图片操作
-              </el-button>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item
-                  :command="{ action: 'preview', files: scope.row.proof }"
-                >预览</el-dropdown-item>
-                <el-dropdown-item
-                  :command="{ action: 'download', files: scope.row.proof }"
-                >下载</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </template>
-        </el-table-column>
-
-        <!-- 学生总结 -->
-        <el-table-column label="学生总结" width="160" align="center">
-          <template v-slot="scope">
-            <el-dropdown
-              trigger="click"
-              @command="handleSummaryCommand"
-              :disabled="!scope.row.summary"
-            >
-              <el-button
-                type="primary"
-                size="mini"
-                plain
-                :disabled="!scope.row.summary"
-              >
-                <i class="el-icon-document"></i> 文档操作
-              </el-button>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item
-                  :command="{ action: 'preview', file: scope.row.summary }"
-                >预览</el-dropdown-item>
-                <el-dropdown-item
-                  :command="{ action: 'download', file: scope.row.summary }"
-                >下载</el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </template>
-        </el-table-column>
 
         <el-table-column label="审核状态" prop="status" align="center" width="100">
           <template slot-scope="scope">
@@ -1049,27 +994,28 @@ export default {
 </script>
 
 <style scoped>
-/* 整体布局优化 */
+/* 整体布局 */
 .app-container {
   margin-left: 100px;
   padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
 /* 统计看板样式 */
 .status-card {
-  border-radius: 8px;
-  transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: 16px;
+  transition: all 0.3s ease;
   cursor: pointer;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
 }
 
 .status-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-6px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
 }
 
 .pending {
@@ -1133,27 +1079,43 @@ export default {
 
 /* 查询表单样式 */
 .custom-query-form {
-  padding: 15px;
-  background: #f5f7fa;
-  border-radius: 6px;
-  margin-bottom: 15px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.custom-query-form:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .custom-query-form .el-form-item {
   margin-bottom: 0;
-  margin-right: 15px;
+  margin-right: 20px;
 }
 
 /* 按钮区域 */
 .button-bar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 15px;
+  margin-bottom: 24px;
+  gap: 12px;
 }
 
 .action-btn {
-  border-radius: 4px;
-  padding: 8px 15px;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .export-btn {
@@ -1170,9 +1132,16 @@ export default {
 
 /* 表格容器 */
 .table-container {
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.table-container:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 /* 表格样式 */
@@ -1187,11 +1156,20 @@ export default {
 }
 
 .enhanced-table th {
-  background-color: #f5f7fa !important;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  color: #1e293b;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.enhanced-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
 }
 
 .enhanced-table .el-table__body tr:hover > td {
-  background-color: #f5f7fa !important;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
 .striped-row {
@@ -1200,14 +1178,16 @@ export default {
 
 .index-badge {
   display: inline-block;
-  width: 28px;
-  height: 28px;
-  line-height: 28px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
   text-align: center;
   border-radius: 50%;
-  background-color: #f0f4ff;
-  color: #409EFF;
-  font-weight: 500;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 
 /* 操作按钮 - 新增样式 */
@@ -1311,10 +1291,12 @@ export default {
 /* 活动类型标签样式 */
 .activity-type-tag {
   font-weight: 500;
-  padding: 0 8px;
-  height: 24px;
-  line-height: 24px;
-  font-size: 12px;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 审核对话框材料区域样式，保持与学生端一致 */

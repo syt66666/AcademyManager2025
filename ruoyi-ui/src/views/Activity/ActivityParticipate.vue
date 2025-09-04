@@ -1,7 +1,11 @@
 <template>
   <div class="app-container">
-    <!-- 搜索区域 - 美化 -->
+    <!-- 搜索区域 -->
     <div class="search-card">
+      <div class="card-header">
+        <i class="el-icon-search"></i>
+        <span>搜索条件</span>
+      </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
         <div class="search-row">
           <el-form-item label="活动名称" prop="activityName">
@@ -62,6 +66,11 @@
 
     <!-- 活动列表 -->
     <div class="table-card">
+      <div class="card-header">
+        <i class="el-icon-tickets"></i>
+        <span>我的活动记录</span>
+        <span class="record-count">共 {{ total }} 条记录</span>
+      </div>
       <el-table
         v-loading="loading"
         :data="activitiesList"
@@ -532,85 +541,139 @@ export default {
 </script>
 
 <style scoped>
-/* 全局样式 */
+/* 整体布局 */
 .app-container {
   margin-left: 100px;
   padding: 20px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+  background: #f5f7fa;
+  min-height: 100vh;
 }
 
-/* 搜索卡片样式 */
-.search-card {
-  padding: 20px;
+/* 统一卡片样式 */
+.search-card,
+.table-card {
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.search-card:hover,
+.table-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
   margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
 }
 
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
+
+/* 搜索表单 */
 .search-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 20px;
   align-items: center;
 }
 
 .search-input {
-  width: 200px;
+  min-width: 220px;
+  transition: all 0.3s ease;
 }
 
 .search-input:hover {
-  box-shadow: 0 2px 6px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
 }
 
-/* 表格卡片样式 */
-.table-card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+.search-actions {
+  margin-left: auto;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* 现代化表格 */
 .modern-table {
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #ebeef5;
+  border: 1px solid #e4e7ed;
 }
 
 .modern-table th {
-  background-color: #f5f7fa !important;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
   font-weight: 600;
-  color: #303133;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.modern-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
+}
+
+.modern-table tr:hover td {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
 /* 按钮样式 */
 .search-button {
   background: linear-gradient(135deg, #409EFF, #64b5ff);
   border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
   transition: all 0.3s;
 }
 
 .search-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 3px 8px rgba(64, 158, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
 }
 
 .refresh-button {
-  background-color: #f0f2f5;
+  background: #f0f2f5;
   border: none;
-  padding: 8px 15px;
+  padding: 10px 20px;
   color: #606266;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 500;
   transition: all 0.3s;
 }
 
 .refresh-button:hover {
-  background-color: #e4e7ed;
+  background: #e4e7ed;
   color: #333;
+  transform: translateY(-2px);
 }
 
 /* 材料提交按钮样式 */
@@ -649,12 +712,30 @@ export default {
   font-size: 12px;
 }
 
+/* 序号徽章 */
+.index-badge {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 活动类型标签 */
 .activity-type-tag {
   font-weight: 500;
-  padding: 0 8px;
-  height: 24px;
-  line-height: 24px;
-  font-size: 12px;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 扩展卡片 */
@@ -691,9 +772,35 @@ export default {
 
 /* 分页样式 */
 .custom-pagination {
-  padding: 15px 0 0;
-  display: flex;
-  justify-content: center;
+  margin-top: 24px;
+  text-align: center;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-input {
+    min-width: 100%;
+  }
+  
+  .search-actions {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .record-count {
+    margin-left: 0;
+  }
 }
 
 /* 上传对话框样式 */
