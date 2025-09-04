@@ -24,6 +24,7 @@
         <result property="activityId"     column="activity_id"     />
         <result property="activityName"   column="activity_name"   />
         <result property="activityLocation" column="activity_location" />
+        <result property="activityType"   column="activity_type"   />
         <result property="startTime"      column="start_time"       />
         <result property="endTime"       column="end_time"       />
         <result property="activityDescription" column="activity_description" />
@@ -50,6 +51,7 @@
         b.activity_id,
         a.activity_name,
         a.activity_location,
+        a.activity_type,
         a.start_time,
         a.end_time,
         a.activity_description,
@@ -96,6 +98,7 @@
             <if test="studentName != null">and b.student_name like concat('%', #{studentName}, '%')</if>
             <if test="activityId != null">and b.activity_id = #{activityId}</if>
             <if test="activityName != null">and a.activity_name like concat('%', #{activityName}, '%')</if>
+            <if test="activityType != null and activityType != ''">and a.activity_type = #{activityType}</if>
             <if test="status != null and status != ''">and b.status = #{status}</if>
             <if test="organizer != null and organizer != ''">and a.organizer like concat('%', #{organizer}, '%')</if>
         </where>
@@ -116,6 +119,7 @@
             <if test="studentName != null">and b.student_name like concat('%', #{studentName}, '%')</if>
             <if test="activityId != null">and b.activity_id = #{activityId}</if>
             <if test="activityName != null">and a.activity_name like concat('%', #{activityName}, '%')</if>
+            <if test="activityType != null and activityType != ''">and a.activity_type = #{activityType}</if>
             <if test="status != null and status != ''">and b.status = #{status}</if>
             <if test="organizer != null and organizer != ''">and a.organizer like concat('%', #{organizer}, '%')</if>
             and b.status != '未提交'

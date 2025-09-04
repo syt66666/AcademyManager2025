@@ -31,6 +31,16 @@
               class="search-input"
             />
           </el-form-item>
+          <el-form-item label="活动类型" prop="activityType" class="search-item">
+            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
+              <el-option 
+                v-for="type in availableActivityTypes" 
+                :key="type" 
+                :label="type" 
+                :value="type"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
               <el-button
@@ -68,6 +78,13 @@
           </template>
         </el-table-column>
         <el-table-column label="活动名称" align="center" prop="activityName" />
+        <el-table-column label="活动类型" align="center" prop="activityType" width="120">
+          <template slot-scope="scope">
+            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
+              {{ scope.row.activityType || '未分类' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
         <el-table-column label="开始时间" align="center" prop="startTime" >
@@ -233,6 +250,8 @@ export default {
       showSearch: true,
       total: 0,
       activitiesList: [],
+      // 可用的活动类型列表
+      availableActivityTypes: [],
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -241,7 +260,8 @@ export default {
         startTime: null,
         endTime: null,
         activityLocation: null,
-        organizer: null
+        organizer: null,
+        activityType: null
       },
     };
   },
@@ -249,6 +269,17 @@ export default {
     this.getList();
   },
   methods: {
+    getActivityTypeTagType(activityType) {
+      const map = {
+        '学术讲座': 'primary',   // 蓝色
+        '实践活动': 'success',   // 绿色
+        '文体活动': 'warning',   // 橙色
+        '志愿服务': 'info',      // 灰色
+        '竞赛活动': 'danger',    // 红色
+        '其他': ''               // 默认蓝色
+      }
+      return map[activityType] || 'info';
+    },
     // 获取文件的完整URL（用于回显）
     getFileFullUrl(fileName) {
       return process.env.VUE_APP_BASE_API  + fileName;
@@ -457,7 +488,32 @@ export default {
         this.activitiesList = response.rows;
         this.total = response.total;
         this.loading = false;
+        // 更新可用的活动类型列表
+        this.updateAvailableActivityTypes();
       });
+    },
+
+    /** 更新可用的活动类型列表 */
+    updateAvailableActivityTypes() {
+      const types = new Set();
+      this.activitiesList.forEach(item => {
+        if (item.activityType) {
+          types.add(item.activityType);
+        }
+      });
+      
+      // 如果没有活动类型数据，提供默认选项
+      if (types.size === 0) {
+        types.add('学术讲座');
+        types.add('实践活动');
+        types.add('文体活动');
+        types.add('志愿服务');
+        types.add('竞赛活动');
+        types.add('其他');
+      }
+      
+      // 转换为数组并排序
+      this.availableActivityTypes = Array.from(types).sort();
     },
 
     /** 搜索按钮操作 */
@@ -590,6 +646,14 @@ export default {
 
 .status-tag {
   padding: 5px 8px;
+  font-size: 12px;
+}
+
+.activity-type-tag {
+  font-weight: 500;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
   font-size: 12px;
 }
 

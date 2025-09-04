@@ -13,16 +13,6 @@
             class="search-input"
           />
         </el-form-item>
-<!--        <el-form-item label="活动地点" prop="activityLocation" class="search-item">-->
-<!--          <el-input-->
-<!--            v-model="queryParams.activityLocation"-->
-<!--            placeholder="请输入活动地点"-->
-<!--            clearable-->
-<!--            prefix-icon="el-icon-location-outline"-->
-<!--            @keyup.enter.native="handleQuery"-->
-<!--            class="search-input"-->
-<!--          />-->
-<!--        </el-form-item>-->
         <el-form-item label="组织单位" prop="organizer" class="search-item">
           <el-input
             v-model="queryParams.organizer"
@@ -33,6 +23,17 @@
             class="search-input"
           />
         </el-form-item>
+        <el-form-item label="活动类型" prop="activityType" class="search-item">
+          <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
+            <el-option 
+              v-for="type in availableActivityTypes" 
+              :key="type" 
+              :label="type" 
+              :value="type"
+            />
+          </el-select>
+        </el-form-item>
+
         <el-form-item label="活动状态" prop="status" class="search-item">
           <el-select v-model="queryParams.status" clearable class="status-select" placeholder="全部状态">
             <el-option label="报名未开始" value="未开始"/>
@@ -68,6 +69,11 @@
       <el-table-column label="活动名称" align="center" prop="activityName" width="180">
         <template slot-scope="scope">
           <div class="activity-name">{{ scope.row.activityName }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动类型" align="center" prop="activityType" width="180">
+        <template slot-scope="scope">
+          <div class="activity-type">{{ scope.row.activityType }}</div>
         </template>
       </el-table-column>
       <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
@@ -114,15 +120,6 @@
           </div>
         </template>
       </el-table-column>
-
-      <!-- 报名状态列 -->
-<!--      <el-table-column label="报名状态" align="center" width="120">-->
-<!--        <template slot-scope="scope">-->
-<!--          <el-tag :type="getSignStatusTag(scope.row)" effect="plain">-->
-<!--            {{ getSignStatusText(scope.row) }}-->
-<!--          </el-tag>-->
-<!--        </template>-->
-<!--      </el-table-column>-->
 
       <!-- 操作列 -->
       <el-table-column label="操作" align="center" fixed="right" width="150">
@@ -201,7 +198,12 @@
 
         <el-divider></el-divider>
 
+
         <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-location"></i> 活动类型：</div>
+            <div class="detail-value">{{ currentActivity.activityType }}</div>
+          </div>
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
             <div class="detail-value">{{ currentActivity.activityLocation }}</div>
@@ -261,7 +263,6 @@
 
       <!-- 底部按钮 -->
       <div slot="footer" class="dialog-footer">
-        <el-button @click="detailVisible = false" class="close-btn">关闭</el-button>
         <el-button
           v-if="showSignUpButton(currentActivity)"
           type="success"
@@ -295,6 +296,8 @@ export default {
       showSearch: true,
       total: 0,
       activitiesList: [],
+      // 可用的活动类型列表
+      availableActivityTypes: [],
       detailVisible: false,
       currentActivity: {},
       queryParams: {
@@ -303,6 +306,7 @@ export default {
         activityName: null,
         activityLocation: null,
         organizer: null,
+        activityType: null,
         status: null,
         onlyAvailable: false,
       }
@@ -388,6 +392,9 @@ export default {
         }
 
         this.activitiesList = activityList;
+        
+        // 更新可用的活动类型列表
+        this.updateAvailableActivityTypes();
 
       } catch (error) {
         console.error("获取数据失败:", error);
@@ -452,6 +459,29 @@ export default {
         case "活动已结束": return "";
         default: return "danger";
       }
+    },
+
+    /** 更新可用的活动类型列表 */
+    updateAvailableActivityTypes() {
+      const types = new Set();
+      this.activitiesList.forEach(item => {
+        if (item.activityType) {
+          types.add(item.activityType);
+        }
+      });
+      
+      // 如果没有活动类型数据，提供默认选项
+      if (types.size === 0) {
+        types.add('学术讲座');
+        types.add('实践活动');
+        types.add('文体活动');
+        types.add('志愿服务');
+        types.add('竞赛活动');
+        types.add('其他');
+      }
+      
+      // 转换为数组并排序
+      this.availableActivityTypes = Array.from(types).sort();
     },
 
     /** 获取报名状态文本 */

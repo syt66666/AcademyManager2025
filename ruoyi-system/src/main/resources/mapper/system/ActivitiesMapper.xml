@@ -16,6 +16,7 @@
         <result property="activityDescription" column="activity_description" />
         <result property="organizer"           column="organizer"            />
         <result property="notes"               column="notes"                />
+        <result property="activityType"        column="activity_type"        />
         <result property="status"              column="status"               />
         <result property="createdAt"           column="created_at"           />
         <result property="activityTotalCapacity"    column="activity_total_capacity"    />
@@ -24,7 +25,7 @@
 
     <sql id="selectActivitiesVo">
         select activity_id, activity_name, start_time, end_time, activity_location, activity_capacity,activity_start,
-               activity_deadline, activity_description, organizer, notes, status, created_at, version,activity_total_capacity
+               activity_deadline, activity_description, organizer, notes, activity_type, status, created_at, version,activity_total_capacity
         from activities
     </sql>
 
@@ -55,6 +56,9 @@
             </if>
             <if test="organizer != null  and organizer != ''">
                 and organizer like concat('%', #{organizer}, '%')
+            </if>
+            <if test="activityType != null  and activityType != ''">
+                and activity_type = #{activityType}
             </if>
             <if test="status != null  and status != ''">
                 and status = #{status}
@@ -90,6 +94,7 @@
             <if test="activityDescription != null">activity_description,</if>
             <if test="organizer != null">organizer,</if>
             <if test="notes != null">notes,</if>
+            <if test="activityType != null">activity_type,</if>
             <if test="status != null">status,</if>
             <if test="version != null">version,</if>
             <if test="activityTotalCapacity != null">activity_total_capacity,</if>
@@ -105,6 +110,7 @@
             <if test="activityDescription != null">#{activityDescription},</if>
             <if test="organizer != null">#{organizer},</if>
             <if test="notes != null">#{notes},</if>
+            <if test="activityType != null">#{activityType},</if>
             <if test="status != null">#{status},</if>
             <if test="version != null">#{version},</if>
             <if test="activityTotalCapacity != null">#{activityTotalCapacity},</if>
@@ -124,6 +130,7 @@
             <if test="activityDescription != null">activity_description = #{activityDescription},</if>
             <if test="organizer != null">organizer = #{organizer},</if>
             <if test="notes != null">notes = #{notes},</if>
+            <if test="activityType != null">activity_type = #{activityType},</if>
             <if test="status != null">status = #{status},</if>
             <if test="activityTotalCapacity != null">activity_total_capacity = #{activityTotalCapacity},</if>
              version = version + 1,
@@ -144,6 +151,7 @@
             <if test="activityDescription != null">activity_description = #{activityDescription},</if>
             <if test="organizer != null">organizer = #{organizer},</if>
             <if test="notes != null">notes = #{notes},</if>
+            <if test="activityType != null">activity_type = #{activityType},</if>
             <if test="status != null">status = #{status},</if>
             <if test="activityTotalCapacity != null">activity_total_capacity = #{activityTotalCapacity},</if>
         </trim>

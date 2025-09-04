@@ -63,6 +63,10 @@ public class Activities extends BaseEntity {
     @Excel(name = "注意事项")
     private String notes;
 
+    /** 活动类型 */
+    @Excel(name = "活动类型")
+    private String activityType;
+
     /** 活动状态 */
     private String status;
 

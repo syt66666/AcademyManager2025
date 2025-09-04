@@ -21,6 +21,16 @@
         </el-form-item>
       </div>
       <div class="query-row">
+        <el-form-item label="活动类型" prop="activityType">
+          <el-select v-model="queryParams.activityType" clearable class="activity-type-select">
+            <el-option 
+              v-for="type in availableActivityTypes" 
+              :key="type" 
+              :label="type" 
+              :value="type"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="活动状态" prop="status">
           <el-select v-model="queryParams.status" clearable class="status-select">
             <el-option label="未开始" value="未开始"/>
@@ -94,6 +104,14 @@
               <span><i class="el-icon-office-building"></i> {{ scope.row.organizer }}</span>
             </div>
           </div>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="活动类型" width="120" align="center">
+        <template slot-scope="scope">
+          <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
+            {{ scope.row.activityType || '未分类' }}
+          </el-tag>
         </template>
       </el-table-column>
 
@@ -249,6 +267,16 @@
         <el-form-item label="活动地点" prop="activityLocation">
           <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
         </el-form-item>
+        <el-form-item label="活动类型" prop="activityType">
+          <el-select v-model="form.activityType" placeholder="请选择活动类型" style="width: 100%">
+            <el-option 
+              v-for="type in availableActivityTypes" 
+              :key="type" 
+              :label="type" 
+              :value="type"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="活动容量" prop="activityTotalCapacity">
           <el-input-number
             v-model="form.activityTotalCapacity"
@@ -391,6 +419,8 @@ export default {
       total: 0,
       // 活动表格数据
       activitiesList: [],
+      // 可用的活动类型列表
+      availableActivityTypes: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -409,6 +439,7 @@ export default {
         activityStart:null,
         activityDeadline: null,
         activityDescription: null,
+        activityType: null,
         status: null,
         createdAt: null,
         organizer: null,
@@ -443,6 +474,9 @@ export default {
         activityTotalCapacity: [
           { required: true, message: "活动容量不能为空", trigger: "blur" }
           ],
+        activityType: [
+          { required: true, message: "活动类型不能为空", trigger: "change" }
+        ],
         activityStart: [
           {required: true, message: "报名开始时间不能为空", trigger: "blur"}
         ],
@@ -523,6 +557,17 @@ export default {
         '已结束': 'info'      // 灰色（表示活动已结束）
       }
       return map[status] || 'info'; // 默认使用灰色
+    },
+    getActivityTypeTagType(activityType) {
+      const map = {
+        '学术讲座': 'primary',   // 蓝色
+        '实践活动': 'success',   // 绿色
+        '文体活动': 'warning',   // 橙色
+        '志愿服务': 'info',      // 灰色
+        '竞赛活动': 'danger',    // 红色
+        '其他': ''               // 默认蓝色
+      }
+      return map[activityType] || 'info';
     },
     // 导出选课学生
     handleExportStudents() {
@@ -643,6 +688,8 @@ export default {
           this.activitiesList = response.rows;
           this.total = response.total;
           this.loading = false;
+          // 更新可用的活动类型列表
+          this.updateAvailableActivityTypes();
         });
       });
     },
@@ -664,6 +711,7 @@ export default {
         activityStart:null,
         activityDeadline: null,
         activityDescription: null,
+        activityType: null,
         status: null,
         createdAt: null,
         organizer: null,
@@ -760,6 +808,29 @@ export default {
       this.download('system/activities/export', {
         ...this.queryParams
       }, `activities_${new Date().getTime()}.xlsx`)
+    },
+
+    /** 更新可用的活动类型列表 */
+    updateAvailableActivityTypes() {
+      const types = new Set();
+      this.activitiesList.forEach(item => {
+        if (item.activityType) {
+          types.add(item.activityType);
+        }
+      });
+      
+      // 如果没有活动类型数据，提供默认选项
+      if (types.size === 0) {
+        types.add('学术讲座');
+        types.add('实践活动');
+        types.add('文体活动');
+        types.add('志愿服务');
+        types.add('竞赛活动');
+        types.add('其他');
+      }
+      
+      // 转换为数组并排序
+      this.availableActivityTypes = Array.from(types).sort();
     }
   },
   watch: {
@@ -921,6 +992,14 @@ export default {
   padding: 0 10px;
   height: 28px;
   line-height: 28px;
+}
+
+.activity-type-tag {
+  font-weight: 500;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 12px;
 }
 
 /* 操作按钮 */

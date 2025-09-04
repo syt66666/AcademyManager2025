@@ -38,6 +38,9 @@ public class BookingDTO {
     /** 活动地点 */
     @Excel(name = "活动地点")
     private String activityLocation;
+    /** 活动类型 */
+    @Excel(name = "活动类型")
+    private String activityType;
     /** 组织单位 */
     @Excel(name = "组织单位")
     private String organizer;
