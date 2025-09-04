@@ -107,22 +107,22 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="材料提交" align="center" class-name="small-padding fixed-width" width="120">
+        <el-table-column label="材料提交" align="center" width="120">
           <template slot-scope="scope">
             <el-button
               v-if="scope.row.status === '未提交'"
-              type="primary"
+              type="text"
               size="mini"
-              class="upload-button"
+              class="action-button upload-button"
               @click="openUploadDialog(scope.row)"
-            ><i class="el-icon-upload"></i> 提交</el-button>
+            >提交</el-button>
             <el-button
               v-if="scope.row.status === '未通过'"
-              type="warning"
+              type="text"
               size="mini"
-              class="reupload-button"
+              class="action-button reupload-button"
               @click="openUploadDialog(scope.row)"
-            ><i class="el-icon-refresh-left"></i> 重新提交</el-button>
+            >重新提交</el-button>
             <el-tag
               v-if="scope.row.status === '未审核'"
               type="warning"
@@ -676,35 +676,33 @@ export default {
   transform: translateY(-2px);
 }
 
-/* 材料提交按钮样式 */
-.upload-button {
-  background-color: #409EFF;
-  color: #fff;
-  border: none;
+/* 材料提交按钮样式 - 统一文字按钮风格 */
+.action-button {
   padding: 5px 8px;
-  border-radius: 4px;
   font-size: 12px;
-  transition: all 0.2s;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button {
+  color: #409EFF;
 }
 
 .upload-button:hover {
-  background-color: #64b5ff;
-  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
 .reupload-button {
-  background-color: #f39c12;
-  color: #fff;
-  border: none;
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  transition: all 0.2s;
+  color: #f39c12;
 }
 
 .reupload-button:hover {
-  background-color: #f4a726;
-  box-shadow: 0 2px 4px rgba(243, 156, 18, 0.3);
+  background-color: rgba(243, 156, 18, 0.1);
 }
 
 .status-tag {

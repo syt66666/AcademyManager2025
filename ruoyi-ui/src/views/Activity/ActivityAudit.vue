@@ -191,27 +191,23 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" align="center" width="150">
           <template slot-scope="scope">
-            <div class="action-container">
-              <el-button-group class="action-buttons">
-                <el-button
-                  size="mini"
-                  type="primary"
-                  icon="el-icon-finished"
-                  @click="openAuditDialog(scope.row)"
-                  circle
-                  class="action-button"
-                ></el-button>
-                <el-button
-                  size="mini"
-                  type="info"
-                  icon="el-icon-notebook-2"
-                  @click="showAuditHistory(scope.row)"
-                  circle
-                  class="action-button history-button"
-                ></el-button>
-              </el-button-group>
+            <div class="action-buttons">
+              <el-button
+                size="mini"
+                type="text"
+                @click="openAuditDialog(scope.row)"
+                class="action-button audit-button">
+                审核
+              </el-button>
+              <el-button
+                size="mini"
+                type="text"
+                @click="showAuditHistory(scope.row)"
+                class="action-button history-button">
+                历史
+              </el-button>
             </div>
           </template>
         </el-table-column>
@@ -1190,67 +1186,39 @@ export default {
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 
-/* 操作按钮 - 新增样式 */
-.action-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
+/* 操作按钮 - 统一文字按钮样式 */
 .action-buttons {
   display: flex;
   gap: 8px;
-}
-
-.action-button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
   justify-content: center;
 }
 
-/* 按钮禁用样式 */
-.action-button.is-disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
-.approve-button {
-  background: #f0f9eb;
-  border-color: #e1f3d8;
-  color: #67c23a;
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.approve-button:hover {
-  background: #e1f3d8;
-  border-color: #67c23a;
-  color: #67c23a;
+.audit-button {
+  color: #409EFF;
 }
 
-.reject-button {
-  background: #fef0f0;
-  border-color: #fde2e2;
-  color: #f56c6c;
-}
-
-.reject-button:hover {
-  background: #fde2e2;
-  border-color: #f56c6c;
-  color: #f56c6c;
+.audit-button:hover {
+  background-color: rgba(64, 158, 255, 0.1);
 }
 
 .history-button {
-  background: #f4f4f5;
-  border-color: #d3d4d6;
   color: #909399;
 }
 
 .history-button:hover {
-  background: #e9e9eb;
-  border-color: #909399;
-  color: #909399;
+  background-color: rgba(144, 147, 153, 0.1);
 }
 
 /* 对话框样式 */

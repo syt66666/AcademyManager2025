@@ -83,8 +83,15 @@
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </div>
 
-    <!-- 表格美化 -->
-    <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="enhanced-table">
+    <!-- 表格卡片 -->
+    <div class="table-card">
+      <div class="card-header">
+        <i class="el-icon-s-grid"></i>
+        <span>活动列表</span>
+      </div>
+      
+      <!-- 表格美化 -->
+      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="enhanced-table">
       <el-table-column type="selection" width="45" align="center"/>
       <el-table-column label="序号" width="70" align="center">
         <template v-slot="scope">
@@ -142,38 +149,38 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作">
+      <el-table-column label="操作" width="200">
         <template slot-scope="scope">
-          <el-button-group class="action-buttons">
+          <div class="action-buttons">
             <el-button
               size="mini"
-              icon="el-icon-user"
+              type="text"
               @click="handleViewStudents(scope.row)"
               class="action-button view-button">
               学生
             </el-button>
             <el-button
               size="mini"
-              icon="el-icon-download"
+              type="text"
               @click="handleExportStudents(scope.row)"
               class="action-button export-button">
-              审核
+              下载名单
             </el-button>
             <el-button
               size="mini"
-              icon="el-icon-edit"
+              type="text"
               @click="handleUpdate(scope.row)"
               class="action-button edit-button">
               编辑
             </el-button>
             <el-button
               size="mini"
-              icon="el-icon-delete"
+              type="text"
               @click="handleDelete(scope.row)"
               class="action-button delete-button">
               删除
             </el-button>
-          </el-button-group>
+          </div>
         </template>
       </el-table-column>
 
@@ -206,19 +213,25 @@
                 </div>
               </div>
             </div>
-          </div>
-        </template>
-      </el-table-column>
-    </el-table>
+                     </div>
+         </template>
+       </el-table-column>
+           </el-table>
 
-    <!-- 分页 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+      <!-- 分页组件 -->
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+        class="custom-pagination"
+      />
+    </div>
+
+
+
+
 
     <!-- 添加或修改活动对话框 -->
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
@@ -931,13 +944,45 @@ export default {
   gap: 8px;
 }
 
+/* 表格卡片样式 */
+.table-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  margin-top: 24px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  padding-bottom: 40px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 30px 24px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+  gap: 12px;
+}
+
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
 /* 表格样式优化 */
 .enhanced-table {
   width: 100%;
-  margin-top: 24px;
-  border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -1108,5 +1153,36 @@ export default {
 .student-dialog .booked_at {
   color: #909399;
   font-size: 13px;
+}
+
+/* 分页样式 */
+.custom-pagination {
+  display: flex;
+  justify-content: center !important;
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.custom-pagination /deep/ .el-pager li:hover {
+  border-color: #409EFF;
+  color: #409EFF;
+}
+
+
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .custom-pagination {
+    padding: 8px;
+    justify-content: center;
+  }
 }
 </style>

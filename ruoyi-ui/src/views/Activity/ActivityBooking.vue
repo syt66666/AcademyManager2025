@@ -58,125 +58,129 @@
     </el-form>
 
     <!-- 活动列表 -->
-    <el-table v-loading="loading" :data="activitiesList" style="width: 100%" class="enhanced-table">
-      <el-table-column label="序号" width="70" align="center">
-        <template v-slot="scope">
-          <span class="index-badge">
-            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-          </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动名称" align="center" prop="activityName" width="180">
-        <template slot-scope="scope">
-          <div class="activity-name">{{ scope.row.activityName }}</div>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动类型" align="center" prop="activityType" width="180">
-        <template slot-scope="scope">
-          <div class="activity-type">{{ scope.row.activityType }}</div>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
-      <el-table-column label="组织单位" align="center" prop="organizer" width="120"/>
-      <el-table-column label="报名时间" align="center" >
-        <template slot-scope="scope">
-          <div class="time-range">
-            <i class="el-icon-time"></i> {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动时间" align="center" >
-        <template slot-scope="scope">
-          <div class="time-range">
-            <i class="el-icon-date"></i> {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
-          </div>
-        </template>
-      </el-table-column>
-
-      <!-- 活动状态列 -->
-      <el-table-column label="活动状态" align="center" width="100">
-        <template slot-scope="scope">
-          <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
-            {{ getActivityStatusText(scope.row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-
-      <el-table-column label="报名人数" align="center" width="100">
-        <template #default="scope">
-          <div class="participants">
-            <el-progress
-              :percentage="calculateCapacityPercentage(scope.row)"
-              :color="getProgressColor(calculateCapacityPercentage(scope.row))"
-              :show-text="false"
-              :stroke-width="10"
-              class="progress-bar"
-            />
-            <div class="count">
-                <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
-                </span>
+    <div class="table-card">
+      <div class="card-header">
+        <i class="el-icon-tickets"></i>
+        <span>活动列表</span>
+        <span class="record-count">共 {{ total }} 条记录</span>
+      </div>
+      <el-table v-loading="loading" :data="activitiesList" style="width: 100%" class="enhanced-table">
+        <el-table-column label="序号" width="70" align="center">
+          <template v-slot="scope">
+            <span class="index-badge">
+              {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动名称" align="center" prop="activityName" width="180">
+          <template slot-scope="scope">
+            <div class="activity-name">{{ scope.row.activityName }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动类型" align="center" prop="activityType" width="180">
+          <template slot-scope="scope">
+            <div class="activity-type">{{ scope.row.activityType }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
+        <el-table-column label="组织单位" align="center" prop="organizer" width="120"/>
+        <el-table-column label="报名时间" align="center" >
+          <template slot-scope="scope">
+            <div class="time-range">
+              <i class="el-icon-time"></i> {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
             </div>
-          </div>
-        </template>
-      </el-table-column>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动时间" align="center" >
+          <template slot-scope="scope">
+            <div class="time-range">
+              <i class="el-icon-date"></i> {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
+            </div>
+          </template>
+        </el-table-column>
 
-      <!-- 操作列 -->
-      <el-table-column label="操作" align="center" fixed="right" width="150">
-        <template slot-scope="scope">
-          <div class="action-buttons">
-            <!-- 详情按钮 -->
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-view"
-              @click="handleDetail(scope.row)"
-              class="action-button detail-button"
-            >详情</el-button>
+        <!-- 活动状态列 -->
+        <el-table-column label="活动状态" align="center" width="100">
+          <template slot-scope="scope">
+            <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
+              {{ getActivityStatusText(scope.row) }}
+            </el-tag>
+          </template>
+        </el-table-column>
 
-            <!-- 报名按钮 - 三种状态 -->
-            <el-button
-              v-if="showSignUpButton(scope.row)"
-              size="mini"
-              type="text"
-              icon="el-icon-check"
-              @click="handleSignUp(scope.row)"
-              :disabled="isSignUpDisabled(scope.row)"
-              :class="[
-          'action-button',
-          'signup-button',
-          {
-            'disabled-button': isSignUpDisabled(scope.row),
-            'full-button': isCapacityFull(scope.row) && isSignUpAllowed(scope.row)
-          }
-        ]"
-            >
-              {{ getSignUpButtonText(scope.row) }}
-            </el-button>
+        <el-table-column label="报名人数" align="center" width="100">
+          <template #default="scope">
+            <div class="participants">
+              <el-progress
+                :percentage="calculateCapacityPercentage(scope.row)"
+                :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+                :show-text="false"
+                :stroke-width="10"
+                class="progress-bar"
+              />
+              <div class="count">
+                  <span :class="getCapacityClass(scope.row)">
+                    {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                  </span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
 
-            <!-- 取消按钮 -->
-            <el-button
-              v-if="showCancelButton(scope.row)"
-              size="mini"
-              type="text"
-              icon="el-icon-close"
-              @click="handleCancel(scope.row)"
-              class="action-button cancel-button"
-            >取消</el-button>
-          </div>
-        </template>
-      </el-table-column>
-          <!-- 分页 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-      class="custom-pagination"
-    />
-    </el-table>
+        <!-- 操作列 -->
+        <el-table-column label="操作" align="center" fixed="right" width="180">
+          <template slot-scope="scope">
+            <div class="action-buttons">
+              <!-- 详情按钮 -->
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleDetail(scope.row)"
+                class="action-button detail-button"
+              >详情</el-button>
 
+              <!-- 报名按钮 - 三种状态 -->
+              <el-button
+                v-if="showSignUpButton(scope.row)"
+                size="mini"
+                type="text"
+                @click="handleSignUp(scope.row)"
+                :disabled="isSignUpDisabled(scope.row)"
+                :class="[
+            'action-button',
+            'signup-button',
+            {
+              'disabled-button': isSignUpDisabled(scope.row),
+              'full-button': isCapacityFull(scope.row) && isSignUpAllowed(scope.row)
+            }
+          ]"
+              >
+                {{ getSignUpButtonText(scope.row) }}
+              </el-button>
+
+              <!-- 取消按钮 -->
+              <el-button
+                v-if="showCancelButton(scope.row)"
+                size="mini"
+                type="text"
+                @click="handleCancel(scope.row)"
+                class="action-button cancel-button"
+              >取消</el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+        class="custom-pagination"
+      />
+    </div>
 
 
     <!-- 活动详情弹窗 -->
@@ -700,13 +704,56 @@ export default {
   margin-right: 15px;
 }
 
+/* 表格卡片样式 */
+.table-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  margin-top: 24px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  padding-bottom: 40px; /* 增加底部内边距 */
+}
+
+.table-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 30px 24px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+  gap: 12px;
+}
+
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+}
+
+.card-header span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
 /* 表格样式优化 */
 .enhanced-table {
   width: 100%;
-  margin-top: 24px;
-  border-radius: 12px;
-  border: 1px solid #e4e7ed;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -892,5 +939,36 @@ export default {
 .close-btn {
   width: 120px;
   padding: 10px 0;
+}
+
+/* 分页样式 */
+.custom-pagination {
+  display: flex;
+  justify-content: center !important; /* 强制居中 */
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+/* 调整分页组件内部布局 */
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 悬停效果 */
+.custom-pagination /deep/ .el-pager li:hover {
+  border-color: #409EFF;
+  color: #409EFF;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .custom-pagination {
+    padding: 8px;
+    justify-content: center;
+  }
 }
 </style>
