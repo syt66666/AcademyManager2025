@@ -97,6 +97,16 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+      <el-form-item label="活动类型" prop="activityType">
+        <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型">
+          <el-option 
+            v-for="type in availableActivityTypes" 
+            :key="type" 
+            :label="type" 
+            :value="type"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
@@ -151,6 +161,13 @@
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
         <el-table-column label="活动名称" align="center" prop="activityName"/>
+        <el-table-column label="活动类型" align="center" prop="activityType" width="120">
+          <template slot-scope="scope">
+            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
+              {{ scope.row.activityType || '未分类' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation"/>
         <el-table-column label="组织单位" align="center" prop="organizer"/>
         <!-- 证明材料 -->
@@ -282,6 +299,8 @@
               <span>学号：{{ currentBooking.studentId || '-' }}</span>
               <span class="divider">|</span>
               <span>活动：{{ currentBooking.activityName || '-' }}</span>
+              <span class="divider">|</span>
+              <span>类型：{{ currentBooking.activityType || '-' }}</span>
               <span class="divider">|</span>
               <span>单位：{{ currentBooking.organizer || '-' }}</span>
             </div>
@@ -524,6 +543,8 @@ export default {
       activityList: [],
       total: 0,
       selectedRows: [],
+      // 可用的活动类型列表
+      availableActivityTypes: [],
 
       // 审核弹窗
       auditDialogVisible: false,
@@ -542,6 +563,7 @@ export default {
         studentId: null,
         studentName: null,
         activityName: null,
+        activityType: null,
         startTime: null,
         endTime: null,
         organizer:null,
@@ -710,6 +732,41 @@ export default {
       };
       return statusMap[status] || 'info';
     },
+
+    getActivityTypeTagType(activityType) {
+      const map = {
+        '学术讲座': 'primary',   // 蓝色
+        '实践活动': 'success',   // 绿色
+        '文体活动': 'warning',   // 橙色
+        '志愿服务': 'info',      // 灰色
+        '竞赛活动': 'danger',    // 红色
+        '其他': ''               // 默认蓝色
+      }
+      return map[activityType] || 'info';
+    },
+
+    /** 更新可用的活动类型列表 */
+    updateAvailableActivityTypes() {
+      const types = new Set();
+      this.activityList.forEach(item => {
+        if (item.activityType) {
+          types.add(item.activityType);
+        }
+      });
+      
+      // 如果没有活动类型数据，提供默认选项
+      if (types.size === 0) {
+        types.add('学术讲座');
+        types.add('实践活动');
+        types.add('文体活动');
+        types.add('志愿服务');
+        types.add('竞赛活动');
+        types.add('其他');
+      }
+      
+      // 转换为数组并排序
+      this.availableActivityTypes = Array.from(types).sort();
+    },
     // 获取活动列表
     getList() {
       this.loading = true;
@@ -717,6 +774,8 @@ export default {
         this.activityList = response.rows; // 直接使用后端返回的状态字符串
         this.total = response.total;
         this.loading = false;
+        // 更新可用的活动类型列表
+        this.updateAvailableActivityTypes();
       });
     },
     // 获取审核统计
@@ -1247,6 +1306,15 @@ export default {
 .operation-info {
   font-size: 13px;
   color: #909399;
+}
+
+/* 活动类型标签样式 */
+.activity-type-tag {
+  font-weight: 500;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 12px;
 }
 
 /* 审核对话框材料区域样式，保持与学生端一致 */
