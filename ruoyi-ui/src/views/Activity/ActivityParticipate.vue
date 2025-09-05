@@ -40,7 +40,7 @@
               <el-option 
                 v-for="type in availableActivityTypes" 
                 :key="type" 
-                :label="type" 
+                :label="getActivityTypeName(type)" 
                 :value="type"
               />
             </el-select>
@@ -87,10 +87,10 @@
           </template>
         </el-table-column>
         <el-table-column label="活动名称" align="center" prop="activityName" />
-        <el-table-column label="活动类型" align="center" prop="activityType" width="120">
+        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-              {{ scope.row.activityType || '未分类' }}
+              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -278,14 +278,24 @@ export default {
     this.getList();
   },
   methods: {
+    // 活动类型映射函数：将数字转换为对应的类型名称
+    getActivityTypeName(activityType) {
+      const typeMap = {
+        '1': '人格塑造与价值引领活动类',
+        '2': '知识融合与思维进阶活动类', 
+        '3': '能力锻造与实践创新活动类',
+        '4': '社会责任与领军意识活动类'
+      };
+      return typeMap[activityType] || activityType;
+    },
+    
     getActivityTypeTagType(activityType) {
       const map = {
-        '学术讲座': 'primary',   // 蓝色
-        '实践活动': 'success',   // 绿色
-        '文体活动': 'warning',   // 橙色
-        '志愿服务': 'info',      // 灰色
-        '竞赛活动': 'danger',    // 红色
-        '其他': ''               // 默认蓝色
+        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
+        '4': 'info',      // 社会责任与领军意识活动类 - 灰色
+        '其他': ''        // 默认蓝色
       }
       return map[activityType] || 'info';
     },
@@ -513,11 +523,10 @@ export default {
       
       // 如果没有活动类型数据，提供默认选项
       if (types.size === 0) {
-        types.add('学术讲座');
-        types.add('实践活动');
-        types.add('文体活动');
-        types.add('志愿服务');
-        types.add('竞赛活动');
+        types.add('1');
+        types.add('2');
+        types.add('3');
+        types.add('4');
         types.add('其他');
       }
       

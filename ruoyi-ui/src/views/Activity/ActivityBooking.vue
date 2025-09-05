@@ -1,61 +1,71 @@
 <template>
   <div class="app-container">
     <!-- 搜索区域 -->
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="auto" class="query-form">
-      <div class="query-row">
-        <el-form-item label="活动名称" prop="activityName" class="search-item">
-          <el-input
-            v-model="queryParams.activityName"
-            placeholder="请输入活动名称"
-            clearable
-            prefix-icon="el-icon-search"
-            @keyup.enter.native="handleQuery"
-            class="search-input"
-          />
-        </el-form-item>
-        <el-form-item label="组织单位" prop="organizer" class="search-item">
-          <el-input
-            v-model="queryParams.organizer"
-            placeholder="请输入组织单位"
-            clearable
-            prefix-icon="el-icon-office-building"
-            @keyup.enter.native="handleQuery"
-            class="search-input"
-          />
-        </el-form-item>
-        <el-form-item label="活动类型" prop="activityType" class="search-item">
-          <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-            <el-option 
-              v-for="type in availableActivityTypes" 
-              :key="type" 
-              :label="type" 
-              :value="type"
-            />
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="活动状态" prop="status" class="search-item">
-          <el-select v-model="queryParams.status" clearable class="status-select" placeholder="全部状态">
-            <el-option label="报名未开始" value="未开始"/>
-            <el-option label="报名进行中" value="可报名"/>
-            <el-option label="报名已截止" value="已截止"/>
-            <el-option label="活动进行中" value="进行中"/>
-            <el-option label="活动已结束" value="已结束"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item class="search-item">
-          <el-checkbox v-model="queryParams.onlyAvailable" @change="handleOnlyAvailableChange">
-            <span class="checkbox-label">只显示可报名活动</span>
-          </el-checkbox>
-        </el-form-item>
-        <el-form-item class="search-item">
-          <el-button-group class="action-buttons">
-            <el-button type="primary" icon="el-icon-search" @click="handleQuery" class="search-button">搜索</el-button>
-            <el-button icon="el-icon-refresh" @click="resetQuery" class="refresh-button">重置</el-button>
-          </el-button-group>
-        </el-form-item>
+    <div class="search-card">
+      <div class="card-header">
+        <i class="el-icon-search"></i>
+        <span>搜索条件</span>
       </div>
-    </el-form>
+      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
+        <div class="search-row">
+          <el-form-item label="活动名称" prop="activityName">
+            <el-input
+              v-model="queryParams.activityName"
+              placeholder="请输入活动名称"
+              clearable
+              prefix-icon="el-icon-search"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="活动地点" prop="activityLocation">
+            <el-input
+              v-model="queryParams.activityLocation"
+              placeholder="请输入活动地点"
+              clearable
+              prefix-icon="el-icon-location-outline"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="组织单位" prop="organizer">
+            <el-input
+              v-model="queryParams.organizer"
+              placeholder="请输入组织单位"
+              clearable
+              prefix-icon="el-icon-office-building"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="活动类型" prop="activityType">
+            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
+              <el-option 
+                v-for="type in availableActivityTypes" 
+                :key="type" 
+                :label="getActivityTypeName(type)" 
+                :value="type"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item class="search-actions">
+            <el-button-group class="action-buttons">
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleQuery"
+                class="search-button"
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetQuery"
+                class="refresh-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
+        </div>
+      </el-form>
+    </div>
 
     <!-- 活动列表 -->
     <div class="table-card">
@@ -64,8 +74,14 @@
         <span>活动列表</span>
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
-      <el-table v-loading="loading" :data="activitiesList" style="width: 100%" class="enhanced-table">
-        <el-table-column label="序号" width="70" align="center">
+      <el-table
+        v-loading="loading"
+        :data="activitiesList"
+        style="width: 100%"
+        class="modern-table"
+        :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
+      >
+        <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
             <span class="index-badge">
               {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
@@ -77,9 +93,11 @@
             <div class="activity-name">{{ scope.row.activityName }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="活动类型" align="center" prop="activityType" width="180">
+        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
           <template slot-scope="scope">
-            <div class="activity-type">{{ scope.row.activityType }}</div>
+            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
+              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
@@ -207,7 +225,7 @@
         <div class="detail-grid">
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-location"></i> 活动类型：</div>
-            <div class="detail-value">{{ currentActivity.activityType }}</div>
+            <div class="detail-value">{{ getActivityTypeName(currentActivity.activityType) }}</div>
           </div>
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
@@ -312,8 +330,6 @@ export default {
         activityLocation: null,
         organizer: null,
         activityType: null,
-        status: null,
-        onlyAvailable: false,
       }
     };
   },
@@ -386,15 +402,6 @@ export default {
         );
         await Promise.all(checkPromises);
 
-        // ✅ 3. 若勾选了只显示可报名活动，进行筛选：
-        if (this.queryParams.onlyAvailable) {
-          activityList = activityList.filter(activity => {
-            const notBooked = !activity.isBooked;
-            const hasCapacity = activity.activityCapacity > 0;
-            const isOngoing = this.getActivityStatusText(activity) === "报名进行中";
-            return notBooked && hasCapacity && isOngoing;
-          });
-        }
 
         this.activitiesList = activityList;
         
@@ -420,11 +427,6 @@ export default {
       this.getList();
     },
 
-    /** 处理只显示可报名活动 */
-    handleOnlyAvailableChange() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
 
     /** 重置搜索 */
     resetQuery() {
@@ -466,6 +468,28 @@ export default {
       }
     },
 
+    // 活动类型映射函数：将数字转换为对应的类型名称
+    getActivityTypeName(activityType) {
+      const typeMap = {
+        '1': '人格塑造与价值引领活动类',
+        '2': '知识融合与思维进阶活动类', 
+        '3': '能力锻造与实践创新活动类',
+        '4': '社会责任与领军意识活动类'
+      };
+      return typeMap[activityType] || activityType;
+    },
+    
+    getActivityTypeTagType(activityType) {
+      const map = {
+        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
+        '4': 'info',      // 社会责任与领军意识活动类 - 灰色
+        '其他': ''        // 默认蓝色
+      }
+      return map[activityType] || 'info';
+    },
+
     /** 更新可用的活动类型列表 */
     updateAvailableActivityTypes() {
       const types = new Set();
@@ -477,11 +501,10 @@ export default {
       
       // 如果没有活动类型数据，提供默认选项
       if (types.size === 0) {
-        types.add('学术讲座');
-        types.add('实践活动');
-        types.add('文体活动');
-        types.add('志愿服务');
-        types.add('竞赛活动');
+        types.add('1');
+        types.add('2');
+        types.add('3');
+        types.add('4');
         types.add('其他');
       }
       
@@ -597,76 +620,101 @@ export default {
   color: #909399 !important;
   background-color: rgba(144, 147, 153, 0.1) !important;
 }
-/* 查询表单 - 紧凑布局 */
-.query-form {
-  padding: 16px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+/* 统一卡片样式 */
+.search-card,
+.table-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
   transition: all 0.3s ease;
-  border: 1px solid #ebeef5;
 }
 
-.query-row {
+.search-card:hover,
+.table-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
+}
+
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 搜索表单 */
+.search-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 20px;
   align-items: center;
 }
 
-.search-item {
-  margin-bottom: 0;
-  flex-grow: 1;
-}
-
 .search-input {
+  min-width: 220px;
   transition: all 0.3s ease;
 }
 
 .search-input:hover {
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
 }
 
-.status-select {
-  min-width: 140px;
-}
-
-.checkbox-label {
-  font-size: 14px;
-  color: #606266;
+.search-actions {
+  margin-left: auto;
 }
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
+
+/* 按钮样式 */
 .search-button {
   background: linear-gradient(135deg, #409EFF, #64b5ff);
   border: none;
-  padding: 9px 18px;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
   transition: all 0.3s;
 }
 
 .search-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(64, 158, 255, 0.4);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
 }
 
 .refresh-button {
-  background-color: #f0f2f5;
+  background: #f0f2f5;
   border: none;
-  padding: 9px 18px;
+  padding: 10px 20px;
   color: #606266;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 500;
   transition: all 0.3s;
 }
 
 .refresh-button:hover {
-  background-color: #e4e7ed;
+  background: #e4e7ed;
   color: #333;
+  transform: translateY(-2px);
 }
 /* 整体布局 */
 .app-container {
@@ -704,73 +752,35 @@ export default {
   margin-right: 15px;
 }
 
-/* 表格卡片样式 */
-.table-card {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
-  margin-top: 24px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  padding-bottom: 40px; /* 增加底部内边距 */
-}
-
-.table-card:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-.card-header {
-  display: flex;
-  align-items: center;
-  padding: 30px 24px;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  border-bottom: 1px solid #e2e8f0;
-  gap: 12px;
-}
-
-.card-header i {
-  font-size: 20px;
-  color: #409EFF;
-}
-
-.card-header span {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
-}
 
 .record-count {
   margin-left: auto;
   font-size: 14px;
-  color: #64748b;
-  font-weight: 500;
+  color: #909399;
+  font-weight: 400;
 }
 
-/* 表格样式优化 */
-.enhanced-table {
-  width: 100%;
-  border-radius: 0;
-  border: none;
-  box-shadow: none;
+/* 现代化表格 */
+.modern-table {
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid #e4e7ed;
 }
 
-.enhanced-table th {
+.modern-table th {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-  color: #1e293b;
   font-weight: 600;
+  color: #1e293b;
   border-bottom: 2px solid #e2e8f0;
   padding: 16px 12px;
 }
 
-.enhanced-table td {
+.modern-table td {
   border-bottom: 1px solid #f1f5f9;
   padding: 16px 12px;
 }
 
-.enhanced-table tr:hover td {
+.modern-table tr:hover td {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
@@ -787,6 +797,17 @@ export default {
   font-weight: 600;
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 活动类型标签 */
+.activity-type-tag {
+  font-weight: 500;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .activity-name {

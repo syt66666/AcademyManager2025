@@ -10,6 +10,7 @@ import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.StuAbilityScore;
 import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.BookingDTO;
+import com.ruoyi.system.domain.dto.BookingExportDTO;
 import com.ruoyi.system.mapper.AuditHistoryMapper;
 import com.ruoyi.system.mapper.BookingsMapper;
 import com.ruoyi.system.service.IBookingsService;
@@ -68,6 +69,10 @@ public class BookingsServiceImpl implements IBookingsService {
      */
     @Override
     public int insertBookings(Bookings bookings) {
+        // 设置默认状态为"未提交"
+        if (bookings.getStatus() == null || bookings.getStatus().isEmpty()) {
+            bookings.setStatus("未提交");
+        }
         return bookingsMapper.insertBookings(bookings);
     }
 
@@ -180,5 +185,15 @@ public class BookingsServiceImpl implements IBookingsService {
     @Override
     public List<Long> getBookedActivityIds(String studentId) {
         return bookingsMapper.selectActivityIdsByStudentId(studentId);
+    }
+
+    /**
+     * 查询预约学生导出数据
+     * @param bookingExportDTO 查询条件
+     * @return 导出数据列表
+     */
+    @Override
+    public List<BookingExportDTO> selectBookingExportList(BookingExportDTO bookingExportDTO) {
+        return bookingsMapper.selectBookingExportList(bookingExportDTO);
     }
 }

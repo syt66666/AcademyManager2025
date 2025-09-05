@@ -1,51 +1,71 @@
 <template>
   <div class="app-container">
-    <!-- 查询区域优化 -->
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="80px" class="query-form">
-      <div class="query-row">
-        <el-form-item label="活动名称" prop="activityName">
-          <el-input
-            v-model="queryParams.activityName"
-            placeholder="请输入活动名称"
-            clearable
-            @keyup.enter.native="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="活动地点" prop="activityLocation">
-          <el-input
-            v-model="queryParams.activityLocation"
-            placeholder="请输入活动地点"
-            clearable
-            @keyup.enter.native="handleQuery"
-          />
-        </el-form-item>
+    <!-- 搜索区域 -->
+    <div class="search-card">
+      <div class="card-header">
+        <i class="el-icon-search"></i>
+        <span>搜索条件</span>
       </div>
-      <div class="query-row">
-        <el-form-item label="活动类型" prop="activityType">
-          <el-select v-model="queryParams.activityType" clearable class="activity-type-select">
-            <el-option 
-              v-for="type in availableActivityTypes" 
-              :key="type" 
-              :label="type" 
-              :value="type"
+      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
+        <div class="search-row">
+          <el-form-item label="活动名称" prop="activityName">
+            <el-input
+              v-model="queryParams.activityName"
+              placeholder="请输入活动名称"
+              clearable
+              prefix-icon="el-icon-search"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
             />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="活动状态" prop="status">
-          <el-select v-model="queryParams.status" clearable class="status-select">
-            <el-option label="未开始" value="未开始"/>
-            <el-option label="可报名" value="可报名"/>
-            <el-option label="已截止" value="已截止"/>
-            <el-option label="进行中" value="进行中"/>
-            <el-option label="已结束" value="已结束"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </div>
-    </el-form>
+          </el-form-item>
+          <el-form-item label="活动地点" prop="activityLocation">
+            <el-input
+              v-model="queryParams.activityLocation"
+              placeholder="请输入活动地点"
+              clearable
+              prefix-icon="el-icon-location-outline"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <!-- <el-form-item label="组织单位" prop="organizer">
+            <el-input
+              v-model="queryParams.organizer"
+              placeholder="请输入组织单位"
+              clearable
+              prefix-icon="el-icon-office-building"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item> -->
+          <el-form-item label="活动类型" prop="activityType">
+            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
+              <el-option 
+                v-for="type in availableActivityTypes" 
+                :key="type" 
+                :label="getActivityTypeName(type)" 
+                :value="type"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item class="search-actions">
+            <el-button-group class="action-buttons">
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleQuery"
+                class="search-button"
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetQuery"
+                class="refresh-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
+        </div>
+      </el-form>
+    </div>
 
     <!-- 按钮区域 -->
     <div class="button-bar">
@@ -88,64 +108,73 @@
       <div class="card-header">
         <i class="el-icon-s-grid"></i>
         <span>活动列表</span>
+        <span class="record-count">共 {{ total }} 条记录</span>
       </div>
       
       <!-- 表格美化 -->
-      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="enhanced-table">
+      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
       <el-table-column type="selection" width="45" align="center"/>
-      <el-table-column label="序号" width="70" align="center">
+      <el-table-column label="序号" width="80" align="center">
         <template v-slot="scope">
           <span class="index-badge">
             {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
           </span>
         </template>
       </el-table-column>
-
-      <el-table-column label="活动信息" width="380">
+      <el-table-column label="活动名称" align="center" prop="activityName" width="180">
         <template slot-scope="scope">
-          <div class="activity-info">
-            <div class="activity-name">{{ scope.row.activityName }}</div>
-            <div class="activity-meta">
-              <span><i class="el-icon-location-outline"></i> {{ scope.row.activityLocation }}</span>
-              <span><i class="el-icon-user"></i> {{ scope.row.activityTotalCapacity-scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}人</span>
-              <span><i class="el-icon-office-building"></i> {{ scope.row.organizer }}</span>
-            </div>
-          </div>
+          <div class="activity-name">{{ scope.row.activityName }}</div>
         </template>
       </el-table-column>
-
-      <el-table-column label="活动类型" width="120" align="center">
+      <el-table-column label="活动类型" align="center" prop="activityType" width="200">
         <template slot-scope="scope">
           <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-            {{ scope.row.activityType || '未分类' }}
+            {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
           </el-tag>
         </template>
       </el-table-column>
-
-      <el-table-column label="时间安排" width="300">
+      <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
+      <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
+      <el-table-column label="报名时间" align="center" >
         <template slot-scope="scope">
-          <div class="time-schedule">
-            <div class="time-period">
-              <el-tag size="mini" type="info">报名</el-tag>
-              {{ parseTime(scope.row.activityStart, '{m}-{d} {h}:{i}') }}
-              至
-              {{ parseTime(scope.row.activityDeadline, '{m}-{d} {h}:{i}') }}
-            </div>
-            <div class="time-period">
-              <el-tag size="mini" type="info">活动</el-tag>
-              {{ parseTime(scope.row.startTime, '{m}-{d} {h}:{i}') }}
-              至
-              {{ parseTime(scope.row.endTime, '{m}-{d} {h}:{i}') }}
-            </div>
+          <div class="time-range">
+            <i class="el-icon-time"></i> {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="活动时间" align="center" >
+        <template slot-scope="scope">
+          <div class="time-range">
+            <i class="el-icon-date"></i> {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
           </div>
         </template>
       </el-table-column>
 
-      <el-table-column label="活动状态" >
+      <!-- 活动状态列 -->
+      <el-table-column label="活动状态" align="center" width="100">
         <template slot-scope="scope">
-          <el-tag :type="statusTagType(scope.row.status)" effect="dark" class="status-tag">
-            {{ scope.row.status }}
+          <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
+            {{ getActivityStatusText(scope.row) }}
           </el-tag>
+        </template>
+      </el-table-column>
+
+      <el-table-column label="报名人数" align="center" width="100">
+        <template #default="scope">
+          <div class="participants">
+            <el-progress
+              :percentage="calculateCapacityPercentage(scope.row)"
+              :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+              :show-text="false"
+              :stroke-width="10"
+              class="progress-bar"
+            />
+            <div class="count">
+                <span :class="getCapacityClass(scope.row)">
+                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                </span>
+            </div>
+          </div>
         </template>
       </el-table-column>
 
@@ -157,15 +186,9 @@
               type="text"
               @click="handleViewStudents(scope.row)"
               class="action-button view-button">
-              学生
+              已选学生
             </el-button>
-            <el-button
-              size="mini"
-              type="text"
-              @click="handleExportStudents(scope.row)"
-              class="action-button export-button">
-              下载名单
-            </el-button>
+
             <el-button
               size="mini"
               type="text"
@@ -187,35 +210,18 @@
       <!-- 活动描述+注意事项 -->
       <el-table-column type="expand" width="60" align="center">
         <template slot-scope="props">
-          <div class="expand-content">
-            <div class="expand-section">
-              <div class="section-header">
-                <i class="el-icon-document"></i>
-                <span>活动描述</span>
-              </div>
-              <div class="section-content">
-                <div class="content-box">
-                  {{ props.row.activityDescription || "无描述信息" }}
-                </div>
-              </div>
+          <div class="expand-card">
+            <div class="expand-row">
+              <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
+              <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
             </div>
-
-            <div class="divider"></div>
-
-            <div class="expand-section">
-              <div class="section-header">
-                <i class="el-icon-warning"></i>
-                <span>注意事项</span>
-              </div>
-              <div class="section-content">
-                <div class="content-box">
-                  {{ props.row.notes || "无注意事项" }}
-                </div>
-              </div>
+            <div class="expand-row">
+              <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
+              <div class="expand-content">{{ props.row.notes || "无注意事项" }}</div>
             </div>
-                     </div>
-         </template>
-       </el-table-column>
+          </div>
+        </template>
+      </el-table-column>
            </el-table>
 
       <!-- 分页组件 -->
@@ -228,9 +234,6 @@
         class="custom-pagination"
       />
     </div>
-
-
-
 
 
     <!-- 添加或修改活动对话框 -->
@@ -285,7 +288,7 @@
             <el-option 
               v-for="type in availableActivityTypes" 
               :key="type" 
-              :label="type" 
+              :label="getActivityTypeName(type)" 
               :value="type"
             />
           </el-select>
@@ -316,7 +319,7 @@
     <el-dialog
       title="预约活动学生列表"
       :visible.sync="dialogVisibleStudents"
-      width="60%"
+      width="90%"
       append-to-body
       class="student-dialog">
       <el-table
@@ -342,16 +345,38 @@
           </template>
         </el-table-column>
 
-        <el-table-column prop="studentName" label="姓名">
+        <el-table-column prop="studentName" label="姓名" width="100">
           <template slot-scope="{row}">
             <span class="student-name">{{ row.studentName }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="bookedAt" label="预约时间" width="180">
+        <el-table-column prop="academy" label="所属书院" width="120">
+          <template slot-scope="{row}">
+            <el-tag size="small" type="info">{{ row.academy || '未知' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="major" label="专业" width="150">
+          <template slot-scope="{row}">
+            <span class="major-info">{{ row.major || row.systemMajor || '未知' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="studentClass" label="行政班" width="100">
+          <template slot-scope="{row}">
+            <span class="class-info">{{ row.studentClass || '未知' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="审核状态" width="100">
+          <template slot-scope="{row}">
+            <el-tag :type="getBookingStatusTag(row.status)" size="small">
+              {{ getBookingStatusText(row.status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="bookAt" label="预约时间" width="160">
           <template slot-scope="{row}">
             <div class="booked_at">
               <i class="el-icon-time"></i>
-              {{ parseTime(row.bookedAt) }}
+              {{ parseTime(row.bookAt) || '无时间' }}
             </div>
           </template>
         </el-table-column>
@@ -407,6 +432,7 @@ import {listActivities, getActivities, delActivities, addActivities, updateActiv
 import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
+import { parseTime } from "@/utils/ruoyi";
 
 export default {
   name: "Activities",
@@ -453,7 +479,6 @@ export default {
         activityDeadline: null,
         activityDescription: null,
         activityType: null,
-        status: null,
         createdAt: null,
         organizer: null,
         notes: null,
@@ -571,14 +596,111 @@ export default {
       }
       return map[status] || 'info'; // 默认使用灰色
     },
+
+    /** 格式化日期时间 */
+    formatDateTime(time) {
+      return parseTime(time, "{y}-{m}-{d} {h}:{i}");
+    },
+
+    /** 获取活动状态文本 */
+    getActivityStatusText(row) {
+      const now = new Date();
+      const start = new Date(row.startTime);
+      const end = new Date(row.endTime);
+      const deadline = new Date(row.activityDeadline);
+      const activityStart = new Date(row.activityStart);
+
+      if (now < activityStart) return "报名未开始";
+      if (now < deadline && now >= activityStart) return "报名进行中";
+      if (now >= deadline && now < start) return "报名已截止";
+      if (now >= start && now <= end) return "活动进行中";
+      if (now > end) return "活动已结束";
+      return row.status || "未知";
+    },
+
+    /** 获取活动状态标签类型 */
+    getActivityStatusTag(row) {
+      const status = this.getActivityStatusText(row);
+      switch (status) {
+        case "报名未开始": return "info";
+        case "报名进行中": return "success";
+        case "报名已截止": return "warning";
+        case "活动进行中": return "primary";
+        case "活动已结束": return "";
+        default: return "danger";
+      }
+    },
+
+    /** 计算容量百分比 */
+    calculateCapacityPercentage(row) {
+      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
+      const used = row.activityTotalCapacity - row.activityCapacity;
+      return Math.round((used / row.activityTotalCapacity) * 100);
+    },
+
+    /** 获取进度条颜色 */
+    getProgressColor(percentage) {
+      if (percentage >= 80) return '#f87171';
+      if (percentage >= 50) return '#fbbf24';
+      return '#4ade80';
+    },
+
+    /** 获取容量文字样式类 */
+    getCapacityClass(row) {
+      const percentage = this.calculateCapacityPercentage(row);
+      if (percentage >= 80) return 'capacity-high';
+      if (percentage >= 50) return 'capacity-medium';
+      return 'capacity-low';
+    },
+
+    /** 获取预约状态文本 */
+    getBookingStatusText(status) {
+      console.log('审核状态原始值:', status, '类型:', typeof status);
+      const statusMap = {
+        'pending': '未提交',
+        'submitted': '未审核', 
+        'approved': '已通过',
+        'rejected': '未通过',
+        '未提交': '未提交',
+        '未审核': '未审核',
+        '已通过': '已通过',
+        '未通过': '未通过'
+      };
+      return statusMap[status] || '未知';
+    },
+
+    /** 获取预约状态标签类型 */
+    getBookingStatusTag(status) {
+      const tagMap = {
+        'pending': 'info',      // 未提交 - 灰色
+        'submitted': 'warning', // 未审核 - 橙色
+        'approved': 'success',  // 已通过 - 绿色
+        'rejected': 'danger',   // 未通过 - 红色
+        '未提交': 'info',       // 未提交 - 灰色
+        '未审核': 'warning',    // 未审核 - 橙色
+        '已通过': 'success',    // 已通过 - 绿色
+        '未通过': 'danger'      // 未通过 - 红色
+      };
+      return tagMap[status] || 'info';
+    },
+    // 活动类型映射函数：将数字转换为对应的类型名称
+    getActivityTypeName(activityType) {
+      const typeMap = {
+        '1': '人格塑造与价值引领活动类',
+        '2': '知识融合与思维进阶活动类', 
+        '3': '能力锻造与实践创新活动类',
+        '4': '社会责任与领军意识活动类'
+      };
+      return typeMap[activityType] || activityType;
+    },
+    
     getActivityTypeTagType(activityType) {
       const map = {
-        '学术讲座': 'primary',   // 蓝色
-        '实践活动': 'success',   // 绿色
-        '文体活动': 'warning',   // 橙色
-        '志愿服务': 'info',      // 灰色
-        '竞赛活动': 'danger',    // 红色
-        '其他': ''               // 默认蓝色
+        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
+        '4': 'info',      // 社会责任与领军意识活动类 - 灰色
+        '其他': ''        // 默认蓝色
       }
       return map[activityType] || 'info';
     },
@@ -597,9 +719,9 @@ export default {
         return;
       }
 
-      this.download('/system/bookings/export2', {
+      this.download('/system/bookings/exportStudents', {
         activityId: activityId
-      }, `预约活动名单_${activityName}_${this.parseTime(new Date(), '{y}{m}{d}')}.xlsx`)
+      }, `预约学生名单_${activityName}_${this.parseTime(new Date(), '{y}{m}{d}')}.xlsx`)
 
       this.dialogVisibleStudents = false; // 导出后自动关闭对话框
     },
@@ -694,15 +816,37 @@ export default {
     /** 查询活动列表 */
     getList() {
       this.loading = true;
+      console.log("开始获取活动列表，queryParams:", this.queryParams);
       getNickName().then(nickName => {
         this.queryParams.organizer = nickName.msg; // 更新组织者
+        console.log("获取到组织者名称:", nickName.msg);
         // 🔽 确保在 organizer 更新后调用列表接口
         listActivities(this.queryParams).then(response => {
+          console.log("获取活动列表成功:", response);
           this.activitiesList = response.rows;
           this.total = response.total;
           this.loading = false;
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
+        }).catch(error => {
+          console.error("获取活动列表失败:", error);
+          this.loading = false;
+          this.$message.error("获取活动列表失败");
+        });
+      }).catch(error => {
+        console.error("获取组织者名称失败:", error);
+        // 即使获取组织者名称失败，也尝试获取活动列表
+        listActivities(this.queryParams).then(response => {
+          console.log("获取活动列表成功（无组织者）:", response);
+          this.activitiesList = response.rows;
+          this.total = response.total;
+          this.loading = false;
+          // 更新可用的活动类型列表
+          this.updateAvailableActivityTypes();
+        }).catch(listError => {
+          console.error("获取活动列表失败:", listError);
+          this.loading = false;
+          this.$message.error("获取活动列表失败");
         });
       });
     },
@@ -834,11 +978,10 @@ export default {
       
       // 如果没有活动类型数据，提供默认选项
       if (types.size === 0) {
-        types.add('学术讲座');
-        types.add('实践活动');
-        types.add('文体活动');
-        types.add('志愿服务');
-        types.add('竞赛活动');
+        types.add('1');
+        types.add('2');
+        types.add('3');
+        types.add('4');
         types.add('其他');
       }
       
@@ -855,44 +998,36 @@ export default {
 </script>
 
 <style scoped>
-/* 左右布局容器 */
-.expand-layout {
-  display: flex;
+/* 扩展卡片 */
+.expand-card {
+  background: #f9fafc;
+  border-radius: 8px;
   padding: 15px;
+  margin: 5px;
+  border-left: 3px solid #409EFF;
 }
 
-/* 分区样式 */
-.expand-section {
-  flex: 1;
-  padding: 0 15px;
+.expand-row {
+  display: flex;
+  margin-bottom: 12px;
 }
 
-/* 分区头部样式 */
-.section-header {
-  font-weight: bold;
+.expand-label {
+  font-weight: 600;
+  min-width: 100px;
   color: #409EFF;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 5px;
+  display: flex;
+  align-items: center;
 }
 
-/* 分区内容样式 */
-.section-content {
-  line-height: 1.6;
+.expand-label i {
+  margin-right: 8px;
+}
+
+.expand-content {
+  flex: 1;
   color: #606266;
-}
-
-/* 可滚动区域 */
-.scrollable {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-/* 分区间的分隔线 */
-.divider {
-  width: 1px;
-  background-color: #EBEEF5;
-  margin: 0 10px;
+  line-height: 1.6;
 }
 /* 整体布局 */
 .app-container {
@@ -902,32 +1037,107 @@ export default {
   min-height: 100vh;
 }
 
-/* 查询表单 */
-.query-form {
-  padding: 24px;
+/* 统一卡片样式 */
+.search-card,
+.table-card {
   background: #fff;
   border-radius: 16px;
+  padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
   transition: all 0.3s ease;
 }
 
-.query-form:hover {
+.search-card:hover,
+.table-card:hover {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
-.query-row {
+/* 卡片头部 */
+.card-header {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
 }
 
-.query-row .el-form-item {
-  margin-bottom: 0;
-  margin-right: 15px;
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
+
+/* 搜索表单 */
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+.search-input {
+  min-width: 220px;
+  transition: all 0.3s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+}
+
+.search-actions {
+  margin-left: auto;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* 按钮样式 */
+.search-button {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+}
+
+.refresh-button {
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  color: #606266;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-button:hover {
+  background: #e4e7ed;
+  color: #333;
+  transform: translateY(-2px);
 }
 
 /* 按钮区域 */
@@ -944,62 +1154,28 @@ export default {
   gap: 8px;
 }
 
-/* 表格卡片样式 */
-.table-card {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+/* 现代化表格 */
+.modern-table {
+  border-radius: 12px;
+  overflow: hidden;
   border: 1px solid #e4e7ed;
-  margin-top: 24px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  padding-bottom: 40px;
 }
 
-.card-header {
-  display: flex;
-  align-items: center;
-  padding: 30px 24px;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  border-bottom: 1px solid #e2e8f0;
-  gap: 12px;
-}
-
-.card-header i {
-  font-size: 20px;
-  color: #409EFF;
-}
-
-.card-header span {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-/* 表格样式优化 */
-.enhanced-table {
-  width: 100%;
-  margin-top: 0;
-  border-radius: 0;
-  border: none;
-  box-shadow: none;
-  overflow: hidden;
-}
-
-.enhanced-table th {
+.modern-table th {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-  color: #1e293b;
   font-weight: 600;
+  color: #1e293b;
   border-bottom: 2px solid #e2e8f0;
   padding: 16px 12px;
 }
 
-.enhanced-table td {
+.modern-table td {
   border-bottom: 1px solid #f1f5f9;
   padding: 16px 12px;
 }
 
-.enhanced-table tr:hover td {
+.modern-table tr:hover td {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
@@ -1017,49 +1193,6 @@ export default {
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 
-.activity-info {
-  padding: 5px 0;
-}
-
-.activity-name {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #303133;
-}
-
-.activity-meta {
-  display: flex;
-  flex-direction: column;
-  font-size: 13px;
-  color: #606266;
-}
-
-.activity-meta span {
-  margin: 2px 0;
-  display: flex;
-  align-items: center;
-}
-
-.activity-meta i {
-  margin-right: 5px;
-  font-size: 14px;
-}
-
-.time-schedule {
-  padding: 8px 0;
-  font-size: 13px;
-}
-
-.time-period {
-  margin: 5px 0;
-  line-height: 1.5;
-}
-
-.time-label {
-  font-weight: 500;
-  color: #409EFF;
-}
 
 .status-tag {
   font-weight: 600;
@@ -1076,6 +1209,55 @@ export default {
   font-size: 13px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.activity-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.time-range {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #606266;
+}
+
+.time-range i {
+  margin-right: 5px;
+  color: #909399;
+}
+
+.participants {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-bar {
+  width: 100%;
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.capacity-high {
+  color: #F56C6C;
+  font-weight: 500;
+}
+
+.capacity-medium {
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.capacity-low {
+  color: #67C23A;
+  font-weight: 500;
 }
 
 /* 操作按钮 */
@@ -1095,50 +1277,6 @@ export default {
 .edit-button { background: #f4f4f5; border-color: #d3d4d6; color: #909399; }
 .delete-button { background: #fef0f0; border-color: #fde2e2; color: #f56c6c; }
 
-/* 扩展内容样式 */
-.expand-content {
-  display: flex;
-  padding: 15px 0;
-  background: #fafafa;
-}
-
-.expand-section {
-  flex: 1;
-  padding: 0 20px;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  font-weight: 600;
-  color: #409EFF;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #ebeef5;
-}
-
-.section-header i {
-  margin-right: 8px;
-  font-size: 16px;
-}
-
-.content-box {
-  background: #fff;
-  padding: 12px;
-  border-radius: 4px;
-  border: 1px solid #ebeef5;
-  line-height: 1.6;
-  color: #606266;
-  font-size: 13px;
-  max-height: 150px;
-  overflow-y: auto;
-}
-
-.divider {
-  width: 1px;
-  background-color: #ebeef5;
-  margin: 0 20px;
-}
 
 /* 学生对话框 */
 .student-dialog .student-id {
@@ -1153,6 +1291,16 @@ export default {
 .student-dialog .booked_at {
   color: #909399;
   font-size: 13px;
+}
+
+.student-dialog .major-info {
+  font-size: 13px;
+  color: #606266;
+}
+
+.student-dialog .class-info {
+  font-size: 13px;
+  color: #606266;
 }
 
 /* 分页样式 */

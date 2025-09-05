@@ -21,6 +21,11 @@
         <id     property="bookingId"      column="booking_id"      />
         <result property="studentId"      column="student_id"      />
         <result property="studentName"      column="student_name"      />
+        <result property="academy"        column="academy"         />
+        <result property="major"          column="major"           />
+        <result property="systemMajor"    column="system_major"    />
+        <result property="studentClass"   column="student_class"   />
+        <result property="studentSex"     column="student_sex"     />
         <result property="activityId"     column="activity_id"     />
         <result property="activityName"   column="activity_name"   />
         <result property="activityLocation" column="activity_location" />
@@ -48,6 +53,11 @@
         booking_id,
         b.student_id,
         s.student_name,
+        s.academy,
+        s.major,
+        s.system_major,
+        s.student_class,
+        s.student_sex,
         b.activity_id,
         a.activity_name,
         a.activity_location,
@@ -209,5 +219,25 @@
         SELECT DISTINCT activity_id
         FROM bookings
         WHERE student_id = #{studentId}
+    </select>
+
+    <!-- 查询预约学生导出数据 -->
+    <select id="selectBookingExportList" parameterType="BookingExportDTO" resultType="BookingExportDTO">
+        SELECT
+        b.student_id as studentId,
+        s.student_name as studentName,
+        s.academy,
+        COALESCE(s.major, s.system_major) as major,
+        s.student_class as studentClass,
+        b.status,
+        b.booked_at as bookAt
+        FROM bookings b
+        LEFT JOIN stu_info s ON b.student_id = s.student_id
+        <where>
+            <if test="activityId != null">
+                AND b.activity_id = #{activityId}
+            </if>
+        </where>
+        ORDER BY b.booked_at DESC
     </select>
 </mapper>

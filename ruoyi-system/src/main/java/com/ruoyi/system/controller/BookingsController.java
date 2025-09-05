@@ -9,6 +9,7 @@ import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.BookingDTO;
+import com.ruoyi.system.domain.dto.BookingExportDTO;
 import com.ruoyi.system.service.IBookingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -116,6 +117,18 @@ public class BookingsController extends BaseController {
         List<BookingDTO> list = bookingsService.selectBookingsList2(bookings);
         ExcelUtil<BookingDTO> util = new ExcelUtil<BookingDTO>(BookingDTO.class);
         util.exportExcel(response, list, "学生书院活动记录数据");
+    }
+
+    /**
+     * 导出预约学生列表（只包含显示的字段）
+     */
+    @Log(title = "预约学生列表", businessType = BusinessType.EXPORT)
+    @PostMapping("/exportStudents")
+    public void exportStudents(HttpServletResponse response, BookingExportDTO bookingExportDTO)
+    {
+        List<BookingExportDTO> list = bookingsService.selectBookingExportList(bookingExportDTO);
+        ExcelUtil<BookingExportDTO> util = new ExcelUtil<BookingExportDTO>(BookingExportDTO.class);
+        util.exportExcel(response, list, "预约学生名单");
     }
     @GetMapping("/auditCount")
     public AjaxResult getAuditStatusCount() {

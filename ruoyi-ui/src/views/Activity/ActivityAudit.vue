@@ -57,61 +57,78 @@
       </el-col>
     </el-row>
 
-    <!-- 查询表单 -->
-    <el-form
-      :model="queryParams"
-      ref="queryForm"
-      size="small"
-      :inline="true"
-      class="custom-query-form"
-    >
-      <el-form-item label="学生学号" prop="studentId">
-        <el-input
-          v-model="queryParams.studentId"
-          placeholder="请输入学生学号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="学生姓名" prop="studentName">
-        <el-input
-          v-model="queryParams.studentName"
-          placeholder="请输入学生姓名"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="活动名称" prop="activityName">
-        <el-input
-          v-model="queryParams.activityName"
-          placeholder="请输入活动名称"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="组织单位" prop="organizer">
-        <el-input
-          v-model="queryParams.organizer"
-          placeholder="请输入组织单位"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="活动类型" prop="activityType">
-        <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型">
-          <el-option 
-            v-for="type in availableActivityTypes" 
-            :key="type" 
-            :label="type" 
-            :value="type"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
+    <!-- 搜索区域 -->
+    <div class="search-card">
+      <div class="card-header">
+        <i class="el-icon-search"></i>
+        <span>搜索条件</span>
+      </div>
+      <el-form
+        :model="queryParams"
+        ref="queryForm"
+        size="small"
+        :inline="true"
+        v-show="showSearch"
+      >
+        <div class="search-row">
+          <el-form-item label="学生学号" prop="studentId">
+            <el-input
+              v-model="queryParams.studentId"
+              placeholder="请输入学生学号"
+              clearable
+              prefix-icon="el-icon-user"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="学生姓名" prop="studentName">
+            <el-input
+              v-model="queryParams.studentName"
+              placeholder="请输入学生姓名"
+              clearable
+              prefix-icon="el-icon-user"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="活动名称" prop="activityName">
+            <el-input
+              v-model="queryParams.activityName"
+              placeholder="请输入活动名称"
+              clearable
+              prefix-icon="el-icon-search"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="活动类型" prop="activityType">
+            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
+              <el-option 
+                v-for="type in availableActivityTypes" 
+                :key="type" 
+                :label="getActivityTypeName(type)" 
+                :value="type"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item class="search-actions">
+            <el-button-group class="action-buttons">
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleQuery"
+                class="search-button"
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetQuery"
+                class="refresh-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
+        </div>
+      </el-form>
+    </div>
 
     <!-- 操作栏 -->
     <div class="button-bar">
@@ -138,13 +155,18 @@
     </div>
 
     <!-- 表格区域 -->
-    <el-card class="table-container">
+    <div class="table-card">
+      <div class="card-header">
+        <i class="el-icon-s-grid"></i>
+        <span>审核列表</span>
+        <span class="record-count">共 {{ total }} 条记录</span>
+      </div>
       <el-table
         v-loading="loading"
         :data="activityList"
         ref="activityTable"
-        class="enhanced-table"
-        :header-cell-style="headerStyle"
+        class="modern-table"
+        :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
         :row-class-name="tableRowClassName"
         row-key="bookingId"
         @selection-change="onSelectionChange"
@@ -161,10 +183,10 @@
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
         <el-table-column label="活动名称" align="center" prop="activityName"/>
-        <el-table-column label="活动类型" align="center" prop="activityType" width="120">
+        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-              {{ scope.row.activityType || '未分类' }}
+              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -220,7 +242,7 @@
         :limit.sync="queryParams.pageSize"
         @pagination="getList"
       />
-    </el-card>
+    </div>
 
     <!-- 审核详情对话框 -->
     <el-dialog
@@ -450,6 +472,8 @@ export default {
       // 数据加载状态
       loading: true,
       historyLoading: false,
+      // 显示搜索条件
+      showSearch: true,
       // 审核状态统计
       auditStats: {
         approved: 0,
@@ -505,9 +529,6 @@ export default {
         studentName: null,
         activityName: null,
         activityType: null,
-        startTime: null,
-        endTime: null,
-        organizer:null,
         status: null
       }
     };
@@ -674,14 +695,24 @@ export default {
       return statusMap[status] || 'info';
     },
 
+    // 活动类型映射函数：将数字转换为对应的类型名称
+    getActivityTypeName(activityType) {
+      const typeMap = {
+        '1': '人格塑造与价值引领活动类',
+        '2': '知识融合与思维进阶活动类', 
+        '3': '能力锻造与实践创新活动类',
+        '4': '社会责任与领军意识活动类'
+      };
+      return typeMap[activityType] || activityType;
+    },
+    
     getActivityTypeTagType(activityType) {
       const map = {
-        '学术讲座': 'primary',   // 蓝色
-        '实践活动': 'success',   // 绿色
-        '文体活动': 'warning',   // 橙色
-        '志愿服务': 'info',      // 灰色
-        '竞赛活动': 'danger',    // 红色
-        '其他': ''               // 默认蓝色
+        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
+        '4': 'info',      // 社会责任与领军意识活动类 - 灰色
+        '其他': ''        // 默认蓝色
       }
       return map[activityType] || 'info';
     },
@@ -697,11 +728,10 @@ export default {
       
       // 如果没有活动类型数据，提供默认选项
       if (types.size === 0) {
-        types.add('学术讲座');
-        types.add('实践活动');
-        types.add('文体活动');
-        types.add('志愿服务');
-        types.add('竞赛活动');
+        types.add('1');
+        types.add('2');
+        types.add('3');
+        types.add('4');
         types.add('其他');
       }
       
@@ -959,6 +989,7 @@ export default {
         studentId: null,
         studentName: null,
         activityName: null,
+        activityType: null,
         status: null
       };
       this.getList();
@@ -976,15 +1007,6 @@ export default {
       return rowIndex % 2 === 0 ? 'striped-row' : '';
     },
 
-    // 表头样式
-    headerStyle() {
-      return {
-        color: '#2d3540',
-        fontWeight: 600,
-        fontSize: '14px',
-        backgroundColor: '#f5f7fa'
-      };
-    }
   }
 };
 </script>
@@ -1073,25 +1095,107 @@ export default {
   color: #303133;
 }
 
-/* 查询表单样式 */
-.custom-query-form {
-  padding: 24px;
+/* 统一卡片样式 */
+.search-card,
+.table-card {
   background: #fff;
   border-radius: 16px;
+  padding: 24px;
   margin-bottom: 24px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
   transition: all 0.3s ease;
 }
 
-.custom-query-form:hover {
+.search-card:hover,
+.table-card:hover {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
 }
 
-.custom-query-form .el-form-item {
-  margin-bottom: 0;
-  margin-right: 20px;
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
+}
+
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
+
+/* 搜索表单 */
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+.search-input {
+  min-width: 220px;
+  transition: all 0.3s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+}
+
+.search-actions {
+  margin-left: auto;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* 按钮样式 */
+.search-button {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+}
+
+.refresh-button {
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  color: #606266;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-button:hover {
+  background: #e4e7ed;
+  color: #333;
+  transform: translateY(-2px);
 }
 
 /* 按钮区域 */
@@ -1126,45 +1230,27 @@ export default {
   color: #67c23a;
 }
 
-/* 表格容器 */
-.table-container {
-  border-radius: 16px;
+/* 现代化表格 */
+.modern-table {
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
-  transition: all 0.3s ease;
 }
 
-.table-container:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-/* 表格样式 */
-.enhanced-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.enhanced-table::before {
-  display: none;
-}
-
-.enhanced-table th {
+.modern-table th {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-  color: #1e293b;
   font-weight: 600;
+  color: #1e293b;
   border-bottom: 2px solid #e2e8f0;
   padding: 16px 12px;
 }
 
-.enhanced-table td {
+.modern-table td {
   border-bottom: 1px solid #f1f5f9;
   padding: 16px 12px;
 }
 
-.enhanced-table .el-table__body tr:hover > td {
+.modern-table tr:hover td {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 

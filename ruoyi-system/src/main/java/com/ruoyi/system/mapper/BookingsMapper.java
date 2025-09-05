@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.dto.BookingDTO;
+import com.ruoyi.system.domain.dto.BookingExportDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Component;
 import org.apache.ibatis.annotations.Param;
@@ -75,4 +76,11 @@ public interface BookingsMapper {
                           @Param("studentId") String studentId);
 
     List<Long> selectActivityIdsByStudentId(@Param("studentId") String studentId);
+
+    /**
+     * 查询预约学生导出数据
+     * @param bookingExportDTO 查询条件
+     * @return 导出数据列表
+     */
+    List<BookingExportDTO> selectBookingExportList(BookingExportDTO bookingExportDTO);
 }

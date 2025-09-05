@@ -2,6 +2,7 @@ package com.ruoyi.system.service;
 
 import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.dto.BookingDTO;
+import com.ruoyi.system.domain.dto.BookingExportDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -59,4 +60,11 @@ public interface IBookingsService {
     boolean checkIfBooked(Long activityId, String studentId);
 
     List<Long> getBookedActivityIds(String studentId);
+
+    /**
+     * 查询预约学生导出数据
+     * @param bookingExportDTO 查询条件
+     * @return 导出数据列表
+     */
+    List<BookingExportDTO> selectBookingExportList(BookingExportDTO bookingExportDTO);
 }

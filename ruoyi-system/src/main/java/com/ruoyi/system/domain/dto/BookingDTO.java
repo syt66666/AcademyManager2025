@@ -20,6 +20,21 @@ public class BookingDTO {
     private String studentId;
     @Excel(name = "学生姓名")
     private String studentName;
+    /** 所属书院 */
+    @Excel(name = "所属书院")
+    private String academy;
+    /** 录取专业 */
+    @Excel(name = "录取专业")
+    private String major;
+    /** 分流后系统内专业 */
+    @Excel(name = "分流后系统内专业")
+    private String systemMajor;
+    /** 行政班 */
+    @Excel(name = "行政班")
+    private String studentClass;
+    /** 学生性别 */
+    @Excel(name = "学生性别")
+    private String studentSex;
     /** 活动id（外键） */
     private Long activityId;
     /** 活动名称 */
@@ -50,6 +65,8 @@ public class BookingDTO {
     private String notes;
 
     /** 预约时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "预约时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime bookAt;
 
     /** 证明材料 */
