@@ -16,7 +16,7 @@
     -webkit-transition: width .28s;
     transition: width 0.28s;
     width: $base-sidebar-width !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(to bottom, rgb(69, 127, 202), rgb(86, 145, 200));
     height: 100%;
     position: fixed;
     font-size: 0px;

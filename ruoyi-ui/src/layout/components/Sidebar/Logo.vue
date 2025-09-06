@@ -58,10 +58,10 @@ export default {
   width: 100%;
   height: 60px;
   line-height: 60px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(rgb(69, 127, 202));
   text-align: center;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: none;
   box-shadow: 0 2px 20px rgba(0,0,0,0.1);
 
   /* 添加装饰性背景 */
