@@ -59,9 +59,12 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             throw new ServiceException("活动名称和组织单位组合已存在，不能重复添加！");
         }
         
-        // 验证活动类型
-        if (activity.getActivityType() == null || !activity.getActivityType().matches("^[1-4]$")) {
-            throw new ServiceException("活动类型只能是1、2、3、4中的一种");
+        // 转换活动类型（支持文字和数字两种格式）
+        try {
+            String convertedType = convertActivityTypeToNumber(activity.getActivityType());
+            activity.setActivityType(convertedType);
+        } catch (ServiceException e) {
+            throw e; // 重新抛出转换异常
         }
         
         if(activity.getActivityCapacity()==null){
@@ -92,9 +95,12 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             throw new ServiceException("活动名称和组织单位组合已存在，不能重复添加！");
         }
         
-        // 验证活动类型
-        if (activity.getActivityType() == null || !activity.getActivityType().matches("^[1-4]$")) {
-            throw new ServiceException("活动类型只能是1、2、3、4中的一种");
+        // 转换活动类型（支持文字和数字两种格式）
+        try {
+            String convertedType = convertActivityTypeToNumber(activity.getActivityType());
+            activity.setActivityType(convertedType);
+        } catch (ServiceException e) {
+            throw e; // 重新抛出转换异常
         }
         
         return activitiesMapper.updateActivity2(activity);
@@ -140,6 +146,10 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             try {
                 BeanValidators.validateWithException(validator, user);
                 user.setCreateBy(operName);
+                
+                // 转换活动类型（支持文字和数字两种格式）
+                String convertedType = convertActivityTypeToNumber(user.getActivityType());
+                user.setActivityType(convertedType);
                 
                 // 直接调用insertActivity，它内部会进行唯一性检查
                 this.insertActivity(user);
@@ -194,5 +204,35 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     public boolean checkActivityUnique(String activityName, String organizer, Integer activityId) {
         int count = activitiesMapper.checkActivityUnique(activityName, organizer, activityId);
         return count == 0;
+    }
+
+    /**
+     * 将活动类型文字转换为数字
+     * @param activityTypeText 活动类型文字
+     * @return 对应的数字字符串
+     */
+    private String convertActivityTypeToNumber(String activityTypeText) {
+        if (activityTypeText == null || activityTypeText.trim().isEmpty()) {
+            return null;
+        }
+        
+        String trimmed = activityTypeText.trim();
+        
+        // 映射关系
+        if (trimmed.equals("人格塑造与价值引领活动类")) {
+            return "1";
+        } else if (trimmed.equals("知识融合与思维进阶活动类")) {
+            return "2";
+        } else if (trimmed.equals("能力锻造与实践创新活动类")) {
+            return "3";
+        } else if (trimmed.equals("社会责任与领军意识活动类")) {
+            return "4";
+        } else if (trimmed.equals("1") || trimmed.equals("2") || trimmed.equals("3") || trimmed.equals("4")) {
+            // 如果已经是数字，直接返回
+            return trimmed;
+        } else {
+            // 如果都不匹配，抛出异常
+            throw new ServiceException("无效的活动类型：" + activityTypeText + "，支持的类型：人格塑造与价值引领活动类、知识融合与思维进阶活动类、能力锻造与实践创新活动类、社会责任与领军意识活动类");
+        }
     }
 }
