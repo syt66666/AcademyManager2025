@@ -128,7 +128,7 @@ export default {
   height: 52px !important;
   line-height: 52px !important;
   margin: 8px 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   color: rgba(255,255,255,0.9) !important;
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
   display: flex !important;
@@ -140,6 +140,25 @@ export default {
   letter-spacing: 0.3px;
   padding: 0 16px !important;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  
+  /* 添加微妙的内部光效 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.05) 0%, 
+      transparent 50%, 
+      rgba(255, 255, 255, 0.02) 100%);
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
 }
 
 /* 悬停效果 - 融合的渐变效果 */
@@ -149,46 +168,65 @@ export default {
     rgba(69, 127, 202, 0.3) 0%, 
     rgba(86, 145, 200, 0.2) 50%,
     rgba(69, 127, 202, 0.1) 100%) !important;
-  transform: translateX(6px);
+  transform: translateX(8px) scale(1.02);
   box-shadow: 
-    0 4px 20px rgba(0,0,0,0.1),
-    inset 0 1px 0 rgba(255,255,255,0.15);
-  color: rgba(255,255,255,0.95) !important;
-  border: 1px solid rgba(255,255,255,0.15);
+    0 8px 25px rgba(69, 127, 202, 0.2),
+    0 4px 15px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  color: rgba(255,255,255,1) !important;
+  border: 1px solid rgba(255,255,255,0.2);
+  
+  /* 悬停时显示内部光效 */
+  &::before {
+    opacity: 1;
+  }
 }
 
 /* 激活菜单项样式 - 融合的突出设计 */
 ::v-deep .el-menu-item.is-active {
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.4) 0%, 
-    rgba(86, 145, 200, 0.3) 50%,
-    rgba(69, 127, 202, 0.2) 100%) !important;
+    rgba(69, 127, 202, 0.5) 0%, 
+    rgba(86, 145, 200, 0.4) 50%,
+    rgba(69, 127, 202, 0.3) 100%) !important;
   color: rgba(255,255,255,1) !important;
   font-weight: 600;
   position: relative;
   box-shadow: 
-    0 6px 25px rgba(0,0,0,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.25),
-    0 0 0 1px rgba(255,255,255,0.2);
-  transform: translateX(4px);
-  border: 1px solid rgba(255,255,255,0.2);
+    0 10px 30px rgba(69, 127, 202, 0.3),
+    0 6px 20px rgba(0,0,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.3),
+    0 0 0 1px rgba(255,255,255,0.25);
+  transform: translateX(6px) scale(1.03);
+  border: 1px solid rgba(255,255,255,0.25);
+  
+  /* 激活时显示内部光效 */
+  &::before {
+    opacity: 1;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.1) 0%, 
+      transparent 50%, 
+      rgba(255, 255, 255, 0.05) 100%);
+  }
 }
 
 /* 激活菜单指示器 - 融合的渐变设计 */
-::v-deep .el-menu-item.is-active::before {
+::v-deep .el-menu-item.is-active::after {
   content: '';
   position: absolute;
   left: -12px;
   top: 50%;
   transform: translateY(-50%);
   width: 4px;
-  height: 60%;
+  height: 70%;
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.8) 0%, 
-    rgba(86, 145, 200, 0.6) 50%,
-    rgba(69, 127, 202, 0.4) 100%);
+    rgba(69, 127, 202, 0.9) 0%, 
+    rgba(86, 145, 200, 0.7) 50%,
+    rgba(69, 127, 202, 0.5) 100%);
   border-radius: 2px;
-  box-shadow: 0 0 10px rgba(86, 145, 200, 0.4);
+  box-shadow: 
+    0 0 15px rgba(86, 145, 200, 0.6),
+    0 0 5px rgba(255, 255, 255, 0.3);
+  animation: indicatorPulse 2s ease-in-out infinite;
 }
 
 /* 子菜单标题 - 增强视觉效果 */
@@ -247,20 +285,22 @@ export default {
   background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
 }
 
-/* 嵌套菜单样式 - 融合的层次设计 */
+/* 嵌套菜单样式 - 浅蓝色系设计 */
 ::v-deep .el-menu--inline {
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.15) 0%, 
-    rgba(86, 145, 200, 0.1) 50%,
-    rgba(69, 127, 202, 0.08) 100%) !important;
-  padding-left: 20px !important;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.15);
+    rgba(135, 206, 235, 0.3) 0%, 
+    rgba(173, 216, 230, 0.25) 50%,
+    rgba(135, 206, 235, 0.2) 100%) !important;
+  padding: 8px 12px !important;
+  margin: 2px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(135, 206, 235, 0.4);
   backdrop-filter: blur(8px);
-  box-shadow: inset 0 1px 5px rgba(0,0,0,0.1);
+  box-shadow: inset 0 1px 5px rgba(135, 206, 235, 0.15);
   position: relative;
   overflow: hidden;
+  width: calc(100% - 24px);
+  box-sizing: border-box;
 }
 
 /* 子菜单容器装饰线 */
@@ -279,71 +319,80 @@ export default {
 }
 
 ::v-deep .el-menu--inline .el-menu-item {
-  margin: 6px 10px;
-  height: 44px !important;
-  line-height: 44px !important;
+  margin: 3px 0;
+  height: 40px !important;
+  line-height: 40px !important;
   font-size: 13px;
-  border-radius: 6px;
-  background: linear-gradient(to bottom, rgba(69, 127, 202, 0.3), rgba(86, 145, 200, 0.15)) !important;
-  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  background: linear-gradient(135deg, 
+    rgba(135, 206, 235, 0.2) 0%, 
+    rgba(173, 216, 230, 0.15) 50%,
+    rgba(135, 206, 235, 0.1) 100%) !important;
+  border: 1px solid rgba(135, 206, 235, 0.3);
   transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
   overflow: hidden;
-  color: rgba(255,255,255,0.85) !important;
+  color: rgba(255,255,255,0.9) !important;
   font-weight: 500;
+  letter-spacing: 0.2px;
   padding: 0 12px !important;
+  text-align: left;
+  display: flex !important;
+  align-items: center;
+  backdrop-filter: blur(10px);
 }
 
-/* 子菜单项左侧指示器 */
+/* 子菜单项内部光效 - 与父菜单相似 */
 ::v-deep .el-menu--inline .el-menu-item::before {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
-  width: 2px;
-  height: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.8), 
-    rgba(86, 145, 200, 0.6));
-  transform: scaleY(0);
-  transition: transform 0.3s ease;
-  border-radius: 0 1px 1px 0;
+    rgba(255, 255, 255, 0.05) 0%, 
+    rgba(255, 255, 255, 0.02) 50%,
+    rgba(255, 255, 255, 0.08) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 ::v-deep .el-menu--inline .el-menu-item:hover {
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.15) 0%, 
-    rgba(86, 145, 200, 0.1) 50%,
-    rgba(69, 127, 202, 0.05) 100%) !important;
-  transform: translateX(4px);
-  border: 1px solid rgba(255,255,255,0.15);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  color: rgba(255,255,255,0.95) !important;
+    rgba(135, 206, 235, 0.5) 0%, 
+    rgba(173, 216, 230, 0.4) 50%,
+    rgba(135, 206, 235, 0.35) 100%) !important;
+  transform: translateY(-2px);
+  border: 1px solid rgba(135, 206, 235, 0.5);
+  box-shadow: 0 8px 25px rgba(135, 206, 235, 0.25);
+  color: rgba(255,255,255,1) !important;
 }
 
 ::v-deep .el-menu--inline .el-menu-item:hover::before {
-  transform: scaleY(1);
+  opacity: 1;
 }
 
 /* 子菜单项激活状态 */
 ::v-deep .el-menu--inline .el-menu-item.is-active {
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.25) 0%, 
-    rgba(86, 145, 200, 0.2) 50%,
-    rgba(69, 127, 202, 0.15) 100%) !important;
+    rgba(135, 206, 235, 0.6) 0%, 
+    rgba(173, 216, 230, 0.5) 50%,
+    rgba(135, 206, 235, 0.45) 100%) !important;
   color: rgba(255,255,255,1) !important;
   font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-  transform: translateX(3px);
+  border: 1px solid rgba(135, 206, 235, 0.6);
+  box-shadow: 0 8px 30px rgba(135, 206, 235, 0.3);
+  transform: translateY(-1px);
 }
 
 ::v-deep .el-menu--inline .el-menu-item.is-active::before {
+  opacity: 1;
   background: linear-gradient(135deg, 
-    rgba(69, 127, 202, 0.8), 
-    rgba(86, 145, 200, 0.6));
-  transform: scaleY(1);
-  box-shadow: 0 0 5px rgba(86, 145, 200, 0.4);
+    rgba(135, 206, 235, 0.2) 0%, 
+    rgba(173, 216, 230, 0.15) 50%,
+    rgba(135, 206, 235, 0.25) 100%);
 }
 
 /* 子菜单项图标样式 */
@@ -496,5 +545,38 @@ export default {
 ::v-deep .theme-dark .el-menu-item.is-active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   color: #ffffff !important;
+}
+
+/* 动画效果 */
+@keyframes indicatorPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateY(-50%) scaleY(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1.1);
+  }
+}
+
+@keyframes menuItemGlow {
+  0% {
+    box-shadow: 
+      0 8px 25px rgba(69, 127, 202, 0.2),
+      0 4px 15px rgba(0,0,0,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  50% {
+    box-shadow: 
+      0 12px 35px rgba(69, 127, 202, 0.3),
+      0 6px 20px rgba(0,0,0,0.15),
+      inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  100% {
+    box-shadow: 
+      0 8px 25px rgba(69, 127, 202, 0.2),
+      0 4px 15px rgba(0,0,0,0.1),
+      inset 0 1px 0 rgba(255,255,255,0.2);
+  }
 }
 </style>

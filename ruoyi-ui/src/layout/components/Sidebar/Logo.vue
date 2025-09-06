@@ -62,7 +62,11 @@ export default {
   text-align: center;
   overflow: hidden;
   border-bottom: none;
-  box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+  box-shadow: 
+    0 4px 30px rgba(69, 127, 202, 0.3),
+    0 2px 10px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  position: relative;
 
   /* 添加装饰性背景 */
   &::before {
@@ -73,9 +77,28 @@ export default {
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
-      radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+      linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.05) 50%, transparent 70%);
     pointer-events: none;
+    animation: logoShimmer 3s ease-in-out infinite;
+  }
+
+  /* 添加底部光晕效果 */
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      rgba(255, 255, 255, 0.3) 20%, 
+      rgba(255, 255, 255, 0.6) 50%, 
+      rgba(255, 255, 255, 0.3) 80%, 
+      transparent 100%);
+    animation: logoGlow 2s ease-in-out infinite alternate;
   }
 
   & .sidebar-logo-link {
@@ -141,6 +164,29 @@ export default {
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
       }
     }
+  }
+}
+
+/* Logo动画效果 */
+@keyframes logoShimmer {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes logoGlow {
+  0% {
+    opacity: 0.3;
+    transform: scaleX(0.8);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scaleX(1);
   }
 }
 
