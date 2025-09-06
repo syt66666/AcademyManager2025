@@ -669,12 +669,11 @@ export default {
     width: calc(100% - 2px);
     max-height: 98px;
     overflow: hidden;
-    padding: 4px 6px;
+    padding: 2px; /* 减少内边距 */
     border: 1px solid rgba(255, 255, 255, 0.3);
     border-radius: 8px;
     display: flex;
-    align-items: flex-start;
-    gap: 6px;
+    flex-direction: column; /* 改为垂直布局 */
     box-sizing: border-box;
     position: relative;
     margin: 1px;
@@ -690,45 +689,53 @@ export default {
 
     .date-header {
       font-weight: bold;
-      margin: 0;
-      min-width: 28px;
+      margin: 0 0 2px 0; /* 添加底部间距 */
+      width: 100%; /* 占满宽度 */
       text-align: center;
-      padding: 3px 6px;
+      padding: 2px 4px; /* 减少内边距 */
       line-height: 1.2;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
-      border-radius: 12px;
-      font-size: 11px;
+      border-radius: 6px; /* 减少圆角 */
+      font-size: 10px; /* 减少字体大小 */
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      flex-shrink: 0; /* 防止被压缩 */
     }
 
     .events-container {
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      flex: 1;
+      gap: 1px; /* 减少间距 */
+      flex: 1; /* 占据剩余空间 */
       min-width: 0;
       overflow-y: auto;
-      max-height: calc(100% - 30px);
+      width: 100%; /* 确保容器占满可用宽度 */
+      box-sizing: border-box; /* 包含内边距在宽度计算中 */
+      padding: 0; /* 移除内边距 */
+      padding-right: 2px; /* 为滚动条留出空间 */
     }
 
     .calendar-event {
       display: flex;
       align-items: center;
-      padding: 2px 4px;
+      padding: 2px 6px; /* 增加左右内边距 */
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
-      border-radius: 6px;
+      border-radius: 4px; /* 减少圆角 */
       font-size: 10px;
       cursor: pointer;
       transition: all 0.3s ease;
       min-width: 0;
-      height: 18px;
+      height: 16px; /* 固定高度 */
       overflow: hidden;
       color: white;
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
       position: relative;
+      width: 100%; /* 确保所有活动条都是100%宽度 */
+      box-sizing: border-box; /* 包含内边距在宽度计算中 */
+      margin-bottom: 1px; /* 添加底部间距 */
+      flex-shrink: 0; /* 防止活动条被压缩 */
 
       &::before {
         content: '';
@@ -760,15 +767,18 @@ export default {
         min-width: 0;
         flex: 1;
         z-index: 1;
+        width: 100%; /* 确保占满整个活动条宽度 */
 
         .event-name {
           font-weight: 600;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          max-width: 50px;
+          flex: 1; /* 允许弹性增长，占据剩余空间 */
           font-size: 9px;
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+          min-width: 0; /* 允许收缩 */
+          margin-right: 4px; /* 添加右边距 */
         }
 
         .event-org {
@@ -776,8 +786,10 @@ export default {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          max-width: 35px;
+          flex: 0 0 auto; /* 固定宽度，不伸缩 */
           font-size: 8px;
+          max-width: 40px; /* 稍微增加最大宽度 */
+          margin-right: 4px; /* 添加右边距 */
         }
 
         .detail-btn {
@@ -789,6 +801,8 @@ export default {
           color: white;
           border-radius: 3px;
           transition: all 0.2s ease;
+          flex: 0 0 auto; /* 固定宽度，不伸缩 */
+          white-space: nowrap; /* 防止按钮文字换行 */
 
           &:hover {
             background: rgba(255, 255, 255, 0.3);
@@ -1324,17 +1338,19 @@ export default {
 /* 细节优化：滚动条美化、过渡动画、响应式布局与可达性增强 */
 /* 滚动条美化（仅影响事件列表，不影响全局） */
 .calendar-view .events-container::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 .calendar-view .events-container::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
 }
 .calendar-view .events-container::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.35);
-  border-radius: 6px;
+  background: rgba(102, 126, 234, 0.4);
+  border-radius: 2px;
+  transition: background 0.3s ease;
 }
 .calendar-view .events-container:hover::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.55);
+  background: rgba(102, 126, 234, 0.6);
 }
 
 /* 入场动画，使元素更灵动 */
