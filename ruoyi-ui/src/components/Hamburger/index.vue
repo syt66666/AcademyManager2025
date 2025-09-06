@@ -36,9 +36,32 @@ export default {
   vertical-align: middle;
   width: 20px;
   height: 20px;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.hamburger:hover {
+  background: rgba(102, 126, 234, 0.1);
+  transform: scale(1.1);
 }
 
 .hamburger.is-active {
   transform: rotate(180deg);
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.hamburger path {
+  fill: #667eea;
+  transition: fill 0.3s ease;
+}
+
+.hamburger:hover path {
+  fill: #764ba2;
+}
+
+.hamburger.is-active path {
+  fill: #ff6b6b;
 }
 </style>

@@ -44,49 +44,123 @@ export default {
 
 <style lang="scss" scoped>
 .sidebarLogoFade-enter-active {
-  transition: opacity 1.5s;
+  transition: all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .sidebarLogoFade-enter,
 .sidebarLogoFade-leave-to {
   opacity: 0;
+  transform: translateY(-10px);
 }
 
 .sidebar-logo-container {
   position: relative;
   width: 100%;
-  height: 50px;
-  line-height: 50px;
-  background: #2b2f3a;
+  height: 60px;
+  line-height: 60px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   text-align: center;
   overflow: hidden;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+
+  /* 添加装饰性背景 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%),
+      radial-gradient(circle at 70% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
 
   & .sidebar-logo-link {
     height: 100%;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+
+    &:hover {
+      transform: scale(1.02);
+    }
 
     & .sidebar-logo {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       vertical-align: middle;
       margin-right: 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+      filter: brightness(1.1) contrast(1.1);
     }
 
     & .sidebar-title {
       display: inline-block;
       margin: 0;
-      color: #fff;
-      font-weight: 600;
-      line-height: 50px;
-      font-size: 14px;
-      font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
+      color: #ffffff;
+      font-weight: 700;
+      line-height: 60px;
+      font-size: 16px;
+      font-family: 'PingFang SC', 'Microsoft YaHei', Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
       vertical-align: middle;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
     }
   }
 
   &.collapse {
     .sidebar-logo {
       margin-right: 0px;
+      transform: scale(1.1);
+    }
+    
+    .sidebar-title {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+  }
+
+  /* 暗色主题适配 */
+  &.theme-dark {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    
+    .sidebar-logo-link {
+      .sidebar-title {
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      }
+    }
+  }
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .sidebar-logo-container {
+    height: 50px;
+    line-height: 50px;
+    
+    .sidebar-logo-link {
+      .sidebar-logo {
+        width: 28px;
+        height: 28px;
+        margin-right: 8px;
+      }
+      
+      .sidebar-title {
+        font-size: 14px;
+        line-height: 50px;
+      }
     }
   }
 }

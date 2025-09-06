@@ -8,10 +8,10 @@ $tiffany: #4AB7BD;
 $yellow:#FEC171;
 $panGreen: #30B08F;
 
-// 默认菜单主题风格
-$base-menu-color:#bfcbd9;
-$base-menu-color-active:#f4f4f5;
-$base-menu-background: #255c8a;
+// 默认菜单主题风格 - 现代渐变设计
+$base-menu-color:rgba(255,255,255,0.95);
+$base-menu-color-active:#667eea;
+$base-menu-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 $base-logo-title-color: #ffffff;
 
 $base-menu-light-color:rgba(0,0,0,.70);
