@@ -203,6 +203,7 @@ export default {
     rgba(69, 127, 202, 0.25) 0%, 
     rgba(86, 145, 200, 0.15) 50%,
     rgba(69, 127, 202, 0.1) 100%) !important;
+  color: rgba(255,255,255,1) !important;
   border: 1px solid rgba(255,255,255,0.2);
   box-shadow: 
     0 6px 20px rgba(0,0,0,0.1),
