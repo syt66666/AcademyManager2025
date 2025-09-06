@@ -41,10 +41,10 @@
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
               <el-option 
-                v-for="type in availableActivityTypes" 
-                :key="type" 
-                :label="getActivityTypeName(type)" 
-                :value="type"
+                v-for="type in predefinedActivityTypes" 
+                :key="type.value" 
+                :label="type.label" 
+                :value="type.value"
               />
             </el-select>
           </el-form-item>
@@ -293,10 +293,10 @@
         <el-form-item label="活动类型" prop="activityType">
           <el-select v-model="form.activityType" placeholder="请选择活动类型" style="width: 100%">
             <el-option 
-              v-for="type in availableActivityTypes" 
-              :key="type" 
-              :label="getActivityTypeName(type)" 
-              :value="type"
+              v-for="type in predefinedActivityTypes" 
+              :key="type.value" 
+              :label="type.label" 
+              :value="type.value"
             />
           </el-select>
         </el-form-item>
@@ -475,6 +475,13 @@ export default {
       activitiesList: [],
       // 可用的活动类型列表
       availableActivityTypes: [],
+      // 预定义的活动类型
+      predefinedActivityTypes: [
+        { value: '1', label: '人格塑造与价值引领活动类' },
+        { value: '2', label: '知识融合与思维进阶活动类' },
+        { value: '3', label: '能力锻造与实践创新活动类' },
+        { value: '4', label: '社会责任与领军意识活动类' }
+      ],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -530,7 +537,7 @@ export default {
           { required: true, message: "活动容量不能为空", trigger: "blur" }
           ],
         activityType: [
-          { required: true, message: "活动类型不能为空", trigger: "change" }
+          { required: true, message: "请选择活动类型", trigger: "change" }
         ],
         activityStart: [
           {required: true, message: "报名开始时间不能为空", trigger: "blur"}
@@ -1005,24 +1012,8 @@ export default {
 
     /** 更新可用的活动类型列表 */
     updateAvailableActivityTypes() {
-      const types = new Set();
-      this.activitiesList.forEach(item => {
-        if (item.activityType) {
-          types.add(item.activityType);
-        }
-      });
-      
-      // 如果没有活动类型数据，提供默认选项
-      if (types.size === 0) {
-        types.add('1');
-        types.add('2');
-        types.add('3');
-        types.add('4');
-        types.add('其他');
-      }
-      
-      // 转换为数组并排序
-      this.availableActivityTypes = Array.from(types).sort();
+      // 使用预定义的活动类型
+      this.availableActivityTypes = ['1', '2', '3', '4'];
     },
 
   },

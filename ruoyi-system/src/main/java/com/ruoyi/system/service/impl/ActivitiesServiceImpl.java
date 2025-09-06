@@ -59,6 +59,11 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             throw new ServiceException("活动名称和组织单位组合已存在，不能重复添加！");
         }
         
+        // 验证活动类型
+        if (activity.getActivityType() == null || !activity.getActivityType().matches("^[1-4]$")) {
+            throw new ServiceException("活动类型只能是1、2、3、4中的一种");
+        }
+        
         if(activity.getActivityCapacity()==null){
             activity.setActivityCapacity(activity.getActivityTotalCapacity());
         }
@@ -85,6 +90,11 @@ public class ActivitiesServiceImpl implements IActivitiesService {
         // 检查活动名称和组织单位的唯一性（编辑时排除自身）
         if (!checkActivityUnique(activity.getActivityName(), activity.getOrganizer(), activity.getActivityId())) {
             throw new ServiceException("活动名称和组织单位组合已存在，不能重复添加！");
+        }
+        
+        // 验证活动类型
+        if (activity.getActivityType() == null || !activity.getActivityType().matches("^[1-4]$")) {
+            throw new ServiceException("活动类型只能是1、2、3、4中的一种");
         }
         
         return activitiesMapper.updateActivity2(activity);

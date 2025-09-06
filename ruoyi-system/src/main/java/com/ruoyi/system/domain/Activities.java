@@ -7,6 +7,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -65,6 +67,8 @@ public class Activities extends BaseEntity {
 
     /** 活动类型 */
     @Excel(name = "活动类型")
+    @NotBlank(message = "活动类型不能为空")
+    @Pattern(regexp = "^[1-4]$", message = "活动类型只能是1、2、3、4中的一种")
     private String activityType;
 
     /** 活动状态 */
