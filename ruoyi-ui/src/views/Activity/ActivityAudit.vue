@@ -103,13 +103,23 @@
           </el-form-item>
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-              <el-option 
-                v-for="type in availableActivityTypes" 
-                :key="type" 
-                :label="getActivityTypeName(type)" 
+              <el-option
+                v-for="type in availableActivityTypes"
+                :key="type"
+                :label="getActivityTypeName(type)"
                 :value="type"
               />
             </el-select>
+          </el-form-item>
+          <el-form-item label="组织单位" prop="organizer">
+            <el-input
+              v-model="queryParams.organizer"
+              placeholder="请输入组织单位"
+              clearable
+              prefix-icon="el-icon-building"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
           </el-form-item>
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
@@ -462,6 +472,7 @@
 import { listBookingsAudit, updateBooking, getAuditCount, getBooking } from "@/api/system/bookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
+import {getNickName} from "@/api/system/student";
 import axios from "axios";
 
 
@@ -529,7 +540,8 @@ export default {
         studentName: null,
         activityName: null,
         activityType: null,
-        status: null
+        status: null,
+        organizer: null
       }
     };
   },
@@ -699,13 +711,13 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
       return typeMap[activityType] || activityType;
     },
-    
+
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -725,7 +737,7 @@ export default {
           types.add(item.activityType);
         }
       });
-      
+
       // 如果没有活动类型数据，提供默认选项
       if (types.size === 0) {
         types.add('1');
@@ -734,22 +746,48 @@ export default {
         types.add('4');
         types.add('其他');
       }
-      
+
       // 转换为数组并排序
       this.availableActivityTypes = Array.from(types).sort();
     },
     // 获取活动列表
     getList() {
       this.loading = true;
-      listBookingsAudit(this.queryParams).then(response => {
-        this.activityList = response.rows; // 直接使用后端返回的状态字符串
-        this.total = response.total;
-        this.loading = false;
-        // 更新可用的活动类型列表
-        this.updateAvailableActivityTypes();
-      });
+      console.log("开始获取审核列表，queryParams:", this.queryParams);
+
+      // 封装获取审核列表的逻辑
+      const fetchAuditList = (params) => {
+        listBookingsAudit(params).then(response => {
+          console.log("获取审核列表成功:", response);
+          this.activityList = response.rows;
+          this.total = response.total;
+          this.updateAvailableActivityTypes();
+        }).catch(error => {
+          console.error("获取审核列表失败:", error);
+          this.$message.error("获取审核列表失败");
+        }).finally(() => {
+          this.loading = false;
+        });
+      };
+
+      // 先获取组织者名称，作为默认筛选条件
+      getNickName()  // 注意：确保已引入getNickName方法
+        .then(nickName => {
+          console.log("获取到组织者名称:", nickName.msg);
+          // 合并查询参数与组织者信息
+          const params = { ...this.queryParams, organizer: nickName.msg };
+          fetchAuditList(params);
+        })
+        .catch(error => {
+          console.error("获取组织者名称失败:", error);
+          // 失败时使用原始查询参数
+          fetchAuditList(this.queryParams);
+        });
     },
-    // 获取审核统计
+
+
+
+      // 获取审核统计
     async fetchAuditCount() {
       try {
         const {code, data} = await getAuditCount();
@@ -990,7 +1028,8 @@ export default {
         studentName: null,
         activityName: null,
         activityType: null,
-        status: null
+        status: null,
+        organizer: null
       };
       this.getList();
     },
