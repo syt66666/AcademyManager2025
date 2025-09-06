@@ -109,32 +109,42 @@
 
         <el-table-column label="材料提交" align="center" width="120">
           <template slot-scope="scope">
-            <el-button
-              v-if="scope.row.status === '未提交'"
-              type="text"
-              size="mini"
-              class="action-button upload-button"
-              @click="openUploadDialog(scope.row)"
-            >提交</el-button>
-            <el-button
-              v-if="scope.row.status === '未通过'"
-              type="text"
-              size="mini"
-              class="action-button reupload-button"
-              @click="openUploadDialog(scope.row)"
-            >重新提交</el-button>
+            <!-- 活动未结束时显示提示信息 -->
             <el-tag
-              v-if="scope.row.status === '未审核'"
-              type="warning"
+              v-if="!isActivityEnded(scope.row.endTime)"
+              type="info"
               effect="light"
               class="status-tag"
-            >待审核</el-tag>
-            <el-tag
-              v-if="scope.row.status === '已通过'"
-              type="success"
-              effect="light"
-              class="status-tag"
-            >已通过</el-tag>
+            >活动未结束</el-tag>
+            <!-- 活动结束后显示上传按钮或状态标签 -->
+            <template v-else>
+              <el-button
+                v-if="scope.row.status === '未提交'"
+                type="text"
+                size="mini"
+                class="action-button upload-button"
+                @click="openUploadDialog(scope.row)"
+              >提交</el-button>
+              <el-button
+                v-if="scope.row.status === '未通过'"
+                type="text"
+                size="mini"
+                class="action-button reupload-button"
+                @click="openUploadDialog(scope.row)"
+              >重新提交</el-button>
+              <el-tag
+                v-if="scope.row.status === '未审核'"
+                type="warning"
+                effect="light"
+                class="status-tag"
+              >待审核</el-tag>
+              <el-tag
+                v-if="scope.row.status === '已通过'"
+                type="success"
+                effect="light"
+                class="status-tag"
+              >已通过</el-tag>
+            </template>
           </template>
         </el-table-column>
         <el-table-column type="expand" width="60" align="center">
@@ -147,6 +157,13 @@
               <div class="expand-row">
                 <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
                 <div class="expand-content">{{ props.row.notes }}</div>
+              </div>
+              <div class="expand-row" v-if="!isActivityEnded(props.row.endTime)">
+                <div class="expand-label"><i class="el-icon-time"></i> 材料提交提示:</div>
+                <div class="expand-content upload-tip">
+                  <i class="el-icon-info"></i>
+                  活动尚未结束，请等待活动结束后再提交证明材料。活动结束时间：{{ parseTime(props.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+                </div>
               </div>
             </div>
           </template>
@@ -288,6 +305,14 @@ export default {
       };
       return typeMap[activityType] || activityType;
     },
+
+    // 检查活动是否已结束
+    isActivityEnded(endTime) {
+      if (!endTime) return false;
+      const now = new Date();
+      const activityEndTime = new Date(endTime);
+      return now > activityEndTime;
+    },
     
     getActivityTypeTagType(activityType) {
       const map = {
@@ -389,6 +414,12 @@ export default {
 
     // 打开上传对话框
     async openUploadDialog(booking) {
+      // 检查活动是否已结束
+      if (!this.isActivityEnded(booking.endTime)) {
+        this.$message.warning("活动尚未结束，无法提交材料。请等待活动结束后再提交。");
+        return;
+      }
+
       this.currentBooking = booking;
       this.uploadTitle = booking.status === '未提交' ? '提交材料' : '重新提交';
       this.uploadVisible = true;
@@ -413,6 +444,13 @@ export default {
     // 提交证明材料
     async submitProof() {
       if (!this.currentBooking) return;
+
+      // 再次检查活动是否已结束（防止在对话框打开期间活动状态变化）
+      if (!this.isActivityEnded(this.currentBooking.endTime)) {
+        this.$message.warning("活动尚未结束，无法提交材料。请等待活动结束后再提交。");
+        this.uploadVisible = false;
+        return;
+      }
 
       try {
         // 准备proof字段 - 只提交文件名数组
@@ -719,6 +757,14 @@ export default {
   font-size: 12px;
 }
 
+/* 活动未结束标签特殊样式 */
+.status-tag[type="info"] {
+  background-color: #f4f4f5;
+  border-color: #d3d4d6;
+  color: #909399;
+  font-weight: 500;
+}
+
 /* 序号徽章 */
 .index-badge {
   display: inline-block;
@@ -775,6 +821,21 @@ export default {
   flex: 1;
   color: #606266;
   line-height: 1.6;
+}
+
+/* 上传提示样式 */
+.upload-tip {
+  background-color: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  padding: 12px;
+  color: #0369a1;
+  font-weight: 500;
+}
+
+.upload-tip i {
+  margin-right: 6px;
+  color: #0284c7;
 }
 
 /* 分页样式 */

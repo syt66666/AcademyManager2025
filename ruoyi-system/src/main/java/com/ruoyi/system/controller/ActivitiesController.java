@@ -139,6 +139,19 @@ public class ActivitiesController extends BaseController {
         int result = activityService.increaseCapacity(activityId,version);
         return result > 0 ? AjaxResult.success("取消报名成功") : AjaxResult.error("取消报名失败");
     }
+
+    /**
+     * 检查活动名称和组织单位的唯一性
+     */
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody Map<String, Object> params) {
+        String activityName = (String) params.get("activityName");
+        String organizer = (String) params.get("organizer");
+        Integer activityId = (Integer) params.get("activityId");
+        
+        boolean isUnique = activityService.checkActivityUnique(activityName, organizer, activityId);
+        return AjaxResult.success(isUnique);
+    }
 }
 
 

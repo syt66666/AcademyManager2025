@@ -106,4 +106,15 @@ public interface ActivitiesMapper {
      */
     int correctActivityStatus(@Param("activityId") Long activityId,
                               @Param("status") String status);
+
+    /**
+     * 检查活动名称和组织单位的唯一性
+     * @param activityName 活动名称
+     * @param organizer 组织单位
+     * @param activityId 活动ID（编辑时排除自身）
+     * @return 重复的活动数量
+     */
+    int checkActivityUnique(@Param("activityName") String activityName, 
+                           @Param("organizer") String organizer,
+                           @Param("activityId") Integer activityId);
 }

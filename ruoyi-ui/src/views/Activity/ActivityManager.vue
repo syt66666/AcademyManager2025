@@ -240,7 +240,14 @@
     <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
       <el-form ref="form" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="活动名称" prop="activityName">
-          <el-input v-model="form.activityName" placeholder="请输入活动名称"/>
+          <el-input 
+            v-model="form.activityName" 
+            placeholder="请输入活动名称"
+          />
+          <div class="form-tip">
+            <i class="el-icon-info"></i>
+            活动名称在当前组织单位下必须唯一
+          </div>
         </el-form-item>
         <!-- 报名开始时间 -->
         <el-form-item label="报名开始时间" prop="activityStart">
@@ -311,8 +318,16 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
+        <el-button 
+          type="primary" 
+          @click="submitForm"
+          :loading="isSubmitting"
+          :disabled="isSubmitting"
+        >
+          <span v-if="!isSubmitting">{{ form.activityId ? '保存修改' : '创建活动' }}</span>
+          <span v-else>处理中...</span>
+        </el-button>
+        <el-button @click="cancel" :disabled="isSubmitting">取 消</el-button>
       </div>
     </el-dialog>
     <!-- 学生预约活动对话框 -->
@@ -428,7 +443,7 @@
 </template>
 
 <script>
-import {listActivities, getActivities, delActivities, addActivities, updateActivities2} from "@/api/system/activities";
+import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique} from "@/api/system/activities";
 import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
@@ -500,6 +515,8 @@ export default {
       },
       // 表单参数
       form: {},
+      // 提交状态控制
+      isSubmitting: false,
 
       // 表单校验
       rules: {
@@ -853,6 +870,7 @@ export default {
     // 取消按钮
     cancel() {
       this.open = false;
+      this.isSubmitting = false;
       this.reset();
     },
     // 表单重置
@@ -913,6 +931,14 @@ export default {
     /** 提交按钮 */
     /** 提交按钮 */
     async submitForm() {
+      // 防止重复提交
+      if (this.isSubmitting) {
+        this.$message.warning("数据正在处理，请勿重复提交");
+        return;
+      }
+
+      this.isSubmitting = true;
+
       try {
         // 1. 先确保获取组织者名称
         const result = await getNickName(); // 等待异步操作完成
@@ -925,18 +951,21 @@ export default {
           this.$refs.form.validate(resolve);
         });
 
-        if (!valid) return; // 验证不通过则停止
+        if (!valid) {
+          this.isSubmitting = false;
+          return; // 验证不通过则停止
+        }
 
         // 3. 计算活动状态
         this.calculateStatus();
 
-        // 4. 根据情况执行新增/修改
+        // 4. 根据情况执行新增/修改（唯一性检查在后端进行）
         if (this.form.activityId != null) {
           await updateActivities2(this.form);  // 等待更新完成
-          this.$modal.msgSuccess("修改成功");
+          this.$message.success("修改成功");
         } else {
           await addActivities(this.form);  // 等待新增完成
-          this.$modal.msgSuccess("新增成功");
+          this.$message.success("新增成功");
         }
 
         // 5. 关闭弹窗并刷新列表
@@ -945,7 +974,14 @@ export default {
 
       } catch (error) {
         console.error("表单提交失败:", error);
-        this.$modal.msgError(`操作失败: ${error.message || '未知错误'}`);
+        // 检查是否是唯一性错误
+        if (error.message && error.message.includes("活动名称和组织单位组合已存在")) {
+          this.$message.error("活动名称和组织单位组合已存在，不能重复添加！");
+        } else {
+          this.$message.error(`操作失败: ${error.message || '未知错误'}`);
+        }
+      } finally {
+        this.isSubmitting = false;
       }
     },
     /** 删除按钮操作 */
@@ -956,7 +992,7 @@ export default {
         return delActivities(activityIds);
       }).then(() => {
         this.getList();
-        this.$modal.msgSuccess("删除成功");
+        this.$message.success("删除成功");
       }).catch(() => {
       });
     },
@@ -987,7 +1023,8 @@ export default {
       
       // 转换为数组并排序
       this.availableActivityTypes = Array.from(types).sort();
-    }
+    },
+
   },
   watch: {
     'form.activityTotalCapacity'(newVal) {
@@ -1325,6 +1362,20 @@ export default {
 }
 
 
+
+/* 表单提示样式 */
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.form-tip i {
+  margin-right: 4px;
+  color: #409EFF;
+}
 
 /* 响应式调整 */
 @media (max-width: 768px) {

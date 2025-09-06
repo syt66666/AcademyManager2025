@@ -54,6 +54,11 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      */
     @Override
     public int insertActivity(Activities activity) {
+        // 检查活动名称和组织单位的唯一性
+        if (!checkActivityUnique(activity.getActivityName(), activity.getOrganizer(), null)) {
+            throw new ServiceException("活动名称和组织单位组合已存在，不能重复添加！");
+        }
+        
         if(activity.getActivityCapacity()==null){
             activity.setActivityCapacity(activity.getActivityTotalCapacity());
         }
@@ -77,6 +82,11 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     }
     @Override
     public int updateActivity2(Activities activity) {
+        // 检查活动名称和组织单位的唯一性（编辑时排除自身）
+        if (!checkActivityUnique(activity.getActivityName(), activity.getOrganizer(), activity.getActivityId())) {
+            throw new ServiceException("活动名称和组织单位组合已存在，不能重复添加！");
+        }
+        
         return activitiesMapper.updateActivity2(activity);
     }
     /**
@@ -120,6 +130,8 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             try {
                 BeanValidators.validateWithException(validator, user);
                 user.setCreateBy(operName);
+                
+                // 直接调用insertActivity，它内部会进行唯一性检查
                 this.insertActivity(user);
                 successNum++;
                 successMsg.append("<br/>" + successNum + "、活动名称 " + user.getActivityName() + " 导入成功");
@@ -166,5 +178,11 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             throw new ServiceException("数据出现错误，请刷新重试！");
         }
         return result;
+    }
+
+    @Override
+    public boolean checkActivityUnique(String activityName, String organizer, Integer activityId) {
+        int count = activitiesMapper.checkActivityUnique(activityName, organizer, activityId);
+        return count == 0;
     }
 }

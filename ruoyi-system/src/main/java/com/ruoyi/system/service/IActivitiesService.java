@@ -61,4 +61,14 @@ public interface IActivitiesService {
     int decreaseCapacity(Integer activityId,Integer version);
 
     int updateActivity2(Activities activity);
+
+    /**
+     * 检查活动名称和组织单位的唯一性
+     *
+     * @param activityName 活动名称
+     * @param organizer 组织单位
+     * @param activityId 活动ID（编辑时排除自身）
+     * @return 是否唯一
+     */
+    boolean checkActivityUnique(String activityName, String organizer, Integer activityId);
 }

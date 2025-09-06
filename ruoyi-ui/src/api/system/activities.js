@@ -72,3 +72,12 @@ export function cancelSignUpCapacity(activityId,version) {
   })
 }
 
+// 检查活动唯一性
+export function checkActivityUnique(params) {
+  return request({
+    url: '/system/activities/checkUnique',
+    method: 'post',
+    data: params
+  })
+}
+

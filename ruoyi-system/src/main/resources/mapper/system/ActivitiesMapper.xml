@@ -254,4 +254,15 @@
         SET status = #{status}
         WHERE activity_id = #{activityId}
     </update>
+
+    <!-- 检查活动名称和组织单位的唯一性 -->
+    <select id="checkActivityUnique" resultType="int">
+        SELECT COUNT(1)
+        FROM activities
+        WHERE activity_name = #{activityName}
+        AND organizer = #{organizer}
+        <if test="activityId != null">
+            AND activity_id != #{activityId}
+        </if>
+    </select>
 </mapper>
