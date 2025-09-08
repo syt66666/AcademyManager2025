@@ -1,5 +1,6 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.Date;
 import java.util.List;
 
 import com.ruoyi.common.exception.ServiceException;
@@ -150,7 +151,13 @@ public class ActivitiesServiceImpl implements IActivitiesService {
                 // 转换活动类型（支持文字和数字两种格式）
                 String convertedType = convertActivityTypeToNumber(user.getActivityType());
                 user.setActivityType(convertedType);
-                
+
+                // 新增：时间规则验证
+                validateTimeConstraints(user);
+
+                // 新增：容量验证
+                validateCapacityConstraints(user);
+
                 // 直接调用insertActivity，它内部会进行唯一性检查
                 this.insertActivity(user);
                 successNum++;
@@ -235,4 +242,61 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             throw new ServiceException("无效的活动类型：" + activityTypeText + "，支持的类型：人格塑造与价值引领活动类、知识融合与思维进阶活动类、能力锻造与实践创新活动类、社会责任与领军意识活动类");
         }
     }
+    /**
+     * 验证活动时间规则
+     */
+    private void validateTimeConstraints(Activities activity) {
+        Date signupStart = activity.getActivityStart();
+        Date signupEnd = activity.getActivityDeadline();
+        Date activityStart = activity.getStartTime();
+        Date activityEnd = activity.getEndTime();
+
+        // 1. 检查必填时间字段
+        if (signupStart == null || signupEnd == null || activityStart == null || activityEnd == null) {
+            throw new ServiceException("报名开始时间、报名结束时间、活动开始时间、活动结束时间都不能为空");
+        }
+
+        // 2. 报名开始时间不能晚于报名结束时间
+        if (signupStart.after(signupEnd)) {
+            throw new ServiceException("报名开始时间不能晚于报名结束时间");
+        }
+
+        // 3. 活动开始时间不能晚于活动结束时间
+        if (activityStart.after(activityEnd)) {
+            throw new ServiceException("活动开始时间不能晚于活动结束时间");
+        }
+
+        // 4. 报名结束时间不能晚于活动开始时间
+        if (signupEnd.after(activityStart)) {
+            throw new ServiceException("报名结束时间不能晚于活动开始时间");
+        }
+
+        // 5. 报名时间必须在活动时间之前（整个报名期都要在活动开始前）
+        if (signupEnd.after(activityStart)) {
+            throw new ServiceException("报名必须在活动开始之前结束");
+        }
+
+    }
+    /**
+     * 验证活动容量限制
+     */
+    private void validateCapacityConstraints(Activities activity) {
+        Integer ActivityTotalCapacity = activity.getActivityTotalCapacity();
+
+        // 1. 容量不能为空
+        if (ActivityTotalCapacity == null) {
+            throw new ServiceException("活动容量不能为空");
+        }
+
+        // 2. 容量必须大于0
+        if (ActivityTotalCapacity <= 0) {
+            throw new ServiceException("活动容量必须大于0");
+        }
+
+        // 3. 可选：设置容量上限
+        if (ActivityTotalCapacity > 1000) {
+            throw new ServiceException("活动容量不能超过1000人");
+        }
+    }
 }
+
