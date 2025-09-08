@@ -54,109 +54,14 @@
         </el-calendar>
       </el-tab-pane>
 
-      <!-- 甘特图视图 -->
-      <el-tab-pane label="甘特图视图" name="gantt">
-        <div class="gantt-container">
-          <!-- 周导航 -->
-          <div class="gantt-week-navigation">
-            <el-button 
-              type="text" 
-              @click="goToPreviousWeek"
-              class="week-nav-btn"
-            >
-              <i class="el-icon-arrow-left"></i> 上周
-            </el-button>
-            <div class="week-display">
-              <span class="week-range">{{ currentWeekRange }}</span>
-            </div>
-            <el-button 
-              type="text" 
-              @click="goToNextWeek"
-              class="week-nav-btn"
-            >
-              下周 <i class="el-icon-arrow-right"></i>
-            </el-button>
-            <el-button 
-              type="text" 
-              @click="goToCurrentWeek"
-              class="week-nav-btn current-week"
-            >
-              本周
-            </el-button>
-          </div>
-          
-          <div class="gantt-header">
-            <div class="gantt-timeline">
-              <div
-                v-for="day in ganttDays"
-                :key="day.date"
-                :class="['gantt-date-cell', { 'today': day.isToday }]"
-              >
-                <div class="date">{{ day.day }}</div>
-                <div class="weekday">{{ day.weekday }}</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="gantt-body">
-            <div
-              v-for="(activity, index) in filteredActivities"
-              :key="index"
-              class="gantt-activity"
-            >
-              <div class="activity-label">
-                <span class="activity-name">{{ activity.activityName }}</span>
-                <span class="activity-org">({{ activity.organizer }})</span>
-              </div>
-
-              <div class="activity-bars">
-                <div
-                  v-for="day in ganttDays"
-                  :key="day.date"
-                  class="gantt-cell"
-                >
-                  <div
-                    v-if="isActivityOnDate(activity, day.date)"
-                    class="activity-bar"
-                    :class="{
-                      'not-started': !isActivityStarted(activity, day.date),
-                      'in-progress': isActivityInProgress(activity, day.date),
-                      'activity-start': isActivityStartDate(activity, day.date),
-                      'activity-end': isActivityEndDate(activity, day.date)
-                    }"
-                    @click="handleEventClick(activity)"
-                  >
-                    <div v-if="isActivityStartDate(activity, day.date)" class="activity-info">
-                      <span class="activity-name">{{ activity.activityName }}</span>
-                      <el-button
-                        v-if="isBeforeToday(activity.activityDeadline)"
-                        type="text"
-                        size="mini"
-                        class="detail-btn"
-                      >
-                        详细
-                      </el-button>
-                      <el-button
-                        v-else
-                        type="text"
-                        size="mini"
-                        disabled
-                        class="detail-btn disabled-btn"
-                      >
-                        已截止
-                      </el-button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- 活动报名视图 -->
+      <el-tab-pane label="活动报名" name="booking">
+        <ActivityBooking />
       </el-tab-pane>
     </el-tabs>
 
     <!-- 详情/报名区域 -->
-    <div class="detail-section">
+    <div class="detail-section" v-if="activeView === 'calendar'">
       <div class="activity-detail" v-if="selectedActivity">
         <!-- 活动详情展示 -->
         <div class="detail-header">
@@ -259,12 +164,16 @@
 import { listActivities, signUpCapacity } from "@/api/system/activities";
 import {addBooking, checkBookingSimple} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
+import ActivityBooking from "./Activity/ActivityBooking.vue";
 
 export default {
   name: "ActivityDashboard",
+  components: {
+    ActivityBooking
+  },
   data() {
     return {
-      activeView: 'calendar', // 当前视图: calendar/gantt
+      activeView: 'calendar', // 当前视图: calendar/booking
       calendarDate: new Date(), // 日历当前日期
       filterDateRange: null,
       activityList: [],
@@ -304,25 +213,9 @@ export default {
         phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }]
       },
 
-      // 甘特图相关
-      ganttDays: [],
-      ganttDaysCount: 7, // 甘特图显示7天
-      currentWeekOffset: 0, // 当前周偏移量，0表示本周，-1表示上周，1表示下周
-      currentWeekRange: '' // 当前显示的周范围
     };
   },
   computed: {
-    // 计算过滤后的活动列表（当周有活动的）
-    filteredActivities() {
-      if (!this.ganttDays || this.ganttDays.length === 0) {
-        return [];
-      }
-      
-      return this.activityList.filter(activity =>
-        this.isActivityInWeek(activity)
-      );
-    },
-
     // 显示报名按钮的条件
     showSignUpButton() {
       if (!this.selectedActivity) return false;
@@ -334,7 +227,6 @@ export default {
   },
   created() {
     this.fetchActivities();
-    this.generateGanttDays();
   },
   mounted() {
     this.hideEmptyCalendarRows();
@@ -346,8 +238,8 @@ export default {
       });
     },
     activeView(newView) {
-      // 当切换到甘特图视图时，清除选中的活动
-      if (newView === 'gantt') {
+      // 当切换到活动报名视图时，清除选中的活动
+      if (newView === 'booking') {
         this.selectedActivity = null;
       }
     }
@@ -485,157 +377,6 @@ export default {
       return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
     },
 
-    // 生成甘特图日期范围（支持周偏移）
-    generateGanttDays() {
-      const days = [];
-      const today = new Date();
-      
-      // 获取目标周的周一日期
-      const targetMonday = this.getTargetWeekMonday();
-      
-      // 生成周一到周日的7天
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(targetMonday);
-        date.setDate(targetMonday.getDate() + i);
-
-        days.push({
-          date: date.toISOString().split('T')[0],
-          day: date.getDate(),
-          weekday: ['日', '一', '二', '三', '四', '五', '六'][date.getDay()],
-          isToday: date.toDateString() === today.toDateString()
-        });
-      }
-
-      this.ganttDays = days;
-      this.updateWeekRange();
-    },
-
-    // 获取目标周的周一日期
-    getTargetWeekMonday() {
-      const today = new Date();
-      
-      // 获取本周一的日期
-      const currentMonday = new Date(today);
-      const dayOfWeek = today.getDay();
-      const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      currentMonday.setDate(today.getDate() + daysToMonday);
-      
-      // 根据偏移量计算目标周的周一
-      const targetMonday = new Date(currentMonday);
-      targetMonday.setDate(currentMonday.getDate() + (this.currentWeekOffset * 7));
-      
-      return targetMonday;
-    },
-
-    // 更新周范围显示
-    updateWeekRange() {
-      if (this.ganttDays && this.ganttDays.length >= 2) {
-        const startDate = this.ganttDays[0];
-        const endDate = this.ganttDays[6];
-        const startMonth = startDate.date.split('-')[1];
-        const endMonth = endDate.date.split('-')[1];
-        const startDay = startDate.day;
-        const endDay = endDate.day;
-        
-        if (startMonth === endMonth) {
-          // 同月
-          this.currentWeekRange = `${startMonth}月${startDay}日 - ${endDay}日`;
-        } else {
-          // 跨月
-          this.currentWeekRange = `${startMonth}月${startDay}日 - ${endMonth}月${endDay}日`;
-        }
-      }
-    },
-
-    // 检查活动是否在当前显示的周
-    isActivityInWeek(activity) {
-      if (!this.ganttDays || this.ganttDays.length === 0) {
-        return false;
-      }
-      
-      const activityStart = new Date(activity.startTime);
-      const activityEnd = new Date(activity.endTime);
-      const weekStart = new Date(this.ganttDays[0].date);
-      const weekEnd = new Date(this.ganttDays[this.ganttDays.length - 1].date);
-      weekEnd.setHours(23, 59, 59, 999);
-
-      // 检查活动是否与当前显示的周有重叠
-      return (activityStart <= weekEnd && activityEnd >= weekStart);
-    },
-
-    // 检查活动是否在日期范围内
-    isActivityInRange(activity, startDate, endDate) {
-      const activityStart = new Date(activity.startTime);
-      const activityEnd = new Date(activity.endTime);
-      const rangeStart = new Date(startDate);
-      const rangeEnd = new Date(endDate);
-      rangeEnd.setHours(23, 59, 59, 999);
-
-      return (activityStart >= rangeStart && activityStart <= rangeEnd) ||
-        (activityEnd >= rangeStart && activityEnd <= rangeEnd) ||
-        (activityStart <= rangeStart && activityEnd >= rangeEnd);
-    },
-
-    // 检查活动是否在指定日期
-    isActivityOnDate(activity, dateString) {
-      const date = new Date(dateString);
-      const start = new Date(activity.startTime);
-      const end = new Date(activity.endTime);
-
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
-
-      return date >= start && date <= end;
-    },
-
-    // 活动是否已开始
-    isActivityStarted(activity, dateString) {
-      const date = new Date(dateString);
-      const activityDate = new Date(activity.startTime);
-      return date >= activityDate;
-    },
-
-    // 活动是否进行中
-    isActivityInProgress(activity, dateString) {
-      const date = new Date(dateString);
-      const start = new Date(activity.startTime);
-      const end = new Date(activity.endTime);
-      return date >= start && date <= end;
-    },
-
-    // 检查是否是活动开始日期
-    isActivityStartDate(activity, dateString) {
-      const date = new Date(dateString);
-      const start = new Date(activity.startTime);
-      start.setHours(0, 0, 0, 0);
-      date.setHours(0, 0, 0, 0);
-      return date.getTime() === start.getTime();
-    },
-
-    // 检查是否是活动结束日期
-    isActivityEndDate(activity, dateString) {
-      const date = new Date(dateString);
-      const end = new Date(activity.endTime);
-      end.setHours(0, 0, 0, 0);
-      date.setHours(0, 0, 0, 0);
-      return date.getTime() === end.getTime();
-    },
-
-    // 周导航方法
-    goToPreviousWeek() {
-      this.currentWeekOffset--;
-      this.generateGanttDays();
-    },
-
-    goToNextWeek() {
-      this.currentWeekOffset++;
-      this.generateGanttDays();
-    },
-
-    goToCurrentWeek() {
-      this.currentWeekOffset = 0;
-      this.generateGanttDays();
-    },
     // 修改报名处理方法
     handleSignUp() {
       this.$confirm('确定要报名该活动吗？', '报名确认', {
@@ -728,28 +469,36 @@ export default {
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  margin-left: 0;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  height: 100vh;
+  margin-left: 200px;
+  background: #f5f7fa;
   padding: 0;
   min-height: 100vh;
   position: relative;
-  left: 200px;
   width: calc(100% - 200px);
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .view-tabs {
   flex: 1;
   margin: 0;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  backdrop-filter: none;
   border-radius: 0;
-  padding: 15px;
+  padding: 0;
   box-shadow: none;
   border: none;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
 
   .el-tabs__header {
     margin: 0 0 15px 0;
+    padding: 15px 15px 0 15px;
   }
 
   .el-tabs__nav-wrap {
@@ -785,10 +534,19 @@ export default {
   .el-tabs__active-bar {
     display: none;
   }
+
+  .el-tabs__content {
+    flex: 1;
+    overflow: auto;
+    padding: 0;
+    width: 100%;
+    box-sizing: border-box;
+    height: 100%;
+  }
 }
 
 .calendar-view {
-  height: 600px;
+  height: calc(100vh - 200px);
   overflow: visible;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   border-radius: 0;
@@ -1094,270 +852,6 @@ export default {
   box-sizing: border-box;
 }
 
-.gantt-container {
-  border: none;
-  border-radius: 0;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  box-shadow: none;
-
-  .gantt-week-navigation {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-
-    .week-nav-btn {
-      color: #495057;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-
-      &:hover {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-        transform: translateY(-1px);
-      }
-
-      &.current-week {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-
-        &:hover {
-          background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-      }
-
-      i {
-        font-size: 14px;
-      }
-    }
-
-    .week-display {
-      flex: 1;
-      text-align: center;
-
-      .week-range {
-        font-size: 16px;
-        font-weight: 600;
-        color: #2c3e50;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 8px 16px;
-        border-radius: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-    }
-  }
-
-  .gantt-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-    .gantt-timeline {
-      display: flex;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-
-      .gantt-date-cell {
-        flex: 1;
-        text-align: center;
-        padding: 12px 0;
-        border-right: 1px solid rgba(255, 255, 255, 0.2);
-        color: white;
-        transition: all 0.3s ease;
-
-        &:last-child {
-          border-right: none;
-        }
-
-        &.today {
-          background: rgba(255, 193, 7, 0.2);
-          border-bottom: 2px solid #ffc107;
-        }
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.1);
-        }
-      }
-
-      .gantt-date-cell {
-        .date {
-          font-weight: bold;
-          font-size: 18px;
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        }
-
-        .weekday {
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 12px;
-        }
-      }
-    }
-  }
-
-  .gantt-body {
-    .gantt-activity {
-      display: flex;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-      transition: all 0.3s ease;
-      min-height: 50px; /* 确保最小高度 */
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .activity-label {
-        width: 200px;
-        padding: 12px;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-right: 1px solid rgba(255, 255, 255, 0.2);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-
-        .activity-name {
-          font-weight: 600;
-          margin-bottom: 4px;
-          color: #495057;
-        }
-
-        .activity-org {
-          font-size: 12px;
-          color: #6c757d;
-        }
-      }
-
-      .activity-bars {
-        flex: 1;
-        display: flex;
-
-        .gantt-cell {
-          flex: 1;
-          border-right: 1px solid rgba(255, 255, 255, 0.2);
-          position: relative;
-
-          &:last-child {
-            border-right: none;
-          }
-
-          .activity-bar {
-            height: 100%;
-            min-height: 40px; /* 确保最小高度 */
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: white;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-            margin: 2px 0; /* 上下边距，左右无边距实现连续效果 */
-            position: relative;
-            
-            /* 开始日期圆角 */
-            &.activity-start {
-              border-radius: 6px 0 0 6px;
-            }
-            
-            /* 结束日期圆角 */
-            &.activity-end {
-              border-radius: 0 6px 6px 0;
-            }
-            
-            /* 中间日期无圆角 */
-            &:not(.activity-start):not(.activity-end) {
-              border-radius: 0;
-            }
-            
-            /* 单日活动圆角 */
-            &.activity-start.activity-end {
-              border-radius: 6px;
-            }
-
-            &:hover {
-              transform: translateY(-1px);
-              box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
-              background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            }
-
-            &.in-progress {
-              background: linear-gradient(135deg, #67c23a 0%, #85ce61 100%);
-              border-top: 2px solid #67c23a;
-              border-bottom: 2px solid #67c23a;
-
-              &:hover {
-                background: linear-gradient(135deg, #5daf34 0%, #7bc855 100%);
-                box-shadow: 0 4px 16px rgba(103, 194, 58, 0.4);
-              }
-            }
-
-            &.not-started {
-              background: linear-gradient(135deg, #909399 0%, #b1b3b8 100%);
-              opacity: 0.8;
-
-              &:hover {
-                background: linear-gradient(135deg, #82848a 0%, #a6a9ad 100%);
-                opacity: 1;
-              }
-            }
-
-            .activity-info {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              padding: 0 8px;
-              width: 100%;
-              
-              .activity-name {
-                font-weight: 600;
-                font-size: 12px;
-                flex: 1;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-              }
-            }
-
-            .detail-btn {
-              font-size: 10px;
-              padding: 2px 6px;
-              background: rgba(255, 255, 255, 0.2);
-              border: 1px solid rgba(255, 255, 255, 0.3);
-              color: white;
-              border-radius: 3px;
-              transition: all 0.2s ease;
-              flex-shrink: 0;
-
-              &:hover {
-                background: rgba(255, 255, 255, 0.3);
-                border-color: rgba(255, 255, 255, 0.5);
-              }
-
-              &.disabled-btn {
-                background: rgba(255, 255, 255, 0.1);
-                color: rgba(255, 255, 255, 0.5);
-                cursor: not-allowed;
-                border-color: rgba(255, 255, 255, 0.1);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
 
 .detail-section {
   border: none;
@@ -1592,13 +1086,9 @@ export default {
 .calendar-view .calendar-event {
   animation: fadeSlideIn 0.2s ease both;
 }
-.gantt-container .activity-bar {
-  animation: fadeSlideIn 0.25s ease both;
-}
 
 /* 焦点可达性优化（键盘导航时有清晰的可见焦点） */
 .calendar-view .detail-btn:focus,
-.gantt-container .detail-btn:focus,
 .detail-section .signup-button:focus {
   outline: 2px solid rgba(102, 126, 234, 0.6);
   outline-offset: 2px;
@@ -1614,14 +1104,18 @@ export default {
   .detail-section .activity-detail .detail-grid {
     grid-template-columns: 1fr;
   }
-  .gantt-container .gantt-body .gantt-activity .activity-label {
-    width: 160px;
-  }
 }
 
 @media (max-width: 768px) {
+  .app-container {
+    margin-left: 0;
+    width: 100%;
+  }
   .view-tabs { padding: 10px; }
-  .calendar-view { padding: 10px; }
+  .calendar-view { 
+    padding: 10px;
+    height: calc(100vh - 150px);
+  }
   .detail-section { padding: 16px; }
   .detail-section .activity-detail .detail-header h2 { font-size: 20px; }
   .detail-section .activity-detail .signup-status .signup-button {

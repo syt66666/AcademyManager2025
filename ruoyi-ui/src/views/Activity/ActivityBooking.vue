@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="booking-container">
     <!-- 搜索区域 -->
     <div class="search-card">
       <div class="card-header">
@@ -18,26 +18,7 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="活动地点" prop="activityLocation">
-            <el-input
-              v-model="queryParams.activityLocation"
-              placeholder="请输入活动地点"
-              clearable
-              prefix-icon="el-icon-location-outline"
-              class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="组织单位" prop="organizer">
-            <el-input
-              v-model="queryParams.organizer"
-              placeholder="请输入组织单位"
-              clearable
-              prefix-icon="el-icon-office-building"
-              class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
+
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
               <el-option 
@@ -101,7 +82,6 @@
           </template>
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
-        <el-table-column label="组织单位" align="center" prop="organizer" width="120"/>
         <el-table-column label="报名时间" align="center" >
           <template slot-scope="scope">
             <div class="time-range">
@@ -624,12 +604,18 @@ export default {
 .search-card,
 .table-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
+  border-radius: 0;
+  padding: 15px;
+  margin: 0 0 12px 0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
   transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-card {
+  margin-top: 0;
 }
 
 .search-card:hover,
@@ -642,8 +628,8 @@ export default {
 .card-header {
   display: flex;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
   border-bottom: 2px solid #f0f2f5;
 }
 
@@ -663,12 +649,16 @@ export default {
 .search-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 15px;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .search-input {
-  min-width: 220px;
+  min-width: 200px;
+  flex: 1;
+  max-width: 300px;
   transition: all 0.3s ease;
 }
 
@@ -717,11 +707,16 @@ export default {
   transform: translateY(-2px);
 }
 /* 整体布局 */
-.app-container {
-  margin-left: 100px;
-  padding: 20px;
-  background: #f5f7fa;
-  min-height: 100vh;
+.booking-container {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  min-height: 100%;
+  height: 100%;
+  overflow: auto;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
 }
 
 /* 查询表单 */
@@ -765,6 +760,10 @@ export default {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e4e7ed;
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modern-table th {
@@ -772,12 +771,12 @@ export default {
   font-weight: 600;
   color: #1e293b;
   border-bottom: 2px solid #e2e8f0;
-  padding: 16px 12px;
+  padding: 10px 12px;
 }
 
 .modern-table td {
   border-bottom: 1px solid #f1f5f9;
-  padding: 16px 12px;
+  padding: 8px 12px;
 }
 
 .modern-table tr:hover td {
@@ -966,8 +965,8 @@ export default {
 .custom-pagination {
   display: flex;
   justify-content: center !important; /* 强制居中 */
-  margin: 20px auto 0;
-  padding: 12px 0;
+  margin: 15px auto 0;
+  padding: 8px 0;
   width: 100%;
 }
 
@@ -987,6 +986,30 @@ export default {
 
 /* 响应式调整 */
 @media (max-width: 768px) {
+  .booking-container {
+    min-height: 100%;
+    height: 100%;
+    width: 100%;
+  }
+  .search-card,
+  .table-card {
+    padding: 12px;
+    margin: 0 0 10px 0;
+    width: 100%;
+  }
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-input {
+    min-width: auto;
+    max-width: none;
+    width: 100%;
+  }
+  .modern-table {
+    max-height: calc(100vh - 220px);
+    width: 100%;
+  }
   .custom-pagination {
     padding: 8px;
     justify-content: center;

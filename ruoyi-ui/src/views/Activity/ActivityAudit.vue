@@ -807,6 +807,7 @@ export default {
         rejected: '未通过'
       };
       this.queryParams.status = statusMap[type];
+
       this.getList();
     },
 

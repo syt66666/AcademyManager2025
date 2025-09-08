@@ -186,6 +186,7 @@
             version = version +1
         WHERE activity_id = #{activityId}
           and version = #{version}
+          AND activity_capacity > 0
     </update>
 
 
