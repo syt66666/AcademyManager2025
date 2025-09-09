@@ -1,5 +1,100 @@
 <template>
   <div class="app-container">
+    <!-- 统计大盒子 -->
+    <div class="stats-card">
+      <div class="card-header">
+        <i class="el-icon-data-analysis"></i>
+        <span>活动统计</span>
+      </div>
+      
+      <div class="stats-content">
+        <!-- 左侧状态统计 -->
+        <div class="status-stats">
+          <h3>活动状态筛选</h3>
+          <div class="status-items">
+            <div 
+              class="status-item" 
+              :class="{ active: selectedStatus === '未提交' }"
+              @click="filterByStatus('未提交')"
+            >
+              <div class="status-icon unsubmitted">
+                <i class="el-icon-upload2"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.unsubmitted }}</div>
+                <div class="status-label">未提交</div>
+              </div>
+            </div>
+            
+            <div 
+              class="status-item" 
+              :class="{ active: selectedStatus === '未通过' }"
+              @click="filterByStatus('未通过')"
+            >
+              <div class="status-icon rejected">
+                <i class="el-icon-close"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.rejected }}</div>
+                <div class="status-label">未通过</div>
+              </div>
+            </div>
+            
+            <div 
+              class="status-item" 
+              :class="{ active: selectedStatus === '已通过' }"
+              @click="filterByStatus('已通过')"
+            >
+              <div class="status-icon approved">
+                <i class="el-icon-check"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.approved }}</div>
+                <div class="status-label">已通过</div>
+              </div>
+            </div>
+            
+            <div 
+              class="status-item clear-filter" 
+              :class="{ active: selectedStatus === null }"
+              @click="clearStatusFilter"
+            >
+              <div class="status-icon all">
+                <i class="el-icon-view"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ allActivitiesList.length }}</div>
+                <div class="status-label">全部</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 右侧进度条 -->
+        <div class="progress-stats">
+          <h3>活动完成进度</h3>
+          <div class="progress-items">
+            <div 
+              v-for="(progress, type) in activityProgress" 
+              :key="type"
+              class="progress-item"
+            >
+              <div class="progress-label">{{ getActivityTypeName(type) }}</div>
+              <div class="progress-bar-container">
+                <div class="progress-bar">
+                  <div 
+                    class="progress-fill" 
+                    :style="{ width: progress.percentage + '%' }"
+                    :class="getProgressBarClass(progress.percentage, type)"
+                  ></div>
+                </div>
+                <div class="progress-text">{{ progress.completed }}/8</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- 活动列表 -->
     <div class="table-card">
@@ -33,12 +128,12 @@
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
-        <el-table-column label="开始时间" align="center" prop="startTime" >
+        <el-table-column label="活动开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="结束时间" align="center" prop="endTime">
+        <el-table-column label="活动结束时间" align="center" prop="endTime">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
@@ -91,10 +186,10 @@
                 <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
                 <div class="expand-content">{{ props.row.activityDescription }}</div>
               </div>
-              <div class="expand-row">
+              <!-- <div class="expand-row">
                 <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
                 <div class="expand-content">{{ props.row.notes }}</div>
-              </div>
+              </div> -->
               <div class="expand-row" v-if="!isActivityEnded(props.row.endTime)">
                 <div class="expand-label"><i class="el-icon-time"></i> 材料提交提示:</div>
                 <div class="expand-content upload-tip">
@@ -217,9 +312,25 @@ export default {
         pageSize: 10,
         studentId: this.$store.state.user.name
       },
+      
+      // 统计相关数据
+      selectedStatus: null, // 当前选中的状态筛选
+      allActivitiesList: [], // 所有活动数据，用于统计计算
+      statusCounts: {
+        unsubmitted: 0,  // 未提交
+        rejected: 0,     // 已拒绝
+        approved: 0      // 已通过
+      },
+      activityProgress: {
+        '1': { completed: 0, percentage: 0 }, // 人格塑造与价值引领活动类
+        '2': { completed: 0, percentage: 0 }, // 知识融合与思维进阶活动类
+        '3': { completed: 0, percentage: 0 }, // 能力锻造与实践创新活动类
+        '4': { completed: 0, percentage: 0 }  // 社会责任与领军意识活动类
+      },
     };
   },
   created() {
+    this.getAllActivitiesForStats();
     this.getList();
   },
   methods: {
@@ -399,6 +510,7 @@ export default {
           this.$message.success("材料提交成功");
           this.uploadVisible = false;
           this.getList(); // 刷新列表
+          this.getAllActivitiesForStats(); // 刷新统计数据
         } else {
           this.$message.error("材料提交失败: " + res.msg);
         }
@@ -466,6 +578,24 @@ export default {
       this.docFiles = fileList;
     },
 
+    /** 获取所有活动数据用于统计 */
+    getAllActivitiesForStats() {
+      const statsParams = {
+        pageNum: 1,
+        pageSize: 1000, // 获取足够多的数据
+        studentId: this.$store.state.user.name
+      };
+      
+      listBookingsWithActivity(statsParams).then(response => {
+        this.allActivitiesList = response.rows || [];
+        // 更新统计数据
+        this.updateStatistics();
+      }).catch(error => {
+        console.error('获取统计数据失败:', error);
+        this.allActivitiesList = [];
+      });
+    },
+
     /** 查询活动列表 */
     getList() {
       this.loading = true;
@@ -474,6 +604,104 @@ export default {
         this.total = response.total;
         this.loading = false;
       });
+    },
+
+    /** 更新统计数据 */
+    updateStatistics() {
+      this.calculateStatusCounts();
+      this.calculateActivityProgress();
+    },
+
+    /** 计算状态统计 */
+    calculateStatusCounts() {
+      this.statusCounts = {
+        unsubmitted: 0,
+        rejected: 0,
+        approved: 0
+      };
+
+      // 使用所有活动数据计算统计
+      this.allActivitiesList.forEach(activity => {
+        switch(activity.status) {
+          case '未提交':
+            this.statusCounts.unsubmitted++;
+            break;
+          case '未通过':
+            this.statusCounts.rejected++;
+            break;
+          case '已通过':
+            this.statusCounts.approved++;
+            break;
+        }
+      });
+    },
+
+    /** 计算活动类型进度 */
+    calculateActivityProgress() {
+      // 重置进度
+      Object.keys(this.activityProgress).forEach(type => {
+        this.activityProgress[type] = { completed: 0, percentage: 0 };
+      });
+
+      // 统计已通过的活动（使用所有活动数据）
+      this.allActivitiesList.forEach(activity => {
+        if (activity.status === '已通过' && activity.activityType) {
+          const type = activity.activityType.toString();
+          if (this.activityProgress[type]) {
+            this.activityProgress[type].completed++;
+          }
+        }
+      });
+
+      // 计算百分比（每个类型完成8次满进度）
+      Object.keys(this.activityProgress).forEach(type => {
+        const completed = this.activityProgress[type].completed;
+        this.activityProgress[type].percentage = Math.min((completed / 8) * 100, 100);
+      });
+    },
+
+    /** 根据状态筛选 */
+    filterByStatus(status) {
+      this.selectedStatus = status;
+      this.queryParams.pageNum = 1;
+      
+      // 添加状态筛选参数
+      if (status) {
+        this.queryParams.status = status;
+      } else {
+        delete this.queryParams.status;
+      }
+      
+      this.getList();
+    },
+
+    /** 清除状态筛选 */
+    clearStatusFilter() {
+      this.selectedStatus = null;
+      this.queryParams.pageNum = 1;
+      delete this.queryParams.status;
+      this.getList();
+    },
+
+    /** 获取进度条样式类 */
+    getProgressBarClass(percentage, activityType) {
+      const baseClass = this.getActivityTypeBaseClass(activityType);
+      if (percentage >= 100) return `${baseClass}-full`;
+      if (percentage >= 75) return `${baseClass}-high`;
+      if (percentage >= 50) return `${baseClass}-medium`;
+      if (percentage >= 25) return `${baseClass}-low`;
+      return `${baseClass}-empty`;
+    },
+
+    /** 获取活动类型对应的基础样式类 */
+    getActivityTypeBaseClass(activityType) {
+      const map = {
+        '1': 'progress-primary',   // 人格塑造与价值引领活动类 - 蓝色
+        '2': 'progress-success',   // 知识融合与思维进阶活动类 - 绿色
+        '3': 'progress-warning',   // 能力锻造与实践创新活动类 - 橙色
+        '4': 'progress-info'       // 社会责任与领军意识活动类 - 灰色
+      };
+      return map[activityType] || 'progress-info';
     },
 
   }
@@ -490,6 +718,7 @@ export default {
 }
 
 /* 统一卡片样式 */
+.stats-card,
 .table-card {
   background: #fff;
   border-radius: 16px;
@@ -500,6 +729,7 @@ export default {
   transition: all 0.3s ease;
 }
 
+.stats-card:hover,
 .table-card:hover {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
@@ -531,6 +761,266 @@ export default {
   font-size: 14px;
   color: #909399;
   font-weight: 400;
+}
+
+/* 统计大盒子样式 */
+.stats-content {
+  display: flex;
+  gap: 40px;
+  margin-top: 20px;
+}
+
+.status-stats,
+.progress-stats {
+  flex: 1;
+}
+
+.status-stats h3,
+.progress-stats h3 {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  border-bottom: 2px solid #f0f2f5;
+  padding-bottom: 10px;
+}
+
+/* 状态统计样式 */
+.status-items {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.status-item:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.status-item.active {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border-color: #409EFF;
+  color: white;
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+}
+
+.status-item.active .status-count,
+.status-item.active .status-label {
+  color: white;
+}
+
+.status-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 18px;
+}
+
+.status-icon.unsubmitted {
+  background: linear-gradient(135deg, #f39c12, #f1c40f);
+  color: white;
+}
+
+.status-icon.rejected {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.status-icon.approved {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  color: white;
+}
+
+.status-icon.all {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: white;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-count {
+  font-size: 24px;
+  font-weight: 700;
+  color: #303133;
+  line-height: 1;
+}
+
+.status-label {
+  font-size: 14px;
+  color: #606266;
+  margin-top: 4px;
+}
+
+/* 进度条样式 */
+.progress-items {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.progress-label {
+  min-width: 200px;
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.progress-bar-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 12px;
+  background: #f0f2f5;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: all 0.6s ease;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 人格塑造与价值引领活动类 - 蓝色系 */
+.progress-primary-empty {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+}
+
+.progress-primary-low {
+  background: linear-gradient(135deg, #90caf9, #64b5f6);
+}
+
+.progress-primary-medium {
+  background: linear-gradient(135deg, #42a5f5, #2196f3);
+}
+
+.progress-primary-high {
+  background: linear-gradient(135deg, #1e88e5, #1976d2);
+}
+
+.progress-primary-full {
+  background: linear-gradient(135deg, #1565c0, #0d47a1);
+}
+
+/* 知识融合与思维进阶活动类 - 绿色系 */
+.progress-success-empty {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+}
+
+.progress-success-low {
+  background: linear-gradient(135deg, #a5d6a7, #81c784);
+}
+
+.progress-success-medium {
+  background: linear-gradient(135deg, #66bb6a, #4caf50);
+}
+
+.progress-success-high {
+  background: linear-gradient(135deg, #43a047, #388e3c);
+}
+
+.progress-success-full {
+  background: linear-gradient(135deg, #2e7d32, #1b5e20);
+}
+
+/* 能力锻造与实践创新活动类 - 橙色系 */
+.progress-warning-empty {
+  background: linear-gradient(135deg, #fff3e0, #ffcc80);
+}
+
+.progress-warning-low {
+  background: linear-gradient(135deg, #ffb74d, #ffa726);
+}
+
+.progress-warning-medium {
+  background: linear-gradient(135deg, #ff9800, #fb8c00);
+}
+
+.progress-warning-high {
+  background: linear-gradient(135deg, #f57c00, #ef6c00);
+}
+
+.progress-warning-full {
+  background: linear-gradient(135deg, #e65100, #d84315);
+}
+
+/* 社会责任与领军意识活动类 - 灰色系 */
+.progress-info-empty {
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+}
+
+.progress-info-low {
+  background: linear-gradient(135deg, #bdbdbd, #9e9e9e);
+}
+
+.progress-info-medium {
+  background: linear-gradient(135deg, #757575, #616161);
+}
+
+.progress-info-high {
+  background: linear-gradient(135deg, #424242, #303030);
+}
+
+.progress-info-full {
+  background: linear-gradient(135deg, #212121, #000000);
+}
+
+.progress-text {
+  min-width: 40px;
+  font-size: 12px;
+  color: #606266;
+  font-weight: 600;
+  text-align: center;
 }
 
 
@@ -682,6 +1172,42 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 1200px) {
+  .stats-content {
+    flex-direction: column;
+    gap: 30px;
+  }
+  
+  .status-items {
+    justify-content: center;
+  }
+  
+  .progress-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .progress-label {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .progress-bar-container {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .status-items {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .status-item {
+    min-width: auto;
+    justify-content: center;
+  }
+  
   .card-header {
     flex-direction: column;
     align-items: flex-start;
