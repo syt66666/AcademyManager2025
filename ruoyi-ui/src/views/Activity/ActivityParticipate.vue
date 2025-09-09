@@ -1,68 +1,5 @@
 <template>
   <div class="app-container">
-    <!-- 搜索区域 -->
-    <div class="search-card">
-      <div class="card-header">
-        <i class="el-icon-search"></i>
-        <span>搜索条件</span>
-      </div>
-      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
-        <div class="search-row">
-          <el-form-item label="活动名称" prop="activityName">
-            <el-input
-              v-model="queryParams.activityName"
-              placeholder="请输入活动名称"
-              clearable
-              prefix-icon="el-icon-search"
-              class="search-input"
-            />
-          </el-form-item>
-          <el-form-item label="活动地点" prop="activityLocation">
-            <el-input
-              v-model="queryParams.activityLocation"
-              placeholder="请输入活动地点"
-              clearable
-              prefix-icon="el-icon-location-outline"
-              class="search-input"
-            />
-          </el-form-item>
-          <el-form-item label="组织单位" prop="organizer">
-            <el-input
-              v-model="queryParams.organizer"
-              placeholder="请输入组织单位"
-              clearable
-              prefix-icon="el-icon-office-building"
-              class="search-input"
-            />
-          </el-form-item>
-          <el-form-item label="活动类型" prop="activityType" class="search-item">
-            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-              <el-option 
-                v-for="type in availableActivityTypes" 
-                :key="type" 
-                :label="getActivityTypeName(type)" 
-                :value="type"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item class="search-actions">
-            <el-button-group class="action-buttons">
-              <el-button
-                type="primary"
-                icon="el-icon-search"
-                @click="handleQuery"
-                class="search-button"
-              >搜索</el-button>
-              <el-button
-                icon="el-icon-refresh"
-                @click="resetQuery"
-                class="refresh-button"
-              >重置</el-button>
-            </el-button-group>
-          </el-form-item>
-        </div>
-      </el-form>
-    </div>
 
     <!-- 活动列表 -->
     <div class="table-card">
@@ -273,21 +210,12 @@ export default {
 
       // 遮罩层
       loading: true,
-      showSearch: true,
       total: 0,
       activitiesList: [],
-      // 可用的活动类型列表
-      availableActivityTypes: [],
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        studentId: this.$store.state.user.name,
-        activityName: null,
-        startTime: null,
-        endTime: null,
-        activityLocation: null,
-        organizer: null,
-        activityType: null
+        studentId: this.$store.state.user.name
       },
     };
   },
@@ -545,44 +473,9 @@ export default {
         this.activitiesList = response.rows;
         this.total = response.total;
         this.loading = false;
-        // 更新可用的活动类型列表
-        this.updateAvailableActivityTypes();
       });
     },
 
-    /** 更新可用的活动类型列表 */
-    updateAvailableActivityTypes() {
-      const types = new Set();
-      this.activitiesList.forEach(item => {
-        if (item.activityType) {
-          types.add(item.activityType);
-        }
-      });
-      
-      // 如果没有活动类型数据，提供默认选项
-      if (types.size === 0) {
-        types.add('1');
-        types.add('2');
-        types.add('3');
-        types.add('4');
-        types.add('其他');
-      }
-      
-      // 转换为数组并排序
-      this.availableActivityTypes = Array.from(types).sort();
-    },
-
-    /** 搜索按钮操作 */
-    handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-
-    /** 重置按钮操作 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
   }
 };
 </script>
@@ -597,7 +490,6 @@ export default {
 }
 
 /* 统一卡片样式 */
-.search-card,
 .table-card {
   background: #fff;
   border-radius: 16px;
@@ -608,7 +500,6 @@ export default {
   transition: all 0.3s ease;
 }
 
-.search-card:hover,
 .table-card:hover {
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
@@ -642,31 +533,6 @@ export default {
   font-weight: 400;
 }
 
-/* 搜索表单 */
-.search-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: center;
-}
-
-.search-input {
-  min-width: 220px;
-  transition: all 0.3s ease;
-}
-
-.search-input:hover {
-  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
-}
-
-.search-actions {
-  margin-left: auto;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 12px;
-}
 
 /* 现代化表格 */
 .modern-table {
@@ -692,36 +558,6 @@ export default {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
-/* 按钮样式 */
-.search-button {
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s;
-}
-
-.search-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
-}
-
-.refresh-button {
-  background: #f0f2f5;
-  border: none;
-  padding: 10px 20px;
-  color: #606266;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s;
-}
-
-.refresh-button:hover {
-  background: #e4e7ed;
-  color: #333;
-  transform: translateY(-2px);
-}
 
 /* 材料提交按钮样式 - 统一文字按钮风格 */
 .action-button {
@@ -846,20 +682,6 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 1200px) {
-  .search-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .search-input {
-    min-width: 100%;
-  }
-  
-  .search-actions {
-    margin-left: 0;
-    margin-top: 20px;
-  }
-  
   .card-header {
     flex-direction: column;
     align-items: flex-start;

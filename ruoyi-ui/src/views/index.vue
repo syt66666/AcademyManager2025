@@ -17,7 +17,7 @@
                 <div
                   v-for="(event, index) in getDateEvents(data.day)"
                   :key="index"
-                  class="calendar-event"
+                  :class="['calendar-event', 'status-' + getActivityStatusType(event)]"
                   @click="handleEventClick(event)"
                 >
                   <div class="event-summary">
@@ -52,6 +52,33 @@
             </div>
           </template>
         </el-calendar>
+        
+        <!-- 活动状态图例 -->
+        <div class="activity-legend">
+          <h4 class="legend-title">活动状态图例</h4>
+          <div class="legend-items">
+            <div class="legend-item">
+              <div class="legend-color status-not-started"></div>
+              <span class="legend-text">报名未开始</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color status-signup-active"></div>
+              <span class="legend-text">报名进行中</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color status-signup-ended"></div>
+              <span class="legend-text">报名已截止</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color status-activity-active"></div>
+              <span class="legend-text">活动进行中</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color status-activity-ended"></div>
+              <span class="legend-text">活动已结束</span>
+            </div>
+          </div>
+        </div>
       </el-tab-pane>
 
       <!-- 活动报名视图 -->
@@ -406,6 +433,22 @@ export default {
       return activity.status || "未知";
     },
 
+    // 获取活动状态类型（用于颜色判断）
+    getActivityStatusType(activity) {
+      const now = new Date();
+      const start = new Date(activity.startTime);
+      const end = new Date(activity.endTime);
+      const deadline = new Date(activity.activityDeadline);
+      const activityStart = new Date(activity.activityStart);
+
+      if (now < activityStart) return "not-started";
+      if (now < deadline && now >= activityStart) return "signup-active";
+      if (now >= deadline && now < start) return "signup-ended";
+      if (now >= start && now <= end) return "activity-active";
+      if (now > end) return "activity-ended";
+      return "unknown";
+    },
+
     // 获取容量样式
     getCapacityClass(activity) {
       const percentage = (activity.activityTotalCapacity - activity.activityCapacity) / activity.activityTotalCapacity;
@@ -729,7 +772,7 @@ export default {
       display: flex;
       align-items: center;
       padding: 4px 8px; /* 增加内边距 */
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* 默认颜色 */
       border: none;
       border-radius: 6px; /* 增加圆角 */
       font-size: 11px; /* 稍微增加字体大小 */
@@ -745,6 +788,42 @@ export default {
       box-sizing: border-box; /* 包含内边距在宽度计算中 */
       margin-bottom: 2px; /* 增加底部间距 */
       flex-shrink: 0; /* 防止活动条被压缩 */
+
+      /* 报名未开始 - 灰色 */
+      &.status-not-started {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        box-shadow: 0 2px 8px rgba(149, 165, 166, 0.2);
+      }
+
+      /* 报名进行中 - 蓝色 */
+      &.status-signup-active {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+      }
+
+      /* 报名已截止 - 橙色 */
+      &.status-signup-ended {
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+        box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
+      }
+
+      /* 活动进行中 - 绿色 */
+      &.status-activity-active {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
+      }
+
+      /* 活动已结束 - 深灰色 */
+      &.status-activity-ended {
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        box-shadow: 0 2px 8px rgba(52, 73, 94, 0.2);
+      }
+
+      /* 未知状态 - 紫色（默认） */
+      &.status-unknown {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+      }
 
       &::before {
         content: '';
@@ -762,6 +841,32 @@ export default {
         transform: translateY(-1px);
         box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
         background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+
+      /* 不同状态的hover效果 */
+      &.status-not-started:hover {
+        background: linear-gradient(135deg, #7f8c8d 0%, #6c7b7d 100%);
+        box-shadow: 0 4px 16px rgba(149, 165, 166, 0.4);
+      }
+
+      &.status-signup-active:hover {
+        background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
+      }
+
+      &.status-signup-ended:hover {
+        background: linear-gradient(135deg, #d35400 0%, #ba4a00 100%);
+        box-shadow: 0 4px 16px rgba(230, 126, 34, 0.4);
+      }
+
+      &.status-activity-active:hover {
+        background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+        box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
+      }
+
+      &.status-activity-ended:hover {
+        background: linear-gradient(135deg, #2c3e50 0%, #1b2631 100%);
+        box-shadow: 0 4px 16px rgba(52, 73, 94, 0.4);
       }
 
       &:active {
@@ -984,6 +1089,80 @@ export default {
 /* 确保日历单元格完全包含在表格单元格内 */
 .calendar-view .el-calendar-table td * {
   box-sizing: border-box;
+}
+
+/* 活动状态图例样式 */
+.activity-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: 200px;
+  z-index: 10;
+
+  .legend-title {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+    text-align: center;
+  }
+
+  .legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      /* 报名未开始 - 灰色 */
+      &.status-not-started {
+        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      }
+
+      /* 报名进行中 - 蓝色 */
+      &.status-signup-active {
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      }
+
+      /* 报名已截止 - 橙色 */
+      &.status-signup-ended {
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      }
+
+      /* 活动进行中 - 绿色 */
+      &.status-activity-active {
+        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      }
+
+      /* 活动已结束 - 深灰色 */
+      &.status-activity-ended {
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+      }
+    }
+
+    .legend-text {
+      font-size: 12px;
+      color: #495057;
+      font-weight: 500;
+    }
+  }
 }
 
 
@@ -1275,6 +1454,16 @@ export default {
   .activity-detail .signup-status .signup-button,
   .activity-detail .signup-status .cancel-button {
     width: 100%;
+  }
+  
+  /* 移动端图例样式调整 */
+  .activity-legend {
+    position: relative;
+    bottom: auto;
+    right: auto;
+    margin: 20px auto 0;
+    width: 90%;
+    max-width: 300px;
   }
 }
 
