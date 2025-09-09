@@ -132,7 +132,7 @@
           <div class="section-content">{{ selectedActivity.notes }}</div>
         </div>
 
-        <!-- 报名按钮 -->
+        <!-- 报名/退掉按钮 -->
         <div class="signup-status">
           <el-button
             type="primary"
@@ -144,8 +144,28 @@
             立即报名
           </el-button>
 
+          <el-button
+            type="danger"
+            :disabled="!showCancelButton"
+            @click="handleCancelSignUp"
+            v-if="showCancelButton"
+            class="cancel-button"
+          >
+            取消报名
+          </el-button>
+
           <el-alert
-            v-if="selectedActivity.isBooked"
+            v-if="showFullCapacityAlert"
+            title="报名已满"
+            type="warning"
+            :closable="false"
+            class="signup-alert"
+          >
+            该活动报名人数已满，无法继续报名
+          </el-alert>
+
+          <el-alert
+            v-if="selectedActivity.isBooked && !showCancelButton"
             title="您已成功报名该活动"
             type="success"
             :closable="false"
@@ -156,17 +176,15 @@
         </div>
       </div>
 
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">关闭</el-button>
-      </span>
+
     </el-dialog>
   </div>
 </template>
 
 
 <script>
-import { listActivities, signUpCapacity } from "@/api/system/activities";
-import {addBooking, checkBookingSimple} from "@/api/system/bookings";
+import { listActivities, signUpCapacity, cancelSignUpCapacity } from "@/api/system/activities";
+import {addBooking, checkBookingSimple, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 import ActivityBooking from "./Activity/ActivityBooking.vue";
 
@@ -229,6 +247,22 @@ export default {
       return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
         !this.selectedActivity.isBooked && // 使用活动对象的isBooked属性
         this.selectedActivity.activityCapacity > 0;
+    },
+
+    // 显示报名已满提示的条件
+    showFullCapacityAlert() {
+      if (!this.selectedActivity) return false;
+      return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
+        !this.selectedActivity.isBooked &&
+        this.selectedActivity.activityCapacity <= 0;
+    },
+
+    // 显示退掉按钮的条件
+    showCancelButton() {
+      if (!this.selectedActivity) return false;
+      const status = this.getActivityStatusText(this.selectedActivity);
+      return this.selectedActivity.isBooked && 
+        (status === "报名进行中" || status === "报名未开始");
     },
 
   },
@@ -450,6 +484,60 @@ export default {
       done();
     },
 
+    // 处理退掉活动
+    handleCancelSignUp() {
+      this.$confirm('确定要取消该活动吗？', '确认取消', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.submitCancelSignUp();
+      }).catch(() => {
+        this.$message.info('已取消取消报名操作');
+      });
+    },
+
+    // 提交退掉活动
+    async submitCancelSignUp() {
+      try {
+        // 1. 删除报名记录
+        await deleteBookingsByActivityAndStudent(
+          this.selectedActivity.activityId, 
+          this.$store.state.user.name
+        );
+
+        // 2. 恢复活动容量
+        await cancelSignUpCapacity(
+          this.selectedActivity.activityId,
+          this.selectedActivity.version
+        );
+
+        // 3. 更新活动状态
+        const updatedActivity = {
+          ...this.selectedActivity,
+          activityCapacity: Math.min(this.selectedActivity.activityCapacity + 1, this.selectedActivity.activityTotalCapacity),
+          version: this.selectedActivity.version + 1,
+          isBooked: false // 标记为未报名
+        };
+
+        this.selectedActivity = updatedActivity;
+
+        // 4. 更新活动列表
+        const index = this.activityList.findIndex(a => a.activityId === this.selectedActivity.activityId);
+        if (index !== -1) {
+          this.activityList.splice(index, 1, updatedActivity);
+        }
+
+        this.$message.success("退掉活动成功！");
+        // 退掉成功后关闭弹窗
+        this.dialogVisible = false;
+
+      } catch (error) {
+        console.error("退掉活动失败:", error);
+        this.$message.error("退掉活动失败: " + (error.msg || "请稍后重试"));
+      }
+    },
+
     // 判断日期是否属于当前月份
     isCurrentMonth(dateString) {
       const date = new Date(dateString);
@@ -640,22 +728,22 @@ export default {
     .calendar-event {
       display: flex;
       align-items: center;
-      padding: 2px 6px; /* 增加左右内边距 */
+      padding: 4px 8px; /* 增加内边距 */
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       border: none;
-      border-radius: 4px; /* 减少圆角 */
-      font-size: 10px;
+      border-radius: 6px; /* 增加圆角 */
+      font-size: 11px; /* 稍微增加字体大小 */
       cursor: pointer;
       transition: all 0.3s ease;
       min-width: 0;
-      height: 16px; /* 固定高度 */
+      height: 24px; /* 增加高度从16px到24px */
       overflow: hidden;
       color: white;
       box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
       position: relative;
       width: 100%; /* 确保所有活动条都是100%宽度 */
       box-sizing: border-box; /* 包含内边距在宽度计算中 */
-      margin-bottom: 1px; /* 添加底部间距 */
+      margin-bottom: 2px; /* 增加底部间距 */
       flex-shrink: 0; /* 防止活动条被压缩 */
 
       &::before {
@@ -696,10 +784,10 @@ export default {
           text-overflow: ellipsis;
           white-space: nowrap;
           flex: 1; /* 允许弹性增长，占据剩余空间 */
-          font-size: 9px;
+          font-size: 10px; /* 增加字体大小 */
           text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
           min-width: 0; /* 允许收缩 */
-          margin-right: 4px; /* 添加右边距 */
+          margin-right: 6px; /* 增加右边距 */
         }
 
         .event-org {
@@ -708,19 +796,19 @@ export default {
           text-overflow: ellipsis;
           white-space: nowrap;
           flex: 0 0 auto; /* 固定宽度，不伸缩 */
-          font-size: 8px;
-          max-width: 40px; /* 稍微增加最大宽度 */
-          margin-right: 4px; /* 添加右边距 */
+          font-size: 9px; /* 增加字体大小 */
+          max-width: 45px; /* 增加最大宽度 */
+          margin-right: 6px; /* 增加右边距 */
         }
 
         .detail-btn {
-          padding: 1px 4px;
-          font-size: 8px;
+          padding: 2px 6px; /* 增加内边距 */
+          font-size: 9px; /* 增加字体大小 */
           margin-left: auto;
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.3);
           color: white;
-          border-radius: 3px;
+          border-radius: 4px; /* 增加圆角 */
           transition: all 0.2s ease;
           flex: 0 0 auto; /* 固定宽度，不伸缩 */
           white-space: nowrap; /* 防止按钮文字换行 */
@@ -1086,6 +1174,29 @@ export default {
       }
     }
 
+    .cancel-button {
+      width: 200px;
+      height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border: none;
+      border-radius: 22px;
+      box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+      }
+    }
+
     .signup-alert {
       margin-top: 20px;
       border-radius: 8px;
@@ -1161,7 +1272,8 @@ export default {
     font-size: 20px; 
   }
   
-  .activity-detail .signup-status .signup-button {
+  .activity-detail .signup-status .signup-button,
+  .activity-detail .signup-status .cancel-button {
     width: 100%;
   }
 }
