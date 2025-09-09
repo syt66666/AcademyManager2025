@@ -21,11 +21,27 @@
 
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-              <el-option 
-                v-for="type in availableActivityTypes" 
-                :key="type" 
-                :label="getActivityTypeName(type)" 
-                :value="type"
+              <el-option
+                v-for="type in activityTypeOptions"
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
+              />
+            </el-select>
+          </el-form-item>
+          <!--活动状态筛选 -->
+          <el-form-item label="活动状态" prop="activityStatus">
+            <el-select
+              v-model="queryParams.activityStatus"
+              clearable
+              placeholder="请选择活动状态"
+              class="search-input"
+            >
+              <el-option
+                v-for="status in activityStatusOptions"
+                :key="status.value"
+                :label="status.label"
+                :value="status.value"
               />
             </el-select>
           </el-form-item>
@@ -300,7 +316,12 @@ export default {
       total: 0,
       activitiesList: [],
       // 可用的活动类型列表
-      availableActivityTypes: [],
+      activityTypeOptions: [
+        { value: '1', label: '人格塑造与价值引领活动类' },
+        { value: '2', label: '知识融合与思维进阶活动类' },
+        { value: '3', label: '能力锻造与实践创新活动类' },
+        { value: '4', label: '社会责任与领军意识活动类' }
+      ],
       detailVisible: false,
       currentActivity: {},
       queryParams: {
@@ -310,7 +331,16 @@ export default {
         activityLocation: null,
         organizer: null,
         activityType: null,
-      }
+        activityStatus: null,
+      },
+      // 新增活动状态选项
+      activityStatusOptions: [
+        { value: '报名未开始', label: '报名未开始' },
+        { value: '报名进行中', label: '报名进行中' },
+        { value: '报名已截止', label: '报名已截止' },
+        { value: '活动进行中', label: '活动进行中' },
+        { value: '活动已结束', label: '活动已结束' }
+      ]
     };
   },
   created() {
@@ -365,28 +395,41 @@ export default {
     async getList() {
       this.loading = true;
       try {
-        // 1. 获取活动列表
-        const response = await listActivities(this.queryParams);
-        let activityList = response.rows.map(activity => ({
-          ...activity,
-          isBooked: false
-        }));
+        // 构建基本请求参数（获取所有数据）
+        const baseParams = {
+          pageNum: 1,
+          pageSize: 1000, // 获取足够大的数量
+          activityName: this.queryParams.activityName,
+          activityType: this.queryParams.activityType,
+        };
 
-        this.total = response.total;
+        // 1. 获取所有活动列表
+        const response = await listActivities(baseParams);
+        let allActivities = response.rows;
 
-        // 2. 查询每个活动是否已报名
-        const checkPromises = activityList.map(activity =>
+        // 2. 前端筛选活动状态
+        if (this.queryParams.activityStatus) {
+          allActivities = allActivities.filter(activity =>
+            this.getActivityStatusText(activity) === this.queryParams.activityStatus
+          );
+        }
+
+        this.total = allActivities.length;
+
+        // 3. 手动分页
+        const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
+        const endIndex = startIndex + this.queryParams.pageSize;
+        const pagedActivities = allActivities.slice(startIndex, endIndex);
+
+        // 4. 查询分页后活动是否已报名
+        const checkPromises = pagedActivities.map(activity =>
           checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
             activity.isBooked = res.data.isBooked;
           })
         );
         await Promise.all(checkPromises);
 
-
-        this.activitiesList = activityList;
-        
-        // 更新可用的活动类型列表
-        this.updateAvailableActivityTypes();
+        this.activitiesList = pagedActivities;
 
       } catch (error) {
         console.error("获取数据失败:", error);
@@ -411,6 +454,7 @@ export default {
     /** 重置搜索 */
     resetQuery() {
       this.resetForm("queryForm");
+      this.queryParams.activityStatus = null; // 确保活动状态也被重置
       this.handleQuery();
     },
 
@@ -452,13 +496,13 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
       return typeMap[activityType] || activityType;
     },
-    
+
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -470,27 +514,6 @@ export default {
       return map[activityType] || 'info';
     },
 
-    /** 更新可用的活动类型列表 */
-    updateAvailableActivityTypes() {
-      const types = new Set();
-      this.activitiesList.forEach(item => {
-        if (item.activityType) {
-          types.add(item.activityType);
-        }
-      });
-      
-      // 如果没有活动类型数据，提供默认选项
-      if (types.size === 0) {
-        types.add('1');
-        types.add('2');
-        types.add('3');
-        types.add('4');
-        types.add('其他');
-      }
-      
-      // 转换为数组并排序
-      this.availableActivityTypes = Array.from(types).sort();
-    },
 
     /** 获取报名状态文本 */
     getSignStatusText(row) {
@@ -518,7 +541,11 @@ export default {
 
     /** 是否显示报名按钮 */
     showSignUpButton(row) {
-      return this.getSignStatusText(row) !== "已报名";
+      const isNotSignedUp = this.getSignStatusText(row) !== "已报名";
+      const isSignUpAllowed = this.getActivityStatusText(row) === "报名进行中";
+      const hasCapacity = row.activityCapacity > 0;
+
+      return isNotSignedUp && isSignUpAllowed && hasCapacity;
     },
 
     /** 是否显示取消按钮 */
@@ -846,8 +873,8 @@ export default {
   border-radius: 4px;
 }
 
-.detail-button { 
-  color: #409EFF !important; 
+.detail-button {
+  color: #409EFF !important;
   display: inline-block !important;
   visibility: visible !important;
   opacity: 1 !important;
