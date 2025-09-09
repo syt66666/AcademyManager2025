@@ -576,7 +576,9 @@ export default {
       const payload = {
         bookingId: this.currentBooking.bookingId,
         status: '已通过',
-        reviewComment: '系统审核通过'
+        reviewComment: '系统审核通过',
+        reviewTime: new Date().toISOString(),
+        reviewer: this.$store.state.user.name
       };
       try {
         this.actionLoading = true;
@@ -604,7 +606,9 @@ export default {
         const payload = {
           bookingId: this.currentBooking.bookingId,
           status: '未通过',
-          reviewComment: value
+          reviewComment: value,
+          reviewTime: new Date().toISOString(),
+          reviewer: this.$store.state.user.name
         };
         this.actionLoading = true;
         await this.$options.methods._updateSingleBooking.call(this, payload);
@@ -671,7 +675,9 @@ export default {
           const payload = {
             bookingId: row.bookingId,
             status: statusMapping[actionLabel],
-            reviewComment
+            reviewComment,
+            reviewTime: new Date().toISOString(),
+            reviewer: this.$store.state.user.name
           };
           try {
             await this.$options.methods._updateSingleBooking.call(this, payload);
@@ -998,7 +1004,9 @@ export default {
         const auditData = {
           bookingId: row.bookingId,
           status: statusMapping[status],
-          reviewComment: isApproved ? '系统审核通过' : value
+          reviewComment: isApproved ? '系统审核通过' : value,
+          reviewTime: new Date().toISOString(),
+          reviewer: this.$store.state.user.name
         };
 
         // 调用审核接口

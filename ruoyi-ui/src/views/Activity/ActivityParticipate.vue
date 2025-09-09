@@ -169,7 +169,7 @@
                 type="warning"
                 effect="light"
                 class="status-tag"
-              >待审核</el-tag>
+              >未审核</el-tag>
               <el-tag
                 v-if="scope.row.status === '已通过'"
                 type="success"
@@ -220,6 +220,24 @@
       width="60%"
       :close-on-click-modal="false"
     >
+      <!-- 审核意见显示区域 -->
+      <div v-if="currentBooking && currentBooking.status === '未通过' && currentBooking.reviewComment" class="audit-feedback-section">
+        <h3><i class="el-icon-warning-outline"></i> 审核意见</h3>
+        <div class="audit-feedback-content">
+          <div class="audit-feedback-text">{{ currentBooking.reviewComment }}</div>
+          <div class="audit-feedback-meta">
+            <span class="audit-time">
+              <i class="el-icon-time"></i>
+              审核时间：{{ parseTime(currentBooking.reviewTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+            </span>
+            <span v-if="currentBooking.reviewer" class="audit-reviewer">
+              <i class="el-icon-user"></i>
+              审核人：{{ currentBooking.reviewer }}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- 图片上传区域 -->
       <div class="section">
         <h3>上传图片证明材料</h3>
@@ -471,6 +489,11 @@ export default {
         const res = await getBooking(booking.bookingId);
         if (res.code === 200) {
           const data = res.data || {};
+          // 更新当前预约信息，包含审核意见等详细字段
+          this.currentBooking = {
+            ...this.currentBooking,
+            ...data
+          };
           // 初始化文件列表
           this.initFileLists(data);
         }
@@ -1231,6 +1254,67 @@ export default {
   margin-bottom: 15px;
   color: #409EFF;
   font-weight: 600;
+}
+
+/* 审核意见显示区域样式 */
+.audit-feedback-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff5f5, #fef2f2);
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  border-left: 4px solid #f87171;
+}
+
+.audit-feedback-section h3 {
+  margin: 0 0 15px 0;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.audit-feedback-section h3 i {
+  margin-right: 8px;
+  font-size: 18px;
+}
+
+.audit-feedback-content {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+}
+
+.audit-feedback-text {
+  color: #374151;
+  line-height: 1.6;
+  font-size: 14px;
+  margin-bottom: 12px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 3px solid #e5e7eb;
+}
+
+.audit-feedback-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.audit-time,
+.audit-reviewer {
+  display: flex;
+  align-items: center;
+}
+
+.audit-time i,
+.audit-reviewer i {
+  margin-right: 4px;
+  color: #9ca3af;
 }
 
 .dialog-footer {
