@@ -135,6 +135,7 @@
                 type="text"
                 @click="handleDetail(scope.row)"
                 class="action-button detail-button"
+                style="display: inline-block !important; visibility: visible !important; opacity: 1 !important;"
               >详情</el-button>
 
               <!-- 报名按钮 - 三种状态 -->
@@ -845,7 +846,12 @@ export default {
   border-radius: 4px;
 }
 
-.detail-button { color: #409EFF; }
+.detail-button { 
+  color: #409EFF !important; 
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 .signup-button { color: #67C23A; }
 .cancel-button { color: #F56C6C; }
 

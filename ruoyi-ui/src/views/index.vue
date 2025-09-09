@@ -111,7 +111,10 @@
             <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
             <div class="detail-value">{{ selectedActivity.activityLocation }}</div>
           </div>
-
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 活动类型：</div>
+            <div class="detail-value">{{ getActivityTypeName(selectedActivity.activityType) }}</div>
+          </div>
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
             <div class="detail-value">{{ selectedActivity.organizer }}</div>
@@ -154,10 +157,10 @@
           <div class="section-content">{{ selectedActivity.activityDescription }}</div>
         </div>
 
-        <div class="detail-section-content">
+        <!-- <div class="detail-section-content">
           <h4 class="section-title"><i class="el-icon-warning"></i> 注意事项</h4>
           <div class="section-content">{{ selectedActivity.notes }}</div>
-        </div>
+        </div> -->
 
         <!-- 报名/退掉按钮 -->
         <div class="signup-status">
@@ -315,6 +318,15 @@ export default {
     }
   },
   methods: {
+    getActivityTypeName(activityType) {
+      const typeMap = {
+        '1': '人格塑造与价值引领活动类',
+        '2': '知识融合与思维进阶活动类', 
+        '3': '能力锻造与实践创新活动类',
+        '4': '社会责任与领军意识活动类'
+      };
+      return typeMap[activityType] || activityType;
+    },
     // 获取活动列表
     async fetchActivities() {
       this.loading = true;

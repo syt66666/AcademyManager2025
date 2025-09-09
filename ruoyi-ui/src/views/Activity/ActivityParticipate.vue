@@ -114,7 +114,10 @@
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
-            <span class="index-badge">
+            <span 
+              class="index-badge" 
+              :class="{ 'rejected-badge': scope.row.status === '未通过' }"
+            >
               {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
             </span>
           </template>
@@ -158,13 +161,13 @@
                 class="action-button upload-button"
                 @click="openUploadDialog(scope.row)"
               >提交</el-button>
-              <el-button
+              <el-tag
                 v-if="scope.row.status === '未通过'"
-                type="text"
-                size="mini"
-                class="action-button reupload-button"
+                type="danger"
+                effect="light"
+                class="status-tag reupload-tag"
                 @click="openUploadDialog(scope.row)"
-              >重新提交</el-button>
+              >重新提交</el-tag>
               <el-tag
                 v-if="scope.row.status === '未审核'"
                 type="warning"
@@ -614,9 +617,36 @@ export default {
     getList() {
       this.loading = true;
       listBookingsWithActivity(this.queryParams).then(response => {
-        this.activitiesList = response.rows;
+        // 对活动列表按照材料提交状态进行排序
+        const sortedRows = this.sortActivitiesByStatus(response.rows);
+        this.activitiesList = sortedRows;
         this.total = response.total;
         this.loading = false;
+      });
+    },
+
+    /** 按照材料提交状态排序活动列表 */
+    sortActivitiesByStatus(activities) {
+      // 定义状态优先级：未通过 > 活动未结束 > 未审核 > 已通过
+      const statusPriority = {
+        '未通过': 1,
+        '未提交': 2,  // 活动未结束对应未提交状态
+        '未审核': 3,
+        '已通过': 4
+      };
+
+      return activities.sort((a, b) => {
+        // 获取状态优先级
+        const priorityA = statusPriority[a.status] || 999;
+        const priorityB = statusPriority[b.status] || 999;
+        
+        // 如果优先级相同，按活动开始时间排序（最新的在前）
+        if (priorityA === priorityB) {
+          return new Date(b.startTime) - new Date(a.startTime);
+        }
+        
+        // 按优先级排序
+        return priorityA - priorityB;
       });
     },
 
@@ -1070,56 +1100,6 @@ export default {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
-/* 未通过状态行样式 */
-.modern-table .rejected-row td {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
-  border-left: 4px solid #ef4444 !important;
-  position: relative;
-}
-
-.modern-table .rejected-row:hover td {
-  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
-}
-
-.modern-table .rejected-row td:first-child {
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
-}
-
-.modern-table .rejected-row td:last-child {
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-
-/* 使用更强的选择器来覆盖Element UI样式 */
-.el-table .rejected-row td {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
-  border-left: 4px solid #ef4444 !important;
-}
-
-.el-table .rejected-row:hover td {
-  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
-}
-
-/* 尝试使用更具体的选择器 */
-.el-table__body tr.rejected-row td {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
-  border-left: 4px solid #ef4444 !important;
-}
-
-.el-table__body tr.rejected-row:hover td {
-  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
-}
-
-/* 使用深度选择器 */
-::v-deep .el-table .rejected-row td {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
-  border-left: 4px solid #ef4444 !important;
-}
-
-::v-deep .el-table .rejected-row:hover td {
-  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
-}
 
 /* 材料提交按钮样式 - 统一文字按钮风格 */
 .action-button {
@@ -1143,16 +1123,27 @@ export default {
 }
 
 .reupload-button {
-  color: #f39c12;
+  color: #ef4444;
 }
 
 .reupload-button:hover {
-  background-color: rgba(243, 156, 18, 0.1);
+  background-color: rgba(239, 68, 68, 0.1);
 }
 
 .status-tag {
   padding: 5px 8px;
   font-size: 12px;
+}
+
+/* 重新提交标签样式 */
+.status-tag.reupload-tag {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-tag.reupload-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 活动未结束标签特殊样式 */
@@ -1176,6 +1167,12 @@ export default {
   font-weight: 600;
   font-size: 14px;
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 未通过状态的红色序号徽章 */
+.index-badge.rejected-badge {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* 活动类型标签 */
