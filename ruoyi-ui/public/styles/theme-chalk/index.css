@@ -14023,7 +14023,7 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
   padding: 8px;
-  height: 85px
+  height: 200px;
 }
 
 .el-calendar-table .el-calendar-day:hover {

@@ -4,7 +4,7 @@
     <el-tabs v-model="activeView" class="view-tabs">
       <!-- 日历视图 -->
       <el-tab-pane label="日历视图" name="calendar">
-        <el-calendar v-model="calendarDate" class="calendar-view">
+        <el-calendar v-model="calendarDate" class="calendar-view" style="--calendar-day-height: 120px;">
           <template #dateCell="{ data }">
             <div 
               v-if="isCurrentMonth(data.day)" 
@@ -230,11 +230,13 @@ export default {
   },
   mounted() {
     this.hideEmptyCalendarRows();
+    this.forceCalendarDayHeight();
   },
   watch: {
     calendarDate() {
       this.$nextTick(() => {
         this.hideEmptyCalendarRows();
+        this.forceCalendarDayHeight();
       });
     },
     activeView(newView) {
@@ -461,6 +463,18 @@ export default {
         }
       });
     },
+
+    // 强制设置日历格子高度
+    forceCalendarDayHeight() {
+      this.$nextTick(() => {
+        const calendarDays = document.querySelectorAll('.el-calendar-table .el-calendar-day');
+        calendarDays.forEach(day => {
+          day.style.height = '120px';
+          day.style.minHeight = '120px';
+          day.style.maxHeight = '120px';
+        });
+      });
+    }
   }
 };
 </script>
@@ -546,17 +560,18 @@ export default {
 }
 
 .calendar-view {
-  height: calc(100vh - 200px);
+  height: calc(100vh - 280px);
   overflow: visible;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   border-radius: 0;
   padding: 15px;
   box-shadow: none;
+}
 
   .calendar-cell {
     height: calc(100% - 2px);
     width: calc(100% - 2px);
-    max-height: 98px;
+    max-height: 150px;
     overflow: hidden;
     padding: 2px; /* 减少内边距 */
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -712,7 +727,21 @@ export default {
       }
     }
   }
-}
+
+  /* 覆盖 Element UI 的日历格子高度 - 使用更高优先级 */
+  .calendar-view .el-calendar-table .el-calendar-day {
+    height: var(--calendar-day-height, 120px) !important;
+    padding: 8px !important;
+    min-height: var(--calendar-day-height, 120px) !important;
+    max-height: var(--calendar-day-height, 120px) !important;
+  }
+
+  /* 强制覆盖所有可能的样式 */
+  .calendar-view .el-calendar-table td .el-calendar-day {
+    height: 120px !important;
+    min-height: 120px !important;
+    max-height: 120px !important;
+  }
 
 /* 日历视图内显示"详细/已截止"按钮 */
 .calendar-view .detail-btn {
@@ -807,7 +836,7 @@ export default {
 /* 确保日历表格完整显示 */
 .calendar-view .el-calendar__body {
   overflow: visible;
-  height: auto;
+  height: 600px;
   padding: 0;
 }
 
@@ -824,13 +853,13 @@ export default {
 
 .calendar-view .el-calendar-table tr {
   display: table-row;
-  height: 100px;
+  height: 155px;
 }
 
 .calendar-view .el-calendar-table td {
   display: table-cell;
   vertical-align: top;
-  height: 100px;
+  height: 155px;
   padding: 0;
   position: relative;
   box-sizing: border-box;
