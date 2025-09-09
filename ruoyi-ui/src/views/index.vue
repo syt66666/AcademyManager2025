@@ -560,7 +560,7 @@ export default {
 }
 
 .calendar-view {
-  height: calc(100vh - 280px);
+  height: calc(100vh - 100px);
   overflow: visible;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   border-radius: 0;
