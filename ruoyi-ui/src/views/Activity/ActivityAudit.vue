@@ -154,8 +154,8 @@
         icon="el-icon-close"
         class="action-btn"
         :disabled="selectedRows.length === 0"
-        @click="handleBatchAudit('拒绝')"
-      >批量拒绝</el-button>
+        @click="handleBatchAudit('未通过')"
+      >批量未通过</el-button>
       <el-button
         type="success"
         icon="el-icon-download"
@@ -597,11 +597,11 @@ export default {
     async rejectCurrent() {
       if (!this.currentBooking) return;
       try {
-        const { value } = await this.$prompt('请输入拒绝原因', '审核拒绝', {
+        const { value } = await this.$prompt('请输入未通过原因', '审核未通过', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           inputPattern: /.+/,
-          inputErrorMessage: '拒绝原因不能为空'
+          inputErrorMessage: '未通过原因不能为空'
         });
         const payload = {
           bookingId: this.currentBooking.bookingId,
@@ -612,12 +612,12 @@ export default {
         };
         this.actionLoading = true;
         await this.$options.methods._updateSingleBooking.call(this, payload);
-        this.$message.success('已拒绝');
+        this.$message.success('未通过');
         this.auditDialogVisible = false;
         this.getList();
         this.fetchAuditCount();
       } catch (e) {
-        if (e !== 'cancel') this.$message.error('拒绝失败');
+        if (e !== 'cancel') this.$message.error('未通过失败');
       } finally {
         this.actionLoading = false;
       }
@@ -635,7 +635,7 @@ export default {
       const isApproved = actionLabel === '通过';
       const statusMapping = {
         '通过': '已通过',
-        '拒绝': '未通过'
+        '未通过': '未通过'
       };
 
       if (!this.selectedRows || this.selectedRows.length === 0) {
@@ -650,12 +650,12 @@ export default {
         };
         if (!isApproved) {
           promptOptions.inputPattern = /.+/;
-          promptOptions.inputErrorMessage = '拒绝原因不能为空';
-          promptOptions.inputPlaceholder = '请输入拒绝原因';
+          promptOptions.inputErrorMessage = '未通过原因不能为空';
+          promptOptions.inputPlaceholder = '请输入未通过原因';
         }
 
         const result = await this.$prompt(
-          isApproved ? '确认批量通过审核吗？' : '请输入拒绝原因（将应用于所有选中记录）',
+          isApproved ? '确认批量通过审核吗？' : '请输入未通过原因（将应用于所有选中记录）',
           '批量审核确认',
           promptOptions
         );
@@ -987,17 +987,17 @@ export default {
       const isApproved = status === '通过';
       const statusMapping = {
         '通过': '已通过',
-        '拒绝': '未通过',
+        '未通过': '未通过',
       };
 
       this.$prompt(
-        isApproved ? '确认通过审核吗？' : '请输入拒绝原因',
+        isApproved ? '确认通过审核吗？' : '请输入未通过原因',
         '审核确认',
         {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           inputPattern: isApproved ? null : /.+/,
-          inputErrorMessage: '拒绝原因不能为空'
+          inputErrorMessage: '未通过原因不能为空'
         }
       ).then(({value}) => {
         // 构建审核数据

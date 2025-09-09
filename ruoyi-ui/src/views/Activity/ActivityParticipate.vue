@@ -109,6 +109,7 @@
         style="width: 100%"
         class="modern-table"
         :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
+        :row-class-name="getRowClassName"
       >
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
@@ -268,14 +269,14 @@
           :on-remove="handleRemoveDoc"
           :on-success="handleDocSuccess"
           :limit="1"
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+          accept=".pdf"
           :before-upload="beforeDocUpload"
           :headers="headers"
           :data="{ filePath: 'bookingImages' }"
         >
           <el-button size="small" type="primary">上传文件</el-button>
           <div slot="tip" class="el-upload__tip">
-            支持上传PDF、Word、Excel、PPT等文档，大小不超过10MB
+            仅支持上传PDF格式文档，大小不超过10MB
           </div>
         </el-upload>
       </div>
@@ -401,7 +402,7 @@ export default {
       if (data.proof && Array.isArray(data.proof)) {
         data.proof.forEach(fileName => {
           this.imageFiles.push({
-            name: fileName,
+            name: this.extractFileName(fileName),
             url: this.getFileFullUrl(fileName),
             isOld: true // 标记为已有文件
           });
@@ -411,7 +412,7 @@ export default {
       // 初始化文档文件
       if (data.summary) {
         this.docFiles.push({
-          name: data.summary,
+          name: this.extractFileName(data.summary),
           url: this.getFileFullUrl(data.summary),
           isOld: true // 标记为已有文件
         });
@@ -567,21 +568,11 @@ export default {
 
     // 文档上传前校验
     beforeDocUpload(file) {
-      const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'application/vnd.ms-powerpoint',
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-      ];
-
-      const isDoc = allowedTypes.includes(file.type);
+      const isPdf = file.type === 'application/pdf';
       const isLt10M = file.size / 1024 / 1024 < 10;
 
-      if (!isDoc) {
-        this.$message.error('请上传PDF、Word、Excel或PPT文件!');
+      if (!isPdf) {
+        this.$message.error('请上传PDF格式文件!');
         return false;
       }
       if (!isLt10M) {
@@ -725,6 +716,14 @@ export default {
         '4': 'progress-info'       // 社会责任与领军意识活动类 - 灰色
       };
       return map[activityType] || 'progress-info';
+    },
+
+    /** 获取表格行的CSS类名 */
+    getRowClassName({ row, rowIndex }) {
+      if (row.status === '未通过') {
+        return 'rejected-row';
+      }
+      return '';
     },
 
   }
@@ -1071,6 +1070,56 @@ export default {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
+/* 未通过状态行样式 */
+.modern-table .rejected-row td {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+  border-left: 4px solid #ef4444 !important;
+  position: relative;
+}
+
+.modern-table .rejected-row:hover td {
+  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
+}
+
+.modern-table .rejected-row td:first-child {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.modern-table .rejected-row td:last-child {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+
+/* 使用更强的选择器来覆盖Element UI样式 */
+.el-table .rejected-row td {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.el-table .rejected-row:hover td {
+  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
+}
+
+/* 尝试使用更具体的选择器 */
+.el-table__body tr.rejected-row td {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.el-table__body tr.rejected-row:hover td {
+  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
+}
+
+/* 使用深度选择器 */
+::v-deep .el-table .rejected-row td {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2) !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+::v-deep .el-table .rejected-row:hover td {
+  background: linear-gradient(135deg, #fecaca, #fca5a5) !important;
+}
 
 /* 材料提交按钮样式 - 统一文字按钮风格 */
 .action-button {
