@@ -675,7 +675,7 @@ export default {
   }
 
   .el-tabs__nav-wrap {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
     border-radius: 8px;
     padding: 4px;
   }
@@ -758,11 +758,11 @@ export default {
       text-align: center;
       padding: 2px 4px; /* 减少内边距 */
       line-height: 1.2;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
       color: white;
       border-radius: 6px; /* 减少圆角 */
       font-size: 10px; /* 减少字体大小 */
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 2px 8px rgba(69, 127, 202, 0.3);
       flex-shrink: 0; /* 防止被压缩 */
     }
 
@@ -784,7 +784,7 @@ export default {
       display: flex;
       align-items: center;
       padding: 4px 8px; /* 增加内边距 */
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* 默认颜色 */
+      background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200)); /* 默认颜色 */
       border: none;
       border-radius: 6px; /* 增加圆角 */
       font-size: 11px; /* 稍微增加字体大小 */
@@ -831,10 +831,10 @@ export default {
         box-shadow: 0 2px 8px rgba(52, 73, 94, 0.2);
       }
 
-      /* 未知状态 - 紫色（默认） */
+      /* 未知状态 - 蓝色（默认） */
       &.status-unknown {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
+        box-shadow: 0 2px 8px rgba(69, 127, 202, 0.2);
       }
 
       &::before {
@@ -851,8 +851,8 @@ export default {
 
       &:hover {
         transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
-        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        box-shadow: 0 4px 16px rgba(69, 127, 202, 0.4);
+        background: linear-gradient(to right, rgb(59, 107, 182), rgb(76, 125, 180));
       }
 
       /* 不同状态的hover效果 */
@@ -993,7 +993,7 @@ export default {
 
 /* 美化月份标题 */
 .calendar-view .el-calendar__header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
   color: white;
   border-radius: 8px 8px 0 0;
   padding: 15px 20px;
@@ -1186,7 +1186,7 @@ export default {
   }
 
   .el-dialog__header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
     color: white;
     border-radius: 12px 12px 0 0;
     padding: 20px 24px;
