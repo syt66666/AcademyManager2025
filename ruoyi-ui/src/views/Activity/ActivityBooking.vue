@@ -171,7 +171,6 @@
 
       <!-- 分页 -->
       <pagination
-        v-show="total>0"
         :total="total"
         :page.sync="queryParams.pageNum"
         :limit.sync="queryParams.pageSize"
@@ -760,7 +759,7 @@ export default {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #e4e7ed;
-  max-height: calc(100vh - 280px);
+  max-height: calc(100vh - 400px);
   overflow-y: auto;
   width: 100%;
   box-sizing: border-box;
@@ -963,11 +962,26 @@ export default {
 
 /* 分页样式 */
 .custom-pagination {
-  display: flex;
+  display: flex !important;
   justify-content: center !important; /* 强制居中 */
-  margin: 15px auto 0;
-  padding: 8px 0;
-  width: 100%;
+  margin: 20px auto 0 !important;
+  padding: 20px 0 !important;
+  width: 100% !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 999 !important;
+  background: white !important;
+  border-top: 1px solid #e4e7ed !important;
+  min-height: 60px !important;
+}
+
+/* 强制显示分页组件 */
+.custom-pagination .pagination-container {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin: 0 !important;
 }
 
 /* 调整分页组件内部布局 */
@@ -1007,7 +1021,7 @@ export default {
     width: 100%;
   }
   .modern-table {
-    max-height: calc(100vh - 220px);
+    max-height: calc(100vh - 350px);
     width: 100%;
   }
   .custom-pagination {

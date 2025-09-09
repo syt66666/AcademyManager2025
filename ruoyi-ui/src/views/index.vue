@@ -489,16 +489,15 @@ export default {
   padding: 0;
   box-shadow: none;
   border: none;
-  overflow: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
-  height: 100%;
+  height: auto;
 
   .el-tabs__header {
     margin: 0 0 15px 0;
-    padding: 15px 15px 0 15px;
   }
 
   .el-tabs__nav-wrap {
@@ -537,12 +536,13 @@ export default {
 
   .el-tabs__content {
     flex: 1;
-    overflow: auto;
+    overflow: visible;
     padding: 0;
     width: 100%;
     box-sizing: border-box;
-    height: 100%;
+    height: auto;
   }
+
 }
 
 .calendar-view {
@@ -1122,6 +1122,36 @@ export default {
     width: 100%;
   }
 }
+
+/* 覆盖 ActivityBooking 组件的表格高度和滚动 */
+::v-deep .booking-container .modern-table {
+  max-height: calc(100vh - 400px) !important;
+  height: auto !important;
+  overflow: hidden !important;
+  overflow-y: auto !important;
+}
+
+/* 确保分页组件正常显示 */
+::v-deep .booking-container .custom-pagination {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 999 !important;
+  margin-top: 20px !important;
+  padding: 20px 0 !important;
+  background: white !important;
+  border-top: 1px solid #e4e7ed !important;
+}
+
+/* 强制显示分页组件内部容器 */
+::v-deep .booking-container .custom-pagination .pagination-container {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin: 0 !important;
+}
 </style>
+
 
 
