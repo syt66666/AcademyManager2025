@@ -60,8 +60,14 @@
       </el-tab-pane>
     </el-tabs>
 
-    <!-- 详情/报名区域 -->
-    <div class="detail-section" v-if="activeView === 'calendar'">
+    <!-- 活动详情弹窗 -->
+    <el-dialog
+      title="活动详情"
+      :visible.sync="dialogVisible"
+      width="800px"
+      :before-close="handleClose"
+      class="activity-dialog"
+    >
       <div class="activity-detail" v-if="selectedActivity">
         <!-- 活动详情展示 -->
         <div class="detail-header">
@@ -127,7 +133,6 @@
         </div>
 
         <!-- 报名按钮 -->
-        <!-- 报名按钮 -->
         <div class="signup-status">
           <el-button
             type="primary"
@@ -151,11 +156,10 @@
         </div>
       </div>
 
-      <div v-else class="no-activity-selected">
-        <i class="el-icon-info"></i>
-        <p>请从上侧选择活动查看详情</p>
-      </div>
-    </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">关闭</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -197,6 +201,9 @@ export default {
 
       // 当前选中的活动
       selectedActivity: null,
+      
+      // 弹窗控制
+      dialogVisible: false,
 
       // 报名表单相关
       showSignUpForm: false,
@@ -421,6 +428,8 @@ export default {
         }
 
         this.$message.success("报名成功！");
+        // 报名成功后关闭弹窗
+        this.dialogVisible = false;
 
       } catch (error) {
         console.error("报名失败:", error);
@@ -431,6 +440,14 @@ export default {
     // 处理事件点击
     handleEventClick(activity) {
       this.selectedActivity = { ...activity };
+      this.dialogVisible = true;
+    },
+
+    // 处理弹窗关闭
+    handleClose(done) {
+      this.dialogVisible = false;
+      this.selectedActivity = null;
+      done();
     },
 
     // 判断日期是否属于当前月份
@@ -882,209 +899,198 @@ export default {
 }
 
 
-.detail-section {
-  border: none;
-  border-radius: 0;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  margin: 0;
-  box-shadow: none;
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+/* 活动详情弹窗样式 */
+.activity-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   }
 
-  .activity-detail {
-    .detail-header {
+  .el-dialog__header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+    background: #f8f9fa;
+  }
+
+  .el-dialog__footer {
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    padding: 16px 24px;
+    text-align: right;
+  }
+}
+
+.activity-detail {
+  .detail-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+
+    h2 {
+      margin: 0 15px 0 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #2c3e50;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-tag {
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+
+    .detail-item {
       display: flex;
       align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
 
-      h2 {
-        margin: 0 15px 0 0;
-        font-size: 24px;
+      &:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .detail-label {
         font-weight: 600;
-        color: #2c3e50;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      }
-
-      .status-tag {
-        border-radius: 20px;
-        padding: 4px 12px;
-        font-weight: 500;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-    }
-
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-
-      .detail-item {
+        width: 120px;
+        color: #495057;
         display: flex;
         align-items: center;
-        padding: 12px;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        transition: all 0.3s ease;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.7);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .detail-label {
-          font-weight: 600;
-          width: 120px;
-          color: #495057;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-
-          i {
-            color: #667eea;
-            font-size: 16px;
-          }
-        }
-
-        .detail-value {
-          flex: 1;
-          font-weight: 500;
-
-          .capacity-high {
-            color: #e74c3c;
-            font-weight: 600;
-            background: rgba(231, 76, 60, 0.1);
-            padding: 2px 8px;
-            border-radius: 12px;
-          }
-
-          .capacity-medium {
-            color: #f39c12;
-            font-weight: 600;
-            background: rgba(243, 156, 18, 0.1);
-            padding: 2px 8px;
-            border-radius: 12px;
-          }
-
-          .capacity-low {
-            color: #27ae60;
-            font-weight: 600;
-            background: rgba(39, 174, 96, 0.1);
-            padding: 2px 8px;
-            border-radius: 12px;
-          }
-        }
-      }
-    }
-
-    .detail-section-content {
-      margin: 20px 0;
-
-      .section-title {
-        display: flex;
-        align-items: center;
-        color: #2c3e50;
-        margin-bottom: 12px;
-        font-weight: 600;
-        font-size: 16px;
+        gap: 8px;
 
         i {
-          margin-right: 8px;
           color: #667eea;
-          font-size: 18px;
+          font-size: 16px;
         }
       }
 
-      .section-content {
-        line-height: 1.6;
-        padding: 16px 20px;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 8px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: #495057;
+      .detail-value {
+        flex: 1;
         font-weight: 500;
-      }
-    }
 
-    .signup-form {
-      margin-top: 30px;
-      padding: 20px;
-      border: 1px solid #ebeef5;
-      border-radius: 4px;
-
-      .form-title {
-        border-left: 4px solid #409eff;
-        padding-left: 10px;
-        margin: 0 0 20px 0;
-      }
-    }
-
-    .signup-status {
-      margin-top: 24px;
-      display: flex;
-      justify-content: center;
-
-      .signup-button {
-        width: 200px;
-        height: 44px;
-        font-size: 16px;
-        font-weight: 600;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 22px;
-        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
-        transition: all 0.3s ease;
-
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-          background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        .capacity-high {
+          color: #e74c3c;
+          font-weight: 600;
+          background: rgba(231, 76, 60, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
         }
 
-        &:active {
-          transform: translateY(0);
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        .capacity-medium {
+          color: #f39c12;
+          font-weight: 600;
+          background: rgba(243, 156, 18, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
         }
-      }
 
-      .signup-alert {
-        margin-top: 20px;
-        border-radius: 8px;
-        border: none;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .capacity-low {
+          color: #27ae60;
+          font-weight: 600;
+          background: rgba(39, 174, 96, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
       }
     }
   }
 
-  .no-activity-selected {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 200px;
-    color: #6c757d;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    border: 2px dashed rgba(102, 126, 234, 0.3);
+  .detail-section-content {
+    margin: 20px 0;
 
-    i {
-      font-size: 50px;
-      margin-bottom: 15px;
-      color: #667eea;
+    .section-title {
+      display: flex;
+      align-items: center;
+      color: #2c3e50;
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 16px;
+
+      i {
+        margin-right: 8px;
+        color: #667eea;
+        font-size: 18px;
+      }
     }
 
-    p {
-      font-size: 16px;
+    .section-content {
+      line-height: 1.6;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #495057;
       font-weight: 500;
+    }
+  }
+
+  .signup-status {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+
+    .signup-button {
+      width: 200px;
+      height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 22px;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+    }
+
+    .signup-alert {
+      margin-top: 20px;
+      border-radius: 8px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
   }
 }
@@ -1130,7 +1136,7 @@ export default {
 
 /* 响应式：较小屏幕下信息布局更紧凑 */
 @media (max-width: 1200px) {
-  .detail-section .activity-detail .detail-grid {
+  .activity-detail .detail-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1145,9 +1151,17 @@ export default {
     padding: 10px;
     height: calc(100vh - 150px);
   }
-  .detail-section { padding: 16px; }
-  .detail-section .activity-detail .detail-header h2 { font-size: 20px; }
-  .detail-section .activity-detail .signup-status .signup-button {
+  
+  .activity-dialog .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .activity-detail .detail-header h2 { 
+    font-size: 20px; 
+  }
+  
+  .activity-detail .signup-status .signup-button {
     width: 100%;
   }
 }
