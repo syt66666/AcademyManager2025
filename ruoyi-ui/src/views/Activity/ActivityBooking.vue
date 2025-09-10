@@ -29,21 +29,11 @@
               />
             </el-select>
           </el-form-item>
-          <!--活动状态筛选 -->
-          <el-form-item label="活动状态" prop="activityStatus">
-            <el-select
-              v-model="queryParams.activityStatus"
-              clearable
-              placeholder="请选择活动状态"
-              class="search-input"
-            >
-              <el-option
-                v-for="status in activityStatusOptions"
-                :key="status.value"
-                :label="status.label"
-                :value="status.value"
-              />
-            </el-select>
+          <!-- 可报名状态筛选 -->
+          <el-form-item prop="availableOnly">
+            <el-checkbox v-model="queryParams.availableOnly" @change="handleQuery">
+              仅显示可报名活动
+            </el-checkbox>
           </el-form-item>
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
@@ -332,15 +322,8 @@ export default {
         organizer: null,
         activityType: null,
         activityStatus: null,
+        availableOnly: false, // 可报名筛选标志
       },
-      // 新增活动状态选项
-      activityStatusOptions: [
-        { value: '报名未开始', label: '报名未开始' },
-        { value: '报名进行中', label: '报名进行中' },
-        { value: '报名已截止', label: '报名已截止' },
-        { value: '活动进行中', label: '活动进行中' },
-        { value: '活动已结束', label: '活动已结束' }
-      ]
     };
   },
   created() {
@@ -407,10 +390,11 @@ export default {
         const response = await listActivities(baseParams);
         let allActivities = response.rows;
 
-        // 2. 前端筛选活动状态
-        if (this.queryParams.activityStatus) {
+        // 2. 前端筛选：如果选中"仅显示可报名活动"
+        if (this.queryParams.availableOnly) {
           allActivities = allActivities.filter(activity =>
-            this.getActivityStatusText(activity) === this.queryParams.activityStatus
+            this.getActivityStatusText(activity) === "报名进行中" &&
+            activity.activityCapacity > 0
           );
         }
 
@@ -444,17 +428,10 @@ export default {
       this.getList();
     },
 
-    /** 搜索报名状态 */
-    handleStatusFilterChange() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-
-
     /** 重置搜索 */
     resetQuery() {
       this.resetForm("queryForm");
-      this.queryParams.activityStatus = null; // 确保活动状态也被重置
+      this.queryParams.availableOnly = false; // 重置复选框
       this.handleQuery();
     },
 
