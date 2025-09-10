@@ -257,6 +257,7 @@
           accept=".jpg,.jpeg,.png,.gif"
           :before-upload="beforeImageUpload"
           :headers="headers"
+          :auto-upload="true"
         >
           <i class="el-icon-plus"></i>
         </el-upload>
@@ -276,6 +277,7 @@
           :before-upload="beforeDocUpload"
           :headers="headers"
           :data="{ filePath: 'bookingImages' }"
+          :auto-upload="true"
         >
           <el-button size="small" type="primary">上传文件</el-button>
           <div slot="tip" class="el-upload__tip">
@@ -519,11 +521,29 @@ export default {
       }
 
       try {
-        // 准备proof字段 - 只提交文件名数组
-        const proofFileNames = this.imageFiles.map(file => file.name);
+        // 准备proof字段 - 区分已有文件和新上传文件
+        const proofFileNames = this.imageFiles.map(file => {
+          if (file.isOld) {
+            // 对于已有文件，从URL中提取完整路径
+            return file.url.replace(process.env.VUE_APP_BASE_API, '');
+          } else {
+            // 对于新上传的文件，使用文件名
+            return file.name;
+          }
+        });
 
-        // 准备summary字段 - 只提交文件名（取第一个文档）
-        const summaryFileName = this.docFiles.length > 0 ? this.docFiles[0].name : null;
+        // 准备summary字段 - 区分已有文件和新上传文件
+        let summaryFileName = null;
+        if (this.docFiles.length > 0) {
+          const docFile = this.docFiles[0];
+          if (docFile.isOld) {
+            // 对于已有文件，从URL中提取完整路径
+            summaryFileName = docFile.url.replace(process.env.VUE_APP_BASE_API, '');
+          } else {
+            // 对于新上传的文件，使用文件名
+            summaryFileName = docFile.name;
+          }
+        }
 
         // 提交到后端
         const res = await updateBooking({
@@ -587,12 +607,16 @@ export default {
 
     // 移除图片
     handleRemoveImage(file, fileList) {
-      this.imageFiles = fileList;
+      // 确保文件列表被正确更新
+      this.imageFiles = [...fileList];
+      this.$forceUpdate(); // 强制更新视图
     },
 
     // 移除文档
     handleRemoveDoc(file, fileList) {
-      this.docFiles = fileList;
+      // 确保文件列表被正确更新
+      this.docFiles = [...fileList];
+      this.$forceUpdate(); // 强制更新视图
     },
 
     /** 获取所有活动数据用于统计 */
