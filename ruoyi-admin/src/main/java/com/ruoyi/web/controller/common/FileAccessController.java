@@ -1,9 +1,16 @@
 package com.ruoyi.web.controller.common;
 
 import com.ruoyi.common.config.RuoYiConfig;
+import com.ruoyi.common.constant.CacheConstants;
+import com.ruoyi.common.constant.Constants;
+import com.ruoyi.common.core.domain.model.LoginUser;
+import com.ruoyi.common.core.redis.RedisCache;
 import com.ruoyi.common.utils.file.FileUtils;
 import com.ruoyi.framework.web.service.TokenService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +31,13 @@ public class FileAccessController {
 
     @Autowired
     private TokenService tokenService;
+    
+    @Autowired
+    private RedisCache redisCache;
+    
+    // 令牌秘钥
+    @Value("${token.secret}")
+    private String secret;
 
     /**
      * 获取文件内容（支持认证）
@@ -39,16 +53,18 @@ public class FileAccessController {
             // 验证token（如果提供）
             if (token != null && !token.isEmpty()) {
                 try {
-                    // 使用现有的token验证方法
-                    String username = tokenService.getUsernameFromToken(token);
-                    System.out.println("Token验证结果 - username: " + username);
-                    if (username == null || username.isEmpty()) {
-                        System.out.println("Token验证失败 - 用户名为空");
+                    // 手动验证token - 解析JWT并获取用户信息
+                    com.ruoyi.common.core.domain.model.LoginUser loginUser = validateTokenManually(token);
+                    System.out.println("Token验证结果 - loginUser: " + (loginUser != null ? "有效" : "无效"));
+                    if (loginUser == null) {
+                        System.out.println("Token验证失败 - 用户信息为空");
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         return;
                     }
+                    System.out.println("Token验证成功 - 用户: " + loginUser.getUsername());
                 } catch (Exception e) {
                     System.out.println("Token验证异常: " + e.getMessage());
+                    e.printStackTrace();
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
@@ -106,6 +122,39 @@ public class FileAccessController {
                 return "image/png";
             default:
                 return "application/octet-stream";
+        }
+    }
+    
+    /**
+     * 手动验证token
+     */
+    private LoginUser validateTokenManually(String token) {
+        try {
+            // 解析JWT token
+            Claims claims = Jwts.parser()
+                    .setSigningKey(secret)
+                    .parseClaimsJws(token)
+                    .getBody();
+            
+            // 获取用户UUID
+            String uuid = (String) claims.get(Constants.LOGIN_USER_KEY);
+            if (uuid == null || uuid.isEmpty()) {
+                System.out.println("Token中未找到用户UUID");
+                return null;
+            }
+            
+            // 从Redis获取用户信息
+            String userKey = CacheConstants.LOGIN_TOKEN_KEY + uuid;
+            LoginUser user = redisCache.getCacheObject(userKey);
+            
+            if (user == null) {
+                System.out.println("Redis中未找到用户信息，userKey: " + userKey);
+            }
+            
+            return user;
+        } catch (Exception e) {
+            System.out.println("Token解析异常: " + e.getMessage());
+            return null;
         }
     }
 }
