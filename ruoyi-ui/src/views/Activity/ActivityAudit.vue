@@ -104,10 +104,10 @@
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
               <el-option
-                v-for="type in availableActivityTypes"
-                :key="type"
-                :label="getActivityTypeName(type)"
-                :value="type"
+                v-for="type in predefinedActivityTypes"
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
               />
             </el-select>
           </el-form-item>
@@ -521,6 +521,13 @@ export default {
       selectedRows: [],
       // 可用的活动类型列表
       availableActivityTypes: [],
+      // 预定义的活动类型
+      predefinedActivityTypes: [
+        { value: '1', label: '人格塑造与价值引领活动类' },
+        { value: '2', label: '知识融合与思维进阶活动类' },
+        { value: '3', label: '能力锻造与实践创新活动类' },
+        { value: '4', label: '社会责任与领军意识活动类' }
+      ],
 
       // 审核弹窗
       auditDialogVisible: false,

@@ -1,6 +1,5 @@
 <template>
   <div class="booking-container">
-    <!-- 搜索区域 -->
     <div class="search-card">
       <div class="card-header">
         <i class="el-icon-search"></i>
@@ -18,14 +17,13 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
               <el-option 
-                v-for="type in availableActivityTypes" 
-                :key="type" 
-                :label="getActivityTypeName(type)" 
-                :value="type"
+                v-for="type in predefinedActivityTypes" 
+                :key="type.value" 
+                :label="type.label" 
+                :value="type.value"
               />
             </el-select>
           </el-form-item>
@@ -69,11 +67,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="活动名称" align="center" prop="activityName" width="180">
-          <template slot-scope="scope">
-            <div class="activity-name">{{ scope.row.activityName }}</div>
-          </template>
-        </el-table-column>
+        <el-table-column label="活动名称" align="center" prop="activityName" />
         <el-table-column label="活动类型" align="center" prop="activityType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
@@ -81,23 +75,18 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
-        <el-table-column label="报名时间" align="center" >
+        <el-table-column label="活动地点" align="center" prop="activityLocation" />
+        <el-table-column label="组织单位" align="center" prop="organizer" />
+        <el-table-column label="活动开始时间" align="center" prop="startTime">
           <template slot-scope="scope">
-            <div class="time-range">
-              <i class="el-icon-time"></i> {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
-            </div>
+            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="活动时间" align="center" >
+        <el-table-column label="活动结束时间" align="center" prop="endTime">
           <template slot-scope="scope">
-            <div class="time-range">
-              <i class="el-icon-date"></i> {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
-            </div>
+            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-
-        <!-- 活动状态列 -->
         <el-table-column label="活动状态" align="center" width="100">
           <template slot-scope="scope">
             <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
@@ -105,181 +94,171 @@
             </el-tag>
           </template>
         </el-table-column>
-
-        <el-table-column label="报名人数" align="center" width="100">
-          <template #default="scope">
-            <div class="participants">
-              <el-progress
-                :percentage="calculateCapacityPercentage(scope.row)"
-                :color="getProgressColor(calculateCapacityPercentage(scope.row))"
-                :show-text="false"
-                :stroke-width="10"
-                class="progress-bar"
-              />
-              <div class="count">
-                  <span :class="getCapacityClass(scope.row)">
-                    {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
-                  </span>
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-
-        <!-- 操作列 -->
-        <el-table-column label="操作" align="center" fixed="right" width="180">
+        <el-table-column label="操作" align="center" fixed="right" width="200">
           <template slot-scope="scope">
-            <div class="action-buttons">
-              <!-- 详情按钮 -->
-              <el-button
-                size="mini"
-                type="text"
-                @click="handleDetail(scope.row)"
-                class="action-button detail-button"
-                style="display: inline-block !important; visibility: visible !important; opacity: 1 !important;"
-              >详情</el-button>
-
-              <!-- 报名按钮 - 三种状态 -->
-              <el-button
-                v-if="showSignUpButton(scope.row)"
-                size="mini"
-                type="text"
-                @click="handleSignUp(scope.row)"
-                :disabled="isSignUpDisabled(scope.row)"
-                :class="[
-            'action-button',
-            'signup-button',
-            {
-              'disabled-button': isSignUpDisabled(scope.row),
-              'full-button': isCapacityFull(scope.row) && isSignUpAllowed(scope.row)
-            }
-          ]"
-              >
-                {{ getSignUpButtonText(scope.row) }}
-              </el-button>
-
-              <!-- 取消按钮 -->
-              <el-button
-                v-if="showCancelButton(scope.row)"
-                size="mini"
-                type="text"
-                @click="handleCancel(scope.row)"
-                class="action-button cancel-button"
-              >取消</el-button>
-            </div>
+            <el-button
+              type="text"
+              size="mini"
+              class="action-button detail-button"
+              @click="handleDetail(scope.row)"
+            >详情</el-button>
+            <el-button
+              v-if="getSignStatusText(scope.row) === '可报名'"
+              type="text"
+              size="mini"
+              class="action-button signup-button"
+              @click="handleSignUp(scope.row)"
+            >报名</el-button>
+            <el-button
+              v-if="getSignStatusText(scope.row) === '已报名'"
+              type="text"
+              size="mini"
+              class="action-button cancel-button"
+              @click="handleCancel(scope.row)"
+            >取消报名</el-button>
+            <el-tag
+              v-if="isActivityFull(scope.row)"
+              type="danger"
+              size="mini"
+              effect="dark"
+              class="full-tag"
+            >已满</el-tag>
           </template>
         </el-table-column>
       </el-table>
 
       <!-- 分页 -->
-      <pagination
-        :total="total"
-        :page.sync="queryParams.pageNum"
-        :limit.sync="queryParams.pageSize"
-        @pagination="getList"
-        class="custom-pagination"
-      />
+      <div class="custom-pagination">
+        <el-pagination
+          v-show="total>0"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="queryParams.pageNum"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="queryParams.pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+      </div>
     </div>
-
 
     <!-- 活动详情弹窗 -->
     <el-dialog
-      :title="currentActivity.activityName"
-      :visible.sync="detailVisible"
-      width="700px"
-      :close-on-click-modal="false"
+      title="活动详情"
+      :visible.sync="detailDialogVisible"
+      width="800px"
+      :before-close="handleDetailClose"
       class="activity-detail-dialog"
     >
-      <div class="activity-detail">
+      <div class="activity-detail" v-if="selectedActivity">
+        <!-- 活动详情展示 -->
         <div class="detail-header">
-          <el-tag :type="getActivityStatusTag(currentActivity)" size="medium" class="status-tag">
-            {{ getActivityStatusText(currentActivity) }}
-          </el-tag>
-          <el-tag :type="getSignStatusTag(currentActivity)" size="medium" effect="light" class="sign-tag">
-            {{ getSignStatusText(currentActivity) }}
-          </el-tag>
+          <h2>{{ selectedActivity.activityName }}</h2>
+          <div class="status-tags">
+            <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
+              {{ getActivityStatusText(selectedActivity) }}
+            </el-tag>
+            <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
+              {{ getSignStatusText(selectedActivity) }}
+            </el-tag>
+          </div>
         </div>
 
         <el-divider></el-divider>
 
-
         <div class="detail-grid">
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-location"></i> 活动类型：</div>
-            <div class="detail-value">{{ getActivityTypeName(currentActivity.activityType) }}</div>
+            <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
+            <div class="detail-value">{{ selectedActivity.activityLocation }}</div>
           </div>
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
-            <div class="detail-value">{{ currentActivity.activityLocation }}</div>
+            <div class="detail-label"><i class="el-icon-office-building"></i> 活动类型：</div>
+            <div class="detail-value">{{ getActivityTypeName(selectedActivity.activityType) }}</div>
           </div>
-
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
-            <div class="detail-value">{{ currentActivity.organizer }}</div>
+            <div class="detail-value">{{ selectedActivity.organizer }}</div>
           </div>
 
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-user"></i> 活动容量：</div>
             <div class="detail-value">
-              <span :class="{
-                'capacity-high': (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity > 0.8,
-                'capacity-medium': (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity > 0.5 && (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity <= 0.8,
-                'capacity-low': (currentActivity.activityTotalCapacity - currentActivity.activityCapacity) / currentActivity.activityTotalCapacity <= 0.5
-              }">
-                {{ currentActivity.activityTotalCapacity - currentActivity.activityCapacity }}/{{ currentActivity.activityTotalCapacity }}人
+              <span :class="getCapacityClass(selectedActivity)">
+                {{ selectedActivity.activityTotalCapacity - selectedActivity.activityCapacity }}/{{ selectedActivity.activityTotalCapacity }}人
               </span>
             </div>
           </div>
 
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名开始：</div>
-            <div class="detail-value">{{ formatDateTime(currentActivity.activityStart) }}</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.activityStart) }}</div>
           </div>
 
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名截止：</div>
-            <div class="detail-value">{{ formatDateTime(currentActivity.activityDeadline) }}</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.activityDeadline) }}</div>
           </div>
 
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-time"></i> 活动开始：</div>
-            <div class="detail-value">{{ formatDateTime(currentActivity.startTime) }}</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.startTime) }}</div>
           </div>
 
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-time"></i> 活动结束：</div>
-            <div class="detail-value">{{ formatDateTime(currentActivity.endTime) }}</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.endTime) }}</div>
           </div>
         </div>
 
         <el-divider></el-divider>
 
-        <div class="detail-section">
+        <div class="detail-section-content">
           <h4 class="section-title"><i class="el-icon-document"></i> 活动描述</h4>
-          <div class="section-content">{{ currentActivity.activityDescription }}</div>
+          <div class="section-content">{{ selectedActivity.activityDescription }}</div>
         </div>
 
-        <div class="detail-section">
-          <h4 class="section-title"><i class="el-icon-warning"></i> 注意事项</h4>
-          <div class="section-content">{{ currentActivity.notes }}</div>
-        </div>
-      </div>
+        <!-- 报名/取消按钮 -->
+        <div class="signup-status">
+          <el-button
+            type="primary"
+            :disabled="!showSignUpButton"
+            @click="handleSignUp(selectedActivity)"
+            v-if="showSignUpButton"
+            class="signup-button"
+          >
+            立即报名
+          </el-button>
 
-      <!-- 底部按钮 -->
-      <div slot="footer" class="dialog-footer">
-        <el-button
-          v-if="showSignUpButton(currentActivity)"
-          type="success"
-          icon="el-icon-circle-check"
-          @click="handleSignUp(currentActivity)"
-          class="action-button"
-        >立即报名</el-button>
-        <el-button
-          v-if="showCancelButton(currentActivity)"
-          type="danger"
-          icon="el-icon-circle-close"
-          @click="handleCancel(currentActivity)"
-          class="action-button"
-        >取消报名</el-button>
+          <el-button
+            type="danger"
+            :disabled="!showCancelButton"
+            @click="handleCancel(selectedActivity)"
+            v-if="showCancelButton"
+            class="cancel-button"
+          >
+            取消报名
+          </el-button>
+
+          <el-alert
+            v-if="showFullCapacityAlert"
+            title="报名已满"
+            type="warning"
+            :closable="false"
+            class="signup-alert"
+          >
+            该活动报名人数已满，无法继续报名
+          </el-alert>
+
+          <el-alert
+            v-if="selectedActivity.isBooked && !showCancelButton"
+            title="您已成功报名该活动"
+            type="success"
+            :closable="false"
+            class="signup-alert"
+          >
+            报名信息已提交，无法取消报名
+          </el-alert>
+        </div>
       </div>
     </el-dialog>
   </div>
@@ -299,10 +278,16 @@ export default {
       showSearch: true,
       total: 0,
       activitiesList: [],
-      // 可用的活动类型列表
-      availableActivityTypes: [],
-      detailVisible: false,
-      currentActivity: {},
+      // 详情弹窗相关
+      detailDialogVisible: false,
+      selectedActivity: null,
+      // 预定义的活动类型
+      predefinedActivityTypes: [
+        { value: '1', label: '人格塑造与价值引领活动类' },
+        { value: '2', label: '知识融合与思维进阶活动类' },
+        { value: '3', label: '能力锻造与实践创新活动类' },
+        { value: '4', label: '社会责任与领军意识活动类' }
+      ],
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -316,138 +301,36 @@ export default {
   created() {
     this.getList();
   },
+  async mounted() {
+    // 检查报名状态
+    await this.checkBookingStatus();
+  },
+  computed: {
+    // 显示报名按钮的条件
+    showSignUpButton() {
+      if (!this.selectedActivity) return false;
+      return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
+        !this.selectedActivity.isBooked &&
+        this.selectedActivity.activityCapacity > 0;
+    },
+
+    // 显示报名已满提示的条件
+    showFullCapacityAlert() {
+      if (!this.selectedActivity) return false;
+      return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
+        !this.selectedActivity.isBooked &&
+        this.selectedActivity.activityCapacity <= 0;
+    },
+
+    // 显示取消报名按钮的条件
+    showCancelButton() {
+      if (!this.selectedActivity) return false;
+      const status = this.getActivityStatusText(this.selectedActivity);
+      return this.selectedActivity.isBooked && 
+        (status === "报名进行中" || status === "报名未开始");
+    },
+  },
   methods: {
-    /** 判断报名按钮是否禁用 */
-    isSignUpDisabled(row) {
-      // 如果容量已满或活动状态不允许报名，则禁用按钮
-      return this.isCapacityFull(row) || !this.isSignUpAllowed(row);
-    },
-
-    /** 检查容量是否已满 */
-    isCapacityFull(row) {
-      return row.activityCapacity <= 0;
-    },
-
-    /** 检查活动状态是否允许报名 */
-    isSignUpAllowed(row) {
-      return this.getActivityStatusText(row) === "报名进行中";
-    },
-
-    /** 获取报名按钮文本 */
-    getSignUpButtonText(row) {
-      if (this.isSignUpAllowed(row) && this.isCapacityFull(row)) {
-        return "已满";
-      }
-      return "报名";
-    },
-    /** 新增方法：计算容量百分比 */
-    calculateCapacityPercentage(row) {
-      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
-      const used = row.activityTotalCapacity - row.activityCapacity;
-      return Math.round((used / row.activityTotalCapacity) * 100);
-    },
-
-    /** 新增方法：获取进度条颜色 */
-    getProgressColor(percentage) {
-      if (percentage >= 80) return '#f87171';
-      if (percentage >= 50) return '#fbbf24';
-      return '#4ade80';
-    },
-
-    /** 新增方法：获取容量文字样式类 */
-    getCapacityClass(row) {
-      const percentage = this.calculateCapacityPercentage(row);
-      if (percentage >= 80) return 'capacity-high';
-      if (percentage >= 50) return 'capacity-medium';
-      return 'capacity-low';
-    },
-    /** 查询活动列表和预约列表 */
-    async getList() {
-      this.loading = true;
-      try {
-        // 1. 获取活动列表
-        const response = await listActivities(this.queryParams);
-        let activityList = response.rows.map(activity => ({
-          ...activity,
-          isBooked: false
-        }));
-
-        this.total = response.total;
-
-        // 2. 查询每个活动是否已报名
-        const checkPromises = activityList.map(activity =>
-          checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
-            activity.isBooked = res.data.isBooked;
-          })
-        );
-        await Promise.all(checkPromises);
-
-
-        this.activitiesList = activityList;
-        
-        // 更新可用的活动类型列表
-        this.updateAvailableActivityTypes();
-
-      } catch (error) {
-        console.error("获取数据失败:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /** 处理搜索 */
-    handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-
-    /** 搜索报名状态 */
-    handleStatusFilterChange() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-
-
-    /** 重置搜索 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
-    },
-
-    /** 格式化日期时间 */
-    formatDateTime(time) {
-      return parseTime(time, "{y}-{m}-{d} {h}:{i}");
-    },
-
-    /** 获取活动状态文本 */
-    getActivityStatusText(row) {
-      const now = new Date();
-      const start = new Date(row.startTime);
-      const end = new Date(row.endTime);
-      const deadline = new Date(row.activityDeadline);
-      const activityStart = new Date(row.activityStart);
-
-      if (now < activityStart) return "报名未开始";
-      if (now < deadline && now >= activityStart) return "报名进行中";
-      if (now >= deadline && now < start) return "报名已截止";
-      if (now >= start && now <= end) return "活动进行中";
-      if (now > end) return "活动已结束";
-      return row.status || "未知";
-    },
-
-    /** 获取活动状态标签类型 */
-    getActivityStatusTag(row) {
-      const status = this.getActivityStatusText(row);
-      switch (status) {
-        case "报名未开始": return "info";
-        case "报名进行中": return "success";
-        case "报名已截止": return "warning";
-        case "活动进行中": return "primary";
-        case "活动已结束": return "";
-        default: return "danger";
-      }
-    },
-
     // 活动类型映射函数：将数字转换为对应的类型名称
     getActivityTypeName(activityType) {
       const typeMap = {
@@ -470,29 +353,88 @@ export default {
       return map[activityType] || 'info';
     },
 
-    /** 更新可用的活动类型列表 */
-    updateAvailableActivityTypes() {
-      const types = new Set();
-      this.activitiesList.forEach(item => {
-        if (item.activityType) {
-          types.add(item.activityType);
-        }
+    // 获取活动列表
+    getList() {
+      this.loading = true;
+      listActivities(this.queryParams).then(response => {
+        this.activitiesList = response.rows;
+        this.total = response.total;
+        this.loading = false;
+        // 获取活动列表后检查报名状态
+        this.checkBookingStatus();
       });
-      
-      // 如果没有活动类型数据，提供默认选项
-      if (types.size === 0) {
-        types.add('1');
-        types.add('2');
-        types.add('3');
-        types.add('4');
-        types.add('其他');
-      }
-      
-      // 转换为数组并排序
-      this.availableActivityTypes = Array.from(types).sort();
     },
 
-    /** 获取报名状态文本 */
+    // 分页事件处理
+    handleSizeChange(val) {
+      this.queryParams.pageSize = val;
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    
+    handleCurrentChange(val) {
+      this.queryParams.pageNum = val;
+      this.getList();
+    },
+
+    // 检查报名状态
+    async checkBookingStatus() {
+      if (!this.activitiesList || this.activitiesList.length === 0) return;
+      
+      const checkPromises = this.activitiesList.map(activity =>
+        checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
+          activity.isBooked = res.data.isBooked;
+        }).catch(error => {
+          console.error('检查报名状态失败:', error);
+          activity.isBooked = false;
+        })
+      );
+      
+      await Promise.all(checkPromises);
+    },
+
+    // 搜索按钮操作
+    handleQuery() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+
+    // 重置按钮操作
+    resetQuery() {
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+
+    // 获取活动状态标签类型
+    getActivityStatusTag(activity) {
+      const status = this.getActivityStatusText(activity);
+      switch (status) {
+        case "报名未开始": return "info";
+        case "报名进行中": return "success";
+        case "报名已截止": return "danger";
+        case "活动进行中": return "warning";
+        case "活动已结束": return "";
+        default: return "danger";
+      }
+    },
+
+    // 获取活动状态文本
+    getActivityStatusText(activity) {
+      const now = new Date();
+      const start = new Date(activity.startTime);
+      const end = new Date(activity.endTime);
+      const deadline = new Date(activity.activityDeadline);
+      const activityStart = new Date(activity.activityStart);
+
+      if (now < activityStart) return "报名未开始";
+      if (now < deadline && now >= activityStart) return "报名进行中";
+      if (now >= deadline && now < start) return "报名已截止";
+      if (now >= start && now <= end) return "活动进行中";
+      if (now > end) return "活动已结束";
+      return activity.status || "未知";
+    },
+
+    // 获取报名状态文本
     getSignStatusText(row) {
       if (row.isBooked) return "已报名";
 
@@ -506,130 +448,182 @@ export default {
       return "不可报名";
     },
 
-    /** 获取报名状态标签类型 */
-    getSignStatusTag(row) {
-      const status = this.getSignStatusText(row);
+    // 判断活动是否已满
+    isActivityFull(row) {
+      const status = this.getActivityStatusText(row);
+      // 只有在报名进行中且容量为0时才显示已满
+      return status === "报名进行中" && row.activityCapacity <= 0;
+    },
+
+    // 获取报名状态标签类型
+    getSignStatusTag(activity) {
+      const status = this.getSignStatusText(activity);
       switch (status) {
-        case "已报名": return "success";
-        case "可报名": return "warning";
+        case "可报名": return "success";
+        case "已报名": return "warning";
+        case "不可报名": return "danger";
         default: return "info";
       }
     },
 
-    /** 是否显示报名按钮 */
-    showSignUpButton(row) {
-      return this.getSignStatusText(row) !== "已报名";
+    // 获取容量样式
+    getCapacityClass(activity) {
+      const percentage = (activity.activityTotalCapacity - activity.activityCapacity) / activity.activityTotalCapacity;
+      if (percentage >= 0.8) return 'capacity-high';
+      if (percentage >= 0.5) return 'capacity-medium';
+      return 'capacity-low';
     },
 
-    /** 是否显示取消按钮 */
-    showCancelButton(row) {
-      return this.getSignStatusText(row) === "已报名" &&
-        ["报名进行中"].includes(this.getActivityStatusText(row));
+    // 格式化日期时间
+    formatDateTime(datetime) {
+      return parseTime(datetime, "{y}-{m}-{d} {h}:{i}");
     },
 
-    /** 查看详情 */
+    // 处理详情
     handleDetail(row) {
-      this.currentActivity = Object.assign({}, row);
-      this.detailVisible = true;
+      this.selectedActivity = { ...row };
+      this.detailDialogVisible = true;
     },
 
-    /** 报名活动 */
+    // 处理详情弹窗关闭
+    handleDetailClose(done) {
+      this.detailDialogVisible = false;
+      this.selectedActivity = null;
+      done();
+    },
+
+    // 处理报名
     handleSignUp(row) {
-      this.$confirm("确定要报名吗？", "确认", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
+      this.$confirm('确定要报名该活动吗？', '报名确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       }).then(() => {
-        signUpCapacity(row.activityId, row.version)
-          .then(() => {
-            this.$message.success("报名成功！");
-            row.isBooked = true;
-            return addBooking({
-              activityId: row.activityId,
-              studentId: this.$store.state.user.name
-            });
-          })
-          .then(() => this.getList())
-          .catch(error => {
-            this.$message.error(error.msg || "报名失败,请刷新界面重试");
-          });
+        this.submitSignUp(row);
+      }).catch(() => {
+        this.$message.info('已取消报名');
       });
     },
 
-    /** 取消报名 */
+    // 处理取消报名
     handleCancel(row) {
-      this.$confirm("确定要取消报名吗？", "确认取消", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
+      this.$confirm('确定要取消该活动报名吗？', '确认取消', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       }).then(() => {
-        cancelSignUpCapacity(row.activityId, row.version)
-          .then(() => {
-            this.$message.info("已取消报名");
-            row.isBooked = false;
-            return deleteBookingsByActivityAndStudent(
-              row.activityId,
-              this.$store.state.user.name
-            );
-          })
-          .then(() => this.getList())
-          .catch(error => {
-            this.$message.error(error.msg || "取消失败");
-          });
+        this.submitCancelSignUp(row);
+      }).catch(() => {
+        this.$message.info('已取消取消报名操作');
       });
+    },
+
+    // 提交报名
+    async submitSignUp(activity) {
+      try {
+        // 1. 更新活动容量
+        await signUpCapacity(activity.activityId, activity.version);
+
+        // 2. 添加报名记录
+        await addBooking({
+          activityId: activity.activityId,
+          studentId: this.$store.state.user.name,
+        });
+
+        // 3. 更新活动状态
+        const updatedActivity = {
+          ...activity,
+          activityCapacity: Math.max(activity.activityCapacity - 1, 0),
+          version: activity.version + 1,
+          isBooked: true // 标记为已报名
+        };
+
+        // 4. 更新活动列表
+        const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
+        if (index !== -1) {
+          this.activitiesList.splice(index, 1, updatedActivity);
+        }
+
+        this.$message.success("报名成功！");
+      } catch (error) {
+        console.error("报名失败:", error);
+        this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
+      }
+    },
+
+    // 提交取消报名
+    async submitCancelSignUp(activity) {
+      try {
+        // 1. 删除报名记录
+        await deleteBookingsByActivityAndStudent(
+          activity.activityId, 
+          this.$store.state.user.name
+        );
+
+        // 2. 恢复活动容量
+        await cancelSignUpCapacity(
+          activity.activityId,
+          activity.version
+        );
+
+        // 3. 更新活动状态
+        const updatedActivity = {
+          ...activity,
+          activityCapacity: Math.min(activity.activityCapacity + 1, activity.activityTotalCapacity),
+          version: activity.version + 1,
+          isBooked: false // 标记为未报名
+        };
+
+        // 4. 更新活动列表
+        const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
+        if (index !== -1) {
+          this.activitiesList.splice(index, 1, updatedActivity);
+        }
+
+        this.$message.success("取消报名成功！");
+      } catch (error) {
+        console.error("取消报名失败:", error);
+        this.$message.error("取消报名失败: " + (error.msg || "请稍后重试"));
+      }
     }
   }
 };
 </script>
 
 <style scoped>
-/* 禁用状态按钮样式 */
-.disabled-button {
-  opacity: 0.6;
-  cursor: not-allowed !important;
-}
-
-/* 已满状态按钮样式 */
-.full-button {
-  color: #F56C6C !important;
-  background-color: rgba(245, 108, 108, 0.1) !important;
-}
-
-/* 不可报名状态按钮样式 */
-.disabled-button.signup-button:not(.full-button) {
-  color: #909399 !important;
-  background-color: rgba(144, 147, 153, 0.1) !important;
-}
-/* 统一卡片样式 */
-.search-card,
-.table-card {
-  background: #fff;
-  border-radius: 0;
-  padding: 15px;
-  margin: 0 0 12px 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
-  transition: all 0.3s ease;
+.booking-container {
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: auto;
+  height: auto;
+  overflow: visible;
+  position: relative;
   width: 100%;
   box-sizing: border-box;
 }
 
-.search-card {
-  margin-top: 0;
+.search-card, .table-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  overflow: visible;
+  position: relative;
 }
 
-.search-card:hover,
-.table-card:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
+.table-card {
+  padding-bottom: 0;
+  margin-bottom: 40px;
+  overflow: visible;
 }
 
-/* 卡片头部 */
 .card-header {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
   border-bottom: 2px solid #f0f2f5;
 }
 
@@ -645,25 +639,22 @@ export default {
   color: #303133;
 }
 
-/* 搜索表单 */
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
+
 .search-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
   align-items: center;
-  width: 100%;
-  box-sizing: border-box;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .search-input {
-  min-width: 200px;
-  flex: 1;
-  max-width: 300px;
-  transition: all 0.3s ease;
-}
-
-.search-input:hover {
-  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+  width: 200px;
 }
 
 .search-actions {
@@ -672,118 +663,18 @@ export default {
 
 .action-buttons {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
-
-/* 按钮样式 */
-.search-button {
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s;
-}
-
-.search-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
-}
-
-.refresh-button {
-  background: #f0f2f5;
-  border: none;
-  padding: 10px 20px;
-  color: #606266;
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s;
-}
-
-.refresh-button:hover {
-  background: #e4e7ed;
-  color: #333;
-  transform: translateY(-2px);
-}
-/* 整体布局 */
-.booking-container {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  min-height: 100%;
-  height: 100%;
-  overflow: auto;
-  width: 100%;
-  box-sizing: border-box;
-  position: relative;
-}
-
-/* 查询表单 */
-.query-form {
-  padding: 24px;
-  background: #fff;
-  border-radius: 16px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
-  transition: all 0.3s ease;
-}
-
-.query-form:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-.query-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.query-row .el-form-item {
-  margin-bottom: 0;
-  margin-right: 15px;
-}
-
-
-.record-count {
-  margin-left: auto;
-  font-size: 14px;
-  color: #909399;
-  font-weight: 400;
-}
-
-/* 现代化表格 */
 .modern-table {
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #e4e7ed;
-  max-height: calc(100vh - 400px);
-  overflow-y: auto;
-  width: 100%;
-  box-sizing: border-box;
+  margin-bottom: 0;
+  height: auto;
+  max-height: none;
 }
 
-.modern-table th {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-  font-weight: 600;
-  color: #1e293b;
-  border-bottom: 2px solid #e2e8f0;
-  padding: 10px 12px;
-}
-
-.modern-table td {
-  border-bottom: 1px solid #f1f5f9;
-  padding: 8px 12px;
-}
-
-.modern-table tr:hover td {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-}
-
-/* 序号徽章 */
 .index-badge {
   display: inline-block;
   width: 36px;
@@ -798,7 +689,6 @@ export default {
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
 }
 
-/* 活动类型标签 */
 .activity-type-tag {
   font-weight: 500;
   padding: 0 16px;
@@ -809,230 +699,313 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.activity-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.time-range {
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  color: #606266;
-}
-
-.time-range i {
-  margin-right: 5px;
-  color: #909399;
-}
-
 .status-tag {
-  font-weight: 600;
-  padding: 0 10px;
-  height: 28px;
-  line-height: 28px;
-}
-
-/* 操作按钮 */
-.action-buttons {
-  display: flex;
-  gap: 6px;
+  padding: 5px 8px;
+  font-size: 12px;
 }
 
 .action-button {
   padding: 5px 8px;
   font-size: 12px;
   border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
-.detail-button { 
-  color: #409EFF !important; 
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-.signup-button { color: #67C23A; }
-.cancel-button { color: #F56C6C; }
-
-.capacity-high {
-  color: #F56C6C;
-  font-weight: 500;
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.capacity-medium {
-  color: #E6A23C;
-  font-weight: 500;
+.detail-button {
+  color: #409EFF;
 }
 
-.capacity-low {
+.detail-button:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.signup-button {
   color: #67C23A;
-  font-weight: 500;
 }
 
-/* 活动详情弹窗 */
-.activity-detail-dialog ::v-deep .el-dialog {
-  border-radius: 8px;
-  overflow: hidden;
+.signup-button:hover {
+  background-color: rgba(103, 194, 58, 0.1);
 }
 
-.activity-detail-dialog ::v-deep .el-dialog__header {
-  background: linear-gradient(120deg, #409EFF, #64b5ff);
-  padding: 15px 20px;
+.cancel-button {
+  color: #F56C6C;
 }
 
-.activity-detail-dialog ::v-deep .el-dialog__title {
-  color: white;
+.cancel-button:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
+.full-tag {
+  margin-left: 8px;
   font-weight: 600;
-}
-
-.activity-detail-dialog ::v-deep .el-dialog__headerbtn {
-  top: 15px;
-}
-
-.activity-detail-dialog ::v-deep .el-dialog__headerbtn .el-dialog__close {
-  color: white;
-}
-
-.detail-header {
-  margin-bottom: 15px;
-  display: flex;
-  gap: 10px;
-}
-
-.detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.detail-item {
-  display: flex;
-  align-items: flex-start;
-}
-
-.detail-label {
-  width: 100px;
-  flex-shrink: 0;
-  font-weight: 500;
-  color: #606266;
-  display: flex;
-  align-items: center;
-}
-
-.detail-label i {
-  margin-right: 6px;
-  color: #409EFF;
-}
-
-.detail-value {
-  flex-grow: 1;
-  color: #303133;
-}
-
-.detail-section {
-  margin-top: 20px;
-}
-
-.section-title {
-  margin-bottom: 10px;
-  color: #409EFF;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-}
-
-.section-title i {
-  margin-right: 8px;
-}
-
-.section-content {
-  padding: 12px;
-  background-color: #f8fafc;
   border-radius: 4px;
-  line-height: 1.7;
-  color: #606266;
-  border-left: 3px solid #409EFF;
+  box-shadow: 0 2px 4px rgba(245, 108, 108, 0.3);
 }
 
-.dialog-footer {
-  text-align: center;
-  padding: 15px 0 5px;
-}
-
-.close-btn {
-  width: 120px;
-  padding: 10px 0;
-}
-
-/* 分页样式 */
 .custom-pagination {
-  display: flex !important;
-  justify-content: center !important; /* 强制居中 */
-  margin: 20px auto 0 !important;
-  padding: 20px 0 !important;
-  width: 100% !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  z-index: 999 !important;
-  background: white !important;
-  border-top: 1px solid #e4e7ed !important;
-  min-height: 60px !important;
+  margin-top: 24px;
+  text-align: center;
+  padding: 20px 0;
+  background: white;
+  border-top: 1px solid #e4e7ed;
+  border-radius: 0 0 16px 16px;
+  min-height: 60px;
+  width: 100%;
 }
 
-/* 强制显示分页组件 */
-.custom-pagination .pagination-container {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  margin: 0 !important;
+/* 活动详情弹窗样式 */
+.activity-detail-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+    background: #f8f9fa;
+  }
+
+  .el-dialog__footer {
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    padding: 16px 24px;
+    text-align: right;
+  }
 }
 
-/* 调整分页组件内部布局 */
-.custom-pagination /deep/ .el-pagination {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
+.activity-detail {
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
 
-/* 悬停效果 */
-.custom-pagination /deep/ .el-pager li:hover {
-  border-color: #409EFF;
-  color: #409EFF;
-}
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #2c3e50;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
 
-/* 响应式调整 */
-@media (max-width: 768px) {
-  .booking-container {
-    min-height: 100%;
-    height: 100%;
-    width: 100%;
+    .status-tags {
+      display: flex;
+      gap: 8px;
+
+      .status-tag, .sign-tag {
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    }
   }
-  .search-card,
-  .table-card {
-    padding: 12px;
-    margin: 0 0 10px 0;
-    width: 100%;
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .detail-label {
+        font-weight: 600;
+        width: 120px;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        i {
+          color: #667eea;
+          font-size: 16px;
+        }
+      }
+
+      .detail-value {
+        flex: 1;
+        font-weight: 500;
+
+        .capacity-high {
+          color: #e74c3c;
+          font-weight: 600;
+          background: rgba(231, 76, 60, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+
+        .capacity-medium {
+          color: #f39c12;
+          font-weight: 600;
+          background: rgba(243, 156, 18, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+
+        .capacity-low {
+          color: #27ae60;
+          font-weight: 600;
+          background: rgba(39, 174, 96, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+      }
+    }
   }
-  .search-row {
-    flex-direction: column;
-    align-items: stretch;
+
+  .detail-section-content {
+    margin: 20px 0;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      color: #2c3e50;
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 16px;
+
+      i {
+        margin-right: 8px;
+        color: #667eea;
+        font-size: 18px;
+      }
+    }
+
+    .section-content {
+      line-height: 1.6;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #495057;
+      font-weight: 500;
+    }
   }
-  .search-input {
-    min-width: auto;
-    max-width: none;
-    width: 100%;
-  }
-  .modern-table {
-    max-height: calc(100vh - 350px);
-    width: 100%;
-  }
-  .custom-pagination {
-    padding: 8px;
+
+  .signup-status {
+    margin-top: 24px;
+    display: flex;
     justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+
+    .signup-button {
+      width: 200px;
+      height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 22px;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+      }
+    }
+
+    .cancel-button {
+      width: 200px;
+      height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border: none;
+      border-radius: 22px;
+      box-shadow: 0 4px 16px rgba(231, 76, 60, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+      }
+    }
+
+    .signup-alert {
+      margin-top: 20px;
+      border-radius: 8px;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .activity-detail .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .activity-detail-dialog .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .activity-detail .detail-header h2 { 
+    font-size: 20px; 
+  }
+  
+  .activity-detail .signup-status .signup-button,
+  .activity-detail .signup-status .cancel-button {
+    width: 100%;
   }
 }
 </style>

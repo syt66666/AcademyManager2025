@@ -83,7 +83,9 @@
 
       <!-- 活动报名视图 -->
       <el-tab-pane label="活动报名" name="booking">
-        <ActivityBooking />
+        <div v-if="activeView === 'booking'">
+          <ActivityBooking />
+        </div>
       </el-tab-pane>
     </el-tabs>
 
@@ -643,14 +645,13 @@ export default {
 .app-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   margin-left: 200px;
   background: #f5f7fa;
   padding: 0;
-  min-height: 100vh;
   position: relative;
   width: calc(100% - 200px);
-  overflow: hidden;
+  overflow: visible;
   box-sizing: border-box;
 }
 
@@ -668,10 +669,11 @@ export default {
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
-  height: auto;
+  min-height: auto;
 
   .el-tabs__header {
     margin: 0 0 15px 0;
+    flex-shrink: 0;
   }
 
   .el-tabs__nav-wrap {
@@ -714,7 +716,7 @@ export default {
     padding: 0;
     width: 100%;
     box-sizing: border-box;
-    height: auto;
+    min-height: auto;
   }
 
 }
@@ -1481,15 +1483,20 @@ export default {
 
 /* 覆盖 ActivityBooking 组件的表格高度和滚动 */
 ::v-deep .booking-container .modern-table {
-  max-height: calc(100vh - 400px) !important;
+  max-height: none !important;
   height: auto !important;
-  overflow: hidden !important;
-  overflow-y: auto !important;
+  overflow: visible !important;
+}
+
+/* 确保页面可以正常滚动 */
+::v-deep body, ::v-deep html {
+  height: auto !important;
+  overflow: visible !important;
 }
 
 /* 确保分页组件正常显示 */
 ::v-deep .booking-container .custom-pagination {
-  display: flex !important;
+  display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
   position: relative !important;
@@ -1498,6 +1505,7 @@ export default {
   padding: 20px 0 !important;
   background: white !important;
   border-top: 1px solid #e4e7ed !important;
+  border-radius: 0 0 16px 16px !important;
 }
 
 /* 强制显示分页组件内部容器 */
