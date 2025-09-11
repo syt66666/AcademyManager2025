@@ -37,7 +37,12 @@ public class FileAccessController {
             // 验证token（如果提供）
             if (token != null && !token.isEmpty()) {
                 try {
-                    tokenService.validateToken(token);
+                    // 使用现有的token验证方法
+                    String username = tokenService.getUsernameFromToken(token);
+                    if (username == null || username.isEmpty()) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        return;
+                    }
                 } catch (Exception e) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
