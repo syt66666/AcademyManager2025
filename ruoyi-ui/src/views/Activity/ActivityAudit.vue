@@ -341,8 +341,8 @@
       </div>
 
       <span slot="footer" class="dialog-footer">
-        <el-button :loading="actionLoading" type="danger" @click="rejectCurrent">不通过</el-button>
         <el-button :loading="actionLoading" type="primary" @click="approveCurrent">通 过</el-button>
+        <el-button :loading="actionLoading" type="danger" @click="rejectCurrent">不通过</el-button>
       </span>
     </el-dialog>
 
@@ -548,7 +548,7 @@ export default {
   methods: {
     async openAuditDialog(row) {
       this.currentBooking = row;
-      this.auditDialogTitle = `审核材料 - ${row.studentName || ''}`;
+      this.auditDialogTitle = `审核材料`;
       this.auditDialogVisible = true;
       // 拉取材料详情（与学生端一致接口）
       try {

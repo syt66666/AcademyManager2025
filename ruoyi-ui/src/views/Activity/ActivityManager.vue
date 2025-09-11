@@ -133,19 +133,39 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="活动地点" align="center" prop="activityLocation" width="120" />
       <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
-      <el-table-column label="报名时间" align="center" >
+      <el-table-column label="时间安排" align="center" min-width="280">
         <template slot-scope="scope">
-          <div class="time-range">
-            <i class="el-icon-time"></i> {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动时间" align="center" >
-        <template slot-scope="scope">
-          <div class="time-range">
-            <i class="el-icon-date"></i> {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
+          <div class="time-schedule">
+            <!-- 报名时间 -->
+            <div class="time-section signup-time">
+              <div class="time-header">
+                <i class="el-icon-user"></i>
+                <span class="time-label">报名时间</span>
+              </div>
+              <div class="time-content">
+                <div class="time-item">
+                  <span class="time-start">{{ formatDateTime(scope.row.activityStart) }}</span>
+                  <span class="time-separator">至</span>
+                  <span class="time-end">{{ formatDateTime(scope.row.activityDeadline) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 活动时间 -->
+            <div class="time-section activity-time">
+              <div class="time-header">
+                <i class="el-icon-date"></i>
+                <span class="time-label">活动时间</span>
+              </div>
+              <div class="time-content">
+                <div class="time-item">
+                  <span class="time-start">{{ formatDateTime(scope.row.startTime) }}</span>
+                  <span class="time-separator">至</span>
+                  <span class="time-end">{{ formatDateTime(scope.row.endTime) }}</span>
+                </div>
+              </div>
+            </div>
           </div>
         </template>
       </el-table-column>
@@ -178,7 +198,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="操作" width="200">
+      <el-table-column label="操作" width="150">
         <template slot-scope="scope">
           <div class="action-buttons">
             <el-button
@@ -194,30 +214,23 @@
               type="text"
               @click="handleUpdate(scope.row)"
               class="action-button edit-button">
-              编辑
-            </el-button>
-            <el-button
-              size="mini"
-              type="text"
-              @click="handleDelete(scope.row)"
-              class="action-button delete-button">
-              删除
+              编辑活动
             </el-button>
           </div>
         </template>
       </el-table-column>
 
-      <!-- 活动描述+注意事项 -->
+      <!-- 活动详细信息 -->
       <el-table-column type="expand" width="60" align="center">
         <template slot-scope="props">
           <div class="expand-card">
             <div class="expand-row">
-              <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
-              <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
+              <div class="expand-label"><i class="el-icon-location"></i> 活动地点:</div>
+              <div class="expand-content">{{ props.row.activityLocation || "未设置地点" }}</div>
             </div>
             <div class="expand-row">
-              <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
-              <div class="expand-content">{{ props.row.notes || "无注意事项" }}</div>
+              <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
+              <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
             </div>
           </div>
         </template>
@@ -237,175 +250,379 @@
 
 
     <!-- 添加或修改活动对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="活动名称" prop="activityName">
-          <el-input 
-            v-model="form.activityName" 
-            placeholder="请输入活动名称"
-          />
-          <div class="form-tip">
-            <i class="el-icon-info"></i>
-            活动名称在当前组织单位下必须唯一
+    <el-dialog 
+      :title="title" 
+      :visible.sync="open" 
+      width="600px" 
+      append-to-body
+      class="activity-form-dialog"
+      :before-close="handleDialogClose">
+      
+      <!-- 对话框头部 -->
+      <div slot="title" class="dialog-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i :class="form.activityId ? 'el-icon-edit' : 'el-icon-plus'"></i>
           </div>
-        </el-form-item>
-        <!-- 报名开始时间 -->
-        <el-form-item label="报名开始时间" prop="activityStart">
-          <el-date-picker clearable
-                          v-model="form.activityStart"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动报名开始时间">
-          </el-date-picker>
-        </el-form-item>
-        <!-- 报名截止时间 -->
-        <el-form-item label="报名截止时间" prop="activityDeadline">
-          <el-date-picker clearable
-                          v-model="form.activityDeadline"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动报名截止时间">
-          </el-date-picker>
-        </el-form-item>
+          <div class="header-text">
+            <h3>{{ title }}</h3>
+            <p>{{ form.activityId ? '修改活动信息' : '创建新的活动' }}</p>
+          </div>
+        </div>
+      </div>
 
-        <!-- 开始时间 -->
-        <el-form-item label="活动开始时间" prop="startTime">
-          <el-date-picker clearable
-                          v-model="form.startTime"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动开始时间">
-          </el-date-picker>
-        </el-form-item>
+      <!-- 表单内容 -->
+      <div class="dialog-body">
+        <el-form ref="form" :model="form" :rules="rules" label-width="100px" class="activity-form">
+          
+          <!-- 基本信息区域 -->
+          <div class="form-section">
+            <div class="section-header">
+              <i class="el-icon-info"></i>
+              <span>基本信息</span>
+            </div>
+            <div class="section-content">
+              <el-form-item label="活动名称" prop="activityName">
+                <el-input 
+                  v-model="form.activityName" 
+                  placeholder="请输入活动名称"
+                  prefix-icon="el-icon-trophy"
+                  class="form-input">
+                </el-input>
+                <div class="form-tip">
+                  <i class="el-icon-info"></i>
+                  活动名称在当前组织单位下必须唯一
+                </div>
+              </el-form-item>
+              
+              <el-form-item label="活动类型" prop="activityType">
+                <el-select v-model="form.activityType" placeholder="请选择活动类型" class="form-select">
+                  <el-option 
+                    v-for="type in predefinedActivityTypes" 
+                    :key="type.value" 
+                    :label="type.label" 
+                    :value="type.value">
+                    <span style="float: left">{{ type.label }}</span>
+                    <span style="float: right; color: #8492a6; font-size: 13px">{{ type.value }}</span>
+                  </el-option>
+                </el-select>
+              </el-form-item>
+              
+              <el-form-item label="活动地点" prop="activityLocation">
+                <el-input 
+                  v-model="form.activityLocation" 
+                  placeholder="请输入活动地点"
+                  prefix-icon="el-icon-location"
+                  class="form-input">
+                </el-input>
+              </el-form-item>
+              
+              <el-form-item label="活动容量" prop="activityTotalCapacity">
+                <el-input-number
+                  v-model="form.activityTotalCapacity"
+                  :min="1"
+                  :max="1000"
+                  controls-position="right"
+                  class="form-number">
+                </el-input-number>
+                <span class="capacity-tip">人</span>
+              </el-form-item>
+            </div>
+          </div>
 
-        <!-- 结束时间 -->
-        <el-form-item label="活动结束时间" prop="endTime">
-          <el-date-picker clearable
-                          v-model="form.endTime"
-                          type="datetime"
-                          value-format="yyyy-MM-dd HH:mm:ss"
-                          placeholder="请选择活动结束时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="活动地点" prop="activityLocation">
-          <el-input v-model="form.activityLocation" placeholder="请输入活动地点"/>
-        </el-form-item>
-        <el-form-item label="活动类型" prop="activityType">
-          <el-select v-model="form.activityType" placeholder="请选择活动类型" style="width: 100%">
-            <el-option 
-              v-for="type in predefinedActivityTypes" 
-              :key="type.value" 
-              :label="type.label" 
-              :value="type.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="活动容量" prop="activityTotalCapacity">
-          <el-input-number
-            v-model="form.activityTotalCapacity"
-            :min="1"
-            controls-position="right"
-          />
-        </el-form-item>
-<!--        <el-form-item label="组织单位" prop="organizer">-->
-<!--          <el-input v-model="form.organizer" placeholder="请输入组织单位"/>-->
-<!--        </el-form-item>-->
-        <el-form-item label="活动描述" prop="activityDescription">
-          <el-input v-model="form.activityDescription" type="textarea" placeholder="请输入内容"/>
-        </el-form-item>
-        <el-form-item label="注意事项" prop="notes">
-          <el-input v-model="form.notes" type="textarea" placeholder="请输入内容"/>
-        </el-form-item>
-      </el-form>
+          <!-- 时间安排区域 -->
+          <div class="form-section">
+            <div class="section-header">
+              <i class="el-icon-time"></i>
+              <span>时间安排</span>
+            </div>
+            <div class="section-content">
+              <div class="time-grid">
+                <el-form-item label="报名开始" prop="activityStart" class="time-item">
+                  <el-date-picker 
+                    v-model="form.activityStart"
+                    type="datetime"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    placeholder="选择报名开始时间"
+                    class="form-datetime">
+                  </el-date-picker>
+                </el-form-item>
+                
+                <el-form-item label="报名截止" prop="activityDeadline" class="time-item">
+                  <el-date-picker 
+                    v-model="form.activityDeadline"
+                    type="datetime"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    placeholder="选择报名截止时间"
+                    class="form-datetime">
+                  </el-date-picker>
+                </el-form-item>
+                
+                <el-form-item label="活动开始" prop="startTime" class="time-item">
+                  <el-date-picker 
+                    v-model="form.startTime"
+                    type="datetime"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    placeholder="选择活动开始时间"
+                    class="form-datetime">
+                  </el-date-picker>
+                </el-form-item>
+                
+                <el-form-item label="活动结束" prop="endTime" class="time-item">
+                  <el-date-picker 
+                    v-model="form.endTime"
+                    type="datetime"
+                    value-format="yyyy-MM-dd HH:mm:ss"
+                    placeholder="选择活动结束时间"
+                    class="form-datetime">
+                  </el-date-picker>
+                </el-form-item>
+              </div>
+            </div>
+          </div>
+
+          <!-- 详细信息区域 -->
+          <div class="form-section">
+            <div class="section-header">
+              <i class="el-icon-document"></i>
+              <span>详细信息</span>
+            </div>
+            <div class="section-content">
+              <el-form-item label="活动描述" prop="activityDescription">
+                <el-input 
+                  v-model="form.activityDescription" 
+                  type="textarea" 
+                  :rows="4"
+                  placeholder="请详细描述活动内容、目的和要求..."
+                  class="form-textarea">
+                </el-input>
+              </el-form-item>
+              
+
+            </div>
+          </div>
+        </el-form>
+      </div>
+
+      <!-- 对话框底部 -->
       <div slot="footer" class="dialog-footer">
-        <el-button 
-          type="primary" 
-          @click="submitForm"
-          :loading="isSubmitting"
-          :disabled="isSubmitting"
-        >
-          <span v-if="!isSubmitting">{{ form.activityId ? '保存修改' : '创建活动' }}</span>
-          <span v-else>处理中...</span>
-        </el-button>
-        <el-button @click="cancel" :disabled="isSubmitting">取 消</el-button>
+        <div class="footer-left">
+          <div class="form-status" v-if="isSubmitting">
+            <i class="el-icon-loading"></i>
+            <span>正在{{ form.activityId ? '保存修改' : '创建活动' }}...</span>
+          </div>
+        </div>
+        <div class="footer-right">
+          <el-button 
+            @click="cancel" 
+            :disabled="isSubmitting"
+            class="cancel-btn">
+            <i class="el-icon-close"></i>
+            取消
+          </el-button>
+          <el-button 
+            type="primary" 
+            @click="submitForm"
+            :loading="isSubmitting"
+            :disabled="isSubmitting"
+            class="submit-btn">
+            <i :class="form.activityId ? 'el-icon-check' : 'el-icon-plus'"></i>
+            {{ form.activityId ? '保存修改' : '创建活动' }}
+          </el-button>
+        </div>
       </div>
     </el-dialog>
     <!-- 学生预约活动对话框 -->
     <el-dialog
       title="预约活动学生列表"
       :visible.sync="dialogVisibleStudents"
-      width="90%"
+      width="95%"
       append-to-body
-      class="student-dialog">
-      <el-table
-        :data="selectedStudents"
-        border
-        v-loading="studentLoading"
-        class="enhanced-student-table"
-        :header-cell-style="{
-      'background': '#f5f7fa',
-      'color': '#2d3540',
-      'font-weight': '600'
-    }">
-        <el-table-column label="序号" width="80" align="center">
-          <template v-slot="scope">
+      class="student-dialog"
+      :before-close="handleStudentDialogClose">
+      
+      <!-- 学生统计信息 -->
+      <div class="student-stats" v-if="selectedStudents.length > 0">
+        <div class="stats-card">
+          <div class="stat-item">
+            <div class="stat-number">{{ selectedStudents.length }}</div>
+            <div class="stat-label">总报名人数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getStatusCount('approved') }}</div>
+            <div class="stat-label">已通过</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getStatusCount('submitted') }}</div>
+            <div class="stat-label">待审核</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getStatusCount('rejected') }}</div>
+            <div class="stat-label">未通过</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 学生表格 -->
+      <div class="student-table-container">
+        <el-table
+          :data="filteredStudents"
+          border
+          v-loading="studentLoading"
+          class="enhanced-student-table"
+          :header-cell-style="{
+            'background': '#f8fafc',
+            'color': '#2d3540',
+            'font-weight': '600',
+            'border-bottom': '2px solid #e2e8f0'
+          }"
+          :row-class-name="getStudentRowClassName"
+          @selection-change="handleStudentSelectionChange">
+          
+          <el-table-column type="selection" width="50" align="center"/>
+          
+          <el-table-column label="序号" width="70" align="center">
+            <template v-slot="scope">
               <span class="index-badge">
-                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+                {{ scope.$index + 1 }}
               </span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="studentId" label="学号" width="180">
-          <template slot-scope="{row}">
-            <span class="student-id">{{ row.studentId }}</span>
-          </template>
-        </el-table-column>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="studentId" label="学号" min-width="140" sortable>
+            <template slot-scope="{row}">
+              <div class="student-id-container">
+                <span class="student-id">{{ row.studentId }}</span>
+                <el-button
+                  v-if="row.studentId"
+                  type="text"
+                  size="mini"
+                  icon="el-icon-copy-document"
+                  @click="copyToClipboard(row.studentId)"
+                  class="copy-btn">
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
 
-        <el-table-column prop="studentName" label="姓名" width="100">
-          <template slot-scope="{row}">
-            <span class="student-name">{{ row.studentName }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="academy" label="所属书院" width="120">
-          <template slot-scope="{row}">
-            <el-tag size="small" type="info">{{ row.academy || '未知' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="major" label="专业" width="150">
-          <template slot-scope="{row}">
-            <span class="major-info">{{ row.major || row.systemMajor || '未知' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="studentClass" label="行政班" width="100">
-          <template slot-scope="{row}">
-            <span class="class-info">{{ row.studentClass || '未知' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="审核状态" width="100">
-          <template slot-scope="{row}">
-            <el-tag :type="getBookingStatusTag(row.status)" size="small">
-              {{ getBookingStatusText(row.status) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="bookAt" label="预约时间" width="160">
-          <template slot-scope="{row}">
-            <div class="booked_at">
-              <i class="el-icon-time"></i>
-              {{ parseTime(row.bookAt) || '无时间' }}
-            </div>
-          </template>
-        </el-table-column>
+          <el-table-column prop="studentName" label="姓名" min-width="100" sortable>
+            <template slot-scope="{row}">
+              <div class="student-name-container">
+                <span class="student-name">{{ row.studentName }}</span>
+                <el-tag v-if="row.isBooked" type="success" size="mini" effect="plain">已报名</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="academy" label="所属书院" min-width="120" sortable>
+            <template slot-scope="{row}">
+              <el-tag size="small" :type="getAcademyTagType(row.academy)" effect="plain">
+                {{ row.academy || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="major" label="专业" min-width="160" sortable>
+            <template slot-scope="{row}">
+              <div class="major-info">
+                <span class="major-name">{{ row.major || row.systemMajor || '未知' }}</span>
+                <div class="class-info" v-if="row.studentClass">
+                  <i class="el-icon-office-building"></i>
+                  {{ row.studentClass }}
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="status" label="审核状态" min-width="110" align="center">
+            <template slot-scope="{row}">
+              <el-tag :type="getBookingStatusTag(row.status)" size="small" effect="dark">
+                {{ getBookingStatusText(row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          
+          <el-table-column prop="bookAt" label="预约时间" min-width="160" sortable>
+            <template slot-scope="{row}">
+              <div class="booked_at">
+                <i class="el-icon-time"></i>
+                <span class="time-text">{{ parseTime(row.bookAt) || '无时间' }}</span>
+              </div>
+            </template>
+          </el-table-column>
 
-      </el-table>
+          <el-table-column label="操作" width="100" align="center">
+            <template slot-scope="{row}">
+              <el-button-group>
+                <el-button
+                  size="mini"
+                  type="text"
+                  icon="el-icon-view"
+                  @click="viewStudentDetail(row)"
+                  title="查看详情">
+                </el-button>
+                <el-button
+                  v-if="row.status === 'submitted'"
+                  size="mini"
+                  type="text"
+                  icon="el-icon-check"
+                  @click="approveStudent(row)"
+                  title="通过审核"
+                  class="approve-btn">
+                </el-button>
+                <el-button
+                  v-if="row.status === 'submitted'"
+                  size="mini"
+                  type="text"
+                  icon="el-icon-close"
+                  @click="rejectStudent(row)"
+                  title="拒绝审核"
+                  class="reject-btn">
+                </el-button>
+              </el-button-group>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <!-- 批量操作区域 -->
+      <div class="batch-actions" v-if="selectedStudentIds.length > 0">
+        <div class="batch-info">
+          <span>已选择 {{ selectedStudentIds.length }} 名学生</span>
+        </div>
+        <div class="batch-buttons">
+          <el-button
+            type="success"
+            size="small"
+            icon="el-icon-check"
+            @click="batchApproveStudents">
+            批量通过
+          </el-button>
+          <el-button
+            type="danger"
+            size="small"
+            icon="el-icon-close"
+            @click="batchRejectStudents">
+            批量拒绝
+          </el-button>
+        </div>
+      </div>
 
       <div slot="footer" class="dialog-footer">
-        <el-button
-          type="primary"
-          icon="el-icon-download"
-          @click="handleExportStudents"
-          class="export-btn">
-          导出名单
-        </el-button>
+        <div class="footer-left">
+          <span class="total-info">共 {{ filteredStudents.length }} 名学生</span>
+        </div>
+        <div class="footer-right">
+          <el-button
+            type="primary"
+            icon="el-icon-download"
+            @click="handleExportStudents"
+            class="export-btn">
+            导出名单
+          </el-button>
+          <el-button @click="dialogVisibleStudents = false">关闭</el-button>
+        </div>
       </div>
     </el-dialog>
     <!-- 用户导入对话框 -->
@@ -457,6 +674,8 @@ export default {
       dialogVisibleStudents: false,
       selectedStudents: [],
       studentLoading: false,
+      // 选中的学生ID列表
+      selectedStudentIds: [],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -605,6 +824,12 @@ export default {
         ]
       }
     };
+  },
+  computed: {
+    // 学生列表（直接显示所有学生，不进行过滤）
+    filteredStudents() {
+      return this.selectedStudents;
+    }
   },
   created() {
     this.getList();
@@ -759,6 +984,7 @@ export default {
 
         if (res.rows && res.rows.length) {
           this.selectedStudents = res.rows;
+          this.selectedStudentIds = [];
           this.dialogVisibleStudents = true;
         } else {
           // 使用正确的消息提示方法
@@ -879,6 +1105,16 @@ export default {
       this.open = false;
       this.isSubmitting = false;
       this.reset();
+    },
+
+    // 对话框关闭处理
+    handleDialogClose(done) {
+      if (this.isSubmitting) {
+        this.$message.warning('正在处理中，请稍候...');
+        return;
+      }
+      this.cancel();
+      done();
     },
     // 表单重置
     reset() {
@@ -1014,6 +1250,152 @@ export default {
     updateAvailableActivityTypes() {
       // 使用预定义的活动类型
       this.availableActivityTypes = ['1', '2', '3', '4'];
+    },
+
+    // ========== 学生列表相关方法 ==========
+    
+    /** 获取状态统计数量 */
+    getStatusCount(status) {
+      return this.selectedStudents.filter(student => student.status === status).length;
+    },
+
+    /** 获取书院标签类型 */
+    getAcademyTagType(academy) {
+      const academyColors = {
+        '知行书院': 'primary',
+        '明德书院': 'success', 
+        '博雅书院': 'warning',
+        '至善书院': 'info',
+        '未知': ''
+      };
+      return academyColors[academy] || 'info';
+    },
+
+    /** 获取学生行样式类名 */
+    getStudentRowClassName({row}) {
+      if (row.status === 'approved') return 'approved-row';
+      if (row.status === 'rejected') return 'rejected-row';
+      if (row.status === 'submitted') return 'pending-row';
+      return '';
+    },
+
+
+    /** 学生选择变化 */
+    handleStudentSelectionChange(selection) {
+      this.selectedStudentIds = selection.map(student => student.studentId);
+    },
+
+    /** 复制到剪贴板 */
+    copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.$message.success('已复制到剪贴板');
+      }).catch(() => {
+        this.$message.error('复制失败');
+      });
+    },
+
+    /** 查看学生详情 */
+    viewStudentDetail(student) {
+      this.$alert(`
+        <div style="text-align: left;">
+          <p><strong>学号：</strong>${student.studentId}</p>
+          <p><strong>姓名：</strong>${student.studentName}</p>
+          <p><strong>所属书院：</strong>${student.academy || '未知'}</p>
+          <p><strong>专业：</strong>${student.major || student.systemMajor || '未知'}</p>
+          <p><strong>行政班：</strong>${student.studentClass || '未知'}</p>
+          <p><strong>审核状态：</strong>${this.getBookingStatusText(student.status)}</p>
+          <p><strong>预约时间：</strong>${this.parseTime(student.bookAt) || '无时间'}</p>
+        </div>
+      `, '学生详情', {
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '确定'
+      });
+    },
+
+    /** 通过学生审核 */
+    approveStudent(student) {
+      this.$confirm(`确定要通过学生 ${student.studentName} 的审核吗？`, '确认通过', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'success'
+      }).then(() => {
+        // 这里应该调用API更新学生状态
+        student.status = 'approved';
+        this.$message.success('审核通过成功');
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
+    },
+
+    /** 拒绝学生审核 */
+    rejectStudent(student) {
+      this.$confirm(`确定要拒绝学生 ${student.studentName} 的审核吗？`, '确认拒绝', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 这里应该调用API更新学生状态
+        student.status = 'rejected';
+        this.$message.success('审核拒绝成功');
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
+    },
+
+    /** 批量通过学生审核 */
+    batchApproveStudents() {
+      if (this.selectedStudentIds.length === 0) {
+        this.$message.warning('请先选择要操作的学生');
+        return;
+      }
+      
+      this.$confirm(`确定要批量通过 ${this.selectedStudentIds.length} 名学生的审核吗？`, '批量通过', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'success'
+      }).then(() => {
+        // 这里应该调用API批量更新学生状态
+        this.selectedStudents.forEach(student => {
+          if (this.selectedStudentIds.includes(student.studentId)) {
+            student.status = 'approved';
+          }
+        });
+        this.selectedStudentIds = [];
+        this.$message.success('批量审核通过成功');
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
+    },
+
+    /** 批量拒绝学生审核 */
+    batchRejectStudents() {
+      if (this.selectedStudentIds.length === 0) {
+        this.$message.warning('请先选择要操作的学生');
+        return;
+      }
+      
+      this.$confirm(`确定要批量拒绝 ${this.selectedStudentIds.length} 名学生的审核吗？`, '批量拒绝', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        // 这里应该调用API批量更新学生状态
+        this.selectedStudents.forEach(student => {
+          if (this.selectedStudentIds.includes(student.studentId)) {
+            student.status = 'rejected';
+          }
+        });
+        this.selectedStudentIds = [];
+        this.$message.success('批量审核拒绝成功');
+      }).catch(() => {
+        this.$message.info('已取消操作');
+      });
+    },
+
+    /** 学生对话框关闭处理 */
+    handleStudentDialogClose(done) {
+      this.selectedStudentIds = [];
+      done();
     },
 
   },
@@ -1245,6 +1627,82 @@ export default {
   color: #303133;
 }
 
+/* 时间安排样式 */
+.time-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.time-section {
+  padding: 8px 0;
+  text-align: center;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateX(2px);
+  }
+  
+  &.signup-time {
+    .time-header i {
+      color: #409EFF;
+    }
+  }
+  
+  &.activity-time {
+    .time-header i {
+      color: #67C23A;
+    }
+  }
+}
+
+.time-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  
+  i {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+  
+  .time-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #303133;
+  }
+}
+
+.time-content {
+  .time-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #606266;
+    line-height: 1.4;
+    
+    .time-start {
+      font-weight: 500;
+      color: #303133;
+    }
+    
+    .time-separator {
+      margin: 0 8px;
+      color: #909399;
+      font-size: 11px;
+    }
+    
+    .time-end {
+      font-weight: 500;
+      color: #303133;
+    }
+  }
+}
+
+/* 保持原有的time-range样式作为备用 */
 .time-range {
   display: flex;
   align-items: center;
@@ -1306,29 +1764,264 @@ export default {
 .delete-button { background: #fef0f0; border-color: #fde2e2; color: #f56c6c; }
 
 
-/* 学生对话框 */
-.student-dialog .student-id {
-  font-family: monospace;
-  letter-spacing: 0.5px;
+/* 学生对话框优化样式 */
+.student-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+  
+  .el-dialog__header {
+    background: linear-gradient(to right, #409EFF, #64b5ff);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+    
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+      
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+  
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
 }
 
-.student-dialog .student-name {
-  font-weight: 500;
+/* 学生统计信息 */
+.student-stats {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px 12px 0 0;
+  
+  .stats-card {
+    display: flex;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    
+    .stat-item {
+      text-align: center;
+      
+      .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #409EFF;
+        margin-bottom: 8px;
+      }
+      
+      .stat-label {
+        font-size: 14px;
+        color: #606266;
+        font-weight: 500;
+      }
+    }
+  }
 }
 
-.student-dialog .booked_at {
-  color: #909399;
-  font-size: 13px;
+
+/* 学生表格容器 */
+.student-table-container {
+  margin: 20px 24px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  overflow: hidden;
 }
 
-.student-dialog .major-info {
-  font-size: 13px;
-  color: #606266;
+/* 增强的学生表格 */
+.enhanced-student-table {
+  .student-id-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .student-id {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 13px;
+      color: #409EFF;
+      font-weight: 500;
+    }
+    
+    .copy-btn {
+      opacity: 0;
+      transition: opacity 0.3s;
+      padding: 2px;
+      
+      &:hover {
+        color: #409EFF;
+      }
+    }
+  }
+  
+  .student-name-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .student-name {
+      font-weight: 600;
+      color: #303133;
+    }
+  }
+  
+  .major-info {
+    .major-name {
+      display: block;
+      font-size: 14px;
+      color: #303133;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    .class-info {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: #909399;
+      
+      i {
+        margin-right: 4px;
+        font-size: 12px;
+      }
+    }
+  }
+  
+  .booked_at {
+    display: flex;
+    align-items: center;
+    color: #606266;
+    font-size: 13px;
+    
+    i {
+      margin-right: 6px;
+      color: #909399;
+    }
+    
+    .time-text {
+      font-family: monospace;
+    }
+  }
+  
+  /* 行状态样式 */
+  .approved-row {
+    background-color: rgba(103, 194, 58, 0.05) !important;
+  }
+  
+  .rejected-row {
+    background-color: rgba(245, 108, 108, 0.05) !important;
+  }
+  
+  .pending-row {
+    background-color: rgba(230, 162, 60, 0.05) !important;
+  }
+  
+  /* 悬停效果 */
+  tr:hover {
+    .copy-btn {
+      opacity: 1;
+    }
+  }
+  
+  /* 操作按钮样式 */
+  .approve-btn {
+    color: #67C23A;
+    
+    &:hover {
+      color: #5daf34;
+      background-color: rgba(103, 194, 58, 0.1);
+    }
+  }
+  
+  .reject-btn {
+    color: #F56C6C;
+    
+    &:hover {
+      color: #f56c6c;
+      background-color: rgba(245, 108, 108, 0.1);
+    }
+  }
 }
 
-.student-dialog .class-info {
-  font-size: 13px;
-  color: #606266;
+/* 批量操作区域 */
+.batch-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-top: 1px solid #e4e7ed;
+  margin: 0 24px;
+  border-radius: 0 0 12px 12px;
+  
+  .batch-info {
+    font-size: 14px;
+    color: #606266;
+    font-weight: 500;
+  }
+  
+  .batch-buttons {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+/* 对话框底部 */
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+  
+  .footer-left {
+    .total-info {
+      font-size: 14px;
+      color: #606266;
+      font-weight: 500;
+    }
+  }
+  
+  .footer-right {
+    display: flex;
+    gap: 12px;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .student-dialog {
+    .el-dialog {
+      width: 95% !important;
+      margin: 0 auto;
+    }
+  }
+  
+  .stats-card {
+    flex-direction: column;
+    gap: 16px;
+    
+    .stat-item {
+      .stat-number {
+        font-size: 24px;
+      }
+    }
+  }
+  
 }
 
 /* 分页样式 */
@@ -1354,18 +2047,335 @@ export default {
 
 
 
+/* 活动表单对话框美化样式 */
+.activity-form-dialog {
+  .el-dialog {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+  
+  .el-dialog__header {
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+  
+  .el-dialog__footer {
+    padding: 0;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+  }
+}
+
+/* 对话框头部 */
+.dialog-header {
+  padding: 24px 32px;
+  color: white;
+  
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+      
+      i {
+        font-size: 24px;
+        color: white;
+      }
+    }
+    
+    .header-text {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+      }
+      
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+}
+
+/* 对话框主体 */
+.dialog-body {
+  padding: 32px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* 活动表单 */
+.activity-form {
+  .form-section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e4e7ed;
+    overflow: hidden;
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid #e4e7ed;
+      
+      i {
+        font-size: 16px;
+        color: #409EFF;
+        margin-right: 8px;
+      }
+      
+      span {
+        font-size: 16px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+    
+    .section-content {
+      padding: 24px;
+    }
+  }
+}
+
+/* 时间网格布局 */
+.time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  
+  .time-item {
+    margin-bottom: 0;
+  }
+}
+
+/* 表单输入框样式 */
+.form-input {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+.form-select {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+.form-datetime {
+  width: 100%;
+  
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+.form-number {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+    
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+.capacity-tip {
+  margin-left: 8px;
+  color: #909399;
+  font-size: 14px;
+}
+
+.form-textarea {
+  .el-textarea__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+    resize: vertical;
+    
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
 /* 表单提示样式 */
 .form-tip {
   font-size: 12px;
   color: #909399;
-  margin-top: 4px;
+  margin-top: 8px;
   display: flex;
   align-items: center;
+  padding: 8px 12px;
+  background: rgba(64, 158, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #409EFF;
+  
+  i {
+    margin-right: 6px;
+    color: #409EFF;
+    font-size: 14px;
+  }
 }
 
-.form-tip i {
-  margin-right: 4px;
-  color: #409EFF;
+/* 对话框底部 */
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  background: #f8f9fa;
+  border-top: 1px solid #e4e7ed;
+  
+  .footer-left {
+    .form-status {
+      display: flex;
+      align-items: center;
+      color: #409EFF;
+      font-size: 14px;
+      
+      i {
+        margin-right: 8px;
+        animation: rotating 2s linear infinite;
+      }
+    }
+  }
+  
+  .footer-right {
+    display: flex;
+    gap: 12px;
+    
+    .cancel-btn {
+      background: #f5f7fa;
+      border: 1px solid #dcdfe6;
+      color: #606266;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        background: #ecf5ff;
+        border-color: #b3d8ff;
+        color: #409EFF;
+      }
+      
+      i {
+        margin-right: 6px;
+      }
+    }
+    
+    .submit-btn {
+      background: linear-gradient(135deg, #409EFF 0%, #64b5ff 100%);
+      border: none;
+      color: white;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        background: linear-gradient(135deg, #3a8ee6 0%, #5a9fd8 100%);
+      }
+      
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+      }
+      
+      i {
+        margin-right: 6px;
+      }
+    }
+  }
+}
+
+/* 旋转动画 */
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .activity-form-dialog {
+    .el-dialog {
+      width: 95% !important;
+      margin: 0 auto;
+    }
+  }
+  
+  .dialog-body {
+    padding: 20px;
+  }
+  
+  .time-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .dialog-footer {
+    flex-direction: column;
+    gap: 16px;
+    
+    .footer-right {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 
 /* 响应式调整 */
