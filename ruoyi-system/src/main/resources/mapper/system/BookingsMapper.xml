@@ -182,6 +182,7 @@
             <if test="bookAt != null">booked_at = #{bookAt},</if>
             <if test="proof != null">proof = #{proof, typeHandler=com.ruoyi.common.mybatis.JsonStringListTypeHandler},</if>
             <if test="summary != null">summary = #{summary},</if>
+            <if test="summary == null">summary = null,</if>
             <if test="status != null">status = #{status},</if>
             <if test="reviewer != null">reviewer = #{reviewer},</if>
             <if test="reviewComment != null">review_comment = #{reviewComment},</if>
