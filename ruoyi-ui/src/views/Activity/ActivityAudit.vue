@@ -111,16 +111,6 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="组织单位" prop="organizer">
-            <el-input
-              v-model="queryParams.organizer"
-              placeholder="请输入组织单位"
-              clearable
-              prefix-icon="el-icon-building"
-              class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
               <el-button
@@ -351,8 +341,7 @@
       </div>
 
       <span slot="footer" class="dialog-footer">
-        <el-button @click="auditDialogVisible = false">取 消</el-button>
-        <el-button :loading="actionLoading" type="danger" @click="rejectCurrent">拒 绝</el-button>
+        <el-button :loading="actionLoading" type="danger" @click="rejectCurrent">不通过</el-button>
         <el-button :loading="actionLoading" type="primary" @click="approveCurrent">通 过</el-button>
       </span>
     </el-dialog>
