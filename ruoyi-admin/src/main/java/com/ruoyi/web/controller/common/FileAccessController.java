@@ -34,16 +34,21 @@ public class FileAccessController {
                           HttpServletRequest request,
                           HttpServletResponse response) throws IOException {
         try {
+            System.out.println("文件访问请求 - path: " + path + ", token: " + (token != null ? "已提供" : "未提供"));
+            
             // 验证token（如果提供）
             if (token != null && !token.isEmpty()) {
                 try {
                     // 使用现有的token验证方法
                     String username = tokenService.getUsernameFromToken(token);
+                    System.out.println("Token验证结果 - username: " + username);
                     if (username == null || username.isEmpty()) {
+                        System.out.println("Token验证失败 - 用户名为空");
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         return;
                     }
                 } catch (Exception e) {
+                    System.out.println("Token验证异常: " + e.getMessage());
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     return;
                 }
@@ -52,8 +57,10 @@ public class FileAccessController {
             // 构建完整文件路径
             String fullPath = RuoYiConfig.getProfile() + File.separator + path;
             File file = new File(fullPath);
+            System.out.println("文件路径: " + fullPath + ", 存在: " + file.exists());
             
             if (!file.exists()) {
+                System.out.println("文件不存在: " + fullPath);
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
@@ -61,6 +68,8 @@ public class FileAccessController {
             // 设置响应头
             String fileName = file.getName();
             String contentType = getContentType(fileName);
+            System.out.println("文件信息 - 文件名: " + fileName + ", Content-Type: " + contentType);
+            
             response.setContentType(contentType);
             response.setHeader("Content-Disposition", "inline; filename=" + fileName);
             response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -68,8 +77,12 @@ public class FileAccessController {
             response.setHeader("Expires", "0");
             
             // 输出文件内容
+            System.out.println("开始输出文件内容...");
             FileUtils.writeBytes(fullPath, response.getOutputStream());
+            System.out.println("文件内容输出完成");
         } catch (Exception e) {
+            System.out.println("文件访问异常: " + e.getMessage());
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
