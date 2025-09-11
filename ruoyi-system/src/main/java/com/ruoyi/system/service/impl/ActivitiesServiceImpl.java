@@ -250,6 +250,7 @@ public class ActivitiesServiceImpl implements IActivitiesService {
         Date signupEnd = activity.getActivityDeadline();
         Date activityStart = activity.getStartTime();
         Date activityEnd = activity.getEndTime();
+        Date currentTime = new Date(); // 获取当前时间
 
         // 1. 检查必填时间字段
         if (signupStart == null || signupEnd == null || activityStart == null || activityEnd == null) {
@@ -274,6 +275,10 @@ public class ActivitiesServiceImpl implements IActivitiesService {
         // 5. 报名时间必须在活动时间之前（整个报名期都要在活动开始前）
         if (signupEnd.after(activityStart)) {
             throw new ServiceException("报名必须在活动开始之前结束");
+        }
+        // 6. 报名开始时间不能早于当前时间
+        if (signupStart.before(currentTime)) {
+            throw new ServiceException("报名开始时间不能早于当前时间");
         }
 
     }
