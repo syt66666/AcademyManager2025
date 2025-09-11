@@ -71,9 +71,21 @@ public class FileAccessController {
             }
             
             // 构建完整文件路径
-            String fullPath = RuoYiConfig.getProfile() + File.separator + path;
+            // 处理path参数，移除开头的/profile前缀（如果存在）
+            String cleanPath = path;
+            if (cleanPath.startsWith("/profile")) {
+                cleanPath = cleanPath.substring("/profile".length());
+            }
+            if (cleanPath.startsWith("/")) {
+                cleanPath = cleanPath.substring(1);
+            }
+            
+            String fullPath = RuoYiConfig.getProfile() + File.separator + cleanPath;
             File file = new File(fullPath);
-            System.out.println("文件路径: " + fullPath + ", 存在: " + file.exists());
+            System.out.println("原始path: " + path);
+            System.out.println("清理后path: " + cleanPath);
+            System.out.println("完整文件路径: " + fullPath);
+            System.out.println("文件存在: " + file.exists());
             
             if (!file.exists()) {
                 System.out.println("文件不存在: " + fullPath);
