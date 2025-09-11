@@ -4,6 +4,7 @@
       <div class="card-header">
         <i class="el-icon-search"></i>
         <span>搜索条件</span>
+        <span class="time-range-info">{{ getTimeRangeText() }}</span>
       </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
         <div class="search-row">
@@ -19,27 +20,20 @@
           </el-form-item>
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-<<<<<<< HEAD
               <el-option 
                 v-for="type in predefinedActivityTypes" 
                 :key="type.value" 
                 :label="type.label" 
-=======
-              <el-option
-                v-for="type in activityTypeOptions"
-                :key="type.value"
-                :label="type.label"
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
                 :value="type.value"
               />
             </el-select>
           </el-form-item>
-          <!-- 可报名状态筛选 -->
           <el-form-item prop="availableOnly">
             <el-checkbox v-model="queryParams.availableOnly" @change="handleQuery">
-              仅显示可报名活动
+              只显示可报名活动
             </el-checkbox>
           </el-form-item>
+          
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
               <el-button
@@ -291,26 +285,16 @@ export default {
       showSearch: true,
       total: 0,
       activitiesList: [],
-<<<<<<< HEAD
       // 详情弹窗相关
       detailDialogVisible: false,
       selectedActivity: null,
       // 预定义的活动类型
       predefinedActivityTypes: [
-=======
-      // 可用的活动类型列表
-      activityTypeOptions: [
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
         { value: '1', label: '人格塑造与价值引领活动类' },
         { value: '2', label: '知识融合与思维进阶活动类' },
         { value: '3', label: '能力锻造与实践创新活动类' },
         { value: '4', label: '社会责任与领军意识活动类' }
       ],
-<<<<<<< HEAD
-=======
-      detailVisible: false,
-      currentActivity: {},
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -318,8 +302,7 @@ export default {
         activityLocation: null,
         organizer: null,
         activityType: null,
-        activityStatus: null,
-        availableOnly: false, // 可报名筛选标志
+        availableOnly: false, // 只显示可报名活动
       },
     };
   },
@@ -356,148 +339,6 @@ export default {
     },
   },
   methods: {
-<<<<<<< HEAD
-=======
-    /** 判断报名按钮是否禁用 */
-    isSignUpDisabled(row) {
-      // 如果容量已满或活动状态不允许报名，则禁用按钮
-      return this.isCapacityFull(row) || !this.isSignUpAllowed(row);
-    },
-
-    /** 检查容量是否已满 */
-    isCapacityFull(row) {
-      return row.activityCapacity <= 0;
-    },
-
-    /** 检查活动状态是否允许报名 */
-    isSignUpAllowed(row) {
-      return this.getActivityStatusText(row) === "报名进行中";
-    },
-
-    /** 获取报名按钮文本 */
-    getSignUpButtonText(row) {
-      if (this.isSignUpAllowed(row) && this.isCapacityFull(row)) {
-        return "已满";
-      }
-      return "报名";
-    },
-    /** 新增方法：计算容量百分比 */
-    calculateCapacityPercentage(row) {
-      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
-      const used = row.activityTotalCapacity - row.activityCapacity;
-      return Math.round((used / row.activityTotalCapacity) * 100);
-    },
-
-    /** 新增方法：获取进度条颜色 */
-    getProgressColor(percentage) {
-      if (percentage >= 80) return '#f87171';
-      if (percentage >= 50) return '#fbbf24';
-      return '#4ade80';
-    },
-
-    /** 新增方法：获取容量文字样式类 */
-    getCapacityClass(row) {
-      const percentage = this.calculateCapacityPercentage(row);
-      if (percentage >= 80) return 'capacity-high';
-      if (percentage >= 50) return 'capacity-medium';
-      return 'capacity-low';
-    },
-    /** 查询活动列表和预约列表 */
-    async getList() {
-      this.loading = true;
-      try {
-        // 构建基本请求参数（获取所有数据）
-        const baseParams = {
-          pageNum: 1,
-          pageSize: 1000, // 获取足够大的数量
-          activityName: this.queryParams.activityName,
-          activityType: this.queryParams.activityType,
-        };
-
-        // 1. 获取所有活动列表
-        const response = await listActivities(baseParams);
-        let allActivities = response.rows;
-
-        // 2. 前端筛选：如果选中"仅显示可报名活动"
-        if (this.queryParams.availableOnly) {
-          allActivities = allActivities.filter(activity =>
-            this.getActivityStatusText(activity) === "报名进行中" &&
-            activity.activityCapacity > 0
-          );
-        }
-
-        this.total = allActivities.length;
-
-        // 3. 手动分页
-        const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
-        const endIndex = startIndex + this.queryParams.pageSize;
-        const pagedActivities = allActivities.slice(startIndex, endIndex);
-
-        // 4. 查询分页后活动是否已报名
-        const checkPromises = pagedActivities.map(activity =>
-          checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
-            activity.isBooked = res.data.isBooked;
-          })
-        );
-        await Promise.all(checkPromises);
-
-        this.activitiesList = pagedActivities;
-
-      } catch (error) {
-        console.error("获取数据失败:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    /** 处理搜索 */
-    handleQuery() {
-      this.queryParams.pageNum = 1;
-      this.getList();
-    },
-
-    /** 重置搜索 */
-    resetQuery() {
-      this.resetForm("queryForm");
-      this.queryParams.availableOnly = false; // 重置复选框
-      this.handleQuery();
-    },
-
-    /** 格式化日期时间 */
-    formatDateTime(time) {
-      return parseTime(time, "{y}-{m}-{d} {h}:{i}");
-    },
-
-    /** 获取活动状态文本 */
-    getActivityStatusText(row) {
-      const now = new Date();
-      const start = new Date(row.startTime);
-      const end = new Date(row.endTime);
-      const deadline = new Date(row.activityDeadline);
-      const activityStart = new Date(row.activityStart);
-
-      if (now < activityStart) return "报名未开始";
-      if (now < deadline && now >= activityStart) return "报名进行中";
-      if (now >= deadline && now < start) return "报名已截止";
-      if (now >= start && now <= end) return "活动进行中";
-      if (now > end) return "活动已结束";
-      return row.status || "未知";
-    },
-
-    /** 获取活动状态标签类型 */
-    getActivityStatusTag(row) {
-      const status = this.getActivityStatusText(row);
-      switch (status) {
-        case "报名未开始": return "info";
-        case "报名进行中": return "success";
-        case "报名已截止": return "warning";
-        case "活动进行中": return "primary";
-        case "活动已结束": return "";
-        default: return "danger";
-      }
-    },
-
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
     // 活动类型映射函数：将数字转换为对应的类型名称
     getActivityTypeName(activityType) {
       const typeMap = {
@@ -520,20 +361,116 @@ export default {
       return map[activityType] || 'info';
     },
 
-<<<<<<< HEAD
     // 获取活动列表
     getList() {
       this.loading = true;
-      listActivities(this.queryParams).then(response => {
-        this.activitiesList = response.rows;
-        this.total = response.total;
+      // 构建查询参数，获取所有活动数据
+      const allParams = {
+        pageNum: 1,
+        pageSize: 1000, // 获取足够大的数量
+        activityName: this.queryParams.activityName,
+        activityType: this.queryParams.activityType,
+        activityLocation: this.queryParams.activityLocation,
+        organizer: this.queryParams.organizer,
+      };
+      
+      listActivities(allParams).then(response => {
+        // 过滤出上个月、本月、下个月的活动
+        let filteredActivities = this.filterActivitiesByMonth(response.rows);
+        
+        // 如果选择了"只显示可报名活动"，进一步过滤
+        if (this.queryParams.availableOnly) {
+          filteredActivities = this.filterAvailableActivities(filteredActivities);
+        }
+        
+        // 手动分页
+        const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
+        const endIndex = startIndex + this.queryParams.pageSize;
+        this.activitiesList = filteredActivities.slice(startIndex, endIndex);
+        this.total = filteredActivities.length;
+        
         this.loading = false;
         // 获取活动列表后检查报名状态
         this.checkBookingStatus();
       });
     },
-=======
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
+
+    // 过滤活动：只显示活动开始时间在上个月、本月、下个月的活动
+    filterActivitiesByMonth(activities) {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth(); // 0-11
+      
+      // 计算上个月和下个月
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+      const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      
+      console.log('当前时间范围过滤:', {
+        lastMonth: `${lastMonthYear}年${lastMonth + 1}月`,
+        currentMonth: `${currentYear}年${currentMonth + 1}月`,
+        nextMonth: `${nextMonthYear}年${nextMonth + 1}月`
+      });
+      
+      const filteredActivities = activities.filter(activity => {
+        if (!activity.startTime) {
+          console.log('活动缺少开始时间:', activity.activityName);
+          return false;
+        }
+        
+        const activityDate = new Date(activity.startTime);
+        const activityYear = activityDate.getFullYear();
+        const activityMonth = activityDate.getMonth();
+        
+        const isInRange = (
+          (activityYear === lastMonthYear && activityMonth === lastMonth) || // 上个月
+          (activityYear === currentYear && activityMonth === currentMonth) || // 本月
+          (activityYear === nextMonthYear && activityMonth === nextMonth) // 下个月
+        );
+        
+        if (isInRange) {
+          console.log('活动在范围内:', {
+            name: activity.activityName,
+            startTime: activity.startTime,
+            month: `${activityYear}年${activityMonth + 1}月`
+          });
+        }
+        
+        return isInRange;
+      });
+      
+      console.log(`过滤结果: 总共${activities.length}个活动，过滤后${filteredActivities.length}个活动`);
+      return filteredActivities;
+    },
+
+    // 过滤可报名活动：在可报名时间内且人数未满
+    filterAvailableActivities(activities) {
+      const availableActivities = activities.filter(activity => {
+        // 检查活动状态是否为"报名进行中"
+        const status = this.getActivityStatusText(activity);
+        const isSignUpActive = status === "报名进行中";
+        
+        // 检查人数是否未满
+        const hasCapacity = activity.activityCapacity > 0;
+        
+        const isAvailable = isSignUpActive && hasCapacity;
+        
+        if (isAvailable) {
+          console.log('可报名活动:', {
+            name: activity.activityName,
+            status: status,
+            capacity: `${activity.activityTotalCapacity - activity.activityCapacity}/${activity.activityTotalCapacity}`,
+            remaining: activity.activityCapacity
+          });
+        }
+        
+        return isAvailable;
+      });
+      
+      console.log(`可报名过滤结果: 总共${activities.length}个活动，可报名${availableActivities.length}个活动`);
+      return availableActivities;
+    },
 
     // 分页事件处理
     handleSizeChange(val) {
@@ -572,6 +509,7 @@ export default {
     // 重置按钮操作
     resetQuery() {
       this.resetForm("queryForm");
+      this.queryParams.availableOnly = false; // 重置可报名活动筛选
       this.handleQuery();
     },
 
@@ -636,27 +574,41 @@ export default {
       }
     },
 
-<<<<<<< HEAD
     // 获取容量样式
     getCapacityClass(activity) {
       const percentage = (activity.activityTotalCapacity - activity.activityCapacity) / activity.activityTotalCapacity;
       if (percentage >= 0.8) return 'capacity-high';
       if (percentage >= 0.5) return 'capacity-medium';
       return 'capacity-low';
-=======
-    /** 是否显示报名按钮 */
-    showSignUpButton(row) {
-      const isNotSignedUp = this.getSignStatusText(row) !== "已报名";
-      const isSignUpAllowed = this.getActivityStatusText(row) === "报名进行中";
-      const hasCapacity = row.activityCapacity > 0;
-
-      return isNotSignedUp && isSignUpAllowed && hasCapacity;
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
     },
 
     // 格式化日期时间
     formatDateTime(datetime) {
       return parseTime(datetime, "{y}-{m}-{d} {h}:{i}");
+    },
+
+    // 获取时间范围文本
+    getTimeRangeText() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth();
+      
+      // 计算上个月和下个月
+      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+      const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      
+      const monthNames = [
+        '1月', '2月', '3月', '4月', '5月', '6月',
+        '7月', '8月', '9月', '10月', '11月', '12月'
+      ];
+      
+      const lastMonthText = `${lastMonthYear}年${monthNames[lastMonth]}`;
+      const currentMonthText = `${currentYear}年${monthNames[currentMonth]}`;
+      const nextMonthText = `${nextMonthYear}年${monthNames[nextMonth]}`;
+      
+      return `活动开始时间范围：${lastMonthText} - ${nextMonthText}`;
     },
 
     // 处理详情
@@ -826,6 +778,18 @@ export default {
   font-weight: 400;
 }
 
+.time-range-info {
+  margin-left: auto;
+  margin-right: 20px;
+  font-size: 13px;
+  color: #409EFF;
+  font-weight: 500;
+  background: rgba(64, 158, 255, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(64, 158, 255, 0.2);
+}
+
 .search-row {
   display: flex;
   align-items: center;
@@ -839,6 +803,20 @@ export default {
 
 .search-actions {
   margin-left: auto;
+}
+
+/* 可报名活动单选框样式 */
+.el-form-item:has(.el-checkbox) {
+  margin-bottom: 0;
+}
+
+.el-checkbox {
+  font-weight: 500;
+}
+
+.el-checkbox__label {
+  color: #409EFF;
+  font-size: 14px;
 }
 
 .action-buttons {
@@ -891,24 +869,9 @@ export default {
   transition: all 0.3s ease;
 }
 
-<<<<<<< HEAD
 .action-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-=======
-.detail-button {
-  color: #409EFF !important;
-  display: inline-block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-.signup-button { color: #67C23A; }
-.cancel-button { color: #F56C6C; }
-
-.capacity-high {
-  color: #F56C6C;
-  font-weight: 500;
->>>>>>> 95d35360f7836f13d2a8598a801787e1b5ba24cc
 }
 
 .detail-button {
