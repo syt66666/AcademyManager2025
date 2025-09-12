@@ -6,14 +6,14 @@
         <i class="el-icon-data-analysis"></i>
         <span>活动统计</span>
       </div>
-      
+
       <div class="stats-content">
         <!-- 左侧状态统计 -->
         <div class="status-stats">
           <h3>活动状态筛选</h3>
           <div class="status-items">
-            <div 
-              class="status-item" 
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未提交' }"
               @click="filterByStatus('未提交')"
             >
@@ -25,9 +25,9 @@
                 <div class="status-label">未提交</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未通过' }"
               @click="filterByStatus('未通过')"
             >
@@ -39,9 +39,9 @@
                 <div class="status-label">未通过</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -53,9 +53,9 @@
                 <div class="status-label">已通过</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item clear-filter" 
+
+            <div
+              class="status-item clear-filter"
               :class="{ active: selectedStatus === null }"
               @click="clearStatusFilter"
             >
@@ -69,21 +69,21 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 右侧进度条 -->
         <div class="progress-stats">
           <h3>活动完成进度</h3>
           <div class="progress-items">
-            <div 
-              v-for="(progress, type) in activityProgress" 
+            <div
+              v-for="(progress, type) in activityProgress"
               :key="type"
               class="progress-item"
             >
               <div class="progress-label">{{ getActivityTypeName(type) }}</div>
               <div class="progress-bar-container">
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
+                  <div
+                    class="progress-fill"
                     :style="{ width: progress.percentage + '%' }"
                     :class="getProgressBarClass(progress.percentage, type)"
                   ></div>
@@ -114,8 +114,8 @@
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
-            <span 
-              class="index-badge" 
+            <span
+              class="index-badge"
               :class="{ 'rejected-badge': scope.row.status === '未通过' }"
             >
               {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
@@ -161,28 +161,40 @@
                 class="action-button upload-button"
                 @click="openUploadDialog(scope.row)"
               >提交</el-button>
+              <!-- 未通过状态 -->
               <el-tag
                 v-if="scope.row.status === '未通过'"
                 type="danger"
                 effect="light"
-                class="status-tag reupload-tag"
+                class="status-tag clickable-tag"
                 @click="openUploadDialog(scope.row)"
-              >重新提交</el-tag>
+              >
+                <i class="el-icon-refresh"></i> 重新提交
+              </el-tag>
+              <!-- 未审核状态 - 添加点击功能 -->
               <el-tag
                 v-if="scope.row.status === '未审核'"
                 type="warning"
                 effect="light"
-                class="status-tag"
-              >未审核</el-tag>
+                class="status-tag clickable-tag"
+                @click="openUploadDialog(scope.row)"
+              >
+                <i class="el-icon-edit"></i> 未审核
+              </el-tag>
+              <!-- 已通过状态 - 添加点击功能 -->
               <el-tag
                 v-if="scope.row.status === '已通过'"
                 type="success"
                 effect="light"
-                class="status-tag"
-              >已通过</el-tag>
+                class="status-tag clickable-tag"
+                @click="openUploadDialog(scope.row)"
+              >
+                <i class="el-icon-view"></i> 已通过
+              </el-tag>
             </template>
           </template>
         </el-table-column>
+
         <el-table-column type="expand" width="60" align="center">
           <template slot-scope="props">
             <div class="expand-card">
@@ -242,8 +254,18 @@
         </div>
       </div>
 
-      <!-- 图片上传区域 -->
-      <div class="section">
+      <!-- 状态提示 -->
+      <div v-if="isViewOnly" class="view-only-notice">
+        <el-alert
+          title="当前状态下不可添加或修改材料"
+          type="info"
+          :closable="false"
+          show-icon>
+        </el-alert>
+      </div>
+
+      <!-- 图片上传区域 - 只在非只读模式下显示 -->
+      <div v-if="!isViewOnly" class="section">
         <h3>上传图片证明材料</h3>
         <el-upload
           :action="uploadUrl"
@@ -264,8 +286,37 @@
         <div class="el-upload__tip">最多可上传5张图片，每张大小不超过2MB</div>
       </div>
 
-      <!-- 文档上传区域 -->
-      <div class="section">
+      <!-- 图片展示区域 - 只在只读模式下显示 -->
+      <div v-if="isViewOnly" class="section">
+        <h3>图片证明材料</h3>
+        <div v-if="imageFiles.length === 0" class="no-data">
+          <i class="el-icon-picture-outline"></i>
+          <p>暂无图片材料</p>
+        </div>
+        <div v-else class="image-preview-list">
+          <div v-for="(file, index) in imageFiles" :key="index" class="image-preview-item">
+            <div class="image-container">
+              <img :src="getPreviewImageUrl(file)" :alt="file.name" @click="handlePicturePreview(file)" class="preview-image">
+              <div class="image-overlay">
+                <div class="image-actions">
+                  <el-button size="mini" icon="el-icon-view" @click="handlePicturePreview(file)">预览</el-button>
+                  <el-button
+                    size="mini"
+                    icon="el-icon-download"
+                    @click="downloadFileReliably(file)"
+                    :loading="file.downloading"
+                  >下载</el-button>
+                </div>
+              </div>
+            </div>
+            <div class="image-name">{{ file.name }}</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- 文档上传区域 - 只在非只读模式下显示 -->
+      <div v-if="!isViewOnly" class="section">
         <h3>上传文档材料</h3>
         <el-upload
           :action="uploadUrl"
@@ -286,18 +337,121 @@
         </el-upload>
       </div>
 
+      <!-- 文档展示区域 - 只在只读模式下显示 -->
+      <div v-if="isViewOnly" class="section">
+        <h3>文档材料</h3>
+        <div v-if="docFiles.length === 0" class="no-data">
+          <i class="el-icon-document"></i>
+          <p>暂无文档材料</p>
+        </div>
+        <div v-else>
+          <div v-for="(file, index) in docFiles" :key="index" class="readonly-file-item">
+            <i class="el-icon-document readonly-file-icon"></i>
+            <span class="readonly-file-name">{{ file.name }}</span>
+            <div class="readonly-file-actions">
+              <el-button size="mini" icon="el-icon-view" @click="handleDocumentPreview(file)">预览</el-button>
+              <el-button
+                size="mini"
+                icon="el-icon-download"
+                @click="downloadFileReliably(file)"
+                :loading="file.downloading"
+              >下载</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       <!-- 图片预览对话框 -->
-      <el-dialog :visible.sync="imagePreviewVisible" width="60%">
-        <img width="100%" :src="previewImageUrl" alt />
+      <el-dialog :visible.sync="previewVisible" title="图片预览" width="70%" top="5vh" class="preview-dialog">
+        <div class="preview-content">
+          <div class="preview-image-container">
+            <img
+              :src="currentPreviewImage"
+              :alt="currentPreviewName"
+              class="preview-large-image"
+            />
+          </div>
+
+          <div class="preview-controls">
+            <el-button
+              icon="el-icon-arrow-left"
+              :disabled="currentPreviewIndex === 0"
+              @click="prevImage"
+              size="small"
+            >上一张</el-button>
+
+            <span class="preview-count">
+          {{ currentPreviewIndex + 1 }} / {{ previewImages.length }}
+          <span class="preview-name">({{ currentPreviewName }})</span>
+        </span>
+
+            <el-button
+              icon="el-icon-arrow-right"
+              :disabled="currentPreviewIndex === previewImages.length - 1"
+              @click="nextImage"
+              size="small"
+            >下一张</el-button>
+          </div>
+          <!-- 缩略图导航 -->
+          <div v-if="previewImages.length > 1" class="thumbnail-navigation">
+            <div
+              v-for="(img, index) in previewImages"
+              :key="index"
+              :class="['thumbnail-item', { active: index === currentPreviewIndex }]"
+              @click="switchToImage(index)"
+            >
+              <img :src="img.url" :alt="img.name" class="thumbnail-image" />
+            </div>
+          </div>
+        </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="previewVisible = false">关闭</el-button>
+          <el-button
+            type="primary"
+            @click="downloadCurrentPreviewImage"
+            :loading="currentPreviewDownloading"
+          >
+            <i class="el-icon-download"></i> 下载当前图片
+          </el-button>
+        </div>
       </el-dialog>
 
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="uploadVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitProof">确认提交</el-button>
-      </span>
+      <!-- 文档预览对话框 -->
+      <el-dialog
+        :visible.sync="docPreviewVisible"
+        title="学生总结预览"
+        width="80%"
+        class="preview-dialog native-pdf-preview"
+      >
+        <div v-if="currentDocument.type === 'pdf'" class="preview-container">
+          <iframe
+            :src="getPdfUrlWithAuth(currentDocument.url)"
+            style="width: 100%; height: 75vh; border: none;"
+            @load="disablePdfInteractions"
+            @error="handlePdfError"
+          ></iframe>
+          <div v-if="pdfError" class="pdf-error">
+            <p>PDF预览失败: {{ pdfError }}</p>
+            <el-button @click="retryPdfPreview">重试</el-button>
+          </div>
+        </div>
+        <div v-else-if="currentDocument.type === 'docx'" class="preview-container docx-preview">
+          <div v-html="docxContent" class="docx-content"></div>
+        </div>
+      </el-dialog>
+
+      <!-- 只在未提交和未通过状态下显示底部按钮 -->
+      <span slot="footer" class="dialog-footer" v-if="showFooterButtons">
+    <el-button @click="uploadVisible = false">取消</el-button>
+    <el-button type="primary" @click="submitProof">
+      {{ currentBooking && currentBooking.status === '未通过' ? '重新提交' : '确认提交' }}
+    </el-button>
+  </span>
     </el-dialog>
   </div>
 </template>
+
 
 <script>
 import { listBookingsWithActivity, updateBooking, getBooking } from "@/api/system/bookings";
@@ -336,7 +490,7 @@ export default {
         pageSize: 10,
         studentId: this.$store.state.user.name
       },
-      
+
       // 统计相关数据
       selectedStatus: null, // 当前选中的状态筛选
       allActivitiesList: [], // 所有活动数据，用于统计计算
@@ -351,6 +505,26 @@ export default {
         '3': { completed: 0, percentage: 0 }, // 能力锻造与实践创新活动类
         '4': { completed: 0, percentage: 0 }  // 社会责任与领军意识活动类
       },
+      isViewOnly: false, // 是否为只查看模式
+      showFooterButtons: false, // 是否显示底部按钮
+
+      // 预览相关
+      previewVisible: false,
+      previewImages: [],
+      currentPreviewIndex: 0,
+      currentPreviewImage: '',
+      currentPreviewName: '',
+      docPreviewVisible: false,
+      currentDocument: {
+        url: '',
+        type: '',
+        name: ''
+      },
+      docxContent: '',
+      pdfError: '',
+      downloading: false,
+      currentPreviewDownloading: false,
+
     };
   },
   created() {
@@ -362,7 +536,7 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
@@ -376,7 +550,7 @@ export default {
       const activityEndTime = new Date(endTime);
       return now > activityEndTime;
     },
-    
+
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -387,63 +561,122 @@ export default {
       }
       return map[activityType] || 'info';
     },
-    // 获取文件的完整URL（用于回显）
+    // 获取文件的完整URL（用于显示）
     getFileFullUrl(fileName) {
-      return process.env.VUE_APP_BASE_API  + fileName;
+      if (!fileName) return '';
+
+      // 如果已经是完整URL，直接返回
+      if (fileName.startsWith('http://') || fileName.startsWith('https://') || fileName.startsWith('data:')) {
+        return fileName;
+      }
+
+      // 确保路径格式正确
+      let normalizedPath = fileName;
+      if (!normalizedPath.startsWith('/')) {
+        normalizedPath = '/' + normalizedPath;
+      }
+
+      const baseUrl = process.env.VUE_APP_BASE_API || '';
+      return `${baseUrl}${normalizedPath}`;
     },
 
-    // 从URL中提取文件名的帮助函数
+    // 获取预览图片URL
+    getPreviewImageUrl(file) {
+      if (!file) return '';
+
+      // 新上传的文件
+      if (file.url && (file.url.startsWith('http') || file.url.startsWith('data:'))) {
+        return file.url;
+      }
+
+      // 服务器返回的文件
+      if (file.url) {
+        return this.getFileFullUrl(file.url);
+      }
+
+      // response中的文件
+      if (file.response && file.response.fileName) {
+        return this.getFileFullUrl(file.response.fileName);
+      }
+
+      return '';
+    },
+
+    // 获取下载URL
+    getDownloadUrl(file) {
+      const url = this.getPreviewImageUrl(file);
+      return url;
+    },
+
+
+    // 从URL中提取文件名
     extractFileName(url) {
-      if (!url) return '';
-      return url.substring(url.lastIndexOf('/') + 1);
+      if (!url) return 'unknown';
+
+      try {
+        // 移除URL参数和查询字符串
+        const cleanUrl = url.split('?')[0].split('#')[0];
+        return cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
+      } catch (e) {
+        return 'file';
+      }
     },
 
-    // 修改初始化文件列表 - 修复回显问题
+
+    // 初始化文件列表
     initFileLists(data) {
       this.imageFiles = [];
       this.docFiles = [];
-
-      // 初始化图片文件 - 使用文件名并拼接完整URL
+      // 初始化图片文件
       if (data.proof && Array.isArray(data.proof)) {
         data.proof.forEach(fileName => {
-          this.imageFiles.push({
-            name: this.extractFileName(fileName),
-            url: this.getFileFullUrl(fileName),
-            isOld: true // 标记为已有文件
-          });
+          if (fileName) {
+            const fullUrl = this.getFileFullUrl(fileName);
+            this.imageFiles.push({
+              name: this.extractFileName(fileName),
+              url: fullUrl,
+              isOld: true,
+              downloading: false // 添加下载状态
+            });
+          }
         });
       }
-
       // 初始化文档文件
       if (data.summary) {
+        const fullUrl = this.getFileFullUrl(data.summary);
         this.docFiles.push({
           name: this.extractFileName(data.summary),
-          url: this.getFileFullUrl(data.summary),
-          isOld: true // 标记为已有文件
+          url: fullUrl,
+          isOld: true,
+          downloading: false
         });
       }
+      console.log('初始化文件列表完成:', {
+        imageFiles: this.imageFiles,
+        docFiles: this.docFiles
+      });
     },
 
     // 修复图片上传成功处理
     handleImageSuccess(response, file, fileList) {
       if (response.code === 200) {
-        // 获取上传的文件名
         const fileName = response.fileName || this.extractFileName(response.url);
 
-        // 更新文件列表：只更新当前上传的文件
         this.imageFiles = fileList.map(f => {
           if (f.uid === file.uid) {
             return {
               name: fileName,
               url: this.getFileFullUrl(fileName),
-              isOld: false // 标记为新上传文件
+              isOld: false,
+              downloading: false // 添加下载状态
             };
           }
-          return f;
+          return {
+            ...f,
+            downloading: f.downloading || false // 确保有下载状态
+          };
         });
         this.$message.success('图片上传成功');
-      } else {
-        this.$message.error('图片上传失败: ' + response.msg);
       }
     },
     // 修复文档上传成功处理
@@ -456,23 +689,109 @@ export default {
             return {
               name: fileName,
               url: this.getFileFullUrl(fileName),
-              isOld: false // 标记为新上传文件
+              isOld: false,
+              downloading: false // 添加下载状态
             };
           }
-          return f;
+          return {
+            ...f,
+            downloading: f.downloading || false // 确保有下载状态
+          };
         });
         this.$message.success('文档上传成功');
-      } else {
-        this.$message.error('文档上传失败: ' + response.msg);
       }
     },
 
-    // 图片预览
+// 处理图片预览
     handlePicturePreview(file) {
-      if (file.url) {
-        this.previewImageUrl = file.url;
-        this.imagePreviewVisible = true;
+      console.log('预览图片:', file);
+
+      // 构建预览图片数组，包含URL和文件名
+      this.previewImages = this.imageFiles
+        .filter(f => {
+          const url = this.getPreviewImageUrl(f);
+          return url && url.length > 0;
+        })
+        .map(f => ({
+          url: this.getPreviewImageUrl(f),
+          name: f.name || this.extractFileNameFromUrl(this.getPreviewImageUrl(f))
+        }));
+
+      console.log('预览图片数组:', this.previewImages);
+
+      if (this.previewImages.length === 0) {
+        this.$message.warning('没有可预览的图片');
+        return;
       }
+
+      // 找到当前图片的索引
+      const currentUrl = this.getPreviewImageUrl(file);
+      const currentIndex = this.previewImages.findIndex(img => img.url === currentUrl);
+
+      this.currentPreviewIndex = currentIndex >= 0 ? currentIndex : 0;
+      this.updatePreviewImage();
+
+      this.previewVisible = true;
+    },
+
+    // 更新当前预览图片
+    updatePreviewImage() {
+      if (this.previewImages.length > 0 && this.currentPreviewIndex >= 0) {
+        const currentImage = this.previewImages[this.currentPreviewIndex];
+        this.currentPreviewImage = currentImage.url;
+        this.currentPreviewName = currentImage.name;
+      }
+    },
+
+    // 切换到上一张图片
+    prevImage() {
+      if (this.currentPreviewIndex > 0) {
+        this.currentPreviewIndex--;
+        this.updatePreviewImage();
+      }
+    },
+
+    // 切换到下一张图片
+    nextImage() {
+      if (this.currentPreviewIndex < this.previewImages.length - 1) {
+        this.currentPreviewIndex++;
+        this.updatePreviewImage();
+      }
+    },
+
+    // 切换到指定图片
+    switchToImage(index) {
+      if (index >= 0 && index < this.previewImages.length) {
+        this.currentPreviewIndex = index;
+        this.updatePreviewImage();
+      }
+    },
+
+    // 从URL中提取文件名
+    extractFileNameFromUrl(url) {
+      if (!url) return '未知文件';
+
+      try {
+        const urlObj = new URL(url);
+        const pathname = urlObj.pathname;
+        const filename = pathname.split('/').pop();
+        return filename || '未知文件';
+      } catch (e) {
+        // 如果不是有效的URL，尝试直接处理
+        const parts = url.split('/');
+        return parts[parts.length - 1] || '未知文件';
+      }
+    },
+
+// 下载单个文件
+    downloadSingleFile(url, fileName = null) {
+      const downloadFileName = fileName || url.split('/').pop();
+
+      // 使用新的可靠下载方法
+      this.downloadFileReliably({
+        url: url,
+        name: downloadFileName
+      });
     },
 
     // 打开上传对话框
@@ -484,9 +803,33 @@ export default {
       }
 
       this.currentBooking = booking;
-      this.uploadTitle = booking.status === '未提交' ? '提交材料' : '重新提交';
-      this.uploadVisible = true;
+      // 根据状态设置不同的对话框标题、模式和按钮显示
+      let title = "提交材料";
+      let viewOnly = false;
+      let showButtons = true;
 
+      if (booking.status === '未通过') {
+        title = '重新提交';
+        viewOnly = false;
+        showButtons = true;
+      } else if (booking.status === '未审核') {
+        title = '查看材料';
+        viewOnly = true;
+        showButtons = false;
+      } else if (booking.status === '已通过') {
+        title = '查看材料';
+        viewOnly = true;
+        showButtons = false;
+      } else if (booking.status === '未提交') {
+        title = '提交材料';
+        viewOnly = false;
+        showButtons = true;
+      }
+
+      this.uploadTitle = title;
+      this.isViewOnly = viewOnly; // 设置是否为只查看模式
+      this.showFooterButtons = showButtons; // 设置是否显示底部按钮
+      this.uploadVisible = true;
       // 重置上传状态
       this.resetUploadState();
 
@@ -626,7 +969,7 @@ export default {
         pageSize: 1000, // 获取足够多的数据
         studentId: this.$store.state.user.name
       };
-      
+
       listBookingsWithActivity(statsParams).then(response => {
         this.allActivitiesList = response.rows || [];
         // 更新统计数据
@@ -663,12 +1006,12 @@ export default {
         // 获取状态优先级
         const priorityA = statusPriority[a.status] || 999;
         const priorityB = statusPriority[b.status] || 999;
-        
+
         // 如果优先级相同，按活动开始时间排序（最新的在前）
         if (priorityA === priorityB) {
           return new Date(b.startTime) - new Date(a.startTime);
         }
-        
+
         // 按优先级排序
         return priorityA - priorityB;
       });
@@ -732,14 +1075,14 @@ export default {
     filterByStatus(status) {
       this.selectedStatus = status;
       this.queryParams.pageNum = 1;
-      
+
       // 添加状态筛选参数
       if (status) {
         this.queryParams.status = status;
       } else {
         delete this.queryParams.status;
       }
-      
+
       this.getList();
     },
 
@@ -778,6 +1121,326 @@ export default {
         return 'rejected-row';
       }
       return '';
+    },
+
+    // 预览证明材料
+    handleProofPreview(files) {
+      if (!files || files.length === 0) {
+        this.$message.warning('无可用证明材料');
+        return;
+      }
+
+      this.previewImages = files.map(file =>
+        `${process.env.VUE_APP_BASE_API}${file}`
+      );
+      this.currentPreviewIndex = 0;
+      this.previewVisible = true;
+    },
+
+// 下载证明材料
+    downloadProofFiles(files) {
+      if (!files || files.length === 0) {
+        this.$message.warning('无可用证明材料');
+        return;
+      }
+
+      files.forEach(file => {
+        const url = `${process.env.VUE_APP_BASE_API}${file}`;
+        this.downloadSingleFile(url);
+      });
+    },
+
+    // 获取带认证的PDF URL
+    getPdfUrlWithAuth(url) {
+      const token = getToken();
+
+      // 检测是否为生产环境（服务器部署）
+      const isProduction = window.location.hostname !== 'localhost' &&
+        window.location.hostname !== '127.0.0.1' &&
+        !window.location.hostname.includes('192.168.');
+
+      console.log('环境检测:', {
+        hostname: window.location.hostname,
+        isProduction: isProduction,
+        hasToken: !!token
+      });
+
+      if (isProduction && token) {
+        // 生产环境：使用文件访问接口
+        try {
+          const filePath = url.replace(process.env.VUE_APP_BASE_API, '');
+          const accessUrl = `${process.env.VUE_APP_BASE_API}/file/access?path=${encodeURIComponent(filePath)}&token=${token}#toolbar=0&navpanes=0&scrollbar=0`;
+          console.log('使用文件访问接口:', accessUrl);
+          return accessUrl;
+        } catch (error) {
+          console.warn('文件访问接口构建失败，回退到原始方式:', error);
+        }
+      }
+
+      // 本地开发环境或回退方案：使用原始URL
+      const fallbackUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
+      console.log('使用原始URL:', fallbackUrl);
+      return fallbackUrl;
+    },
+
+    // 处理PDF预览错误
+    handlePdfError(event) {
+      console.error('PDF预览错误:', event);
+      this.pdfError = 'PDF文件加载失败，请检查文件是否存在或网络连接';
+    },
+
+    // 重试PDF预览
+    retryPdfPreview() {
+      this.pdfError = '';
+      // 强制刷新iframe
+      this.$nextTick(() => {
+        const iframe = document.querySelector('.preview-container iframe');
+        if (iframe) {
+          iframe.src = iframe.src;
+        }
+      });
+    },
+
+    // 禁用PDF交互功能
+    disablePdfInteractions(event) {
+      try {
+        const iframeDoc = event.target.contentDocument || event.target.contentWindow.document;
+        iframeDoc.addEventListener('contextmenu', e => e.preventDefault());
+        iframeDoc.body.style.userSelect = 'none';
+      } catch (error) {
+        console.log('安全策略限制，部分交互禁用失败');
+      }
+    },
+
+    // 处理总结文档操作
+    handleSummaryCommand(command) {
+      if (command.action === 'preview') {
+        this.handleDocumentPreview(command.file);
+      } else if (command.action === 'download') {
+        this.downloadSummaryFile(command.file);
+      }
+    },
+
+    downloadSummaryFile(filePath) {
+      if (!filePath) {
+        this.$message.warning('无可用总结文档');
+        return;
+      }
+
+      const url = `${process.env.VUE_APP_BASE_API}${filePath}`;
+      this.downloadSingleFile(url);
+    },
+
+    // 处理文档预览
+    handleDocumentPreview(file) {
+      if (file.url) {
+        // 判断文件类型
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        if (ext === 'pdf') {
+          // PDF文件预览
+          this.currentDocument = {
+            url: file.url,
+            type: 'pdf',
+            name: file.name
+          };
+          this.pdfError = '';
+          this.docPreviewVisible = true;
+        } else if (['doc', 'docx'].includes(ext)) {
+          // Word文档提示下载
+          this.$message.info('Word文档暂不支持在线预览，请下载后查看');
+          this.downloadSingleFile(file.url);
+        } else {
+          // 其他文件类型直接下载
+          this.downloadSingleFile(file.url);
+        }
+      }
+    },
+
+    // 可靠的下载方法
+    async downloadFileReliably(file) {
+      try {
+        // 设置下载状态
+        this.$set(file, 'downloading', true);
+
+        let downloadUrl = '';
+        let fileName = '';
+
+        // 确定下载URL和文件名
+        if (file.url && (file.url.startsWith('http') || file.url.startsWith('data:'))) {
+          downloadUrl = file.url;
+          fileName = file.name || this.extractFileName(file.url);
+        } else if (file.response && file.response.fileName) {
+          downloadUrl = this.getFileFullUrl(file.response.fileName);
+          fileName = file.name || this.extractFileName(file.response.fileName);
+        } else if (file.url) {
+          downloadUrl = this.getFileFullUrl(file.url);
+          fileName = file.name || this.extractFileName(file.url);
+        } else {
+          throw new Error('无法获取文件下载地址');
+        }
+
+        console.log('开始下载文件:', { downloadUrl, fileName });
+
+        // 方法1: 使用fetch API下载
+        try {
+          const response = await fetch(downloadUrl);
+          if (!response.ok) throw new Error('网络响应不正常');
+
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+
+          // 清理
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 100);
+
+          this.$message.success('文件下载成功');
+          return;
+        } catch (fetchError) {
+          console.log('Fetch下载失败，尝试备用方法:', fetchError);
+        }
+
+        // 方法2: 直接创建链接下载（备用）
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+          document.body.removeChild(a);
+        }, 100);
+
+        this.$message.info('文件下载已开始');
+
+      } catch (error) {
+        console.error('文件下载失败:', error);
+        this.$message.error(`下载失败: ${error.message || '请稍后重试'}`);
+
+        // 最终备用方案：在新窗口打开
+        if (file.url) {
+          window.open(file.url, '_blank');
+        }
+      } finally {
+        this.$set(file, 'downloading', false);
+      }
+    },
+
+
+
+    // 统一的文件下载方法
+    async downloadFile(file) {
+      try {
+        // 设置下载状态
+        this.$set(file, 'downloading', true);
+
+        let filePath = '';
+        let fileName = '';
+
+        // 确定文件路径和名称
+        if (file.isOld) {
+          // 已有文件：从URL中提取路径
+          filePath = file.url.replace(process.env.VUE_APP_BASE_API, '');
+          fileName = file.name;
+        } else if (file.response && file.response.fileName) {
+          // 新上传的文件：使用response中的文件名
+          filePath = file.response.fileName;
+          fileName = file.name || this.extractFileName(filePath);
+        } else if (file.url) {
+          // 其他情况：尝试从URL提取
+          filePath = file.url.replace(process.env.VUE_APP_BASE_API, '');
+          fileName = file.name || this.extractFileName(filePath);
+        } else {
+          throw new Error('无法获取文件路径');
+        }
+
+        console.log('下载文件:', { filePath, fileName, file });
+
+        // 使用API下载文件
+        const response = await downloadFile(filePath, fileName);
+
+        if (response.code === 200) {
+          this.$message.success('文件下载成功');
+        } else {
+          throw new Error(response.msg || '下载失败');
+        }
+      } catch (error) {
+        console.error('文件下载失败:', error);
+        this.$message.error('文件下载失败: ' + (error.message || '请稍后重试'));
+
+        // 降级方案：尝试直接下载
+        this.fallbackDownload(file);
+      } finally {
+        this.$set(file, 'downloading', false);
+      }
+    },
+
+    // 降级下载方案
+    fallbackDownload(file) {
+      try {
+        let downloadUrl = '';
+
+        if (file.url) {
+          downloadUrl = file.url;
+        } else if (file.response && file.response.fileName) {
+          downloadUrl = this.getFileFullUrl(file.response.fileName);
+        }
+
+        if (downloadUrl) {
+          // 创建隐藏的iframe进行下载
+          const iframe = document.createElement('iframe');
+          iframe.style.display = 'none';
+          iframe.src = downloadUrl;
+          document.body.appendChild(iframe);
+
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 5000);
+
+          this.$message.info('正在尝试下载文件...');
+        }
+      } catch (fallbackError) {
+        console.error('降级下载也失败了:', fallbackError);
+      }
+    },
+
+    // 下载当前预览的图片
+// 下载当前预览的图片
+    async downloadCurrentPreviewImage() {
+      if (!this.currentPreviewImage || this.previewImages.length === 0) {
+        this.$message.warning('没有可下载的图片');
+        return;
+      }
+
+      try {
+        this.currentPreviewDownloading = true;
+
+        const currentImage = this.previewImages[this.currentPreviewIndex];
+        const downloadUrl = currentImage.url;
+        const fileName = currentImage.name || this.extractFileName(downloadUrl);
+
+        // 使用统一的可靠下载方法
+        await this.downloadFileReliably({
+          url: downloadUrl,
+          name: fileName
+        });
+
+      } catch (error) {
+        console.error('图片下载失败:', error);
+        this.$message.error('图片下载失败');
+      } finally {
+        this.currentPreviewDownloading = false;
+      }
     },
 
   }
@@ -1269,22 +1932,22 @@ export default {
     flex-direction: column;
     gap: 30px;
   }
-  
+
   .status-items {
     justify-content: center;
   }
-  
+
   .progress-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .progress-label {
     min-width: auto;
     width: 100%;
   }
-  
+
   .progress-bar-container {
     width: 100%;
   }
@@ -1295,18 +1958,18 @@ export default {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .status-item {
     min-width: auto;
     justify-content: center;
   }
-  
+
   .card-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .record-count {
     margin-left: 0;
   }
@@ -1390,4 +2053,358 @@ export default {
 .dialog-footer {
   text-align: right;
 }
+
+/* 图片卡片容器 */
+.image-card-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+/* 悬浮层样式 */
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 6px;
+}
+
+/* 鼠标悬停时显示悬浮层 */
+.image-card-container:hover .image-overlay {
+  opacity: 1;
+}
+
+/* 操作按钮样式 */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+.action-buttons .el-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  color: #606266;
+  transition: all 0.3s ease;
+}
+.action-buttons .el-button:hover {
+  background: #409EFF;
+  color: white;
+  transform: scale(1.1);
+}
+/* 调整预览对话框样式 */
+.preview-dialog .el-dialog__body {
+  padding: 20px;
+}
+.preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 15px;
+  gap: 15px;
+}
+.preview-count {
+  margin: 0 15px;
+  font-weight: 500;
+  color: #606266;
+}
+
+/* 只读模式通知 */
+.view-only-notice {
+  margin-bottom: 20px;
+}
+/* 上传区域禁用状态 */
+.upload-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+/* 只读模式下的文件列表样式 */
+.readonly-file-list {
+  margin-top: 15px;
+}
+.readonly-file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
+}
+.readonly-file-icon {
+  margin-right: 8px;
+  color: #409EFF;
+}
+.readonly-file-name {
+  flex: 1;
+  font-size: 14px;
+  color: #606266;
+}
+.readonly-file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 只读模式通知 */
+.view-only-notice {
+  margin-bottom: 20px;
+}
+
+/* 只读模式下的文件列表样式 */
+.readonly-file-list {
+  margin-top: 15px;
+}
+
+.readonly-file-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
+}
+
+.readonly-file-icon {
+  margin-right: 8px;
+  color: #409EFF;
+}
+
+.readonly-file-name {
+  flex: 1;
+  font-size: 14px;
+  color: #606266;
+}
+
+.readonly-file-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 无数据提示 */
+.no-data {
+  text-align: center;
+  color: #909399;
+  padding: 30px 0;
+}
+
+.no-data i {
+  font-size: 50px;
+  margin-bottom: 10px;
+  color: #dcdfe6;
+}
+
+.no-data p {
+  margin: 0;
+}
+/* 图片预览列表 */
+.image-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.image-preview-item {
+  width: 150px;
+  margin-bottom: 15px;
+}
+
+.image-container {
+  position: relative;
+  width: 150px;
+  height: 120px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.image-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.image-container:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.image-name {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #606266;
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+/* 预览对话框样式 */
+.preview-dialog .el-dialog__body {
+  padding: 20px;
+}
+
+.preview-controls {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.preview-count {
+  font-size: 14px;
+  color: #606266;
+  margin: 0 10px;
+}
+/* 预览对话框样式 */
+.preview-dialog .el-dialog__body {
+  padding: 20px;
+}
+
+.preview-content {
+  text-align: center;
+}
+
+.preview-image-container {
+  margin-bottom: 20px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-large-image {
+  max-width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.preview-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f5f7fa;
+  border-radius: 4px;
+}
+
+.preview-count {
+  font-size: 14px;
+  color: #606266;
+  min-width: 120px;
+  text-align: center;
+}
+
+.preview-name {
+  display: block;
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+/* 缩略图导航 */
+.thumbnail-navigation {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+.thumbnail-item {
+  width: 60px;
+  height: 60px;
+  border: 2px solid #e4e7ed;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.thumbnail-item:hover {
+  border-color: #409EFF;
+  transform: scale(1.05);
+}
+
+.thumbnail-item.active {
+  border-color: #409EFF;
+  border-width: 3px;
+}
+
+.thumbnail-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .preview-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .thumbnail-item {
+    width: 50px;
+    height: 50px;
+  }
+}
+/* 下载按钮加载状态样式 */
+.el-button [class*="el-icon-loading"] {
+  margin-right: 5px;
+}
+
+/* 文件项悬停效果 */
+.readonly-file-item:hover {
+  background-color: #f0f9ff;
+  border-color: #c6e2ff;
+}
+
+.image-preview-item:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
+
 </style>
