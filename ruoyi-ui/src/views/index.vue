@@ -4,10 +4,23 @@
     <el-tabs v-model="activeView" class="view-tabs">
       <!-- 日历视图 -->
       <el-tab-pane label="日历视图" name="calendar">
+        <div class="calendar-toolbar">
+          <div class="toolbar-left">
+            <el-select v-model="selectedOrganizer" clearable placeholder="按组织单位筛选" size="small" class="organizer-select" @change="onOrganizerChange">
+              <el-option :label="'全部组织单位'" :value="''" />
+              <el-option
+                v-for="org in organizerOptions"
+                :key="org"
+                :label="org"
+                :value="org"
+              />
+            </el-select>
+          </div>
+        </div>
         <el-calendar v-model="calendarDate" class="calendar-view" style="--calendar-day-height: 120px;">
           <template #dateCell="{ data }">
-            <div 
-              v-if="isCurrentMonth(data.day)" 
+            <div
+              v-if="isCurrentMonth(data.day)"
               class="calendar-cell"
             >
               <div class="date-header">
@@ -52,7 +65,7 @@
             </div>
           </template>
         </el-calendar>
-        
+
         <!-- 活动状态图例 -->
         <div class="activity-legend">
           <h4 class="legend-title">活动状态图例</h4>
@@ -251,7 +264,7 @@ export default {
 
       // 当前选中的活动
       selectedActivity: null,
-      
+
       // 弹窗控制
       dialogVisible: false,
 
@@ -269,10 +282,22 @@ export default {
         studentId: [{ required: true, message: '请输入学号', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }]
       },
-
+      // organizer 筛选
+      selectedOrganizer: '',
     };
   },
   computed: {
+    organizerOptions() {
+      const set = new Set();
+      this.activityList.forEach(a => {
+        if (a && a.organizer) set.add(a.organizer);
+      });
+      return Array.from(set);
+    },
+    currentMonthTitle() {
+      const d = new Date(this.calendarDate);
+      return `${d.getFullYear()}年${(d.getMonth() + 1).toString().padStart(2, '0')}月`;
+    },
     // 显示报名按钮的条件
     showSignUpButton() {
       if (!this.selectedActivity) return false;
@@ -293,7 +318,7 @@ export default {
     showCancelButton() {
       if (!this.selectedActivity) return false;
       const status = this.getActivityStatusText(this.selectedActivity);
-      return this.selectedActivity.isBooked && 
+      return this.selectedActivity.isBooked &&
         (status === "报名进行中" || status === "报名未开始");
     },
 
@@ -326,10 +351,29 @@ export default {
     }
   },
   methods: {
+    onOrganizerChange() {
+      this.$nextTick(() => {
+        this.hideEmptyCalendarRows();
+        this.forceCalendarDayHeight();
+      });
+    },
+    prevMonth() {
+      const d = new Date(this.calendarDate);
+      d.setMonth(d.getMonth() - 1);
+      this.calendarDate = d;
+    },
+    nextMonth() {
+      const d = new Date(this.calendarDate);
+      d.setMonth(d.getMonth() + 1);
+      this.calendarDate = d;
+    },
+    goToday() {
+      this.calendarDate = new Date();
+    },
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
@@ -382,10 +426,14 @@ export default {
 
     // 获取日期内的事件
     getDateEvents(dateString) {
+      const selected = (this.selectedOrganizer || '').trim();
       return this.activityList.filter(activity => {
         // 只显示活动开始日期当天的活动
         const activityStartDate = this.formatDate(activity.startTime);
-        return activityStartDate === dateString;
+        if (activityStartDate !== dateString) return false;
+        if (!selected) return true; // 为空表示“全部组织者”
+        const org = (activity.organizer || '').trim();
+        return org === selected;
       });
     },
     // 添加日期格式化方法
@@ -555,10 +603,10 @@ export default {
 
         this.$message.success("报名成功！");
         console.log('日历视图报名成功，活动ID:', this.selectedActivity.activityId, '用户:', this.$store.state.user.name);
-        
+
         // 报名成功后关闭弹窗
         this.dialogVisible = false;
-        
+
         // 如果当前在活动报名视图，刷新数据
         if (this.activeView === 'booking' && this.$refs.activityBooking) {
           this.$refs.activityBooking.getList();
@@ -586,14 +634,14 @@ export default {
     // 处理活动报名状态更新
     handleBookingUpdated(bookingData) {
       console.log('收到报名状态更新事件:', bookingData);
-      
+
       // 更新日历视图中的活动数据
       const index = this.activityList.findIndex(a => a.activityId === bookingData.activityId);
       if (index !== -1) {
         // 使用Vue.set确保响应式更新
         this.$set(this.activityList[index], 'isBooked', bookingData.isBooked);
         this.$set(this.activityList[index], 'activityCapacity', bookingData.activityCapacity);
-        
+
         console.log('日历视图活动状态已更新:', this.activityList[index]);
       }
     },
@@ -623,7 +671,7 @@ export default {
 
         // 1. 删除报名记录
         await deleteBookingsByActivityAndStudent(
-          this.selectedActivity.activityId, 
+          this.selectedActivity.activityId,
           this.$store.state.user.name
         );
 
@@ -652,7 +700,7 @@ export default {
         this.$message.success("取消活动成功！");
         // 取消成功后关闭弹窗
         this.dialogVisible = false;
-        
+
         // 如果当前在活动报名视图，刷新数据
         if (this.activeView === 'booking' && this.$refs.activityBooking) {
           this.$refs.activityBooking.getList();
@@ -668,9 +716,9 @@ export default {
     isCurrentMonth(dateString) {
       const date = new Date(dateString);
       const currentDate = new Date(this.calendarDate);
-      
-      return date.getMonth() === currentDate.getMonth() && 
-             date.getFullYear() === currentDate.getFullYear();
+
+      return date.getMonth() === currentDate.getMonth() &&
+        date.getFullYear() === currentDate.getFullYear();
     },
 
     // 隐藏多余的空行
@@ -681,10 +729,10 @@ export default {
           const rows = calendarTable.querySelectorAll('tr');
           rows.forEach(row => {
             const cells = row.querySelectorAll('td');
-            const hasCurrentMonthCell = Array.from(cells).some(cell => 
+            const hasCurrentMonthCell = Array.from(cells).some(cell =>
               cell.classList.contains('is-current-month')
             );
-            
+
             if (!hasCurrentMonthCell) {
               row.classList.add('hide-row');
             } else {
@@ -799,242 +847,242 @@ export default {
   box-shadow: none;
 }
 
-  .calendar-cell {
-    height: calc(100% - 2px);
-    width: calc(100% - 2px);
-    max-height: 150px;
-    overflow: hidden;
-    padding: 2px; /* 减少内边距 */
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column; /* 改为垂直布局 */
-    box-sizing: border-box;
+.calendar-cell {
+  height: calc(100% - 2px);
+  width: calc(100% - 2px);
+  max-height: 150px;
+  overflow: hidden;
+  padding: 2px; /* 减少内边距 */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column; /* 改为垂直布局 */
+  box-sizing: border-box;
+  position: relative;
+  margin: 1px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .date-header {
+    font-weight: bold;
+    margin: 0 0 2px 0; /* 添加底部间距 */
+    width: 100%; /* 占满宽度 */
+    text-align: center;
+    padding: 2px 4px; /* 减少内边距 */
+    line-height: 1.2;
+    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
+    color: white;
+    border-radius: 6px; /* 减少圆角 */
+    font-size: 10px; /* 减少字体大小 */
+    box-shadow: 0 2px 8px rgba(69, 127, 202, 0.3);
+    flex-shrink: 0; /* 防止被压缩 */
+  }
+
+  .events-container {
     position: relative;
-    margin: 1px;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 1px; /* 减少间距 */
+    flex: 1; /* 占据剩余空间 */
+    min-width: 0;
+    overflow-y: auto;
+    width: 100%; /* 确保容器占满可用宽度 */
+    box-sizing: border-box; /* 包含内边距在宽度计算中 */
+    padding: 0; /* 移除内边距 */
+    padding-right: 2px; /* 为滚动条留出空间 */
+  }
+
+  .calendar-event {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px; /* 增加内边距 */
+    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200)); /* 默认颜色 */
+    border: none;
+    border-radius: 6px; /* 增加圆角 */
+    font-size: 11px; /* 稍微增加字体大小 */
+    cursor: pointer;
     transition: all 0.3s ease;
+    min-width: 0;
+    height: 24px; /* 增加高度从16px到24px */
+    overflow: hidden;
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+    position: relative;
+    width: 100%; /* 确保所有活动条都是100%宽度 */
+    box-sizing: border-box; /* 包含内边距在宽度计算中 */
+    margin-bottom: 2px; /* 增加底部间距 */
+    flex-shrink: 0; /* 防止活动条被压缩 */
+
+    /* 报名未开始 - 灰色 */
+    &.status-not-started {
+      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+      box-shadow: 0 2px 8px rgba(149, 165, 166, 0.2);
+    }
+
+    /* 报名进行中 - 蓝色 */
+    &.status-signup-active {
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+    }
+
+    /* 报名已截止 - 橙色 */
+    &.status-signup-ended {
+      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
+    }
+
+    /* 活动进行中 - 绿色 */
+    &.status-activity-active {
+      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+      box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
+    }
+
+    /* 活动已结束 - 深灰色 */
+    &.status-activity-ended {
+      background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+      box-shadow: 0 2px 8px rgba(52, 73, 94, 0.2);
+    }
+
+    /* 未知状态 - 蓝色（默认） */
+    &.status-unknown {
+      background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
+      box-shadow: 0 2px 8px rgba(69, 127, 202, 0.2);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+      border-radius: 6px;
+      pointer-events: none;
+    }
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      background: rgba(255, 255, 255, 0.95);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(69, 127, 202, 0.4);
+      background: linear-gradient(to right, rgb(59, 107, 182), rgb(76, 125, 180));
     }
 
-    .date-header {
-      font-weight: bold;
-      margin: 0 0 2px 0; /* 添加底部间距 */
-      width: 100%; /* 占满宽度 */
-      text-align: center;
-      padding: 2px 4px; /* 减少内边距 */
-      line-height: 1.2;
-      background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-      color: white;
-      border-radius: 6px; /* 减少圆角 */
-      font-size: 10px; /* 减少字体大小 */
-      box-shadow: 0 2px 8px rgba(69, 127, 202, 0.3);
-      flex-shrink: 0; /* 防止被压缩 */
+    /* 不同状态的hover效果 */
+    &.status-not-started:hover {
+      background: linear-gradient(135deg, #7f8c8d 0%, #6c7b7d 100%);
+      box-shadow: 0 4px 16px rgba(149, 165, 166, 0.4);
     }
 
-    .events-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 1px; /* 减少间距 */
-      flex: 1; /* 占据剩余空间 */
-      min-width: 0;
-      overflow-y: auto;
-      width: 100%; /* 确保容器占满可用宽度 */
-      box-sizing: border-box; /* 包含内边距在宽度计算中 */
-      padding: 0; /* 移除内边距 */
-      padding-right: 2px; /* 为滚动条留出空间 */
+    &.status-signup-active:hover {
+      background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+      box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
     }
 
-    .calendar-event {
+    &.status-signup-ended:hover {
+      background: linear-gradient(135deg, #d35400 0%, #ba4a00 100%);
+      box-shadow: 0 4px 16px rgba(230, 126, 34, 0.4);
+    }
+
+    &.status-activity-active:hover {
+      background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+      box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
+    }
+
+    &.status-activity-ended:hover {
+      background: linear-gradient(135deg, #2c3e50 0%, #1b2631 100%);
+      box-shadow: 0 4px 16px rgba(52, 73, 94, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .event-summary {
       display: flex;
       align-items: center;
-      padding: 4px 8px; /* 增加内边距 */
-      background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200)); /* 默认颜色 */
-      border: none;
-      border-radius: 6px; /* 增加圆角 */
-      font-size: 11px; /* 稍微增加字体大小 */
-      cursor: pointer;
-      transition: all 0.3s ease;
+      gap: 4px;
       min-width: 0;
-      height: 24px; /* 增加高度从16px到24px */
-      overflow: hidden;
-      color: white;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-      position: relative;
-      width: 100%; /* 确保所有活动条都是100%宽度 */
-      box-sizing: border-box; /* 包含内边距在宽度计算中 */
-      margin-bottom: 2px; /* 增加底部间距 */
-      flex-shrink: 0; /* 防止活动条被压缩 */
+      flex: 1;
+      z-index: 1;
+      width: 100%; /* 确保占满整个活动条宽度 */
 
-      /* 报名未开始 - 灰色 */
-      &.status-not-started {
-        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-        box-shadow: 0 2px 8px rgba(149, 165, 166, 0.2);
+      .event-name {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1; /* 允许弹性增长，占据剩余空间 */
+        font-size: 10px; /* 增加字体大小 */
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        min-width: 0; /* 允许收缩 */
+        margin-right: 6px; /* 增加右边距 */
       }
 
-      /* 报名进行中 - 蓝色 */
-      &.status-signup-active {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+      .event-org {
+        color: rgba(255, 255, 255, 0.8);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 0 0 auto; /* 固定宽度，不伸缩 */
+        font-size: 9px; /* 增加字体大小 */
+        max-width: 45px; /* 增加最大宽度 */
+        margin-right: 6px; /* 增加右边距 */
       }
 
-      /* 报名已截止 - 橙色 */
-      &.status-signup-ended {
-        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-        box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
-      }
+      .detail-btn {
+        padding: 2px 6px; /* 增加内边距 */
+        font-size: 9px; /* 增加字体大小 */
+        margin-left: auto;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 4px; /* 增加圆角 */
+        transition: all 0.2s ease;
+        flex: 0 0 auto; /* 固定宽度，不伸缩 */
+        white-space: nowrap; /* 防止按钮文字换行 */
 
-      /* 活动进行中 - 绿色 */
-      &.status-activity-active {
-        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-        box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
-      }
-
-      /* 活动已结束 - 深灰色 */
-      &.status-activity-ended {
-        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-        box-shadow: 0 2px 8px rgba(52, 73, 94, 0.2);
-      }
-
-      /* 未知状态 - 蓝色（默认） */
-      &.status-unknown {
-        background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-        box-shadow: 0 2px 8px rgba(69, 127, 202, 0.2);
-      }
-
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
-        border-radius: 6px;
-        pointer-events: none;
-      }
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(69, 127, 202, 0.4);
-        background: linear-gradient(to right, rgb(59, 107, 182), rgb(76, 125, 180));
-      }
-
-      /* 不同状态的hover效果 */
-      &.status-not-started:hover {
-        background: linear-gradient(135deg, #7f8c8d 0%, #6c7b7d 100%);
-        box-shadow: 0 4px 16px rgba(149, 165, 166, 0.4);
-      }
-
-      &.status-signup-active:hover {
-        background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
-        box-shadow: 0 4px 16px rgba(52, 152, 219, 0.4);
-      }
-
-      &.status-signup-ended:hover {
-        background: linear-gradient(135deg, #d35400 0%, #ba4a00 100%);
-        box-shadow: 0 4px 16px rgba(230, 126, 34, 0.4);
-      }
-
-      &.status-activity-active:hover {
-        background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
-        box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
-      }
-
-      &.status-activity-ended:hover {
-        background: linear-gradient(135deg, #2c3e50 0%, #1b2631 100%);
-        box-shadow: 0 4px 16px rgba(52, 73, 94, 0.4);
-      }
-
-      &:active {
-        transform: translateY(0);
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-      }
-
-      .event-summary {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        min-width: 0;
-        flex: 1;
-        z-index: 1;
-        width: 100%; /* 确保占满整个活动条宽度 */
-
-        .event-name {
-          font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          flex: 1; /* 允许弹性增长，占据剩余空间 */
-          font-size: 10px; /* 增加字体大小 */
-          text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          min-width: 0; /* 允许收缩 */
-          margin-right: 6px; /* 增加右边距 */
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.5);
         }
 
-        .event-org {
-          color: rgba(255, 255, 255, 0.8);
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          flex: 0 0 auto; /* 固定宽度，不伸缩 */
-          font-size: 9px; /* 增加字体大小 */
-          max-width: 45px; /* 增加最大宽度 */
-          margin-right: 6px; /* 增加右边距 */
+        &.disabled-btn {
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.5);
+          cursor: not-allowed;
+          border-color: rgba(255, 255, 255, 0.1);
         }
-
-        .detail-btn {
-          padding: 2px 6px; /* 增加内边距 */
-          font-size: 9px; /* 增加字体大小 */
-          margin-left: auto;
-          background: rgba(255, 255, 255, 0.2);
-          border: 1px solid rgba(255, 255, 255, 0.3);
-          color: white;
-          border-radius: 4px; /* 增加圆角 */
-          transition: all 0.2s ease;
-          flex: 0 0 auto; /* 固定宽度，不伸缩 */
-          white-space: nowrap; /* 防止按钮文字换行 */
-
-          &:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-          }
-
-          &.disabled-btn {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.5);
-            cursor: not-allowed;
-            border-color: rgba(255, 255, 255, 0.1);
-          }
-        }
-      }
-
-      .event-time-range {
-        display: none; /* 隐藏时间范围以保持一行紧凑显示 */
       }
     }
-  }
 
-  /* 覆盖 Element UI 的日历格子高度 - 使用更高优先级 */
-  .calendar-view .el-calendar-table .el-calendar-day {
-    height: var(--calendar-day-height, 120px) !important;
-    padding: 8px !important;
-    min-height: var(--calendar-day-height, 120px) !important;
-    max-height: var(--calendar-day-height, 120px) !important;
+    .event-time-range {
+      display: none; /* 隐藏时间范围以保持一行紧凑显示 */
+    }
   }
+}
 
-  /* 强制覆盖所有可能的样式 */
-  .calendar-view .el-calendar-table td .el-calendar-day {
-    height: 120px !important;
-    min-height: 120px !important;
-    max-height: 120px !important;
-  }
+/* 覆盖 Element UI 的日历格子高度 - 使用更高优先级 */
+.calendar-view .el-calendar-table .el-calendar-day {
+  height: var(--calendar-day-height, 120px) !important;
+  padding: 8px !important;
+  min-height: var(--calendar-day-height, 120px) !important;
+  max-height: var(--calendar-day-height, 120px) !important;
+}
+
+/* 强制覆盖所有可能的样式 */
+.calendar-view .el-calendar-table td .el-calendar-day {
+  height: 120px !important;
+  min-height: 120px !important;
+  max-height: 120px !important;
+}
 
 /* 日历视图内显示"详细/已截止"按钮 */
 .calendar-view .detail-btn {
@@ -1047,7 +1095,7 @@ export default {
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
     border: 2px solid #ffc107;
     box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
-    
+
     .date-header {
       background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
       box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
@@ -1069,19 +1117,19 @@ export default {
   border-radius: 8px 8px 0 0;
   padding: 15px 20px;
   margin-bottom: 0;
-  
+
   .el-calendar__title {
     font-size: 18px;
     font-weight: 600;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
-  
+
   .el-calendar__button-group {
     .el-button {
       background: rgba(255, 255, 255, 0.2);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: white;
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.3);
         border-color: rgba(255, 255, 255, 0.5);
@@ -1520,25 +1568,25 @@ export default {
     width: 100%;
   }
   .view-tabs { padding: 10px; }
-  .calendar-view { 
+  .calendar-view {
     padding: 10px;
     height: calc(100vh - 150px);
   }
-  
+
   .activity-dialog .el-dialog {
     width: 95% !important;
     margin: 0 auto;
   }
-  
-  .activity-detail .detail-header h2 { 
-    font-size: 20px; 
+
+  .activity-detail .detail-header h2 {
+    font-size: 20px;
   }
-  
+
   .activity-detail .signup-status .signup-button,
   .activity-detail .signup-status .cancel-button {
     width: 100%;
   }
-  
+
   /* 移动端图例样式调整 */
   .activity-legend {
     position: relative;
