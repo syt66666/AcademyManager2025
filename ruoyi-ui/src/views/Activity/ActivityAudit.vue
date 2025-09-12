@@ -463,7 +463,7 @@
 </template>
 
 <script>
-import { listBookingsAudit, updateBooking, getAuditCount, getBooking } from "@/api/system/bookings";
+import { listBookingsAudit, updateBooking, auditBooking, getAuditCount, getBooking } from "@/api/system/bookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
 import {getNickName} from "@/api/system/student";
@@ -704,7 +704,7 @@ export default {
     },
 
     async _updateSingleBooking(payload) {
-      return updateBooking(payload);
+      return auditBooking(payload);
     },
     getStatusTagType(status) {
       const statusMap = {
@@ -1090,7 +1090,7 @@ export default {
         };
 
         // 调用审核接口
-        updateBooking(auditData).then(response => {
+        auditBooking(auditData).then(response => {
           this.$message.success(`已${status}审核`);
           this.getList(); // 刷新列表
           this.fetchAuditCount();

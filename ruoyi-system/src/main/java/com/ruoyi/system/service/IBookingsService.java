@@ -38,6 +38,13 @@ public interface IBookingsService {
     int updateBookings(Bookings bookings);
 
     /**
+     * 审核更新预订记录（只更新审核相关字段，不影响文件字段）
+     * @param bookings 要更新的预订对象
+     * @return 更新结果（影响的行数）
+     */
+    int updateBookingsAudit(Bookings bookings);
+
+    /**
      * 批量删除预订记录
      * @param bookingIds 要删除的预订ID数组
      * @return 删除结果（影响的行数）

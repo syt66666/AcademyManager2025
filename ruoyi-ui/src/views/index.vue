@@ -84,7 +84,7 @@
       <!-- 活动报名视图 -->
       <el-tab-pane label="活动报名" name="booking">
         <div v-if="activeView === 'booking'">
-          <ActivityBooking />
+          <ActivityBooking ref="activityBooking" @booking-updated="handleBookingUpdated" />
         </div>
       </el-tab-pane>
     </el-tabs>
@@ -215,7 +215,7 @@
 
 
 <script>
-import { listActivities, signUpCapacity, cancelSignUpCapacity } from "@/api/system/activities";
+import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities } from "@/api/system/activities";
 import {addBooking, checkBookingSimple, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 import ActivityBooking from "./Activity/ActivityBooking.vue";
@@ -313,9 +313,15 @@ export default {
       });
     },
     activeView(newView) {
-      // 当切换到活动报名视图时，清除选中的活动
+      // 当切换到活动报名视图时，清除选中的活动并刷新数据
       if (newView === 'booking') {
         this.selectedActivity = null;
+        // 延迟执行，确保组件已经渲染
+        this.$nextTick(() => {
+          if (this.$refs.activityBooking) {
+            this.$refs.activityBooking.getList();
+          }
+        });
       }
     }
   },
@@ -490,23 +496,52 @@ export default {
       });
     },
 
+    // 获取最新活动信息
+    async getLatestActivityInfo(activityId) {
+      try {
+        const response = await getActivities(activityId);
+        return response.data;
+      } catch (error) {
+        console.error("获取活动信息失败:", error);
+        return null;
+      }
+    },
+
     // 提交报名
     async submitSignUp() {
       try {
-        // 1. 更新活动容量
-        await signUpCapacity(this.selectedActivity.activityId, this.selectedActivity.version);
+        // 0. 先检查是否已经报名过
+        const checkResponse = await checkBookingSimple(this.selectedActivity.activityId, this.$store.state.user.name);
+        if (checkResponse.data.isBooked) {
+          this.$message.warning("您已经报名过该活动，不能重复报名");
+          // 更新活动状态为已报名
+          this.selectedActivity.isBooked = true;
+          return;
+        }
+
+        // 0.5. 先获取最新的活动信息，确保版本号是最新的
+        const latestActivity = await this.getLatestActivityInfo(this.selectedActivity.activityId);
+        if (!latestActivity) {
+          this.$message.error("获取活动信息失败，请刷新重试");
+          return;
+        }
+
+        // 1. 更新活动容量（使用最新的版本号）
+        await signUpCapacity(this.selectedActivity.activityId, latestActivity.version);
 
         // 2. 添加报名记录
         await addBooking({
           activityId: this.selectedActivity.activityId,
           studentId: this.$store.state.user.name,
+          bookAt: new Date().toISOString(),
+          status: "未提交"
         });
 
         // 3. 更新活动状态
         const updatedActivity = {
-          ...this.selectedActivity,
-          activityCapacity: Math.max(this.selectedActivity.activityCapacity - 1, 0),
-          version: this.selectedActivity.version + 1,
+          ...latestActivity,
+          activityCapacity: Math.max(latestActivity.activityCapacity - 1, 0),
+          version: latestActivity.version + 1,
           isBooked: true // 标记为已报名
         };
 
@@ -519,8 +554,15 @@ export default {
         }
 
         this.$message.success("报名成功！");
+        console.log('日历视图报名成功，活动ID:', this.selectedActivity.activityId, '用户:', this.$store.state.user.name);
+        
         // 报名成功后关闭弹窗
         this.dialogVisible = false;
+        
+        // 如果当前在活动报名视图，刷新数据
+        if (this.activeView === 'booking' && this.$refs.activityBooking) {
+          this.$refs.activityBooking.getList();
+        }
 
       } catch (error) {
         console.error("报名失败:", error);
@@ -541,6 +583,21 @@ export default {
       done();
     },
 
+    // 处理活动报名状态更新
+    handleBookingUpdated(bookingData) {
+      console.log('收到报名状态更新事件:', bookingData);
+      
+      // 更新日历视图中的活动数据
+      const index = this.activityList.findIndex(a => a.activityId === bookingData.activityId);
+      if (index !== -1) {
+        // 使用Vue.set确保响应式更新
+        this.$set(this.activityList[index], 'isBooked', bookingData.isBooked);
+        this.$set(this.activityList[index], 'activityCapacity', bookingData.activityCapacity);
+        
+        console.log('日历视图活动状态已更新:', this.activityList[index]);
+      }
+    },
+
     // 处理退掉活动
     handleCancelSignUp() {
       this.$confirm('确定要取消该活动吗？', '确认取消', {
@@ -557,23 +614,30 @@ export default {
     // 提交退掉活动
     async submitCancelSignUp() {
       try {
+        // 0. 先获取最新的活动信息，确保版本号是最新的
+        const latestActivity = await this.getLatestActivityInfo(this.selectedActivity.activityId);
+        if (!latestActivity) {
+          this.$message.error("获取活动信息失败，请刷新重试");
+          return;
+        }
+
         // 1. 删除报名记录
         await deleteBookingsByActivityAndStudent(
           this.selectedActivity.activityId, 
           this.$store.state.user.name
         );
 
-        // 2. 恢复活动容量
+        // 2. 恢复活动容量（使用最新的版本号）
         await cancelSignUpCapacity(
           this.selectedActivity.activityId,
-          this.selectedActivity.version
+          latestActivity.version
         );
 
         // 3. 更新活动状态
         const updatedActivity = {
-          ...this.selectedActivity,
-          activityCapacity: Math.min(this.selectedActivity.activityCapacity + 1, this.selectedActivity.activityTotalCapacity),
-          version: this.selectedActivity.version + 1,
+          ...latestActivity,
+          activityCapacity: Math.min(latestActivity.activityCapacity + 1, latestActivity.activityTotalCapacity),
+          version: latestActivity.version + 1,
           isBooked: false // 标记为未报名
         };
 
@@ -588,6 +652,11 @@ export default {
         this.$message.success("退掉活动成功！");
         // 退掉成功后关闭弹窗
         this.dialogVisible = false;
+        
+        // 如果当前在活动报名视图，刷新数据
+        if (this.activeView === 'booking' && this.$refs.activityBooking) {
+          this.$refs.activityBooking.getList();
+        }
 
       } catch (error) {
         console.error("退掉活动失败:", error);
