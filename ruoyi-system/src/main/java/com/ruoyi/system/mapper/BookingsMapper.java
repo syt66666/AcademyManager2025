@@ -46,6 +46,13 @@ public interface BookingsMapper {
     int updateBookings(Bookings bookings);
 
     /**
+     * 审核更新预约（只更新审核相关字段，不影响文件字段）
+     * @param bookings 预约对象
+     * @return 修改结果
+     */
+    int updateBookingsAudit(Bookings bookings);
+
+    /**
      * 批量删除预约
      * @param bookingIds 需要删除的预约ID数组
      * @return 删除结果

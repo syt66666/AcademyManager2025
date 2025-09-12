@@ -69,6 +69,14 @@ public class BookingsServiceImpl implements IBookingsService {
      */
     @Override
     public int insertBookings(Bookings bookings) {
+        // 检查是否已经报名过该活动
+        if (bookings.getActivityId() != null && bookings.getStudentId() != null) {
+            boolean alreadyBooked = checkIfBooked(bookings.getActivityId(), bookings.getStudentId());
+            if (alreadyBooked) {
+                throw new ServiceException("您已经报名过该活动，不能重复报名");
+            }
+        }
+        
         // 设置默认状态为"未提交"
         if (bookings.getStatus() == null || bookings.getStatus().isEmpty()) {
             bookings.setStatus("未提交");
@@ -105,6 +113,37 @@ public class BookingsServiceImpl implements IBookingsService {
         }
         return bookingsMapper.updateBookings(bookings);
     }
+
+    /**
+     * 审核更新预订记录（只更新审核相关字段，不影响文件字段）
+     * @param bookings 要更新的预订对象
+     * @return 更新结果（影响的行数）
+     */
+    @Override
+    public int updateBookingsAudit(Bookings bookings) {
+        if (Objects.equals(bookings.getStatus(), "已通过") || Objects.equals(bookings.getStatus(), "未通过")) {
+            // 1. 获取原始状态
+            Bookings originalRecord = bookingsMapper.selectBookingsById(bookings.getBookingId());
+            String beforeStatus = originalRecord.getStatus();
+            
+            // 2. 执行审核状态更新（只更新审核相关字段）
+            int updateResult = bookingsMapper.updateBookingsAudit(bookings);
+            if (updateResult <= 0) {
+                throw new ServiceException("审核状态更新失败");
+            }
+
+            // 3. 保存审核记录
+            saveAuditHistory(
+                    Math.toIntExact(bookings.getBookingId()),
+                    beforeStatus,
+                    bookings.getStatus(),
+                    bookings.getReviewComment()
+            );
+            return updateResult;
+        }
+        return bookingsMapper.updateBookingsAudit(bookings);
+    }
+
     // 新增方法：保存审核历史
     private void saveAuditHistory(Integer bookingsId, String beforeStatus,
                                   String afterStatus, String remark) {

@@ -388,10 +388,15 @@
     >
       <div v-if="currentDocument.type === 'pdf'" class="preview-container">
         <iframe
-          :src="`${currentDocument.url}#toolbar=0&navpanes=0&scrollbar=0`"
+          :src="getPdfUrlWithAuth(currentDocument.url)"
           style="width: 100%; height: 75vh; border: none;"
           @load="disablePdfInteractions"
+          @error="handlePdfError"
         ></iframe>
+        <div v-if="pdfError" class="pdf-error">
+          <p>PDF预览失败: {{ pdfError }}</p>
+          <el-button @click="retryPdfPreview">重试</el-button>
+        </div>
       </div>
       <div v-else-if="currentDocument.type === 'docx'" class="preview-container docx-preview">
         <div v-html="docxContent" class="docx-content"></div>
@@ -458,7 +463,7 @@
 </template>
 
 <script>
-import { listBookingsAudit, updateBooking, getAuditCount, getBooking } from "@/api/system/bookings";
+import { listBookingsAudit, updateBooking, auditBooking, getAuditCount, getBooking } from "@/api/system/bookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
 import {getNickName} from "@/api/system/student";
@@ -503,6 +508,7 @@ export default {
         name: ''
       },
       docxContent: '',
+      pdfError: '',
 
       // 表格数据
       activityList: [],
@@ -698,7 +704,7 @@ export default {
     },
 
     async _updateSingleBooking(payload) {
-      return updateBooking(payload);
+      return auditBooking(payload);
     },
     getStatusTagType(status) {
       const statusMap = {
@@ -886,18 +892,45 @@ export default {
         };
 
         if (fileType === 'docx') {
-          const response = await axios.get(this.currentDocument.url, {
-            responseType: 'arraybuffer',
-            headers: {
-              Authorization: `Bearer ${getToken()}`
-            }
-          });
+          // 尝试多种方式获取文档
+          let response;
+          try {
+            // 方式1：带认证头请求
+            response = await axios.get(this.currentDocument.url, {
+              responseType: 'arraybuffer',
+              headers: {
+                Authorization: `Bearer ${getToken()}`,
+                'Cache-Control': 'no-cache'
+              },
+              timeout: 30000
+            });
+          } catch (authError) {
+            console.warn('带认证头请求失败，尝试匿名访问:', authError.message);
+            // 方式2：匿名访问（如果服务器配置了permitAll）
+            response = await axios.get(this.currentDocument.url, {
+              responseType: 'arraybuffer',
+              headers: {
+                'Cache-Control': 'no-cache'
+              },
+              timeout: 30000
+            });
+          }
+          
           const result = await this.parseDocx(response.data);
           this.docxContent = result.html;
         }
         this.docPreviewVisible = true;
       } catch (error) {
-        this.$message.error(`预览失败: ${error.message}`);
+        console.error('文档预览失败:', error);
+        if (error.response && error.response.status === 401) {
+          this.$message.error('文档访问权限不足，请重新登录后重试');
+        } else if (error.response && error.response.status === 403) {
+          this.$message.error('文档访问被拒绝，请联系管理员');
+        } else if (error.code === 'ECONNABORTED') {
+          this.$message.error('文档加载超时，请检查网络连接');
+        } else {
+          this.$message.error(`预览失败: ${error.message || '未知错误'}`);
+        }
       } finally {
         loading.close();
       }
@@ -946,6 +979,57 @@ export default {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+    },
+
+    // 获取带认证的PDF URL
+    getPdfUrlWithAuth(url) {
+      const token = getToken();
+      
+      // 检测是否为生产环境（服务器部署）
+      const isProduction = window.location.hostname !== 'localhost' && 
+                          window.location.hostname !== '127.0.0.1' &&
+                          !window.location.hostname.includes('192.168.');
+      
+      console.log('环境检测:', {
+        hostname: window.location.hostname,
+        isProduction: isProduction,
+        hasToken: !!token
+      });
+      
+      if (isProduction && token) {
+        // 生产环境：使用文件访问接口
+        try {
+          const filePath = url.replace(process.env.VUE_APP_BASE_API, '');
+          const accessUrl = `${process.env.VUE_APP_BASE_API}/file/access?path=${encodeURIComponent(filePath)}&token=${token}#toolbar=0&navpanes=0&scrollbar=0`;
+          console.log('使用文件访问接口:', accessUrl);
+          return accessUrl;
+        } catch (error) {
+          console.warn('文件访问接口构建失败，回退到原始方式:', error);
+        }
+      }
+      
+      // 本地开发环境或回退方案：使用原始URL
+      const fallbackUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
+      console.log('使用原始URL:', fallbackUrl);
+      return fallbackUrl;
+    },
+
+    // 处理PDF预览错误
+    handlePdfError(event) {
+      console.error('PDF预览错误:', event);
+      this.pdfError = 'PDF文件加载失败，请检查文件是否存在或网络连接';
+    },
+
+    // 重试PDF预览
+    retryPdfPreview() {
+      this.pdfError = '';
+      // 强制刷新iframe
+      this.$nextTick(() => {
+        const iframe = document.querySelector('.preview-container iframe');
+        if (iframe) {
+          iframe.src = iframe.src;
+        }
+      });
     },
 
     // 禁用PDF交互功能
@@ -1006,7 +1090,7 @@ export default {
         };
 
         // 调用审核接口
-        updateBooking(auditData).then(response => {
+        auditBooking(auditData).then(response => {
           this.$message.success(`已${status}审核`);
           this.getList(); // 刷新列表
           this.fetchAuditCount();
@@ -1523,5 +1607,29 @@ export default {
 .doc-actions {
   display: flex;
   gap: 8px;
+}
+
+/* PDF错误样式 */
+.pdf-error {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.pdf-error p {
+  color: #f56c6c;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.preview-container {
+  position: relative;
 }
 </style>

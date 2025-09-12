@@ -56,6 +56,17 @@ export function updateBooking(data) {
   })
 }
 
+/**
+ * 审核更新预约（只更新审核相关字段，不影响文件字段）
+ */
+export function auditBooking(data) {
+  return request({
+    url: '/system/bookings/audit',
+    method: 'put',
+    data: data
+  })
+}
+
 
 /**
  * 批量删除预约

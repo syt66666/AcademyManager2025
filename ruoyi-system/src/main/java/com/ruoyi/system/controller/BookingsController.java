@@ -83,6 +83,15 @@ public class BookingsController extends BaseController {
     }
 
     /**
+     * 审核更新预约信息（只更新审核相关字段，不影响文件字段）
+     */
+    @Log(title = "预约审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/audit")
+    public AjaxResult audit(@RequestBody Bookings bookings) {
+        return toAjax(bookingsService.updateBookingsAudit(bookings));
+    }
+
+    /**
      * 删除预约
      */
     @Log(title = "预约信息", businessType = BusinessType.DELETE)

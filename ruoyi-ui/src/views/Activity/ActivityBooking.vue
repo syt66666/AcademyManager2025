@@ -83,7 +83,7 @@
           </template>
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
-        <el-table-column label="组织单位" align="center" prop="organizer" />
+        <!-- <el-table-column label="组织单位" align="center" prop="organizer" /> -->
         <el-table-column label="活动开始时间" align="center" prop="startTime">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -103,24 +103,24 @@
         </el-table-column>
         <el-table-column label="操作" align="center" fixed="right" width="200">
           <template slot-scope="scope">
-            <el-button
-              type="text"
+              <el-button
+                type="text"
               size="mini"
-              class="action-button detail-button"
+                class="action-button detail-button"
               @click="handleDetail(scope.row)"
-            >详情</el-button>
-            <el-button
+              >详情</el-button>
+              <el-button
               v-if="getSignStatusText(scope.row) === '可报名'"
-              type="text"
+                type="text"
               size="mini"
               class="action-button signup-button"
-              @click="handleSignUp(scope.row)"
+                @click="handleSignUp(scope.row)"
             >报名</el-button>
-            <el-button
+              <el-button
               v-if="getSignStatusText(scope.row) === '已报名'"
-              type="text"
+                type="text"
               size="mini"
-              class="action-button cancel-button"
+                class="action-button cancel-button"
               @click="handleCancel(scope.row)"
             >取消报名</el-button>
             <el-tag
@@ -164,10 +164,10 @@
           <div class="status-tags">
             <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
               {{ getActivityStatusText(selectedActivity) }}
-            </el-tag>
-            <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
+          </el-tag>
+            <!-- <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
               {{ getSignStatusText(selectedActivity) }}
-            </el-tag>
+          </el-tag> -->
           </div>
         </div>
 
@@ -236,8 +236,8 @@
             立即报名
           </el-button>
 
-          <el-button
-            type="danger"
+        <el-button
+          type="danger"
             :disabled="!showCancelButton"
             @click="handleCancel(selectedActivity)"
             v-if="showCancelButton"
@@ -272,7 +272,7 @@
 </template>
 
 <script>
-import { listActivities, signUpCapacity, cancelSignUpCapacity } from "@/api/system/activities";
+import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities } from "@/api/system/activities";
 import { addBooking, deleteBookingsByActivityAndStudent } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 import { checkBookingSimple } from "@/api/system/bookings";
@@ -310,8 +310,10 @@ export default {
     this.getList();
   },
   async mounted() {
-    // 检查报名状态
-    await this.checkBookingStatus();
+    // 使用nextTick确保组件完全挂载后再检查报名状态
+    this.$nextTick(async () => {
+      await this.checkBookingStatus();
+    });
   },
   computed: {
     // 显示报名按钮的条件
@@ -383,6 +385,9 @@ export default {
           filteredActivities = this.filterAvailableActivities(filteredActivities);
         }
         
+        // 按照活动状态和活动开始时间排序
+        filteredActivities = this.sortActivitiesByStatusAndTime(filteredActivities);
+        
         // 手动分页
         const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
         const endIndex = startIndex + this.queryParams.pageSize;
@@ -390,8 +395,11 @@ export default {
         this.total = filteredActivities.length;
         
         this.loading = false;
-        // 获取活动列表后检查报名状态
-        this.checkBookingStatus();
+        
+        // 获取活动列表后检查报名状态，使用nextTick确保DOM更新完成
+        this.$nextTick(() => {
+          this.checkBookingStatus();
+        });
       });
     },
 
@@ -444,6 +452,36 @@ export default {
       return filteredActivities;
     },
 
+    // 按照活动状态和活动开始时间排序
+    sortActivitiesByStatusAndTime(activities) {
+      // 定义活动状态优先级：报名进行中 > 报名未开始 > 报名已截止 > 活动进行中 > 活动已结束
+      const statusPriority = {
+        '报名进行中': 1,
+        '报名未开始': 2,
+        '报名已截止': 3,
+        '活动进行中': 4,
+        '活动已结束': 5
+      };
+
+      return activities.sort((a, b) => {
+        // 获取活动状态
+        const statusA = this.getActivityStatusText(a);
+        const statusB = this.getActivityStatusText(b);
+        
+        // 获取状态优先级
+        const priorityA = statusPriority[statusA] || 999;
+        const priorityB = statusPriority[statusB] || 999;
+        
+        // 如果优先级相同，按活动开始时间排序（最早的在前面）
+        if (priorityA === priorityB) {
+          return new Date(a.startTime) - new Date(b.startTime);
+        }
+        
+        // 按优先级排序
+        return priorityA - priorityB;
+      });
+    },
+
     // 过滤可报名活动：在可报名时间内且人数未满
     filterAvailableActivities(activities) {
       const availableActivities = activities.filter(activity => {
@@ -478,7 +516,7 @@ export default {
       this.queryParams.pageNum = 1;
       this.getList();
     },
-    
+
     handleCurrentChange(val) {
       this.queryParams.pageNum = val;
       this.getList();
@@ -488,16 +526,25 @@ export default {
     async checkBookingStatus() {
       if (!this.activitiesList || this.activitiesList.length === 0) return;
       
-      const checkPromises = this.activitiesList.map(activity =>
-        checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
-          activity.isBooked = res.data.isBooked;
+      console.log('开始检查报名状态，活动数量:', this.activitiesList.length);
+      console.log('当前用户:', this.$store.state.user.name);
+      
+      const checkPromises = this.activitiesList.map((activity, index) => {
+        console.log(`检查活动 ${activity.activityId} 的报名状态`);
+        return checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
+          console.log(`活动 ${activity.activityId} 的API响应:`, res);
+          console.log(`活动 ${activity.activityId} 的报名状态:`, res.data.isBooked);
+          // 使用Vue.set确保响应式更新
+          this.$set(this.activitiesList[index], 'isBooked', res.data.isBooked);
         }).catch(error => {
-          console.error('检查报名状态失败:', error);
-          activity.isBooked = false;
-        })
-      );
+          console.error(`检查活动 ${activity.activityId} 报名状态失败:`, error);
+          // 使用Vue.set确保响应式更新
+          this.$set(this.activitiesList[index], 'isBooked', false);
+        });
+      });
       
       await Promise.all(checkPromises);
+      console.log('所有活动报名状态检查完成:', this.activitiesList.map(a => ({id: a.activityId, isBooked: a.isBooked})));
     },
 
     // 搜索按钮操作
@@ -544,6 +591,12 @@ export default {
 
     // 获取报名状态文本
     getSignStatusText(row) {
+      console.log(`检查活动 ${row.activityId} 的报名状态:`, {
+        isBooked: row.isBooked,
+        activityName: row.activityName,
+        activityCapacity: row.activityCapacity
+      });
+      
       if (row.isBooked) return "已报名";
 
       const status = this.getActivityStatusText(row);
@@ -650,33 +703,80 @@ export default {
       });
     },
 
+    // 获取最新活动信息
+    async getLatestActivityInfo(activityId) {
+      try {
+        const response = await getActivities(activityId);
+        return response.data;
+      } catch (error) {
+        console.error("获取活动信息失败:", error);
+        return null;
+      }
+    },
+
     // 提交报名
     async submitSignUp(activity) {
       try {
-        // 1. 更新活动容量
-        await signUpCapacity(activity.activityId, activity.version);
+        // 0. 先检查是否已经报名过
+        const checkResponse = await checkBookingSimple(activity.activityId, this.$store.state.user.name);
+        if (checkResponse.data.isBooked) {
+          this.$message.warning("您已经报名过该活动，不能重复报名");
+          // 更新活动状态为已报名
+          const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
+          if (index !== -1) {
+            this.$set(this.activitiesList[index], 'isBooked', true);
+          }
+          return;
+        }
+
+        // 0.5. 先获取最新的活动信息，确保版本号是最新的
+        const latestActivity = await this.getLatestActivityInfo(activity.activityId);
+        if (!latestActivity) {
+          this.$message.error("获取活动信息失败，请刷新重试");
+          return;
+        }
+
+        // 1. 更新活动容量（使用最新的版本号）
+        await signUpCapacity(activity.activityId, latestActivity.version);
 
         // 2. 添加报名记录
         await addBooking({
           activityId: activity.activityId,
           studentId: this.$store.state.user.name,
+          bookAt: new Date().toISOString(),
+          status: "未提交"
         });
 
         // 3. 更新活动状态
         const updatedActivity = {
-          ...activity,
-          activityCapacity: Math.max(activity.activityCapacity - 1, 0),
-          version: activity.version + 1,
+          ...latestActivity,
+          activityCapacity: Math.max(latestActivity.activityCapacity - 1, 0),
+          version: latestActivity.version + 1,
           isBooked: true // 标记为已报名
         };
 
         // 4. 更新活动列表
         const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
         if (index !== -1) {
-          this.activitiesList.splice(index, 1, updatedActivity);
+          // 使用Vue.set确保响应式更新
+          this.$set(this.activitiesList, index, updatedActivity);
         }
 
+        // 5. 更新当前选中的活动状态（如果详情弹窗打开）
+        if (this.selectedActivity && this.selectedActivity.activityId === activity.activityId) {
+          this.selectedActivity = updatedActivity;
+        }
+
+        console.log('报名成功，更新后的活动状态:', updatedActivity);
+        console.log('活动列表中的对应项:', this.activitiesList[index]);
         this.$message.success("报名成功！");
+        
+        // 通知父组件刷新日历数据
+        this.$emit('booking-updated', {
+          activityId: activity.activityId,
+          isBooked: true,
+          activityCapacity: updatedActivity.activityCapacity
+        });
       } catch (error) {
         console.error("报名失败:", error);
         this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
@@ -686,33 +786,53 @@ export default {
     // 提交取消报名
     async submitCancelSignUp(activity) {
       try {
+        // 0. 先获取最新的活动信息，确保版本号是最新的
+        const latestActivity = await this.getLatestActivityInfo(activity.activityId);
+        if (!latestActivity) {
+          this.$message.error("获取活动信息失败，请刷新重试");
+          return;
+        }
+
         // 1. 删除报名记录
         await deleteBookingsByActivityAndStudent(
           activity.activityId, 
           this.$store.state.user.name
         );
 
-        // 2. 恢复活动容量
+        // 2. 恢复活动容量（使用最新的版本号）
         await cancelSignUpCapacity(
           activity.activityId,
-          activity.version
+          latestActivity.version
         );
 
         // 3. 更新活动状态
         const updatedActivity = {
-          ...activity,
-          activityCapacity: Math.min(activity.activityCapacity + 1, activity.activityTotalCapacity),
-          version: activity.version + 1,
+          ...latestActivity,
+          activityCapacity: Math.min(latestActivity.activityCapacity + 1, latestActivity.activityTotalCapacity),
+          version: latestActivity.version + 1,
           isBooked: false // 标记为未报名
         };
 
         // 4. 更新活动列表
         const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
         if (index !== -1) {
-          this.activitiesList.splice(index, 1, updatedActivity);
+          // 使用Vue.set确保响应式更新
+          this.$set(this.activitiesList, index, updatedActivity);
+        }
+
+        // 5. 更新当前选中的活动状态（如果详情弹窗打开）
+        if (this.selectedActivity && this.selectedActivity.activityId === activity.activityId) {
+          this.selectedActivity = updatedActivity;
         }
 
         this.$message.success("取消报名成功！");
+        
+        // 通知父组件刷新日历数据
+        this.$emit('booking-updated', {
+          activityId: activity.activityId,
+          isBooked: false,
+          activityCapacity: updatedActivity.activityCapacity
+        });
       } catch (error) {
         console.error("取消报名失败:", error);
         this.$message.error("取消报名失败: " + (error.msg || "请稍后重试"));
@@ -925,14 +1045,14 @@ export default {
 
   .el-dialog__header {
     background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-    color: white;
+  color: white;
     border-radius: 12px 12px 0 0;
     padding: 20px 24px;
 
     .el-dialog__title {
       font-size: 18px;
-      font-weight: 600;
-    }
+  font-weight: 600;
+}
 
     .el-dialog__close {
       color: white;
@@ -958,8 +1078,8 @@ export default {
 }
 
 .activity-detail {
-  .detail-header {
-    display: flex;
+.detail-header {
+  display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 20px;
@@ -985,15 +1105,15 @@ export default {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
     }
-  }
+}
 
-  .detail-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
     gap: 20px;
 
-    .detail-item {
-      display: flex;
+.detail-item {
+  display: flex;
       align-items: center;
       padding: 12px;
       background: rgba(255, 255, 255, 0.8);
@@ -1005,23 +1125,23 @@ export default {
         background: rgba(255, 255, 255, 0.9);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      }
+}
 
-      .detail-label {
+.detail-label {
         font-weight: 600;
         width: 120px;
         color: #495057;
-        display: flex;
-        align-items: center;
+  display: flex;
+  align-items: center;
         gap: 8px;
 
         i {
           color: #667eea;
           font-size: 16px;
         }
-      }
+}
 
-      .detail-value {
+.detail-value {
         flex: 1;
         font-weight: 500;
 
@@ -1055,22 +1175,22 @@ export default {
   .detail-section-content {
     margin: 20px 0;
 
-    .section-title {
-      display: flex;
-      align-items: center;
+.section-title {
+  display: flex;
+  align-items: center;
       color: #2c3e50;
       margin-bottom: 12px;
       font-weight: 600;
       font-size: 16px;
 
       i {
-        margin-right: 8px;
+  margin-right: 8px;
         color: #667eea;
         font-size: 18px;
       }
-    }
+}
 
-    .section-content {
+.section-content {
       line-height: 1.6;
       padding: 16px 20px;
       background: rgba(255, 255, 255, 0.8);
