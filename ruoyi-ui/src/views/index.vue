@@ -164,7 +164,7 @@
           <div class="section-content">{{ selectedActivity.notes }}</div>
         </div> -->
 
-        <!-- 报名/退掉按钮 -->
+        <!-- 报名/取消按钮 -->
         <div class="signup-status">
           <el-button
             type="primary"
@@ -289,7 +289,7 @@ export default {
         this.selectedActivity.activityCapacity <= 0;
     },
 
-    // 显示退掉按钮的条件
+    // 显示取消按钮的条件
     showCancelButton() {
       if (!this.selectedActivity) return false;
       const status = this.getActivityStatusText(this.selectedActivity);
@@ -598,7 +598,7 @@ export default {
       }
     },
 
-    // 处理退掉活动
+    // 处理取消活动
     handleCancelSignUp() {
       this.$confirm('确定要取消该活动吗？', '确认取消', {
         confirmButtonText: '确定',
@@ -611,7 +611,7 @@ export default {
       });
     },
 
-    // 提交退掉活动
+    // 提交取消活动
     async submitCancelSignUp() {
       try {
         // 0. 先获取最新的活动信息，确保版本号是最新的
@@ -649,8 +649,8 @@ export default {
           this.activityList.splice(index, 1, updatedActivity);
         }
 
-        this.$message.success("退掉活动成功！");
-        // 退掉成功后关闭弹窗
+        this.$message.success("取消活动成功！");
+        // 取消成功后关闭弹窗
         this.dialogVisible = false;
         
         // 如果当前在活动报名视图，刷新数据
@@ -659,8 +659,8 @@ export default {
         }
 
       } catch (error) {
-        console.error("退掉活动失败:", error);
-        this.$message.error("退掉活动失败: " + (error.msg || "请稍后重试"));
+        console.error("取消活动失败:", error);
+        this.$message.error("取消活动失败: " + (error.msg || "请稍后重试"));
       }
     },
 

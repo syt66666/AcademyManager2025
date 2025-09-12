@@ -83,7 +83,7 @@
           </template>
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
-        <el-table-column label="组织单位" align="center" prop="organizer" />
+        <!-- <el-table-column label="组织单位" align="center" prop="organizer" /> -->
         <el-table-column label="活动开始时间" align="center" prop="startTime">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -165,9 +165,9 @@
             <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
               {{ getActivityStatusText(selectedActivity) }}
           </el-tag>
-            <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
+            <!-- <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
               {{ getSignStatusText(selectedActivity) }}
-          </el-tag>
+          </el-tag> -->
           </div>
         </div>
 
@@ -385,6 +385,9 @@ export default {
           filteredActivities = this.filterAvailableActivities(filteredActivities);
         }
         
+        // 按照活动状态和活动开始时间排序
+        filteredActivities = this.sortActivitiesByStatusAndTime(filteredActivities);
+        
         // 手动分页
         const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
         const endIndex = startIndex + this.queryParams.pageSize;
@@ -447,6 +450,36 @@ export default {
       
       console.log(`过滤结果: 总共${activities.length}个活动，过滤后${filteredActivities.length}个活动`);
       return filteredActivities;
+    },
+
+    // 按照活动状态和活动开始时间排序
+    sortActivitiesByStatusAndTime(activities) {
+      // 定义活动状态优先级：报名进行中 > 报名未开始 > 报名已截止 > 活动进行中 > 活动已结束
+      const statusPriority = {
+        '报名进行中': 1,
+        '报名未开始': 2,
+        '报名已截止': 3,
+        '活动进行中': 4,
+        '活动已结束': 5
+      };
+
+      return activities.sort((a, b) => {
+        // 获取活动状态
+        const statusA = this.getActivityStatusText(a);
+        const statusB = this.getActivityStatusText(b);
+        
+        // 获取状态优先级
+        const priorityA = statusPriority[statusA] || 999;
+        const priorityB = statusPriority[statusB] || 999;
+        
+        // 如果优先级相同，按活动开始时间排序（最早的在前面）
+        if (priorityA === priorityB) {
+          return new Date(a.startTime) - new Date(b.startTime);
+        }
+        
+        // 按优先级排序
+        return priorityA - priorityB;
+      });
     },
 
     // 过滤可报名活动：在可报名时间内且人数未满
