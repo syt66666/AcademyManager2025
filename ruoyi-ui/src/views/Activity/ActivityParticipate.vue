@@ -6,14 +6,14 @@
         <i class="el-icon-data-analysis"></i>
         <span>活动统计</span>
       </div>
-
+      
       <div class="stats-content">
         <!-- 左侧状态统计 -->
         <div class="status-stats">
           <h3>活动状态筛选</h3>
           <div class="status-items">
-            <div
-              class="status-item"
+            <div 
+              class="status-item" 
               :class="{ active: selectedStatus === '未提交' }"
               @click="filterByStatus('未提交')"
             >
@@ -25,9 +25,9 @@
                 <div class="status-label">未提交</div>
               </div>
             </div>
-
-            <div
-              class="status-item"
+            
+            <div 
+              class="status-item" 
               :class="{ active: selectedStatus === '未通过' }"
               @click="filterByStatus('未通过')"
             >
@@ -39,9 +39,9 @@
                 <div class="status-label">未通过</div>
               </div>
             </div>
-
-            <div
-              class="status-item"
+            
+            <div 
+              class="status-item" 
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -53,9 +53,9 @@
                 <div class="status-label">已通过</div>
               </div>
             </div>
-
-            <div
-              class="status-item clear-filter"
+            
+            <div 
+              class="status-item clear-filter" 
               :class="{ active: selectedStatus === null }"
               @click="clearStatusFilter"
             >
@@ -69,21 +69,21 @@
             </div>
           </div>
         </div>
-
+        
         <!-- 右侧进度条 -->
         <div class="progress-stats">
           <h3>活动完成进度</h3>
           <div class="progress-items">
-            <div
-              v-for="(progress, type) in activityProgress"
+            <div 
+              v-for="(progress, type) in activityProgress" 
               :key="type"
               class="progress-item"
             >
               <div class="progress-label">{{ getActivityTypeName(type) }}</div>
               <div class="progress-bar-container">
                 <div class="progress-bar">
-                  <div
-                    class="progress-fill"
+                  <div 
+                    class="progress-fill" 
                     :style="{ width: progress.percentage + '%' }"
                     :class="getProgressBarClass(progress.percentage, type)"
                   ></div>
@@ -114,8 +114,8 @@
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
-            <span
-              class="index-badge"
+            <span 
+              class="index-badge" 
               :class="{ 'rejected-badge': scope.row.status === '未通过' }"
             >
               {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
@@ -169,17 +169,17 @@
                 class="status-tag clickable-tag"
                 @click="openUploadDialog(scope.row)"
               >
-                <i class="el-icon-refresh"></i> 重新提交
+                重新提交
               </el-tag>
               <!-- 未审核状态 - 添加点击功能 -->
               <el-tag
                 v-if="scope.row.status === '未审核'"
                 type="warning"
                 effect="light"
-                class="status-tag clickable-tag"
+                class="clickable-tag"
                 @click="openUploadDialog(scope.row)"
               >
-                <i class="el-icon-edit"></i> 未审核
+                未审核
               </el-tag>
               <!-- 已通过状态 - 添加点击功能 -->
               <el-tag
@@ -189,7 +189,7 @@
                 class="status-tag clickable-tag"
                 @click="openUploadDialog(scope.row)"
               >
-                <i class="el-icon-view"></i> 已通过
+                已通过
               </el-tag>
             </template>
           </template>
@@ -267,6 +267,7 @@
       <!-- 图片上传区域 - 只在非只读模式下显示 -->
       <div v-if="!isViewOnly" class="section">
         <h3>上传图片证明材料</h3>
+        <div class="image-upload-container">
         <el-upload
           :action="uploadUrl"
           list-type="picture-card"
@@ -279,45 +280,65 @@
           accept=".jpg,.jpeg,.png,.gif"
           :before-upload="beforeImageUpload"
           :headers="headers"
-          :auto-upload="true"
+            :auto-upload="true"
+            class="image-upload"
         >
-          <i class="el-icon-plus"></i>
+            <div class="upload-add-card">
+              <i class="el-icon-plus upload-add-icon"></i>
+              <div class="upload-add-text">添加图片</div>
+            </div>
         </el-upload>
-        <div class="el-upload__tip">最多可上传5张图片，每张大小不超过2MB</div>
+          <div class="upload-tip">
+            <i class="el-icon-info"></i>
+            最多可上传5张图片，每张大小不超过2MB，支持JPG、PNG、GIF格式
+          </div>
+        </div>
       </div>
 
       <!-- 图片展示区域 - 只在只读模式下显示 -->
       <div v-if="isViewOnly" class="section">
-        <h3>图片证明材料</h3>
-        <div v-if="imageFiles.length === 0" class="no-data">
-          <i class="el-icon-picture-outline"></i>
-          <p>暂无图片材料</p>
-        </div>
-        <div v-else class="image-preview-list">
-          <div v-for="(file, index) in imageFiles" :key="index" class="image-preview-item">
-            <div class="image-container">
-              <img :src="getPreviewImageUrl(file)" :alt="file.name" @click="handlePicturePreview(file)" class="preview-image">
-              <div class="image-overlay">
-                <div class="image-actions">
-                  <el-button size="mini" icon="el-icon-view" @click="handlePicturePreview(file)">预览</el-button>
-                  <el-button
-                    size="mini"
-                    icon="el-icon-download"
-                    @click="downloadFileReliably(file)"
-                    :loading="file.downloading"
-                  >下载</el-button>
-                </div>
-              </div>
+        <h3>图片材料</h3>
+        <div v-if="imageFiles && imageFiles.length" class="proof-grid">
+          <div
+            v-for="(file, idx) in imageFiles"
+            :key="idx"
+            class="proof-card"
+          >
+            <el-image
+              :src="getPreviewImageUrl(file)"
+              fit="cover"
+              class="proof-thumb"
+              @click="handlePicturePreview(file)"
+            />
+            <div class="proof-overlay">
+              <el-button
+                size="mini"
+                circle
+                icon="el-icon-view"
+                @click.stop="handlePicturePreview(file)"
+              />
+              <el-button
+                size="mini"
+                circle
+                icon="el-icon-download"
+                @click.stop="downloadFileReliably(file)"
+                :loading="file.downloading"
+              />
             </div>
-            <div class="image-name">{{ file.name }}</div>
+          </div>
+          <div class="proof-actions">
+            <el-button size="small" icon="el-icon-view" @click="handlePicturePreview(imageFiles[0])">预览全部</el-button>
+            <el-button size="small" icon="el-icon-download" type="primary" @click="downloadAllImages">全部下载</el-button>
           </div>
         </div>
+        <div v-else class="empty-tip">暂无图片材料</div>
       </div>
 
 
       <!-- 文档上传区域 - 只在非只读模式下显示 -->
       <div v-if="!isViewOnly" class="section">
         <h3>上传文档材料</h3>
+        <div class="upload-container">
         <el-upload
           :action="uploadUrl"
           :file-list="docFiles"
@@ -328,42 +349,72 @@
           :before-upload="beforeDocUpload"
           :headers="headers"
           :data="{ filePath: 'bookingImages' }"
-          :auto-upload="true"
-        >
-          <el-button size="small" type="primary">上传文件</el-button>
-          <div slot="tip" class="el-upload__tip">
+            :auto-upload="true"
+            drag
+            class="document-upload"
+            :show-file-list="false"
+          >
+            <div class="upload-drag-area">
+              <i class="el-icon-upload upload-icon"></i>
+              <div class="upload-text">
+                <p class="upload-main-text">将PDF文件拖拽到此处，或</p>
+                <p class="upload-sub-text">点击选择文件</p>
+              </div>
+            </div>
+            <div slot="tip" class="upload-tip">
+              <i class="el-icon-info"></i>
             仅支持上传PDF格式文档，大小不超过10MB
           </div>
         </el-upload>
-      </div>
-
-      <!-- 文档展示区域 - 只在只读模式下显示 -->
-      <div v-if="isViewOnly" class="section">
-        <h3>文档材料</h3>
-        <div v-if="docFiles.length === 0" class="no-data">
-          <i class="el-icon-document"></i>
-          <p>暂无文档材料</p>
-        </div>
-        <div v-else>
-          <div v-for="(file, index) in docFiles" :key="index" class="readonly-file-item">
-            <i class="el-icon-document readonly-file-icon"></i>
-            <span class="readonly-file-name">{{ file.name }}</span>
-            <div class="readonly-file-actions">
-              <el-button size="mini" icon="el-icon-view" @click="handleDocumentPreview(file)">预览</el-button>
-              <el-button
-                size="mini"
-                icon="el-icon-download"
-                @click="downloadFileReliably(file)"
-                :loading="file.downloading"
-              >下载</el-button>
+          
+          <!-- 自定义文件列表显示 -->
+          <div v-if="docFiles && docFiles.length > 0" class="custom-file-list">
+            <div v-for="(file, index) in docFiles" :key="index" class="custom-file-item">
+              <i class="el-icon-document file-icon"></i>
+              <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
+              <el-button 
+                type="text" 
+                icon="el-icon-delete" 
+                class="remove-btn"
+                @click="handleRemoveDoc(file)"
+              ></el-button>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- 文档展示区域 - 只在只读模式下显示 -->
+      <div v-if="isViewOnly" class="section">
+        <h3>文档材料</h3>
+        <div v-if="docFiles && docFiles.length" class="doc-card">
+          <div class="doc-left">
+            <i :class="['file-icon', getDocIconClass(docFiles[0].name)]"></i>
+            <div class="file-meta">
+              <div class="file-name" :title="docFiles[0].name">{{ docFiles[0].name }}</div>
+              <el-tag size="mini" type="info">{{ getFileType(docFiles[0].name).toUpperCase() }}</el-tag>
+            </div>
+          </div>
+          <div class="doc-actions">
+            <el-button size="mini" icon="el-icon-view" @click="handleDocumentPreview(docFiles[0])">预览</el-button>
+            <el-button size="mini" icon="el-icon-download" type="primary" @click="downloadFileReliably(docFiles[0])" :loading="docFiles[0].downloading">下载</el-button>
+          </div>
+        </div>
+        <div v-else class="empty-tip">暂无文档材料</div>
+      </div>
+
 
       <!-- 图片预览对话框 -->
-      <el-dialog :visible.sync="previewVisible" title="图片预览" width="70%" top="5vh" class="preview-dialog">
+      <el-dialog 
+        :visible.sync="previewVisible" 
+        title="图片预览" 
+        width="70%" 
+        top="5vh" 
+        class="preview-dialog"
+        :modal="true"
+        :close-on-click-modal="true"
+        :close-on-press-escape="true"
+        append-to-body
+      >
         <div class="preview-content">
           <div class="preview-image-container">
             <img
@@ -383,7 +434,6 @@
 
             <span class="preview-count">
           {{ currentPreviewIndex + 1 }} / {{ previewImages.length }}
-          <span class="preview-name">({{ currentPreviewName }})</span>
         </span>
 
             <el-button
@@ -423,6 +473,10 @@
         title="学生总结预览"
         width="80%"
         class="preview-dialog native-pdf-preview"
+        :modal="true"
+        :close-on-click-modal="true"
+        :close-on-press-escape="true"
+        append-to-body
       >
         <div v-if="currentDocument.type === 'pdf'" class="preview-container">
           <iframe
@@ -443,11 +497,11 @@
 
       <!-- 只在未提交和未通过状态下显示底部按钮 -->
       <span slot="footer" class="dialog-footer" v-if="showFooterButtons">
-    <el-button @click="uploadVisible = false">取消</el-button>
+        <el-button @click="uploadVisible = false">取消</el-button>
     <el-button type="primary" @click="submitProof">
       {{ currentBooking && currentBooking.status === '未通过' ? '重新提交' : '确认提交' }}
     </el-button>
-  </span>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -490,7 +544,7 @@ export default {
         pageSize: 10,
         studentId: this.$store.state.user.name
       },
-
+      
       // 统计相关数据
       selectedStatus: null, // 当前选中的状态筛选
       allActivitiesList: [], // 所有活动数据，用于统计计算
@@ -536,7 +590,7 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
+        '2': '知识融合与思维进阶活动类', 
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
@@ -550,7 +604,7 @@ export default {
       const activityEndTime = new Date(endTime);
       return now > activityEndTime;
     },
-
+    
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -632,12 +686,12 @@ export default {
         data.proof.forEach(fileName => {
           if (fileName) {
             const fullUrl = this.getFileFullUrl(fileName);
-            this.imageFiles.push({
-              name: this.extractFileName(fileName),
+          this.imageFiles.push({
+            name: this.extractFileName(fileName),
               url: fullUrl,
               isOld: true,
               downloading: false // 添加下载状态
-            });
+          });
           }
         });
       }
@@ -704,6 +758,7 @@ export default {
 
 // 处理图片预览
     handlePicturePreview(file) {
+      console.log('=== 开始预览图片 ===');
       console.log('预览图片:', file);
 
       // 构建预览图片数组，包含URL和文件名
@@ -731,7 +786,16 @@ export default {
       this.currentPreviewIndex = currentIndex >= 0 ? currentIndex : 0;
       this.updatePreviewImage();
 
+      console.log('设置预览状态:', {
+        previewVisible: this.previewVisible,
+        currentPreviewIndex: this.currentPreviewIndex,
+        currentPreviewImage: this.currentPreviewImage,
+        currentPreviewName: this.currentPreviewName
+      });
+
       this.previewVisible = true;
+      
+      console.log('预览对话框应该已显示');
     },
 
     // 更新当前预览图片
@@ -765,6 +829,45 @@ export default {
         this.currentPreviewIndex = index;
         this.updatePreviewImage();
       }
+    },
+
+    // 获取文件类型
+    getFileType(fileName) {
+      if (!fileName) return 'other';
+      const extension = fileName.split('.').pop().toLowerCase();
+      return {
+        pdf: 'pdf',
+        docx: 'docx',
+        doc: 'doc'
+      }[extension] || 'other';
+    },
+
+    // 获取文档图标类
+    getDocIconClass(fileName) {
+      const type = this.getFileType(fileName);
+      const map = { pdf: 'icon-pdf', docx: 'icon-doc', doc: 'icon-doc', other: 'icon-file' };
+      return map[type] || 'icon-file';
+    },
+
+    // 下载所有图片
+    downloadAllImages() {
+      if (!this.imageFiles || this.imageFiles.length === 0) {
+        this.$message.warning('没有可下载的图片');
+        return;
+      }
+      
+      this.imageFiles.forEach(file => {
+        this.downloadFileReliably(file);
+      });
+    },
+
+    // 获取文件名（不包含路径）
+    getFileNameOnly(fileName) {
+      if (!fileName) return '未知文件';
+      
+      // 如果包含路径分隔符，取最后一部分
+      const parts = fileName.split('/');
+      return parts[parts.length - 1];
     },
 
     // 从URL中提取文件名
@@ -950,15 +1053,31 @@ export default {
 
     // 移除图片
     handleRemoveImage(file, fileList) {
-      // 确保文件列表被正确更新
-      this.imageFiles = [...fileList];
+      if (fileList) {
+        // Element UI 上传组件调用时，fileList 参数存在
+        this.imageFiles = [...fileList];
+      } else {
+        // 手动删除时，从数组中移除文件
+        const index = this.imageFiles.findIndex(f => f.uid === file.uid || f.name === file.name);
+        if (index > -1) {
+          this.imageFiles.splice(index, 1);
+        }
+      }
       this.$forceUpdate(); // 强制更新视图
     },
 
     // 移除文档
     handleRemoveDoc(file, fileList) {
-      // 确保文件列表被正确更新
-      this.docFiles = [...fileList];
+      if (fileList) {
+        // Element UI 上传组件调用时，fileList 参数存在
+        this.docFiles = [...fileList];
+      } else {
+        // 自定义删除按钮调用时，手动从数组中移除文件
+        const index = this.docFiles.findIndex(f => f.uid === file.uid || f.name === file.name);
+        if (index > -1) {
+          this.docFiles.splice(index, 1);
+        }
+      }
       this.$forceUpdate(); // 强制更新视图
     },
 
@@ -969,7 +1088,7 @@ export default {
         pageSize: 1000, // 获取足够多的数据
         studentId: this.$store.state.user.name
       };
-
+      
       listBookingsWithActivity(statsParams).then(response => {
         this.allActivitiesList = response.rows || [];
         // 更新统计数据
@@ -1006,12 +1125,12 @@ export default {
         // 获取状态优先级
         const priorityA = statusPriority[a.status] || 999;
         const priorityB = statusPriority[b.status] || 999;
-
+        
         // 如果优先级相同，按活动开始时间排序（最新的在前）
         if (priorityA === priorityB) {
           return new Date(b.startTime) - new Date(a.startTime);
         }
-
+        
         // 按优先级排序
         return priorityA - priorityB;
       });
@@ -1075,14 +1194,14 @@ export default {
     filterByStatus(status) {
       this.selectedStatus = status;
       this.queryParams.pageNum = 1;
-
+      
       // 添加状态筛选参数
       if (status) {
         this.queryParams.status = status;
       } else {
         delete this.queryParams.status;
       }
-
+      
       this.getList();
     },
 
@@ -1932,22 +2051,22 @@ export default {
     flex-direction: column;
     gap: 30px;
   }
-
+  
   .status-items {
     justify-content: center;
   }
-
+  
   .progress-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-
+  
   .progress-label {
     min-width: auto;
     width: 100%;
   }
-
+  
   .progress-bar-container {
     width: 100%;
   }
@@ -1958,18 +2077,18 @@ export default {
     flex-direction: column;
     align-items: stretch;
   }
-
+  
   .status-item {
     min-width: auto;
     justify-content: center;
   }
-
+  
   .card-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-
+  
   .record-count {
     margin-left: 0;
   }
@@ -2101,8 +2220,342 @@ export default {
   transform: scale(1.1);
 }
 /* 调整预览对话框样式 */
+.preview-dialog {
+  z-index: 4000 !important;
+}
+
+.preview-dialog .el-dialog {
+  z-index: 4001 !important;
+}
+
+.preview-dialog .el-dialog__wrapper {
+  z-index: 4000 !important;
+}
+
 .preview-dialog .el-dialog__body {
   padding: 20px;
+}
+
+/* 审核界面样式 - 与ActivityAudit.vue保持一致 */
+.section {
+  margin-bottom: 30px;
+  padding: 15px;
+  background: #f9fafc;
+  border-radius: 8px;
+}
+
+.section h3 {
+  margin-bottom: 15px;
+  color: #409EFF;
+  font-weight: 600;
+}
+
+.proof-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.proof-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+  width: 150px;
+  height: 150px;
+  background: #fff;
+}
+
+.proof-thumb {
+  width: 100%;
+  height: 100%;
+}
+
+.proof-overlay {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: flex;
+  gap: 6px;
+}
+
+.proof-actions {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.empty-tip {
+  color: #909399;
+  text-align: center;
+  padding: 20px;
+}
+
+/* 文档卡片样式 */
+.doc-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.doc-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+}
+
+.icon-pdf { background: #f56c6c; }
+.icon-doc { background: #409EFF; }
+.icon-file { background: #909399; }
+
+.file-meta .file-name {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 美化上传区域样式 */
+.upload-container {
+  margin-top: 15px;
+}
+
+.document-upload {
+  width: 100%;
+}
+
+.upload-drag-area {
+  padding: 20px;
+  text-align: center;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.upload-drag-area:hover {
+  border-color: #409EFF;
+  background: #f0f9ff;
+}
+
+.upload-icon {
+  font-size: 32px;
+  color: #c0c4cc;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.upload-text {
+  color: #606266;
+}
+
+.upload-main-text {
+  font-size: 14px;
+  margin: 0 0 6px 0;
+  font-weight: 500;
+}
+
+.upload-sub-text {
+  font-size: 12px;
+  margin: 0;
+  color: #409EFF;
+}
+
+.upload-tip {
+  margin-top: 15px;
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border: 1px solid #b3d8ff;
+  border-radius: 6px;
+  color: #409EFF;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-tip i {
+  font-size: 16px;
+}
+
+/* 图片上传美化 */
+.image-upload-container {
+  margin-top: 15px;
+}
+
+.image-upload .el-upload--picture-card {
+  width: 120px;
+  height: 120px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.image-upload .el-upload--picture-card:hover {
+  border-color: #409EFF;
+  background: #f0f9ff;
+}
+
+/* 移除Element UI默认的padding和margin */
+.image-upload .el-upload--picture-card * {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.upload-add-card {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  color: #606266;
+  position: relative;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.upload-add-icon {
+  font-size: 28px;
+  margin-bottom: 6px !important;
+  color: #c0c4cc;
+  display: block;
+  line-height: 1;
+  margin-top: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+.upload-add-text {
+  font-size: 12px;
+  color: #909399;
+  display: block;
+  line-height: 1;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 已上传文件卡片美化 */
+.image-upload .el-upload-list--picture-card .el-upload-list__item {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+  overflow: hidden;
+}
+
+.image-upload .el-upload-list--picture-card .el-upload-list__item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 文档上传列表美化 */
+.document-upload .el-upload-list__item {
+  margin-top: 15px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.document-upload .el-upload-list__item:hover {
+  border-color: #409EFF;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+}
+
+.document-upload .el-upload-list__item .el-icon-document {
+  color: #f56c6c;
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.document-upload .el-upload-list__item .el-upload-list__item-name {
+  color: #303133;
+  font-weight: 500;
+}
+
+.document-upload .el-upload-list__item .el-upload-list__item-status-label {
+  background: #67c23a;
+  border-radius: 50%;
+}
+
+/* 自定义文件列表样式 */
+.custom-file-list {
+  margin-top: 15px;
+}
+
+.custom-file-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+}
+
+.custom-file-item:hover {
+  border-color: #409EFF;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
+}
+
+.custom-file-item .file-icon {
+  color: #f56c6c;
+  font-size: 20px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.custom-file-item .file-name {
+  flex: 1;
+  color: #303133;
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-file-item .remove-btn {
+  color: #f56c6c;
+  padding: 0;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.custom-file-item .remove-btn:hover {
+  color: #f78989;
 }
 .preview-controls {
   display: flex;

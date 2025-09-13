@@ -6,15 +6,7 @@
       <el-tab-pane label="日历视图" name="calendar">
         <div class="calendar-toolbar">
           <div class="toolbar-left">
-            <el-select v-model="selectedOrganizer" clearable placeholder="按组织单位筛选" size="small" class="organizer-select" @change="onOrganizerChange">
-              <el-option :label="'全部组织单位'" :value="''" />
-              <el-option
-                v-for="org in organizerOptions"
-                :key="org"
-                :label="org"
-                :value="org"
-              />
-            </el-select>
+            <span class="academy-info">当前书院：{{ currentAcademy || '加载中...' }}</span>
           </div>
         </div>
         <el-calendar v-model="calendarDate" class="calendar-view" style="--calendar-day-height: 120px;">
@@ -230,6 +222,7 @@
 <script>
 import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities } from "@/api/system/activities";
 import {addBooking, checkBookingSimple, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
+import { getStudent } from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
 import ActivityBooking from "./Activity/ActivityBooking.vue";
 
@@ -282,18 +275,11 @@ export default {
         studentId: [{ required: true, message: '请输入学号', trigger: 'blur' }],
         phone: [{ required: true, message: '请输入联系电话', trigger: 'blur' }]
       },
-      // organizer 筛选
-      selectedOrganizer: '',
+      // 当前学生书院信息
+      currentAcademy: '',
     };
   },
   computed: {
-    organizerOptions() {
-      const set = new Set();
-      this.activityList.forEach(a => {
-        if (a && a.organizer) set.add(a.organizer);
-      });
-      return Array.from(set);
-    },
     currentMonthTitle() {
       const d = new Date(this.calendarDate);
       return `${d.getFullYear()}年${(d.getMonth() + 1).toString().padStart(2, '0')}月`;
@@ -324,7 +310,7 @@ export default {
 
   },
   created() {
-    this.fetchActivities();
+    this.getCurrentStudentInfo();
   },
   mounted() {
     this.hideEmptyCalendarRows();
@@ -351,11 +337,29 @@ export default {
     }
   },
   methods: {
-    onOrganizerChange() {
-      this.$nextTick(() => {
-        this.hideEmptyCalendarRows();
-        this.forceCalendarDayHeight();
-      });
+    // 获取当前学生信息
+    async getCurrentStudentInfo() {
+      try {
+        const response = await getStudent(this.$store.state.user.name);
+        console.log('学生信息API响应:', response);
+        
+        if (response && response.studentInfo) {
+          this.currentAcademy = response.studentInfo.academy;
+          console.log('当前学生书院:', this.currentAcademy);
+          // 获取学生信息后，根据书院获取活动
+          this.fetchActivities();
+        } else {
+          console.error('获取学生信息失败，响应中没有studentInfo:', response);
+          this.currentAcademy = '未知';
+          // 即使获取失败，也尝试获取活动
+          this.fetchActivities();
+        }
+      } catch (error) {
+        console.error('获取学生信息异常:', error);
+        this.currentAcademy = '未知';
+        // 即使获取失败，也尝试获取活动
+        this.fetchActivities();
+      }
     },
     prevMonth() {
       const d = new Date(this.calendarDate);
@@ -383,7 +387,13 @@ export default {
     async fetchActivities() {
       this.loading = true;
       try {
-        const response = await listActivities(this.queryParams);
+        // 根据当前学生的书院过滤活动
+        const params = {
+          ...this.queryParams,
+          organizer: this.currentAcademy // 只获取当前学生书院的活动
+        };
+        
+        const response = await listActivities(params);
         if (response.code === 200) {
           this.activityList = response.rows;
 
@@ -426,14 +436,10 @@ export default {
 
     // 获取日期内的事件
     getDateEvents(dateString) {
-      const selected = (this.selectedOrganizer || '').trim();
       return this.activityList.filter(activity => {
         // 只显示活动开始日期当天的活动
         const activityStartDate = this.formatDate(activity.startTime);
-        if (activityStartDate !== dateString) return false;
-        if (!selected) return true; // 为空表示“全部组织者”
-        const org = (activity.organizer || '').trim();
-        return org === selected;
+        return activityStartDate === dateString;
       });
     },
     // 添加日期格式化方法
@@ -548,6 +554,8 @@ export default {
     async getLatestActivityInfo(activityId) {
       try {
         const response = await getActivities(activityId);
+        console.log('获取最新活动信息响应:', response);
+        console.log('活动组织者:', response.data?.organizer);
         return response.data;
       } catch (error) {
         console.error("获取活动信息失败:", error);
@@ -578,12 +586,16 @@ export default {
         await signUpCapacity(this.selectedActivity.activityId, latestActivity.version);
 
         // 2. 添加报名记录
-        await addBooking({
+        const bookingData = {
           activityId: this.selectedActivity.activityId,
           studentId: this.$store.state.user.name,
           bookAt: new Date().toISOString(),
           status: "未提交"
-        });
+        };
+        console.log('报名数据:', bookingData);
+        console.log('当前活动信息:', this.selectedActivity);
+        console.log('最新活动信息:', latestActivity);
+        await addBooking(bookingData);
 
         // 3. 更新活动状态
         const updatedActivity = {
@@ -1553,6 +1565,17 @@ export default {
 /* 标签激活时的轻微放大反馈 */
 .view-tabs .el-tabs__item.is-active {
   transform: translateY(-1px);
+}
+
+/* 书院信息样式 */
+.academy-info {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+  padding: 8px 16px;
+  background: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
 }
 
 /* 响应式：较小屏幕下信息布局更紧凑 */

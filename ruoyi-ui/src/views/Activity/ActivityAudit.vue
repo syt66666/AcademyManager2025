@@ -263,9 +263,7 @@
               <span class="divider">|</span>
               <span>活动：{{ currentBooking.activityName || '-' }}</span>
               <span class="divider">|</span>
-              <span>类型：{{ currentBooking.activityType || '-' }}</span>
-              <span class="divider">|</span>
-              <span>单位：{{ currentBooking.organizer || '-' }}</span>
+              <span>类型：{{ getActivityTypeName(currentBooking.activityType) || '-' }}</span>
             </div>
           </div>
           <div class="header-right">
@@ -972,13 +970,67 @@ export default {
     },
 
     // 下载单个文件
-    downloadSingleFile(url) {
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = url.split('/').pop();
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    async downloadSingleFile(url) {
+      try {
+        // 从URL中提取文件名
+        const fileName = url.split('/').pop() || 'download';
+        
+        // 方法1: 使用fetch API下载
+        try {
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${getToken()}`
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('网络响应不正常');
+          }
+          
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          
+          // 清理
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 100);
+          
+          this.$message.success('文件下载成功');
+          return;
+        } catch (fetchError) {
+          console.log('Fetch下载失败，尝试备用方法:', fetchError);
+        }
+        
+        // 方法2: 直接创建链接下载（备用）
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(a);
+        }, 100);
+        
+        this.$message.info('文件下载已开始');
+        
+      } catch (error) {
+        console.error('文件下载失败:', error);
+        this.$message.error(`下载失败: ${error.message || '请稍后重试'}`);
+        
+        // 最终备用方案：在新窗口打开
+        window.open(url, '_blank');
+      }
     },
 
     // 获取带认证的PDF URL
