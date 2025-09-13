@@ -554,6 +554,8 @@ export default {
     async getLatestActivityInfo(activityId) {
       try {
         const response = await getActivities(activityId);
+        console.log('获取最新活动信息响应:', response);
+        console.log('活动组织者:', response.data?.organizer);
         return response.data;
       } catch (error) {
         console.error("获取活动信息失败:", error);
@@ -584,12 +586,16 @@ export default {
         await signUpCapacity(this.selectedActivity.activityId, latestActivity.version);
 
         // 2. 添加报名记录
-        await addBooking({
+        const bookingData = {
           activityId: this.selectedActivity.activityId,
           studentId: this.$store.state.user.name,
           bookAt: new Date().toISOString(),
           status: "未提交"
-        });
+        };
+        console.log('报名数据:', bookingData);
+        console.log('当前活动信息:', this.selectedActivity);
+        console.log('最新活动信息:', latestActivity);
+        await addBooking(bookingData);
 
         // 3. 更新活动状态
         const updatedActivity = {

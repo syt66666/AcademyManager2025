@@ -165,9 +165,9 @@
             <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
               {{ getActivityStatusText(selectedActivity) }}
           </el-tag>
-            <!-- <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
+            <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
               {{ getSignStatusText(selectedActivity) }}
-          </el-tag> -->
+          </el-tag>
           </div>
         </div>
 
