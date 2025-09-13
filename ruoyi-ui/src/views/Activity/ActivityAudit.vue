@@ -913,7 +913,7 @@ export default {
               timeout: 30000
             });
           }
-
+          
           const result = await this.parseDocx(response.data);
           this.docxContent = result.html;
         }
@@ -1036,18 +1036,18 @@ export default {
     // 获取带认证的PDF URL
     getPdfUrlWithAuth(url) {
       const token = getToken();
-
+      
       // 检测是否为生产环境（服务器部署）
-      const isProduction = window.location.hostname !== 'localhost' &&
+      const isProduction = window.location.hostname !== 'localhost' && 
                           window.location.hostname !== '127.0.0.1' &&
                           !window.location.hostname.includes('192.168.');
-
+      
       console.log('环境检测:', {
         hostname: window.location.hostname,
         isProduction: isProduction,
         hasToken: !!token
       });
-
+      
       if (isProduction && token) {
         // 生产环境：使用文件访问接口
         try {
@@ -1059,7 +1059,7 @@ export default {
           console.warn('文件访问接口构建失败，回退到原始方式:', error);
         }
       }
-
+      
       // 本地开发环境或回退方案：使用原始URL
       const fallbackUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
       console.log('使用原始URL:', fallbackUrl);
