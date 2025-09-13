@@ -40,10 +40,10 @@
           </el-form-item> -->
           <el-form-item label="活动类型" prop="activityType">
             <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-              <el-option 
-                v-for="type in predefinedActivityTypes" 
-                :key="type.value" 
-                :label="type.label" 
+              <el-option
+                v-for="type in predefinedActivityTypes"
+                :key="type.value"
+                :label="type.label"
                 :value="type.value"
               />
             </el-select>
@@ -110,132 +110,132 @@
         <span>活动列表</span>
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
-      
+
       <!-- 表格美化 -->
       <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
-      <el-table-column type="selection" width="45" align="center"/>
-      <el-table-column label="序号" width="80" align="center">
-        <template v-slot="scope">
+        <el-table-column type="selection" width="45" align="center"/>
+        <el-table-column label="序号" width="80" align="center">
+          <template v-slot="scope">
           <span class="index-badge">
             {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
           </span>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动名称" align="center" prop="activityName" width="180">
-        <template slot-scope="scope">
-          <div class="activity-name">{{ scope.row.activityName }}</div>
-        </template>
-      </el-table-column>
-      <el-table-column label="活动类型" align="center" prop="activityType" width="200">
-        <template slot-scope="scope">
-          <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-            {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
-      <el-table-column label="时间安排" align="center" min-width="280">
-        <template slot-scope="scope">
-          <div class="time-schedule">
-            <!-- 报名时间 -->
-            <div class="time-section signup-time">
-              <div class="time-header">
-                <i class="el-icon-user"></i>
-                <span class="time-label">报名时间</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动名称" align="center" prop="activityName" width="180">
+          <template slot-scope="scope">
+            <div class="activity-name">{{ scope.row.activityName }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
+          <template slot-scope="scope">
+            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
+              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
+        <el-table-column label="时间安排" align="center" min-width="280">
+          <template slot-scope="scope">
+            <div class="time-schedule">
+              <!-- 报名时间 -->
+              <div class="time-section signup-time">
+                <div class="time-header">
+                  <i class="el-icon-user"></i>
+                  <span class="time-label">报名时间</span>
+                </div>
+                <div class="time-content">
+                  <div class="time-item">
+                    <span class="time-start">{{ formatDateTime(scope.row.activityStart) }}</span>
+                    <span class="time-separator">至</span>
+                    <span class="time-end">{{ formatDateTime(scope.row.activityDeadline) }}</span>
+                  </div>
+                </div>
               </div>
-              <div class="time-content">
-                <div class="time-item">
-                  <span class="time-start">{{ formatDateTime(scope.row.activityStart) }}</span>
-                  <span class="time-separator">至</span>
-                  <span class="time-end">{{ formatDateTime(scope.row.activityDeadline) }}</span>
+
+              <!-- 活动时间 -->
+              <div class="time-section activity-time">
+                <div class="time-header">
+                  <i class="el-icon-date"></i>
+                  <span class="time-label">活动时间</span>
+                </div>
+                <div class="time-content">
+                  <div class="time-item">
+                    <span class="time-start">{{ formatDateTime(scope.row.startTime) }}</span>
+                    <span class="time-separator">至</span>
+                    <span class="time-end">{{ formatDateTime(scope.row.endTime) }}</span>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <!-- 活动时间 -->
-            <div class="time-section activity-time">
-              <div class="time-header">
-                <i class="el-icon-date"></i>
-                <span class="time-label">活动时间</span>
-              </div>
-              <div class="time-content">
-                <div class="time-item">
-                  <span class="time-start">{{ formatDateTime(scope.row.startTime) }}</span>
-                  <span class="time-separator">至</span>
-                  <span class="time-end">{{ formatDateTime(scope.row.endTime) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </template>
-      </el-table-column>
+          </template>
+        </el-table-column>
 
-      <!-- 活动状态列 -->
-      <el-table-column label="活动状态" align="center" width="100">
-        <template slot-scope="scope">
-          <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
-            {{ getActivityStatusText(scope.row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
+        <!-- 活动状态列 -->
+        <el-table-column label="活动状态" align="center" width="100">
+          <template slot-scope="scope">
+            <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
+              {{ getActivityStatusText(scope.row) }}
+            </el-tag>
+          </template>
+        </el-table-column>
 
-      <el-table-column label="报名人数" align="center" width="100">
-        <template #default="scope">
-          <div class="participants">
-            <el-progress
-              :percentage="calculateCapacityPercentage(scope.row)"
-              :color="getProgressColor(calculateCapacityPercentage(scope.row))"
-              :show-text="false"
-              :stroke-width="10"
-              class="progress-bar"
-            />
-            <div class="count">
+        <el-table-column label="报名人数" align="center" width="100">
+          <template #default="scope">
+            <div class="participants">
+              <el-progress
+                :percentage="calculateCapacityPercentage(scope.row)"
+                :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+                :show-text="false"
+                :stroke-width="10"
+                class="progress-bar"
+              />
+              <div class="count">
                 <span :class="getCapacityClass(scope.row)">
                   {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
                 </span>
+              </div>
             </div>
-          </div>
-        </template>
-      </el-table-column>
+          </template>
+        </el-table-column>
 
-      <el-table-column label="操作" width="150">
-        <template slot-scope="scope">
-          <div class="action-buttons">
-            <el-button
-              size="mini"
-              type="text"
-              @click="handleViewStudents(scope.row)"
-              class="action-button view-button">
-              已选学生
-            </el-button>
+        <el-table-column label="操作" width="150">
+          <template slot-scope="scope">
+            <div class="action-buttons">
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleViewStudents(scope.row)"
+                class="action-button view-button">
+                已选学生
+              </el-button>
 
-            <el-button
-              size="mini"
-              type="text"
-              @click="handleUpdate(scope.row)"
-              class="action-button edit-button">
-              编辑活动
-            </el-button>
-          </div>
-        </template>
-      </el-table-column>
-
-      <!-- 活动详细信息 -->
-      <el-table-column type="expand" width="60" align="center">
-        <template slot-scope="props">
-          <div class="expand-card">
-            <div class="expand-row">
-              <div class="expand-label"><i class="el-icon-location"></i> 活动地点:</div>
-              <div class="expand-content">{{ props.row.activityLocation || "未设置地点" }}</div>
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleUpdate(scope.row)"
+                class="action-button edit-button">
+                编辑活动
+              </el-button>
             </div>
-            <div class="expand-row">
-              <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
-              <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
+          </template>
+        </el-table-column>
+
+        <!-- 活动详细信息 -->
+        <el-table-column type="expand" width="60" align="center">
+          <template slot-scope="props">
+            <div class="expand-card">
+              <div class="expand-row">
+                <div class="expand-label"><i class="el-icon-location"></i> 活动地点:</div>
+                <div class="expand-content">{{ props.row.activityLocation || "未设置地点" }}</div>
+              </div>
+              <div class="expand-row">
+                <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
+                <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
+              </div>
             </div>
-          </div>
-        </template>
-      </el-table-column>
-           </el-table>
+          </template>
+        </el-table-column>
+      </el-table>
 
       <!-- 分页组件 -->
       <pagination
@@ -250,14 +250,14 @@
 
 
     <!-- 添加或修改活动对话框 -->
-    <el-dialog 
-      :title="title" 
-      :visible.sync="open" 
-      width="600px" 
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      width="600px"
       append-to-body
       class="activity-form-dialog"
       :before-close="handleDialogClose">
-      
+
       <!-- 对话框头部 -->
       <div slot="title" class="dialog-header">
         <div class="header-content">
@@ -274,7 +274,7 @@
       <!-- 表单内容 -->
       <div class="dialog-body">
         <el-form ref="form" :model="form" :rules="rules" label-width="100px" class="activity-form">
-          
+
           <!-- 基本信息区域 -->
           <div class="form-section">
             <div class="section-header">
@@ -283,8 +283,8 @@
             </div>
             <div class="section-content">
               <el-form-item label="活动名称" prop="activityName">
-                <el-input 
-                  v-model="form.activityName" 
+                <el-input
+                  v-model="form.activityName"
                   placeholder="请输入活动名称"
                   prefix-icon="el-icon-trophy"
                   class="form-input">
@@ -294,29 +294,29 @@
                   活动名称在当前组织单位下必须唯一
                 </div>
               </el-form-item>
-              
+
               <el-form-item label="活动类型" prop="activityType">
                 <el-select v-model="form.activityType" placeholder="请选择活动类型" class="form-select">
-                  <el-option 
-                    v-for="type in predefinedActivityTypes" 
-                    :key="type.value" 
-                    :label="type.label" 
+                  <el-option
+                    v-for="type in predefinedActivityTypes"
+                    :key="type.value"
+                    :label="type.label"
                     :value="type.value">
                     <span style="float: left">{{ type.label }}</span>
                     <span style="float: right; color: #8492a6; font-size: 13px">{{ type.value }}</span>
                   </el-option>
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="活动地点" prop="activityLocation">
-                <el-input 
-                  v-model="form.activityLocation" 
+                <el-input
+                  v-model="form.activityLocation"
                   placeholder="请输入活动地点"
                   prefix-icon="el-icon-location"
                   class="form-input">
                 </el-input>
               </el-form-item>
-              
+
               <el-form-item label="活动容量" prop="activityTotalCapacity">
                 <el-input-number
                   v-model="form.activityTotalCapacity"
@@ -339,7 +339,7 @@
             <div class="section-content">
               <div class="time-grid">
                 <el-form-item label="报名开始" prop="activityStart" class="time-item">
-                  <el-date-picker 
+                  <el-date-picker
                     v-model="form.activityStart"
                     type="datetime"
                     value-format="yyyy-MM-dd HH:mm:ss"
@@ -347,9 +347,9 @@
                     class="form-datetime">
                   </el-date-picker>
                 </el-form-item>
-                
+
                 <el-form-item label="报名截止" prop="activityDeadline" class="time-item">
-                  <el-date-picker 
+                  <el-date-picker
                     v-model="form.activityDeadline"
                     type="datetime"
                     value-format="yyyy-MM-dd HH:mm:ss"
@@ -357,9 +357,9 @@
                     class="form-datetime">
                   </el-date-picker>
                 </el-form-item>
-                
+
                 <el-form-item label="活动开始" prop="startTime" class="time-item">
-                  <el-date-picker 
+                  <el-date-picker
                     v-model="form.startTime"
                     type="datetime"
                     value-format="yyyy-MM-dd HH:mm:ss"
@@ -367,9 +367,9 @@
                     class="form-datetime">
                   </el-date-picker>
                 </el-form-item>
-                
+
                 <el-form-item label="活动结束" prop="endTime" class="time-item">
-                  <el-date-picker 
+                  <el-date-picker
                     v-model="form.endTime"
                     type="datetime"
                     value-format="yyyy-MM-dd HH:mm:ss"
@@ -389,16 +389,14 @@
             </div>
             <div class="section-content">
               <el-form-item label="活动描述" prop="activityDescription">
-                <el-input 
-                  v-model="form.activityDescription" 
-                  type="textarea" 
-                  :rows="4"
-                  placeholder="请详细描述活动内容、目的和要求..."
-                  class="form-textarea">
-                </el-input>
+                <div class="editor-container">
+                  <quill-editor
+                    v-model="form.activityDescription"
+                    :options="editorOption"
+                    class="quill-editor"
+                  />
+                </div>
               </el-form-item>
-              
-
             </div>
           </div>
         </el-form>
@@ -413,15 +411,15 @@
           </div>
         </div>
         <div class="footer-right">
-          <el-button 
-            @click="cancel" 
+          <el-button
+            @click="cancel"
             :disabled="isSubmitting"
             class="cancel-btn">
             <i class="el-icon-close"></i>
             取消
           </el-button>
-          <el-button 
-            type="primary" 
+          <el-button
+            type="primary"
             @click="submitForm"
             :loading="isSubmitting"
             :disabled="isSubmitting"
@@ -440,7 +438,7 @@
       append-to-body
       class="student-dialog"
       :before-close="handleStudentDialogClose">
-      
+
       <!-- 学生统计信息 -->
       <div class="student-stats" v-if="selectedStudents.length > 0">
         <div class="stats-card">
@@ -479,9 +477,9 @@
           }"
           :row-class-name="getStudentRowClassName"
           @selection-change="handleStudentSelectionChange">
-          
+
           <el-table-column type="selection" width="50" align="center"/>
-          
+
           <el-table-column label="序号" width="70" align="center">
             <template v-slot="scope">
               <span class="index-badge">
@@ -489,7 +487,7 @@
               </span>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="studentId" label="学号" min-width="140" sortable>
             <template slot-scope="{row}">
               <div class="student-id-container">
@@ -514,7 +512,7 @@
               </div>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="academy" label="所属书院" min-width="120" sortable>
             <template slot-scope="{row}">
               <el-tag size="small" :type="getAcademyTagType(row.academy)" effect="plain">
@@ -522,7 +520,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="major" label="专业" min-width="160" sortable>
             <template slot-scope="{row}">
               <div class="major-info">
@@ -534,7 +532,7 @@
               </div>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="status" label="审核状态" min-width="110" align="center">
             <template slot-scope="{row}">
               <el-tag :type="getBookingStatusTag(row.status)" size="small" effect="dark">
@@ -542,7 +540,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          
+
           <el-table-column prop="bookAt" label="预约时间" min-width="160" sortable>
             <template slot-scope="{row}">
               <div class="booked_at">
@@ -649,7 +647,7 @@
           是否更新已经存在的用户数据
           <el-link type="info" style="font-size:12px" @click="importTemplate">下载模板</el-link>
         </div>
-        <div class="el-upload__tip" style="color:red" slot="tip">提示：仅允许导入“xls”或“xlsx”格式文件！</div>
+        <div class="el-upload__tip" style="color:red" slot="tip">提示：仅允许导入"xls"或"xlsx"格式文件！</div>
       </el-upload>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitFileForm">确 定</el-button>
@@ -659,17 +657,47 @@
   </div>
 </template>
 
+
 <script>
 import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique} from "@/api/system/activities";
 import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
+import { quillEditor } from 'vue-quill-editor'
+import 'quill/dist/quill.core.css'
+import 'quill/dist/quill.snow.css'
+import 'quill/dist/quill.bubble.css'
 
 export default {
   name: "Activities",
+  components: {
+    quillEditor
+  },
   data() {
     return {
+
+      editorOption: {
+        placeholder: '请详细描述活动内容、目的和要求...',
+        modules: {
+          toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'script': 'sub'}, { 'script': 'super' }],
+            [{ 'indent': '-1'}, { 'indent': '+1' }],
+            [{ 'direction': 'rtl' }],
+            [{ 'size': ['small', false, 'large', 'huge'] }],
+            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'font': [] }],
+            [{ 'align': [] }],
+            ['clean'],
+            ['image']
+          ]
+        }
+      },
       // 新增状态
       dialogVisibleStudents: false,
       selectedStudents: [],
@@ -754,7 +782,7 @@ export default {
         ],
         activityTotalCapacity: [
           { required: true, message: "活动容量不能为空", trigger: "blur" }
-          ],
+        ],
         activityType: [
           { required: true, message: "请选择活动类型", trigger: "change" }
         ],
@@ -907,7 +935,7 @@ export default {
       console.log('审核状态原始值:', status, '类型:', typeof status);
       const statusMap = {
         'pending': '未提交',
-        'submitted': '未审核', 
+        'submitted': '未审核',
         'approved': '已通过',
         'rejected': '未通过',
         '未提交': '未提交',
@@ -936,13 +964,13 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
       return typeMap[activityType] || activityType;
     },
-    
+
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -1161,16 +1189,48 @@ export default {
       this.open = true;
       this.title = "添加活动信息";
     },
+    // /** 修改按钮操作 */
+    // handleUpdate(row) {
+    //   this.reset();
+    //   const activityId = row.activityId || this.ids
+    //   getActivities(activityId).then(response => {
+    //     this.form = response.data;
+    //     this.open = true;
+    //     this.title = "修改活动信息";
+    //   });
+    // },
+
     /** 修改按钮操作 */
-    handleUpdate(row) {
+    async handleUpdate(row) {
       this.reset();
-      const activityId = row.activityId || this.ids
-      getActivities(activityId).then(response => {
+      const activityId = row.activityId || this.ids;
+
+      this.loading = true;
+      try {
+        const response = await getActivities(activityId);
         this.form = response.data;
+
+        // 确保活动描述字段有值
+        if (!this.form.activityDescription) {
+          this.form.activityDescription = '';
+        }
+
         this.open = true;
         this.title = "修改活动信息";
-      });
+
+        // 等待对话框和编辑器完全渲染
+        await this.$nextTick();
+
+        // 如果需要，可以在这里添加额外的处理逻辑
+        console.log('富文本内容已加载:', this.form.activityDescription);
+      } catch (error) {
+        console.error('获取活动详情失败:', error);
+        this.$message.error('获取活动详情失败');
+      } finally {
+        this.loading = false;
+      }
     },
+
     /** 提交按钮 */
     /** 提交按钮 */
     async submitForm() {
@@ -1184,12 +1244,23 @@ export default {
 
       try {
         // 1. 先确保获取组织者名称
-        const result = await getNickName(); // 等待异步操作完成
+        const result = await getNickName();
         this.form.organizer = result.msg;
 
         console.log("提交表单数据：", JSON.parse(JSON.stringify(this.form)));
 
-        // 2. 验证表单
+        // 2. 处理富文本内容中的图片（如果有）
+        let descriptionToSave = this.form.activityDescription || '';
+
+        // 检查活动描述是否包含Base64图片
+        if (descriptionToSave.includes('<img src="data:image')) {
+          console.log('活动描述包含图片，开始处理...');
+          descriptionToSave = await this.processImagesInHtml(descriptionToSave);
+          console.log('处理后的活动描述:', descriptionToSave);
+          this.form.activityDescription = descriptionToSave;
+        }
+
+        // 3. 验证表单
         const valid = await new Promise((resolve) => {
           this.$refs.form.validate(resolve);
         });
@@ -1199,25 +1270,23 @@ export default {
           return; // 验证不通过则停止
         }
 
-        // 3. 计算活动状态
+        // 4. 计算活动状态
         this.calculateStatus();
 
-        // 4. 根据情况执行新增/修改（唯一性检查在后端进行）
+        // 5. 根据情况执行新增/修改
         if (this.form.activityId != null) {
-          await updateActivities2(this.form);  // 等待更新完成
+          await updateActivities2(this.form);
           this.$message.success("修改成功");
         } else {
-          await addActivities(this.form);  // 等待新增完成
+          await addActivities(this.form);
           this.$message.success("新增成功");
         }
 
-        // 5. 关闭弹窗并刷新列表
+        // 6. 关闭弹窗并刷新列表
         this.open = false;
-        await this.getList();  // 如果需要等待刷新完成
-
+        await this.getList();
       } catch (error) {
         console.error("表单提交失败:", error);
-        // 检查是否是唯一性错误
         if (error.message && error.message.includes("活动名称和组织单位组合已存在")) {
           this.$message.error("活动名称和组织单位组合已存在，不能重复添加！");
         } else {
@@ -1227,6 +1296,93 @@ export default {
         this.isSubmitting = false;
       }
     },
+
+// 处理富文本中的图片，将Base64图片上传到服务器并替换为URL
+    async processImagesInHtml(htmlContent) {
+      if (!htmlContent || !htmlContent.includes('<img src="data:image')) {
+        return htmlContent; // 没有图片，直接返回
+      }
+
+      console.log('开始处理HTML中的图片');
+
+      try {
+        // 使用新的接口处理富文本中的图片
+        const response = await this.$http.post('/common/upload/rich-text', {
+          content: htmlContent,
+          type: 'activity'
+        }, {
+          headers: {
+            'Authorization': 'Bearer ' + getToken()
+          }
+        });
+
+        if (response.data.code === 200) {
+          console.log('富文本内容处理成功');
+          return response.data.content;
+        } else {
+          throw new Error(response.data.msg || '处理富文本内容失败');
+        }
+      } catch (error) {
+        console.error('处理富文本内容失败:', error);
+        // 如果处理失败，尝试逐个处理图片
+        return this.processImagesManually(htmlContent);
+      }
+    },
+
+// 手动处理图片（作为备用方案）
+    async processImagesManually(htmlContent) {
+      console.log('使用手动方式处理图片');
+
+      // 创建一个临时DOM元素来解析HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+
+      // 获取所有图片元素
+      const images = tempDiv.querySelectorAll('img[src^="data:image"]');
+      console.log('找到', images.length, '个Base64图片');
+
+      // 处理每个图片
+      for (const img of images) {
+        const base64Data = img.src;
+
+        try {
+          // 从Base64数据中提取图片类型和内容
+          const matches = base64Data.match(/^data:(image\/\w+);base64,(.+)$/);
+          if (!matches || matches.length !== 3) {
+            console.warn('无法解析Base64图片数据');
+            continue;
+          }
+
+          const imageType = matches[1]; // 例如：image/png
+          const imageData = matches[2]; // Base64编码的图片数据
+
+          // 上传Base64图片
+          const response = await this.$http.post('/common/upload/base64', {
+            imageType: imageType,
+            base64Data: imageData,
+            type: 'activity'
+          }, {
+            headers: {
+              'Authorization': 'Bearer ' + getToken()
+            }
+          });
+
+          if (response.data.code === 200) {
+            // 替换图片src为上传后的URL
+            img.src = response.data.url;
+            console.log('图片上传成功，URL:', img.src);
+          } else {
+            console.error('图片上传失败:', response.data.msg);
+          }
+        } catch (error) {
+          console.error('处理图片时出错:', error);
+        }
+      }
+
+      // 返回处理后的HTML
+      return tempDiv.innerHTML;
+    },
+
     /** 删除按钮操作 */
     handleDelete(row) {
       const activityIds = row.activityId || this.ids;
@@ -1253,7 +1409,7 @@ export default {
     },
 
     // ========== 学生列表相关方法 ==========
-    
+
     /** 获取状态统计数量 */
     getStatusCount(status) {
       return this.selectedStudents.filter(student => student.status === status).length;
@@ -1263,7 +1419,7 @@ export default {
     getAcademyTagType(academy) {
       const academyColors = {
         '知行书院': 'primary',
-        '明德书院': 'success', 
+        '明德书院': 'success',
         '博雅书院': 'warning',
         '至善书院': 'info',
         '未知': ''
@@ -1348,7 +1504,7 @@ export default {
         this.$message.warning('请先选择要操作的学生');
         return;
       }
-      
+
       this.$confirm(`确定要批量通过 ${this.selectedStudentIds.length} 名学生的审核吗？`, '批量通过', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -1373,7 +1529,7 @@ export default {
         this.$message.warning('请先选择要操作的学生');
         return;
       }
-      
+
       this.$confirm(`确定要批量拒绝 ${this.selectedStudentIds.length} 名学生的审核吗？`, '批量拒绝', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
@@ -1639,17 +1795,17 @@ export default {
   padding: 8px 0;
   text-align: center;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateX(2px);
   }
-  
+
   &.signup-time {
     .time-header i {
       color: #409EFF;
     }
   }
-  
+
   &.activity-time {
     .time-header i {
       color: #67C23A;
@@ -1662,12 +1818,12 @@ export default {
   align-items: center;
   justify-content: center;
   margin-bottom: 6px;
-  
+
   i {
     font-size: 14px;
     margin-right: 6px;
   }
-  
+
   .time-label {
     font-size: 12px;
     font-weight: 600;
@@ -1683,18 +1839,18 @@ export default {
     font-size: 12px;
     color: #606266;
     line-height: 1.4;
-    
+
     .time-start {
       font-weight: 500;
       color: #303133;
     }
-    
+
     .time-separator {
       margin: 0 8px;
       color: #909399;
       font-size: 11px;
     }
-    
+
     .time-end {
       font-weight: 500;
       color: #303133;
@@ -1770,28 +1926,28 @@ export default {
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   }
-  
+
   .el-dialog__header {
     background: linear-gradient(to right, #409EFF, #64b5ff);
     color: white;
     border-radius: 12px 12px 0 0;
     padding: 20px 24px;
-    
+
     .el-dialog__title {
       font-size: 18px;
       font-weight: 600;
     }
-    
+
     .el-dialog__close {
       color: white;
       font-size: 20px;
-      
+
       &:hover {
         color: rgba(255, 255, 255, 0.8);
       }
     }
   }
-  
+
   .el-dialog__body {
     padding: 0;
     background: #f8f9fa;
@@ -1803,7 +1959,7 @@ export default {
   padding: 20px 24px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px 12px 0 0;
-  
+
   .stats-card {
     display: flex;
     justify-content: space-around;
@@ -1811,17 +1967,17 @@ export default {
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    
+
     .stat-item {
       text-align: center;
-      
+
       .stat-number {
         font-size: 28px;
         font-weight: 700;
         color: #409EFF;
         margin-bottom: 8px;
       }
-      
+
       .stat-label {
         font-size: 14px;
         color: #606266;
@@ -1848,36 +2004,36 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .student-id {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       font-size: 13px;
       color: #409EFF;
       font-weight: 500;
     }
-    
+
     .copy-btn {
       opacity: 0;
       transition: opacity 0.3s;
       padding: 2px;
-      
+
       &:hover {
         color: #409EFF;
       }
     }
   }
-  
+
   .student-name-container {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .student-name {
       font-weight: 600;
       color: #303133;
     }
   }
-  
+
   .major-info {
     .major-name {
       display: block;
@@ -1886,69 +2042,69 @@ export default {
       font-weight: 500;
       margin-bottom: 4px;
     }
-    
+
     .class-info {
       display: flex;
       align-items: center;
       font-size: 12px;
       color: #909399;
-      
+
       i {
         margin-right: 4px;
         font-size: 12px;
       }
     }
   }
-  
+
   .booked_at {
     display: flex;
     align-items: center;
     color: #606266;
     font-size: 13px;
-    
+
     i {
       margin-right: 6px;
       color: #909399;
     }
-    
+
     .time-text {
       font-family: monospace;
     }
   }
-  
+
   /* 行状态样式 */
   .approved-row {
     background-color: rgba(103, 194, 58, 0.05) !important;
   }
-  
+
   .rejected-row {
     background-color: rgba(245, 108, 108, 0.05) !important;
   }
-  
+
   .pending-row {
     background-color: rgba(230, 162, 60, 0.05) !important;
   }
-  
+
   /* 悬停效果 */
   tr:hover {
     .copy-btn {
       opacity: 1;
     }
   }
-  
+
   /* 操作按钮样式 */
   .approve-btn {
     color: #67C23A;
-    
+
     &:hover {
       color: #5daf34;
       background-color: rgba(103, 194, 58, 0.1);
     }
   }
-  
+
   .reject-btn {
     color: #F56C6C;
-    
+
     &:hover {
       color: #f56c6c;
       background-color: rgba(245, 108, 108, 0.1);
@@ -1966,13 +2122,45 @@ export default {
   border-top: 1px solid #e4e7ed;
   margin: 0 24px;
   border-radius: 0 0 12px 12px;
-  
+
   .batch-info {
     font-size: 14px;
     color: #606266;
     font-weight: 500;
   }
-  
+  /* 富文本编辑器样式 */
+  .editor-container {
+    border: 1px solid #dcdfe6;
+    border-radius: 8px;
+    line-height: normal;
+  }
+
+  .quill-editor {
+    min-height: 200px;
+  }
+
+  .quill-editor /deep/ .ql-toolbar {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom: 1px solid #dcdfe6;
+  }
+
+  .quill-editor /deep/ .ql-container {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    min-height: 150px;
+    font-size: 14px;
+  }
+
+  .quill-editor /deep/ .ql-editor {
+    min-height: 150px;
+  }
+
+  .quill-editor /deep/ .ql-editor.ql-blank::before {
+    color: #c0c4cc;
+    font-style: normal;
+  }
+
   .batch-buttons {
     display: flex;
     gap: 12px;
@@ -1987,7 +2175,7 @@ export default {
   padding: 16px 24px;
   background: #f8f9fa;
   border-radius: 0 0 12px 12px;
-  
+
   .footer-left {
     .total-info {
       font-size: 14px;
@@ -1995,7 +2183,7 @@ export default {
       font-weight: 500;
     }
   }
-  
+
   .footer-right {
     display: flex;
     gap: 12px;
@@ -2010,18 +2198,18 @@ export default {
       margin: 0 auto;
     }
   }
-  
+
   .stats-card {
     flex-direction: column;
     gap: 16px;
-    
+
     .stat-item {
       .stat-number {
         font-size: 24px;
       }
     }
   }
-  
+
 }
 
 /* 分页样式 */
@@ -2054,18 +2242,18 @@ export default {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
     overflow: hidden;
   }
-  
+
   .el-dialog__header {
     padding: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 16px 16px 0 0;
   }
-  
+
   .el-dialog__body {
     padding: 0;
     background: #f8f9fa;
   }
-  
+
   .el-dialog__footer {
     padding: 0;
     background: #f8f9fa;
@@ -2077,12 +2265,12 @@ export default {
 .dialog-header {
   padding: 24px 32px;
   color: white;
-  
+
   .header-content {
     display: flex;
     align-items: center;
     gap: 16px;
-    
+
     .header-icon {
       width: 48px;
       height: 48px;
@@ -2092,13 +2280,13 @@ export default {
       align-items: center;
       justify-content: center;
       backdrop-filter: blur(10px);
-      
+
       i {
         font-size: 24px;
         color: white;
       }
     }
-    
+
     .header-text {
       h3 {
         margin: 0 0 4px 0;
@@ -2106,7 +2294,7 @@ export default {
         font-weight: 600;
         color: white;
       }
-      
+
       p {
         margin: 0;
         font-size: 14px;
@@ -2132,27 +2320,27 @@ export default {
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid #e4e7ed;
     overflow: hidden;
-    
+
     .section-header {
       display: flex;
       align-items: center;
       padding: 16px 20px;
       background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       border-bottom: 1px solid #e4e7ed;
-      
+
       i {
         font-size: 16px;
         color: #409EFF;
         margin-right: 8px;
       }
-      
+
       span {
         font-size: 16px;
         font-weight: 600;
         color: #303133;
       }
     }
-    
+
     .section-content {
       padding: 24px;
     }
@@ -2164,7 +2352,7 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  
+
   .time-item {
     margin-bottom: 0;
   }
@@ -2176,7 +2364,7 @@ export default {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
-    
+
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
@@ -2189,7 +2377,7 @@ export default {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
-    
+
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
@@ -2199,12 +2387,12 @@ export default {
 
 .form-datetime {
   width: 100%;
-  
+
   .el-input__inner {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
-    
+
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
@@ -2217,7 +2405,7 @@ export default {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
-    
+
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
@@ -2237,7 +2425,7 @@ export default {
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
     resize: vertical;
-    
+
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
@@ -2256,7 +2444,7 @@ export default {
   background: rgba(64, 158, 255, 0.05);
   border-radius: 6px;
   border-left: 3px solid #409EFF;
-  
+
   i {
     margin-right: 6px;
     color: #409EFF;
@@ -2272,25 +2460,25 @@ export default {
   padding: 20px 32px;
   background: #f8f9fa;
   border-top: 1px solid #e4e7ed;
-  
+
   .footer-left {
     .form-status {
       display: flex;
       align-items: center;
       color: #409EFF;
       font-size: 14px;
-      
+
       i {
         margin-right: 8px;
         animation: rotating 2s linear infinite;
       }
     }
   }
-  
+
   .footer-right {
     display: flex;
     gap: 12px;
-    
+
     .cancel-btn {
       background: #f5f7fa;
       border: 1px solid #dcdfe6;
@@ -2299,18 +2487,18 @@ export default {
       padding: 10px 20px;
       font-weight: 500;
       transition: all 0.3s ease;
-      
+
       &:hover {
         background: #ecf5ff;
         border-color: #b3d8ff;
         color: #409EFF;
       }
-      
+
       i {
         margin-right: 6px;
       }
     }
-    
+
     .submit-btn {
       background: linear-gradient(135deg, #409EFF 0%, #64b5ff 100%);
       border: none;
@@ -2320,18 +2508,18 @@ export default {
       font-weight: 600;
       transition: all 0.3s ease;
       box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
         background: linear-gradient(135deg, #3a8ee6 0%, #5a9fd8 100%);
       }
-      
+
       &:active {
         transform: translateY(0);
         box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
       }
-      
+
       i {
         margin-right: 6px;
       }
@@ -2357,20 +2545,20 @@ export default {
       margin: 0 auto;
     }
   }
-  
+
   .dialog-body {
     padding: 20px;
   }
-  
+
   .time-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .dialog-footer {
     flex-direction: column;
     gap: 16px;
-    
+
     .footer-right {
       width: 100%;
       justify-content: center;
