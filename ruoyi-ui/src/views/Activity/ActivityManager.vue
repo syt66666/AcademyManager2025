@@ -694,7 +694,7 @@ export default {
             [{ 'font': [] }],
             [{ 'align': [] }],
             ['clean'],
-            ['image']
+            // ['image']
           ]
         }
       },
