@@ -101,14 +101,8 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" fixed="right" width="200">
+        <el-table-column label="操作" align="center" fixed="right" width="120">
           <template slot-scope="scope">
-            <el-button
-              type="text"
-              size="mini"
-              class="action-button detail-button"
-              @click="handleDetail(scope.row)"
-            >详情</el-button>
             <el-button
               v-if="getSignStatusText(scope.row) === '可报名'"
               type="text"
@@ -117,19 +111,26 @@
               @click="handleSignUp(scope.row)"
             >报名</el-button>
             <el-button
-              v-if="getSignStatusText(scope.row) === '已报名'"
+              v-else-if="getSignStatusText(scope.row) === '已报名'"
               type="text"
               size="mini"
               class="action-button cancel-button"
               @click="handleCancel(scope.row)"
             >取消报名</el-button>
-            <el-tag
-              v-if="isActivityFull(scope.row)"
-              type="danger"
+            <el-button
+              v-else-if="isActivityFull(scope.row)"
+              type="text"
               size="mini"
-              effect="dark"
-              class="full-tag"
-            >已满</el-tag>
+              class="action-button full-button"
+              disabled
+            >已满</el-button>
+            <el-button
+              v-else
+              type="text"
+              size="mini"
+              class="action-button disabled-button"
+              disabled
+            >不可报名</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -385,22 +386,14 @@ export default {
       });
     },
 
-    // 过滤活动：只显示活动开始时间在上个月、本月、下个月的活动
+    // 过滤活动：只显示活动开始时间在本月的活动
     filterActivitiesByMonth(activities) {
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth(); // 0-11
 
-      // 计算上个月和下个月
-      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
-      const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
-
       console.log('当前时间范围过滤:', {
-        lastMonth: `${lastMonthYear}年${lastMonth + 1}月`,
-        currentMonth: `${currentYear}年${currentMonth + 1}月`,
-        nextMonth: `${nextMonthYear}年${nextMonth + 1}月`
+        currentMonth: `${currentYear}年${currentMonth + 1}月`
       });
 
       const filteredActivities = activities.filter(activity => {
@@ -413,11 +406,7 @@ export default {
         const activityYear = activityDate.getFullYear();
         const activityMonth = activityDate.getMonth();
 
-        const isInRange = (
-          (activityYear === lastMonthYear && activityMonth === lastMonth) || // 上个月
-          (activityYear === currentYear && activityMonth === currentMonth) || // 本月
-          (activityYear === nextMonthYear && activityMonth === nextMonth) // 下个月
-        );
+        const isInRange = (activityYear === currentYear && activityMonth === currentMonth); // 只显示本月
 
         if (isInRange) {
           console.log('活动在范围内:', {
@@ -583,22 +572,14 @@ export default {
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth();
 
-      // 计算上个月和下个月
-      const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
-      const nextMonthYear = currentMonth === 11 ? currentYear + 1 : currentYear;
-
       const monthNames = [
         '1月', '2月', '3月', '4月', '5月', '6月',
         '7月', '8月', '9月', '10月', '11月', '12月'
       ];
 
-      const lastMonthText = `${lastMonthYear}年${monthNames[lastMonth]}`;
       const currentMonthText = `${currentYear}年${monthNames[currentMonth]}`;
-      const nextMonthText = `${nextMonthYear}年${monthNames[nextMonth]}`;
 
-      return `活动开始时间范围：${lastMonthText} - ${nextMonthText}`;
+      return `${currentMonthText}`;
     },
 
     // 处理详情
@@ -888,11 +869,22 @@ export default {
   background-color: rgba(245, 108, 108, 0.1);
 }
 
-.full-tag {
-  margin-left: 8px;
-  font-weight: 600;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(245, 108, 108, 0.3);
+.full-button {
+  color: #F56C6C;
+  cursor: not-allowed;
+}
+
+.full-button:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
+.disabled-button {
+  color: #C0C4CC;
+  cursor: not-allowed;
+}
+
+.disabled-button:hover {
+  background-color: rgba(192, 196, 204, 0.1);
 }
 
 .custom-pagination {
