@@ -4,12 +4,26 @@
     <el-tabs v-model="activeView" class="view-tabs">
       <!-- 日历视图 -->
       <el-tab-pane label="日历视图" name="calendar">
-        <div class="calendar-toolbar">
-          <div class="toolbar-left">
-            <span class="academy-info">当前书院：{{ currentAcademy || '加载中...' }}</span>
+        <!-- 自定义日历头部 -->
+        <div class="custom-calendar-header">
+          <div class="header-left">
+            <span class="calendar-title">{{ currentMonthTitle }} - {{ currentAcademy || '加载中...' }}</span>
+          </div>
+          <div class="header-right">
+            <el-button-group>
+              <el-button size="mini" @click="prevMonth">上个月</el-button>
+              <el-button size="mini" @click="goCurrentMonth">本月</el-button>
+              <el-button size="mini" @click="nextMonth">下个月</el-button>
+            </el-button-group>
           </div>
         </div>
-        <el-calendar v-model="calendarDate" class="calendar-view" style="--calendar-day-height: 120px;">
+        
+        <el-calendar 
+          v-model="calendarDate" 
+          class="calendar-view" 
+          style="--calendar-day-height: 120px;"
+          :range="null"
+        >
           <template #dateCell="{ data }">
             <div
               v-if="isCurrentMonth(data.day)"
@@ -315,12 +329,14 @@ export default {
   mounted() {
     this.hideEmptyCalendarRows();
     this.forceCalendarDayHeight();
+    this.hideTodayButton();
   },
   watch: {
     calendarDate() {
       this.$nextTick(() => {
         this.hideEmptyCalendarRows();
         this.forceCalendarDayHeight();
+        this.hideTodayButton();
       });
     },
     activeView(newView) {
@@ -373,6 +389,13 @@ export default {
     },
     goToday() {
       this.calendarDate = new Date();
+    },
+    goCurrentMonth() {
+      this.calendarDate = new Date();
+    },
+    formatCalendarTitle(date) {
+      const d = new Date(date);
+      return `${d.getFullYear()}年${(d.getMonth() + 1).toString().padStart(2, '0')}月`;
     },
     getActivityTypeName(activityType) {
       const typeMap = {
@@ -765,6 +788,44 @@ export default {
           day.style.maxHeight = '120px';
         });
       });
+    },
+
+    // 隐藏"今天"按钮
+    hideTodayButton() {
+      this.$nextTick(() => {
+        // 隐藏Element UI默认的日历头部
+        const defaultHeader = document.querySelector('.calendar-view .el-calendar__header');
+        if (defaultHeader) {
+          defaultHeader.style.display = 'none';
+        }
+        
+        // 隐藏所有包含"今天"文字的按钮，但排除自定义头部的按钮
+        const buttons = document.querySelectorAll('.calendar-view .el-button');
+        buttons.forEach(button => {
+          if (button.textContent && button.textContent.includes('今天') && 
+              !button.closest('.custom-calendar-header')) {
+            button.style.display = 'none';
+          }
+        });
+        
+        // 隐藏默认的按钮组，但保留自定义的按钮组
+        const defaultButtonGroup = document.querySelector('.calendar-view .el-calendar__header .el-calendar__button-group');
+        if (defaultButtonGroup) {
+          defaultButtonGroup.style.display = 'none';
+        }
+      });
+      
+      // 使用定时器重复检查，确保"今天"按钮被隐藏
+      setTimeout(() => {
+        const buttons = document.querySelectorAll('.calendar-view .el-button');
+        buttons.forEach(button => {
+          if (button.textContent && button.textContent.includes('今天') && 
+              !button.closest('.custom-calendar-header')) {
+            button.style.display = 'none';
+            button.style.visibility = 'hidden';
+          }
+        });
+      }, 100);
     }
   }
 };
@@ -1122,32 +1183,92 @@ export default {
   }
 }
 
-/* 美化月份标题 */
-.calendar-view .el-calendar__header {
+/* 自定义日历头部样式 */
+.custom-calendar-header {
+  display: flex !important;
+  justify-content: space-between;
+  align-items: center;
   background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
   color: white;
   border-radius: 8px 8px 0 0;
   padding: 15px 20px;
   margin-bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
 
-  .el-calendar__title {
-    font-size: 18px;
-    font-weight: 600;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  .header-left {
+    display: flex !important;
+    align-items: center;
+    
+    .calendar-title {
+      font-size: 18px;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+    }
   }
 
-  .el-calendar__button-group {
-    .el-button {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
+  .header-right {
+    display: flex !important;
+    align-items: center;
+    
+    .el-button-group {
+      display: flex !important;
+      
+      .el-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        font-size: 12px;
+        padding: 6px 12px;
+        display: inline-block !important;
 
-      &:hover {
-        background: rgba(255, 255, 255, 0.3);
-        border-color: rgba(255, 255, 255, 0.5);
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        &:active {
+          background: rgba(255, 255, 255, 0.4);
+        }
       }
     }
   }
+}
+
+/* 隐藏Element UI默认的日历头部 */
+.calendar-view .el-calendar__header {
+  display: none !important;
+}
+
+/* 隐藏Element UI默认的按钮组，但保留自定义的按钮组 */
+.calendar-view .el-calendar__header .el-calendar__button-group {
+  display: none !important;
+}
+
+/* 隐藏所有包含"今天"文字的按钮 */
+.calendar-view .el-button:contains("今天") {
+  display: none !important;
+}
+
+/* 更强制性地隐藏"今天"按钮 */
+.calendar-view .el-calendar__header .el-button-group .el-button:nth-child(2) {
+  display: none !important;
+}
+
+/* 隐藏所有可能的"今天"按钮 */
+.calendar-view .el-button[title*="今天"],
+.calendar-view .el-button[aria-label*="今天"] {
+  display: none !important;
+}
+
+/* 确保自定义日历头部的按钮组正常显示 */
+.custom-calendar-header .el-button-group {
+  display: flex !important;
+}
+
+.custom-calendar-header .el-button-group .el-button {
+  display: inline-block !important;
 }
 
 /* 美化星期标题 */
