@@ -690,7 +690,7 @@ export default {
       }).then(() => {
         this.submitCancelSignUp();
       }).catch(() => {
-        this.$message.info('已取消取消报名操作');
+        // 用户取消操作，不显示提示
       });
     },
 
