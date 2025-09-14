@@ -18,7 +18,7 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="活动地点" prop="activityLocation">
+          <!-- <el-form-item label="活动地点" prop="activityLocation">
             <el-input
               v-model="queryParams.activityLocation"
               placeholder="请输入活动地点"
@@ -27,7 +27,7 @@
               class="search-input"
               @keyup.enter.native="handleQuery"
             />
-          </el-form-item>
+          </el-form-item> -->
           <!-- <el-form-item label="组织单位" prop="organizer">
             <el-input
               v-model="queryParams.organizer"
@@ -45,6 +45,16 @@
                 :key="type.value"
                 :label="type.label"
                 :value="type.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="活动状态" prop="activityStatus">
+            <el-select v-model="queryParams.activityStatus" clearable placeholder="请选择活动状态" class="search-input">
+              <el-option
+                v-for="status in activityStatusOptions"
+                :key="status.value"
+                :label="status.label"
+                :value="status.value"
               />
             </el-select>
           </el-form-item>
@@ -134,37 +144,25 @@
           </template>
         </el-table-column>
         <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
-        <el-table-column label="时间安排" align="center" min-width="280">
+        <el-table-column label="时间安排" align="center" min-width="320">
           <template slot-scope="scope">
-            <div class="time-schedule">
+            <div class="time-schedule-inline">
               <!-- 报名时间 -->
-              <div class="time-section signup-time">
-                <div class="time-header">
-                  <i class="el-icon-user"></i>
-                  <span class="time-label">报名时间</span>
-                </div>
-                <div class="time-content">
-                  <div class="time-item">
-                    <span class="time-start">{{ formatDateTime(scope.row.activityStart) }}</span>
-                    <span class="time-separator">至</span>
-                    <span class="time-end">{{ formatDateTime(scope.row.activityDeadline) }}</span>
-                  </div>
-                </div>
+              <div class="time-inline-item signup-time">
+                <i class="el-icon-user"></i>
+                <span class="time-inline-label">报名时间</span>
+                <span class="time-inline-content">
+                  {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
+                </span>
               </div>
 
               <!-- 活动时间 -->
-              <div class="time-section activity-time">
-                <div class="time-header">
-                  <i class="el-icon-date"></i>
-                  <span class="time-label">活动时间</span>
-                </div>
-                <div class="time-content">
-                  <div class="time-item">
-                    <span class="time-start">{{ formatDateTime(scope.row.startTime) }}</span>
-                    <span class="time-separator">至</span>
-                    <span class="time-end">{{ formatDateTime(scope.row.endTime) }}</span>
-                  </div>
-                </div>
+              <div class="time-inline-item activity-time">
+                <i class="el-icon-date"></i>
+                <span class="time-inline-label">活动时间</span>
+                <span class="time-inline-content">
+                  {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
+                </span>
               </div>
             </div>
           </template>
@@ -729,6 +727,14 @@ export default {
         { value: '3', label: '能力锻造与实践创新活动类' },
         { value: '4', label: '社会责任与领军意识活动类' }
       ],
+      // 活动状态选项
+      activityStatusOptions: [
+        { value: '报名未开始', label: '报名未开始' },
+        { value: '报名进行中', label: '报名进行中' },
+        { value: '报名已截止', label: '报名已截止' },
+        { value: '活动进行中', label: '活动进行中' },
+        { value: '活动已结束', label: '活动已结束' }
+      ],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -736,7 +742,7 @@ export default {
       // 查询参数
       queryParams: {
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 10, // 恢复合理的分页大小
         activityId: null,
         activityName: null,
         startTime: null,
@@ -748,6 +754,7 @@ export default {
         activityDeadline: null,
         activityDescription: null,
         activityType: null,
+        activityStatus: null,
         createdAt: null,
         organizer: null,
         notes: null,
@@ -1099,10 +1106,27 @@ export default {
         this.queryParams.organizer = nickName.msg; // 更新组织者
         console.log("获取到组织者名称:", nickName.msg);
         // 🔽 确保在 organizer 更新后调用列表接口
-        listActivities(this.queryParams).then(response => {
+        // 先获取所有活动数据（不分页）
+        const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
+        listActivities(allDataParams).then(response => {
           console.log("获取活动列表成功:", response);
-          this.activitiesList = response.rows;
-          this.total = response.total;
+          let allActivities = response.rows;
+          
+          // 如果有活动状态筛选条件，进行前端筛选
+          if (this.queryParams.activityStatus) {
+            allActivities = allActivities.filter(activity => {
+              const status = this.getActivityStatusText(activity);
+              return status === this.queryParams.activityStatus;
+            });
+          }
+          
+          // 对筛选后的数据进行分页
+          const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
+          const endIndex = startIndex + this.queryParams.pageSize;
+          const paginatedList = allActivities.slice(startIndex, endIndex);
+          
+          this.activitiesList = paginatedList;
+          this.total = allActivities.length; // 使用筛选后的总数量
           this.loading = false;
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
@@ -1114,10 +1138,27 @@ export default {
       }).catch(error => {
         console.error("获取组织者名称失败:", error);
         // 即使获取组织者名称失败，也尝试获取活动列表
-        listActivities(this.queryParams).then(response => {
+        // 先获取所有活动数据（不分页）
+        const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
+        listActivities(allDataParams).then(response => {
           console.log("获取活动列表成功（无组织者）:", response);
-          this.activitiesList = response.rows;
-          this.total = response.total;
+          let allActivities = response.rows;
+          
+          // 如果有活动状态筛选条件，进行前端筛选
+          if (this.queryParams.activityStatus) {
+            allActivities = allActivities.filter(activity => {
+              const status = this.getActivityStatusText(activity);
+              return status === this.queryParams.activityStatus;
+            });
+          }
+          
+          // 对筛选后的数据进行分页
+          const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
+          const endIndex = startIndex + this.queryParams.pageSize;
+          const paginatedList = allActivities.slice(startIndex, endIndex);
+          
+          this.activitiesList = paginatedList;
+          this.total = allActivities.length; // 使用筛选后的总数量
           this.loading = false;
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
@@ -1173,6 +1214,8 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
+      // 手动重置查询参数，确保活动状态被清空
+      this.queryParams.activityStatus = null;
       this.resetForm("queryForm");
       this.handleQuery();
     },
@@ -1789,6 +1832,61 @@ export default {
   flex-direction: column;
   gap: 12px;
   padding: 8px 0;
+}
+
+/* 内联时间安排样式 */
+.time-schedule-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.time-inline-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  &.signup-time {
+    i {
+      color: #409EFF;
+      margin-right: 4px;
+    }
+    .time-inline-label {
+      color: #409EFF;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+  }
+
+  &.activity-time {
+    i {
+      color: #67C23A;
+      margin-right: 4px;
+    }
+    .time-inline-label {
+      color: #67C23A;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+  }
+
+  i {
+    font-size: 14px;
+  }
+
+  .time-inline-label {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .time-inline-content {
+    color: #606266;
+    font-weight: 500;
+  }
 }
 
 .time-section {
