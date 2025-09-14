@@ -43,12 +43,21 @@
                     <span class="event-name">{{ truncate(event.activityName, 10) }}</span>
                     <span class="event-org">({{ truncate(event.organizer, 5) }})</span>
                     <el-button
-                      v-if="isBeforeToday(event.activityDeadline)"
+                      v-if="getActivityStatusType(event) === 'signup-active'"
                       type="text"
                       size="mini"
                       class="detail-btn"
                     >
                       详细
+                    </el-button>
+                    <el-button
+                      v-else-if="getActivityStatusType(event) === 'not-started'"
+                      type="text"
+                      size="mini"
+                      disabled
+                      class="detail-btn disabled-btn"
+                    >
+                      未开始
                     </el-button>
                     <el-button
                       v-else
@@ -87,14 +96,6 @@
             <div class="legend-item">
               <div class="legend-color status-signup-ended"></div>
               <span class="legend-text">报名已截止</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color status-activity-active"></div>
-              <span class="legend-text">活动进行中</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color status-activity-ended"></div>
-              <span class="legend-text">活动已结束</span>
             </div>
           </div>
         </div>
@@ -533,17 +534,13 @@ export default {
     // 获取活动状态类型（用于颜色判断）
     getActivityStatusType(activity) {
       const now = new Date();
-      const start = new Date(activity.startTime);
-      const end = new Date(activity.endTime);
       const deadline = new Date(activity.activityDeadline);
       const activityStart = new Date(activity.activityStart);
 
-      if (now < activityStart) return "not-started";
-      if (now < deadline && now >= activityStart) return "signup-active";
-      if (now >= deadline && now < start) return "signup-ended";
-      if (now >= start && now <= end) return "activity-active";
-      if (now > end) return "activity-ended";
-      return "unknown";
+      if (now < activityStart) return "not-started"; // 报名未开始
+      if (now < deadline && now >= activityStart) return "signup-active"; // 报名进行中
+      if (now >= deadline) return "signup-ended"; // 报名已截止
+      return "signup-ended"; // 默认显示为报名已截止
     },
 
     // 获取容量样式
@@ -1011,24 +1008,6 @@ export default {
       box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
     }
 
-    /* 活动进行中 - 绿色 */
-    &.status-activity-active {
-      background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-      box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
-    }
-
-    /* 活动已结束 - 深灰色 */
-    &.status-activity-ended {
-      background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-      box-shadow: 0 2px 8px rgba(52, 73, 94, 0.2);
-    }
-
-    /* 未知状态 - 蓝色（默认） */
-    &.status-unknown {
-      background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-      box-shadow: 0 2px 8px rgba(69, 127, 202, 0.2);
-    }
-
     &::before {
       content: '';
       position: absolute;
@@ -1061,16 +1040,6 @@ export default {
     &.status-signup-ended:hover {
       background: linear-gradient(135deg, #d35400 0%, #ba4a00 100%);
       box-shadow: 0 4px 16px rgba(230, 126, 34, 0.4);
-    }
-
-    &.status-activity-active:hover {
-      background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
-      box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
-    }
-
-    &.status-activity-ended:hover {
-      background: linear-gradient(135deg, #2c3e50 0%, #1b2631 100%);
-      box-shadow: 0 4px 16px rgba(52, 73, 94, 0.4);
     }
 
     &:active {
@@ -1358,7 +1327,7 @@ export default {
 /* 活动状态图例样式 */
 .activity-legend {
   position: absolute;
-  bottom: 20px;
+  bottom: 80px;
   right: 20px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -1408,16 +1377,6 @@ export default {
       /* 报名已截止 - 橙色 */
       &.status-signup-ended {
         background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-      }
-
-      /* 活动进行中 - 绿色 */
-      &.status-activity-active {
-        background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-      }
-
-      /* 活动已结束 - 深灰色 */
-      &.status-activity-ended {
-        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
       }
     }
 
