@@ -418,7 +418,7 @@
     <el-dialog
       title="预约活动学生列表"
       :visible.sync="dialogVisibleStudents"
-      width="95%"
+      width="60%"
       append-to-body
       class="student-dialog"
       :before-close="handleStudentDialogClose">
@@ -459,10 +459,7 @@
             'font-weight': '600',
             'border-bottom': '2px solid #e2e8f0'
           }"
-          :row-class-name="getStudentRowClassName"
-          @selection-change="handleStudentSelectionChange">
-
-          <el-table-column type="selection" width="50" align="center"/>
+          :row-class-name="getStudentRowClassName">
 
           <el-table-column label="序号" width="70" align="center">
             <template v-slot="scope">
@@ -505,17 +502,6 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="major" label="专业" min-width="160" sortable>
-            <template slot-scope="{row}">
-              <div class="major-info">
-                <span class="major-name">{{ row.major || row.systemMajor || '未知' }}</span>
-                <div class="class-info" v-if="row.studentClass">
-                  <i class="el-icon-office-building"></i>
-                  {{ row.studentClass }}
-                </div>
-              </div>
-            </template>
-          </el-table-column>
 
           <el-table-column prop="status" label="审核状态" min-width="110" align="center">
             <template slot-scope="{row}">
@@ -525,71 +511,10 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="bookAt" label="预约时间" min-width="160" sortable>
-            <template slot-scope="{row}">
-              <div class="booked_at">
-                <i class="el-icon-time"></i>
-                <span class="time-text">{{ parseTime(row.bookAt) || '无时间' }}</span>
-              </div>
-            </template>
-          </el-table-column>
 
-          <el-table-column label="操作" width="100" align="center">
-            <template slot-scope="{row}">
-              <el-button-group>
-                <el-button
-                  size="mini"
-                  type="text"
-                  icon="el-icon-view"
-                  @click="viewStudentDetail(row)"
-                  title="查看详情">
-                </el-button>
-                <el-button
-                  v-if="row.status === 'submitted'"
-                  size="mini"
-                  type="text"
-                  icon="el-icon-check"
-                  @click="approveStudent(row)"
-                  title="通过审核"
-                  class="approve-btn">
-                </el-button>
-                <el-button
-                  v-if="row.status === 'submitted'"
-                  size="mini"
-                  type="text"
-                  icon="el-icon-close"
-                  @click="rejectStudent(row)"
-                  title="拒绝审核"
-                  class="reject-btn">
-                </el-button>
-              </el-button-group>
-            </template>
-          </el-table-column>
         </el-table>
       </div>
 
-      <!-- 批量操作区域 -->
-      <div class="batch-actions" v-if="selectedStudentIds.length > 0">
-        <div class="batch-info">
-          <span>已选择 {{ selectedStudentIds.length }} 名学生</span>
-        </div>
-        <div class="batch-buttons">
-          <el-button
-            type="success"
-            size="small"
-            icon="el-icon-check"
-            @click="batchApproveStudents">
-            批量通过
-          </el-button>
-          <el-button
-            type="danger"
-            size="small"
-            icon="el-icon-close"
-            @click="batchRejectStudents">
-            批量拒绝
-          </el-button>
-        </div>
-      </div>
 
       <div slot="footer" class="dialog-footer">
         <div class="footer-left">
@@ -655,8 +580,6 @@ export default {
       dialogVisibleStudents: false,
       selectedStudents: [],
       studentLoading: false,
-      // 选中的学生ID列表
-      selectedStudentIds: [],
       // 遮罩层
       loading: true,
       // 选中数组
@@ -959,7 +882,6 @@ export default {
 
         if (res.rows && res.rows.length) {
           this.selectedStudents = res.rows;
-          this.selectedStudentIds = [];
           this.dialogVisibleStudents = true;
         } else {
           // 使用正确的消息提示方法
@@ -1376,11 +1298,6 @@ export default {
     },
 
 
-    /** 学生选择变化 */
-    handleStudentSelectionChange(selection) {
-      this.selectedStudentIds = selection.map(student => student.studentId);
-    },
-
     /** 复制到剪贴板 */
     copyToClipboard(text) {
       navigator.clipboard.writeText(text).then(() => {
@@ -1390,107 +1307,8 @@ export default {
       });
     },
 
-    /** 查看学生详情 */
-    viewStudentDetail(student) {
-      this.$alert(`
-        <div style="text-align: left;">
-          <p><strong>学号：</strong>${student.studentId}</p>
-          <p><strong>姓名：</strong>${student.studentName}</p>
-          <p><strong>所属书院：</strong>${student.academy || '未知'}</p>
-          <p><strong>专业：</strong>${student.major || student.systemMajor || '未知'}</p>
-          <p><strong>行政班：</strong>${student.studentClass || '未知'}</p>
-          <p><strong>审核状态：</strong>${this.getBookingStatusText(student.status)}</p>
-          <p><strong>预约时间：</strong>${this.parseTime(student.bookAt) || '无时间'}</p>
-        </div>
-      `, '学生详情', {
-        dangerouslyUseHTMLString: true,
-        confirmButtonText: '确定'
-      });
-    },
-
-    /** 通过学生审核 */
-    approveStudent(student) {
-      this.$confirm(`确定要通过学生 ${student.studentName} 的审核吗？`, '确认通过', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'success'
-      }).then(() => {
-        // 这里应该调用API更新学生状态
-        student.status = 'approved';
-        this.$message.success('审核通过成功');
-      }).catch(() => {
-        this.$message.info('已取消操作');
-      });
-    },
-
-    /** 拒绝学生审核 */
-    rejectStudent(student) {
-      this.$confirm(`确定要拒绝学生 ${student.studentName} 的审核吗？`, '确认拒绝', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        // 这里应该调用API更新学生状态
-        student.status = 'rejected';
-        this.$message.success('审核拒绝成功');
-      }).catch(() => {
-        this.$message.info('已取消操作');
-      });
-    },
-
-    /** 批量通过学生审核 */
-    batchApproveStudents() {
-      if (this.selectedStudentIds.length === 0) {
-        this.$message.warning('请先选择要操作的学生');
-        return;
-      }
-
-      this.$confirm(`确定要批量通过 ${this.selectedStudentIds.length} 名学生的审核吗？`, '批量通过', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'success'
-      }).then(() => {
-        // 这里应该调用API批量更新学生状态
-        this.selectedStudents.forEach(student => {
-          if (this.selectedStudentIds.includes(student.studentId)) {
-            student.status = 'approved';
-          }
-        });
-        this.selectedStudentIds = [];
-        this.$message.success('批量审核通过成功');
-      }).catch(() => {
-        this.$message.info('已取消操作');
-      });
-    },
-
-    /** 批量拒绝学生审核 */
-    batchRejectStudents() {
-      if (this.selectedStudentIds.length === 0) {
-        this.$message.warning('请先选择要操作的学生');
-        return;
-      }
-
-      this.$confirm(`确定要批量拒绝 ${this.selectedStudentIds.length} 名学生的审核吗？`, '批量拒绝', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        // 这里应该调用API批量更新学生状态
-        this.selectedStudents.forEach(student => {
-          if (this.selectedStudentIds.includes(student.studentId)) {
-            student.status = 'rejected';
-          }
-        });
-        this.selectedStudentIds = [];
-        this.$message.success('批量审核拒绝成功');
-      }).catch(() => {
-        this.$message.info('已取消操作');
-      });
-    },
-
     /** 学生对话框关闭处理 */
     handleStudentDialogClose(done) {
-      this.selectedStudentIds = [];
       done();
     },
 
