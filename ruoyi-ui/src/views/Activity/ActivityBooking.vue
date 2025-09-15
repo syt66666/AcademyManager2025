@@ -66,6 +66,7 @@
         style="width: 100%"
         class="modern-table"
         :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
+        :row-class-name="getRowClassName"
       >
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
@@ -83,7 +84,7 @@
           </template>
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
-        <el-table-column label="组织单位" align="center" prop="organizer" />
+        <el-table-column label="组织单位" align="center" prop="organizer"  width="90"/>
         <el-table-column label="活动开始时间" align="center" prop="startTime">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -94,7 +95,7 @@
             <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="活动状态" align="center" width="100">
+        <el-table-column label="活动状态" align="center" width="90">
           <template slot-scope="scope">
             <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
               {{ getActivityStatusText(scope.row) }}
@@ -108,28 +109,28 @@
               type="text"
               size="mini"
               class="action-button signup-button"
-              @click="handleSignUp(scope.row)"
+              @click="handleDetail(scope.row)"
             >报名</el-button>
             <el-button
               v-else-if="getSignStatusText(scope.row) === '已报名'"
               type="text"
               size="mini"
               class="action-button cancel-button"
-              @click="handleCancel(scope.row)"
+              @click="handleDetail(scope.row)"
             >取消报名</el-button>
             <el-button
               v-else-if="isActivityFull(scope.row)"
               type="text"
               size="mini"
-              class="action-button full-button"
-              disabled
+              class="action-button detail-button"
+              @click="handleDetail(scope.row)"
             >已满</el-button>
             <el-button
               v-else
               type="text"
               size="mini"
-              class="action-button disabled-button"
-              disabled
+              class="action-button detail-button"
+              @click="handleDetail(scope.row)"
             >不可报名</el-button>
           </template>
         </el-table-column>
@@ -469,10 +470,12 @@ export default {
 
       const checkPromises = this.activitiesList.map(activity =>
         checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
-          activity.isBooked = res.data.isBooked;
+          // 使用 Vue.set 确保响应式更新
+          this.$set(activity, 'isBooked', res.data.isBooked);
+          console.log(`活动 ${activity.activityName} 报名状态更新为: ${res.data.isBooked}`);
         }).catch(error => {
           console.error('检查报名状态失败:', error);
-          activity.isBooked = false;
+          this.$set(activity, 'isBooked', false);
         })
       );
 
@@ -551,6 +554,14 @@ export default {
         case "不可报名": return "danger";
         default: return "info";
       }
+    },
+
+    // 获取表格行样式类名
+    getRowClassName({row}) {
+      if (row.isBooked) {
+        return 'booked-row';
+      }
+      return '';
     },
 
     // 获取容量样式
@@ -644,10 +655,19 @@ export default {
         // 4. 更新活动列表
         const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
         if (index !== -1) {
-          this.activitiesList.splice(index, 1, updatedActivity);
+          // 使用 Vue.set 确保响应式更新
+          this.$set(this.activitiesList, index, updatedActivity);
+          console.log(`活动 ${activity.activityName} 报名状态已更新为已报名`);
         }
 
         this.$message.success("报名成功！");
+        
+        // 报名成功后关闭详情弹窗
+        this.detailDialogVisible = false;
+        this.selectedActivity = null;
+        
+        // 重新检查报名状态以确保数据同步
+        await this.checkBookingStatus();
       } catch (error) {
         console.error("报名失败:", error);
         this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
@@ -680,10 +700,19 @@ export default {
         // 4. 更新活动列表
         const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
         if (index !== -1) {
-          this.activitiesList.splice(index, 1, updatedActivity);
+          // 使用 Vue.set 确保响应式更新
+          this.$set(this.activitiesList, index, updatedActivity);
+          console.log(`活动 ${activity.activityName} 报名状态已更新为未报名`);
         }
 
         this.$message.success("取消报名成功！");
+        
+        // 取消报名成功后关闭详情弹窗
+        this.detailDialogVisible = false;
+        this.selectedActivity = null;
+        
+        // 重新检查报名状态以确保数据同步
+        await this.checkBookingStatus();
       } catch (error) {
         console.error("取消报名失败:", error);
         this.$message.error("取消报名失败: " + (error.msg || "请稍后重试"));
@@ -831,6 +860,36 @@ export default {
 .status-tag {
   padding: 5px 8px;
   font-size: 12px;
+}
+
+/* 已报名活动行样式 */
+.booked-row {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fff1 100%) !important;
+  border-left: 4px solid #27ae60 !important;
+  position: relative;
+}
+
+.booked-row:hover {
+  background: linear-gradient(135deg, #e6fff1 0%, #d4f4dd 100%) !important;
+}
+
+.booked-row::before {
+  content: '✓';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: #27ae60;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
 }
 
 .action-button {

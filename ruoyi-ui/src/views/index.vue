@@ -36,7 +36,7 @@
                 <div
                   v-for="(event, index) in getDateEvents(data.day)"
                   :key="index"
-                  :class="['calendar-event', 'status-' + getActivityStatusType(event)]"
+                  :class="['calendar-event', 'status-' + getActivityStatusType(event), { 'booked': event.isBooked }]"
                   @click="handleEventClick(event)"
                 >
                   <div class="event-summary">
@@ -96,6 +96,10 @@
             <div class="legend-item">
               <div class="legend-color status-signup-ended"></div>
               <span class="legend-text">报名已截止</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color status-booked"></div>
+              <span class="legend-text">已报名</span>
             </div>
           </div>
         </div>
@@ -1008,6 +1012,31 @@ export default {
       box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
     }
 
+    /* 已报名状态 - 绿色边框和特殊标识 */
+    &.booked {
+      border: 2px solid #27ae60;
+      box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+      position: relative;
+      
+      &::after {
+        content: '✓';
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 16px;
+        height: 16px;
+        background: #27ae60;
+        color: white;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(39, 174, 96, 0.4);
+      }
+    }
+
     &::before {
       content: '';
       position: absolute;
@@ -1377,6 +1406,30 @@ export default {
       /* 报名已截止 - 橙色 */
       &.status-signup-ended {
         background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      }
+
+      /* 已报名 - 绿色 */
+      &.status-booked {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        border: 2px solid #27ae60;
+        position: relative;
+        
+        &::after {
+          content: '✓';
+          position: absolute;
+          top: -2px;
+          right: -2px;
+          width: 12px;
+          height: 12px;
+          background: #27ae60;
+          color: white;
+          border-radius: 50%;
+          font-size: 8px;
+          font-weight: bold;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       }
     }
 
