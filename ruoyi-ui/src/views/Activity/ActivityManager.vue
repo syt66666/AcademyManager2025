@@ -196,8 +196,10 @@
               <el-button
                 size="mini"
                 type="text"
+                :disabled="isActivityEnded(scope.row)"
                 @click="handleUpdate(scope.row)"
-                class="action-button edit-button">
+                class="action-button edit-button"
+                :class="{ 'disabled-button': isActivityEnded(scope.row) }">
                 编辑活动
               </el-button>
             </div>
@@ -778,6 +780,13 @@ export default {
       }
     },
 
+    /** 判断活动是否已结束 */
+    isActivityEnded(row) {
+      const now = new Date();
+      const end = new Date(row.endTime);
+      return now > end;
+    },
+
     /** 计算容量百分比 */
     calculateCapacityPercentage(row) {
       if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
@@ -1070,6 +1079,12 @@ export default {
 
     /** 修改按钮操作 */
     async handleUpdate(row) {
+      // 检查活动是否已结束
+      if (this.isActivityEnded(row)) {
+        this.$message.warning('活动已结束，不允许编辑活动信息');
+        return;
+      }
+
       this.reset();
       const activityId = row.activityId || this.ids;
 
@@ -1731,6 +1746,23 @@ export default {
 .export-button { background: #f0f7ff; border-color: #d9ecff; color: #409eff; }
 .edit-button { background: #f4f4f5; border-color: #d3d4d6; color: #909399; }
 .delete-button { background: #fef0f0; border-color: #fde2e2; color: #f56c6c; }
+
+/* 禁用按钮样式 */
+.disabled-button {
+  background: #f5f7fa !important;
+  border-color: #e4e7ed !important;
+  color: #c0c4cc !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.disabled-button:hover {
+  background: #f5f7fa !important;
+  border-color: #e4e7ed !important;
+  color: #c0c4cc !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
 
 
 /* 学生对话框优化样式 */
