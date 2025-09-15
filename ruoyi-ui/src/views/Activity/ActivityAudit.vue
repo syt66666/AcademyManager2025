@@ -573,14 +573,22 @@ export default {
 
     async approveCurrent() {
       if (!this.currentBooking) return;
-      const payload = {
-        bookingId: this.currentBooking.bookingId,
-        status: '已通过',
-        reviewComment: '系统审核通过',
-        reviewTime: new Date().toISOString(),
-        reviewer: this.$store.state.user.name
-      };
+      
       try {
+        await this.$confirm('确认通过该活动的审核吗？', '审核确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        });
+        
+        const payload = {
+          bookingId: this.currentBooking.bookingId,
+          status: '已通过',
+          reviewComment: '系统审核通过',
+          reviewTime: new Date().toISOString(),
+          reviewer: this.$store.state.user.name
+        };
+        
         this.actionLoading = true;
         await this.$options.methods._updateSingleBooking.call(this, payload);
         this.$message.success('审核通过');
@@ -588,7 +596,9 @@ export default {
         this.getList();
         this.fetchAuditCount();
       } catch (e) {
-        this.$message.error('审核通过失败');
+        if (e !== 'cancel') {
+          this.$message.error('审核通过失败');
+        }
       } finally {
         this.actionLoading = false;
       }
