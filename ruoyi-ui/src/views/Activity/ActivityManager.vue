@@ -1295,14 +1295,22 @@ export default {
 
     /** 图片上传成功回调 */
     handleImageSuccess(response, file) {
+      console.log('📤 [ActivityManager] 图片上传响应:', response);
+      console.log('📁 [ActivityManager] 文件信息:', file);
+      
       if (response.code === 200 && response.url) {
+        console.log('✅ [ActivityManager] 上传成功，设置图片URL:', response.url);
         // 使用Vue.set确保响应式更新
         this.$set(this.form, 'pictureUrl', response.url);
         this.$message.success('图片上传成功');
         
         // 强制更新视图
         this.$forceUpdate();
+        
+        // 测试URL处理
+        console.log('🧪 [ActivityManager] 测试URL处理结果:', this.getActivityImageUrl(response.url));
       } else {
+        console.log('❌ [ActivityManager] 上传失败:', response.msg);
         this.$message.error(response.msg || '图片上传失败');
       }
     },
@@ -1347,13 +1355,38 @@ export default {
 
     /** 获取活动图片完整URL */
     getActivityImageUrl(pictureUrl) {
-      if (!pictureUrl) return '';
+      console.log('🔍 [ActivityManager] 处理图片URL:', {
+        originalUrl: pictureUrl,
+        baseAPI: process.env.VUE_APP_BASE_API,
+        isCompleteUrl: pictureUrl && (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')),
+        isProfilePath: pictureUrl && pictureUrl.startsWith('/profile/')
+      });
+      
+      if (!pictureUrl) {
+        console.log('❌ [ActivityManager] 图片URL为空');
+        return '';
+      }
+      
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+        console.log('✅ [ActivityManager] 使用完整URL:', pictureUrl);
         return pictureUrl;
       }
-      // 否则拼接基础API路径
-      return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
+      
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
+      if (pictureUrl.startsWith('/profile/')) {
+        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
+        console.log('🔗 [ActivityManager] 拼接相对路径:', {
+          baseAPI: process.env.VUE_APP_BASE_API,
+          relativePath: pictureUrl,
+          result: fullUrl
+        });
+        return fullUrl;
+      }
+      
+      // 其他情况直接返回
+      console.log('⚠️ [ActivityManager] 未知URL格式，直接返回:', pictureUrl);
+      return pictureUrl;
     },
 
   },
