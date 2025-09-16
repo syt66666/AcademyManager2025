@@ -1597,39 +1597,20 @@ export default {
       this.activityImagePreviewVisible = true;
     },
 
-    /** 获取活动图片完整URL */
+    /** 获取活动图片完整URL（仿照审核界面实现） */
     getActivityImageUrl(pictureUrl) {
-      console.log('🔍 [ActivityParticipate] 处理图片URL:', {
-        originalUrl: pictureUrl,
-        baseAPI: process.env.VUE_APP_BASE_API,
-        isCompleteUrl: pictureUrl && (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')),
-        isProfilePath: pictureUrl && pictureUrl.startsWith('/profile/')
-      });
-      
-      if (!pictureUrl) {
-        console.log('❌ [ActivityParticipate] 图片URL为空');
-        return '';
-      }
+      if (!pictureUrl) return '';
       
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('✅ [ActivityParticipate] 使用完整URL:', pictureUrl);
         return pictureUrl;
       }
       
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
       if (pictureUrl.startsWith('/profile/')) {
-        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        console.log('🔗 [ActivityParticipate] 拼接相对路径:', {
-          baseAPI: process.env.VUE_APP_BASE_API,
-          relativePath: pictureUrl,
-          result: fullUrl
-        });
-        return fullUrl;
+        return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
       }
       
-      // 其他情况直接返回
-      console.log('⚠️ [ActivityParticipate] 未知URL格式，直接返回:', pictureUrl);
       return pictureUrl;
     }
 

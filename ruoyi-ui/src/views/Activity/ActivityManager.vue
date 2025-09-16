@@ -223,11 +223,11 @@
                 <div class="expand-content">
                   <div class="activity-image-container">
                     <el-image
-                      :src="getActivityImageUrlFixed(props.row.pictureUrl)"
-                      :preview-src-list="[getActivityImageUrlFixed(props.row.pictureUrl)]"
+                      :src="getActivityImageUrlSmart(props.row.pictureUrl)"
+                      :preview-src-list="[getActivityImageUrlSmart(props.row.pictureUrl)]"
                       fit="cover"
                       class="activity-image"
-                      @click="previewActivityImage(getActivityImageUrlFixed(props.row.pictureUrl))"
+                      @click="previewActivityImage(getActivityImageUrlSmart(props.row.pictureUrl))"
                     />
                   </div>
                 </div>
@@ -412,7 +412,7 @@
                     :disabled="isSubmitting">
                     <div v-if="form.pictureUrl" class="image-preview">
                       <img 
-                        :src="getActivityImageUrlFixed(form.pictureUrl)" 
+                        :src="getActivityImageUrlSmart(form.pictureUrl)" 
                         class="uploaded-image" 
                         @error="handleImageLoadError"
                         @load="handleImageLoadSuccess"
@@ -1443,7 +1443,7 @@ export default {
 
     /** 预览图片 */
     previewImage() {
-      this.previewImageUrl = this.getActivityImageUrlFixed(this.form.pictureUrl);
+      this.previewImageUrl = this.getActivityImageUrlSmart(this.form.pictureUrl);
       this.imagePreviewVisible = true;
     },
 
@@ -1509,7 +1509,25 @@ export default {
       
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        // 检查URL中是否包含中文字符，如果有则进行编码处理
+        console.log('🔧 [ActivityManager] 尝试使用原始URL（不编码）:', pictureUrl);
+        return pictureUrl;
+      }
+      
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
+      if (pictureUrl.startsWith('/profile/')) {
+        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
+        return this.getActivityImageUrlFixed(fullUrl);
+      }
+      
+      return pictureUrl;
+    },
+
+    /** 获取活动图片完整URL（尝试编码版本） */
+    getActivityImageUrlEncoded(pictureUrl) {
+      if (!pictureUrl) return '';
+      
+      // 如果已经是完整URL，尝试编码处理
+      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         try {
           // 解析URL
           const url = new URL(pictureUrl);
@@ -1519,12 +1537,12 @@ export default {
             return encodeURIComponent(decodeURIComponent(segment));
           }).join('/');
           
-          const fixedUrl = `${url.protocol}//${url.host}${encodedPath}`;
-          console.log('🔧 [ActivityManager] 修复中文编码URL:', {
+          const encodedUrl = `${url.protocol}//${url.host}${encodedPath}`;
+          console.log('🔧 [ActivityManager] 尝试编码URL:', {
             original: pictureUrl,
-            fixed: fixedUrl
+            encoded: encodedUrl
           });
-          return fixedUrl;
+          return encodedUrl;
         } catch (error) {
           console.error('❌ [ActivityManager] URL解析失败:', error);
           return pictureUrl;
@@ -1534,7 +1552,31 @@ export default {
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        return this.getActivityImageUrlFixed(fullUrl);
+        return this.getActivityImageUrlEncoded(fullUrl);
+      }
+      
+      return pictureUrl;
+    },
+
+    /** 智能获取活动图片URL（仿照审核界面实现） */
+    getActivityImageUrlSmart(pictureUrl) {
+      if (!pictureUrl) return '';
+      
+      // 如果已经是完整URL，直接返回
+      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+        console.log('🧠 [ActivityManager] 智能URL处理 - 使用完整URL:', pictureUrl);
+        return pictureUrl;
+      }
+      
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
+      if (pictureUrl.startsWith('/profile/')) {
+        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
+        console.log('🧠 [ActivityManager] 智能URL处理 - 拼接相对路径:', {
+          baseAPI: process.env.VUE_APP_BASE_API,
+          relativePath: pictureUrl,
+          result: fullUrl
+        });
+        return fullUrl;
       }
       
       return pictureUrl;
