@@ -1,7 +1,14 @@
 <template>
   <div class="app-container">
-    <!-- 视图切换标签 -->
-    <el-tabs v-model="activeView" class="view-tabs">
+    <!-- 管理员界面：显示活动管理 -->
+    <div v-if="isAdmin" class="admin-home-container">
+      <ActivityManager :isHomeMode="true" />
+    </div>
+    
+    <!-- 学生界面：显示日历和活动报名 -->
+    <div v-else>
+      <!-- 视图切换标签 -->
+      <el-tabs v-model="activeView" class="view-tabs">
       <!-- 日历视图 -->
       <el-tab-pane label="日历视图" name="calendar">
         <!-- 自定义日历头部 -->
@@ -183,6 +190,20 @@
           <div class="section-content">{{ selectedActivity.activityDescription }}</div>
         </div>
 
+        <!-- 活动图片展示 -->
+        <div class="detail-section-content" v-if="selectedActivity.pictureUrl">
+          <h4 class="section-title"><i class="el-icon-picture"></i> 活动图片</h4>
+          <div class="section-content">
+            <div class="activity-image-container">
+              <img 
+                :src="selectedActivity.pictureUrl" 
+                class="activity-image" 
+                @click="previewActivityImage(selectedActivity.pictureUrl)"
+                alt="活动图片" />
+            </div>
+          </div>
+        </div>
+
         <!-- <div class="detail-section-content">
           <h4 class="section-title"><i class="el-icon-warning"></i> 注意事项</h4>
           <div class="section-content">{{ selectedActivity.notes }}</div>
@@ -234,6 +255,19 @@
 
 
     </el-dialog>
+
+    <!-- 图片预览对话框 -->
+    <el-dialog
+      title="图片预览"
+      :visible.sync="imagePreviewVisible"
+      width="60%"
+      append-to-body
+      class="image-preview-dialog">
+      <div class="preview-container">
+        <img :src="previewImageUrl" class="preview-image" />
+      </div>
+    </el-dialog>
+    </div> <!-- 学生界面结束 -->
   </div>
 </template>
 
@@ -241,6 +275,7 @@
 <script>
 import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities } from "@/api/system/activities";
 import {addBooking, checkBookingSimple, deleteBookingsByActivityAndStudent} from "@/api/system/bookings";
+import ActivityManager from "@/views/Activity/ActivityManager.vue";
 import { getStudent } from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
 import ActivityBooking from "./Activity/ActivityBooking.vue";
@@ -248,7 +283,8 @@ import ActivityBooking from "./Activity/ActivityBooking.vue";
 export default {
   name: "ActivityDashboard",
   components: {
-    ActivityBooking
+    ActivityBooking,
+    ActivityManager
   },
   data() {
     return {
@@ -279,6 +315,9 @@ export default {
 
       // 弹窗控制
       dialogVisible: false,
+      // 图片预览相关
+      imagePreviewVisible: false,
+      previewImageUrl: '',
 
       // 报名表单相关
       showSignUpForm: false,
@@ -299,6 +338,11 @@ export default {
     };
   },
   computed: {
+    // 判断是否为管理员
+    isAdmin() {
+      const userName = this.$store.state.user.name;
+      return userName && userName >= '10001' && userName <= '10007';
+    },
     currentMonthTitle() {
       const d = new Date(this.calendarDate);
       return `${d.getFullYear()}年${(d.getMonth() + 1).toString().padStart(2, '0')}月`;
@@ -827,6 +871,12 @@ export default {
           }
         });
       }, 100);
+    },
+
+    /** 预览活动图片 */
+    previewActivityImage(imageUrl) {
+      this.previewImageUrl = imageUrl;
+      this.imagePreviewVisible = true;
     }
   }
 };
@@ -1787,6 +1837,128 @@ export default {
   visibility: visible !important;
   opacity: 1 !important;
   margin: 0 !important;
+}
+
+/* 活动图片展示样式 */
+.activity-image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.activity-image {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 图片预览对话框样式 */
+.image-preview-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(to right, #409EFF, #64b5ff);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+}
+
+.preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 管理员首页容器样式 */
+.admin-home-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  min-height: calc(100vh - 84px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* 专门针对管理员首页的ActivityManager样式 */
+.admin-home-container .admin-activity-manager {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.admin-home-container .admin-activity-manager ::v-deep .app-container {
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 20px !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  background: #f5f7fa;
+  min-height: calc(100vh - 84px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.admin-home-container .admin-activity-manager ::v-deep .search-card,
+.admin-home-container .admin-activity-manager ::v-deep .table-card {
+  width: 100%;
+  margin: 0;
+}
+
+.admin-home-container .admin-activity-manager ::v-deep .el-form {
+  width: 100%;
+  text-align: left;
+}
+
+.admin-home-container .admin-activity-manager ::v-deep .table-container {
+  width: 100%;
+  text-align: left;
+}
+
+.admin-home-container .admin-activity-manager ::v-deep .el-form-item__content {
+  justify-content: flex-start;
 }
 </style>
 

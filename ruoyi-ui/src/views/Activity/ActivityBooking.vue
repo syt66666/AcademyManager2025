@@ -219,6 +219,20 @@
             <div class="rich-text-content" v-html="selectedActivity.activityDescription || '暂无描述信息'"></div>
           </div>
         </div>
+
+        <!-- 活动图片展示 -->
+        <div class="detail-section-content" v-if="selectedActivity.pictureUrl">
+          <h4 class="section-title"><i class="el-icon-picture"></i> 活动图片</h4>
+          <div class="section-content">
+            <div class="activity-image-container">
+              <img 
+                :src="selectedActivity.pictureUrl" 
+                class="activity-image" 
+                @click="previewActivityImage(selectedActivity.pictureUrl)"
+                alt="活动图片" />
+            </div>
+          </div>
+        </div>
         <!-- 报名/取消按钮 -->
         <div class="signup-status">
           <el-button
@@ -260,6 +274,18 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 图片预览对话框 -->
+    <el-dialog
+      title="图片预览"
+      :visible.sync="imagePreviewVisible"
+      width="60%"
+      append-to-body
+      class="image-preview-dialog">
+      <div class="preview-container">
+        <img :src="previewImageUrl" class="preview-image" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -280,6 +306,9 @@ export default {
       // 详情弹窗相关
       detailDialogVisible: false,
       selectedActivity: null,
+      // 图片预览相关
+      imagePreviewVisible: false,
+      previewImageUrl: '',
       // 预定义的活动类型
       predefinedActivityTypes: [
         { value: '1', label: '人格塑造与价值引领活动类' },
@@ -717,6 +746,12 @@ export default {
         console.error("取消报名失败:", error);
         this.$message.error("取消报名失败: " + (error.msg || "请稍后重试"));
       }
+    },
+
+    /** 预览活动图片 */
+    previewActivityImage(imageUrl) {
+      this.previewImageUrl = imageUrl;
+      this.imagePreviewVisible = true;
     }
   }
 };
@@ -1206,5 +1241,76 @@ export default {
   .activity-detail .signup-status .cancel-button {
     width: 100%;
   }
+}
+
+/* 活动图片展示样式 */
+.activity-image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.activity-image {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 图片预览对话框样式 */
+.image-preview-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(to right, #409EFF, #64b5ff);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+}
+
+.preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">
+  <div class="app-container" :class="{ 'home-mode': isHomeMode }">
     <!-- 搜索区域 -->
     <div class="search-card">
       <div class="card-header">
@@ -218,6 +218,18 @@
                 <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
                 <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
               </div>
+              <div class="expand-row" v-if="props.row.pictureUrl">
+                <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
+                <div class="expand-content">
+                  <div class="activity-image-container">
+                    <img 
+                      :src="props.row.pictureUrl" 
+                      class="activity-image" 
+                      @click="previewActivityImage(props.row.pictureUrl)"
+                      alt="活动图片" />
+                  </div>
+                </div>
+              </div>
             </div>
           </template>
         </el-table-column>
@@ -375,12 +387,40 @@
             </div>
             <div class="section-content">
               <el-form-item label="活动描述" prop="activityDescription">
-                <div class="editor-container">
-                  <quill-editor
-                    v-model="form.activityDescription"
-                    :options="editorOption"
-                    class="quill-editor"
-                  />
+                <el-input
+                  type="textarea"
+                  v-model="form.activityDescription"
+                  :rows="6"
+                  placeholder="请输入活动描述"
+                  class="form-textarea"
+                />
+              </el-form-item>
+
+              <el-form-item label="活动图片" prop="pictureUrl">
+                <div class="image-upload-container">
+                  <el-upload
+                    class="image-uploader"
+                    :action="uploadUrl"
+                    :headers="uploadHeaders"
+                    :show-file-list="false"
+                    :on-success="handleImageSuccess"
+                    :on-error="handleImageError"
+                    :before-upload="beforeImageUpload"
+                    accept="image/*"
+                    :disabled="isSubmitting">
+                    <div v-if="form.pictureUrl" class="image-preview">
+                      <img :src="form.pictureUrl" class="uploaded-image" @error="handleImageLoadError" />
+                      <div class="image-overlay">
+                        <i class="el-icon-zoom-in" @click.stop="previewImage"></i>
+                        <i class="el-icon-delete" @click.stop="removeImage"></i>
+                      </div>
+                    </div>
+                    <div v-else class="upload-placeholder">
+                      <i class="el-icon-plus"></i>
+                      <div class="upload-text">点击上传图片</div>
+                      <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 2MB</div>
+                    </div>
+                  </el-upload>
                 </div>
               </el-form-item>
             </div>
@@ -534,6 +574,18 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 图片预览对话框 -->
+    <el-dialog
+      title="图片预览"
+      :visible.sync="imagePreviewVisible"
+      width="60%"
+      append-to-body
+      class="image-preview-dialog">
+      <div class="preview-container">
+        <img :src="previewImageUrl" class="preview-image" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -544,44 +596,31 @@ import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
-import { quillEditor } from 'vue-quill-editor'
-import 'quill/dist/quill.core.css'
-import 'quill/dist/quill.snow.css'
-import 'quill/dist/quill.bubble.css'
 
 export default {
   name: "Activities",
+  props: {
+    isHomeMode: {
+      type: Boolean,
+      default: false
+    }
+  },
   components: {
-    quillEditor
   },
   data() {
     return {
 
-      editorOption: {
-        placeholder: '请详细描述活动内容、目的和要求...',
-        modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['blockquote', 'code-block'],
-            [{ 'header': 1 }, { 'header': 2 }],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            [{ 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'direction': 'rtl' }],
-            [{ 'size': ['small', false, 'large', 'huge'] }],
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'font': [] }],
-            [{ 'align': [] }],
-            ['clean'],
-            // ['image']
-          ]
-        }
-      },
       // 新增状态
       dialogVisibleStudents: false,
       selectedStudents: [],
       studentLoading: false,
+      // 图片上传相关
+      imagePreviewVisible: false,
+      previewImageUrl: '',
+      uploadUrl: process.env.VUE_APP_BASE_API + '/common/upload', // 上传接口地址
+      uploadHeaders: {
+        'Authorization': 'Bearer ' + getToken()
+      },
       // 遮罩层
       loading: true,
       // 选中数组
@@ -1037,6 +1076,7 @@ export default {
         createdAt: null,
         organizer: null,
         notes: null,
+        pictureUrl: null,
         version: 0
       };
       this.resetForm("form");
@@ -1104,8 +1144,7 @@ export default {
         // 等待对话框和编辑器完全渲染
         await this.$nextTick();
 
-        // 如果需要，可以在这里添加额外的处理逻辑
-        console.log('富文本内容已加载:', this.form.activityDescription);
+        // 可添加额外处理
       } catch (error) {
         console.error('获取活动详情失败:', error);
         this.$message.error('获取活动详情失败');
@@ -1130,18 +1169,7 @@ export default {
         const result = await getNickName();
         this.form.organizer = result.msg;
 
-        console.log("提交表单数据：", JSON.parse(JSON.stringify(this.form)));
-
-        // 2. 处理富文本内容中的图片（如果有）
-        let descriptionToSave = this.form.activityDescription || '';
-
-        // 检查活动描述是否包含Base64图片
-        if (descriptionToSave.includes('<img src="data:image')) {
-          console.log('活动描述包含图片，开始处理...');
-          descriptionToSave = await this.processImagesInHtml(descriptionToSave);
-          console.log('处理后的活动描述:', descriptionToSave);
-          this.form.activityDescription = descriptionToSave;
-        }
+        // 普通文本内容无需特殊处理
 
         // 3. 验证表单
         const valid = await new Promise((resolve) => {
@@ -1155,6 +1183,7 @@ export default {
 
         // 4. 计算活动状态
         this.calculateStatus();
+
 
         // 5. 根据情况执行新增/修改
         if (this.form.activityId != null) {
@@ -1181,90 +1210,7 @@ export default {
     },
 
 // 处理富文本中的图片，将Base64图片上传到服务器并替换为URL
-    async processImagesInHtml(htmlContent) {
-      if (!htmlContent || !htmlContent.includes('<img src="data:image')) {
-        return htmlContent; // 没有图片，直接返回
-      }
-
-      console.log('开始处理HTML中的图片');
-
-      try {
-        // 使用新的接口处理富文本中的图片
-        const response = await this.$http.post('/common/upload/rich-text', {
-          content: htmlContent,
-          type: 'activity'
-        }, {
-          headers: {
-            'Authorization': 'Bearer ' + getToken()
-          }
-        });
-
-        if (response.data.code === 200) {
-          console.log('富文本内容处理成功');
-          return response.data.content;
-        } else {
-          throw new Error(response.data.msg || '处理富文本内容失败');
-        }
-      } catch (error) {
-        console.error('处理富文本内容失败:', error);
-        // 如果处理失败，尝试逐个处理图片
-        return this.processImagesManually(htmlContent);
-      }
-    },
-
-// 手动处理图片（作为备用方案）
-    async processImagesManually(htmlContent) {
-      console.log('使用手动方式处理图片');
-
-      // 创建一个临时DOM元素来解析HTML
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = htmlContent;
-
-      // 获取所有图片元素
-      const images = tempDiv.querySelectorAll('img[src^="data:image"]');
-      console.log('找到', images.length, '个Base64图片');
-
-      // 处理每个图片
-      for (const img of images) {
-        const base64Data = img.src;
-
-        try {
-          // 从Base64数据中提取图片类型和内容
-          const matches = base64Data.match(/^data:(image\/\w+);base64,(.+)$/);
-          if (!matches || matches.length !== 3) {
-            console.warn('无法解析Base64图片数据');
-            continue;
-          }
-
-          const imageType = matches[1]; // 例如：image/png
-          const imageData = matches[2]; // Base64编码的图片数据
-
-          // 上传Base64图片
-          const response = await this.$http.post('/common/upload/base64', {
-            imageType: imageType,
-            base64Data: imageData,
-            type: 'activity'
-          }, {
-            headers: {
-              'Authorization': 'Bearer ' + getToken()
-            }
-          });
-
-          if (response.data.code === 200) {
-            // 替换图片src为上传后的URL
-            img.src = response.data.url;
-            console.log('图片上传成功，URL:', img.src);
-          } else {
-            console.error('图片上传失败:', response.data.msg);
-          }
-        } catch (error) {
-          console.error('处理图片时出错:', error);
-        }
-      }
-
-      // 返回处理后的HTML
-      return tempDiv.innerHTML;
-    },
+    
 
     /** 删除按钮操作 */
     handleDelete(row) {
@@ -1327,6 +1273,76 @@ export default {
       done();
     },
 
+    // ========== 图片上传相关方法 ==========
+
+    /** 图片上传前验证 */
+    beforeImageUpload(file) {
+      const isImage = file.type.startsWith('image/');
+      const isLt2M = file.size / 1024 / 1024 < 2;
+
+      if (!isImage) {
+        this.$message.error('只能上传图片文件!');
+        return false;
+      }
+      if (!isLt2M) {
+        this.$message.error('上传图片大小不能超过 2MB!');
+        return false;
+      }
+      return true;
+    },
+
+    /** 图片上传成功回调 */
+    handleImageSuccess(response, file) {
+      if (response.code === 200 && response.url) {
+        // 使用Vue.set确保响应式更新
+        this.$set(this.form, 'pictureUrl', response.url);
+        this.$message.success('图片上传成功');
+        
+        // 强制更新视图
+        this.$forceUpdate();
+      } else {
+        this.$message.error(response.msg || '图片上传失败');
+      }
+    },
+
+    /** 图片上传失败回调 */
+    handleImageError(error) {
+      console.error('图片上传失败:', error);
+      this.$message.error('图片上传失败，请重试');
+    },
+
+    /** 图片加载错误处理 */
+    handleImageLoadError(event) {
+      console.error('图片加载失败:', event);
+      this.$message.error('图片加载失败，请检查图片URL');
+    },
+
+    /** 预览图片 */
+    previewImage() {
+      this.previewImageUrl = this.form.pictureUrl;
+      this.imagePreviewVisible = true;
+    },
+
+    /** 删除图片 */
+    removeImage() {
+      this.$confirm('确定要删除这张图片吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.$set(this.form, 'pictureUrl', null);
+        this.$message.success('图片已删除');
+      }).catch(() => {
+        // 用户取消删除
+      });
+    },
+
+    /** 预览活动图片 */
+    previewActivityImage(imageUrl) {
+      this.previewImageUrl = imageUrl;
+      this.imagePreviewVisible = true;
+    },
+
   },
   watch: {
     'form.activityTotalCapacity'(newVal) {
@@ -1374,6 +1390,33 @@ export default {
   padding: 20px;
   background: #f5f7fa;
   min-height: 100vh;
+}
+
+/* 首页模式样式 */
+.app-container.home-mode {
+  margin-left: 0 !important;
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: calc(100vh - 84px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* 首页模式下的表格样式 */
+.app-container.home-mode .table-card {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.app-container.home-mode .el-table {
+  width: 100%;
+  min-width: 1200px; /* 确保表格有足够的最小宽度 */
+}
+
+.app-container.home-mode .el-table__body-wrapper {
+  overflow-x: auto;
 }
 
 /* 统一卡片样式 */
@@ -1973,37 +2016,12 @@ export default {
     color: #606266;
     font-weight: 500;
   }
-  /* 富文本编辑器样式 */
+  /* 文本域容器样式 */
   .editor-container {
     border: 1px solid #dcdfe6;
     border-radius: 8px;
     line-height: normal;
-  }
-
-  .quill-editor {
-    min-height: 200px;
-  }
-
-  .quill-editor /deep/ .ql-toolbar {
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    border-bottom: 1px solid #dcdfe6;
-  }
-
-  .quill-editor /deep/ .ql-container {
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-    min-height: 150px;
-    font-size: 14px;
-  }
-
-  .quill-editor /deep/ .ql-editor {
-    min-height: 150px;
-  }
-
-  .quill-editor /deep/ .ql-editor.ql-blank::before {
-    color: #c0c4cc;
-    font-style: normal;
+    padding: 4px;
   }
 
   .batch-buttons {
@@ -2416,6 +2434,212 @@ export default {
   .custom-pagination {
     padding: 8px;
     justify-content: center;
+  }
+}
+
+/* ========== 图片上传相关样式 ========== */
+
+/* 图片上传容器 */
+.image-upload-container {
+  width: 100%;
+}
+
+.image-uploader {
+  width: 100%;
+}
+
+/* 上传占位符 */
+.upload-placeholder {
+  width: 100%;
+  height: 200px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #409EFF;
+    background: #f0f7ff;
+  }
+
+  i {
+    font-size: 48px;
+    color: #c0c4cc;
+    margin-bottom: 16px;
+  }
+
+  .upload-text {
+    font-size: 16px;
+    color: #606266;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .upload-tip {
+    font-size: 12px;
+    color: #909399;
+  }
+}
+
+/* 图片预览 */
+.image-preview {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e4e7ed;
+
+  .uploaded-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+
+    i {
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  &:hover .image-overlay {
+    opacity: 1;
+  }
+}
+
+/* 活动图片展示 */
+.activity-image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.activity-image {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 图片预览对话框 */
+.image-preview-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(to right, #409EFF, #64b5ff);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+}
+
+.preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .upload-placeholder {
+    height: 150px;
+
+    i {
+      font-size: 36px;
+    }
+
+    .upload-text {
+      font-size: 14px;
+    }
+
+    .upload-tip {
+      font-size: 11px;
+    }
+  }
+
+  .image-preview {
+    height: 150px;
+  }
+
+  .activity-image {
+    max-width: 150px;
+    max-height: 100px;
+  }
+
+  .image-preview-dialog {
+    .el-dialog {
+      width: 95% !important;
+      margin: 0 auto;
+    }
   }
 }
 </style>

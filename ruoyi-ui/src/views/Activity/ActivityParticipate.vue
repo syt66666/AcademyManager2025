@@ -202,6 +202,18 @@
                 <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
                 <div class="expand-content">{{ props.row.activityDescription }}</div>
               </div>
+              <div class="expand-row" v-if="props.row.pictureUrl">
+                <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
+                <div class="expand-content">
+                  <div class="activity-image-container">
+                    <img 
+                      :src="props.row.pictureUrl" 
+                      class="activity-image" 
+                      @click="previewActivityImage(props.row.pictureUrl)"
+                      alt="活动图片" />
+                  </div>
+                </div>
+              </div>
               <!-- <div class="expand-row">
                 <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
                 <div class="expand-content">{{ props.row.notes }}</div>
@@ -503,6 +515,18 @@
     </el-button>
       </span>
     </el-dialog>
+
+    <!-- 活动图片预览对话框 -->
+    <el-dialog
+      title="活动图片预览"
+      :visible.sync="activityImagePreviewVisible"
+      width="60%"
+      append-to-body
+      class="image-preview-dialog">
+      <div class="preview-container">
+        <img :src="previewActivityImageUrl" class="preview-image" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -563,6 +587,9 @@ export default {
       showFooterButtons: false, // 是否显示底部按钮
 
       // 预览相关
+      // 活动图片预览
+      activityImagePreviewVisible: false,
+      previewActivityImageUrl: '',
       previewVisible: false,
       previewImages: [],
       currentPreviewIndex: 0,
@@ -1561,6 +1588,12 @@ export default {
         this.currentPreviewDownloading = false;
       }
     },
+
+    /** 预览活动图片 */
+    previewActivityImage(imageUrl) {
+      this.previewActivityImageUrl = imageUrl;
+      this.activityImagePreviewVisible = true;
+    }
 
   }
 };
@@ -2857,6 +2890,77 @@ export default {
 .image-preview-item:hover {
   transform: translateY(-2px);
   transition: transform 0.2s ease;
+}
+
+/* 活动图片展示样式 */
+.activity-image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.activity-image {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 图片预览对话框样式 */
+.image-preview-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(to right, #409EFF, #64b5ff);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+}
+
+.preview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 0 0 12px 12px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 70vh;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 
