@@ -223,8 +223,8 @@
                 <div class="expand-content">
                   <div class="activity-image-container">
                     <el-image
-                      :src="getActivityImageUrlSmart(props.row.pictureUrl)"
-                      :preview-src-list="[getActivityImageUrlSmart(props.row.pictureUrl)]"
+                      :src="getActivityImageUrl(props.row.pictureUrl)"
+                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
                       fit="cover"
                       class="activity-image"
                     />
@@ -411,8 +411,8 @@
                     :disabled="isSubmitting">
                     <div v-if="form.pictureUrl" class="image-preview">
                       <el-image
-                        :src="getActivityImageUrlSmart(form.pictureUrl)"
-                        :preview-src-list="[getActivityImageUrlSmart(form.pictureUrl)]"
+                        :src="getActivityImageUrl(form.pictureUrl)"
+                        :preview-src-list="[getActivityImageUrl(form.pictureUrl)]"
                         fit="cover"
                         class="uploaded-image"
                       />
@@ -1303,16 +1303,21 @@ export default {
       console.log('📁 [ActivityManager] 文件信息:', file);
       
       if (response.code === 200 && response.url) {
-        console.log('✅ [ActivityManager] 上传成功，设置图片URL:', response.url);
-        // 使用Vue.set确保响应式更新
-        this.$set(this.form, 'pictureUrl', response.url);
+        // 提取相对路径部分（如：/profile/upload/...）
+        const relativePath = response.fileName || response.url.replace(/^https?:\/\/[^\/]+/, '');
+        console.log('✅ [ActivityManager] 上传成功，设置图片相对路径:', relativePath);
+        console.log('🔍 [ActivityManager] 原始URL:', response.url);
+        console.log('🔍 [ActivityManager] 提取的相对路径:', relativePath);
+        
+        // 使用Vue.set确保响应式更新，存储相对路径
+        this.$set(this.form, 'pictureUrl', relativePath);
         this.$message.success('图片上传成功');
         
         // 强制更新视图
         this.$forceUpdate();
         
         // 测试URL处理
-        console.log('🧪 [ActivityManager] 测试URL处理结果:', this.getActivityImageUrl(response.url));
+        console.log('🧪 [ActivityManager] 测试URL处理结果:', this.getActivityImageUrl(relativePath));
       } else {
         console.log('❌ [ActivityManager] 上传失败:', response.msg);
         this.$message.error(response.msg || '图片上传失败');
@@ -1440,7 +1445,7 @@ export default {
 
     /** 预览图片 */
     previewImage() {
-      this.previewImageUrl = this.getActivityImageUrlSmart(this.form.pictureUrl);
+      this.previewImageUrl = this.getActivityImageUrl(this.form.pictureUrl);
       this.imagePreviewVisible = true;
     },
 
