@@ -73,6 +73,10 @@ public class Activities extends BaseEntity {
     /** 活动状态 */
     private String status;
 
+    /** 活动图片URL */
+    @Excel(name = "活动图片")
+    private String pictureUrl;
+
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;

@@ -61,6 +61,8 @@ public class BookingDTO {
     private String organizer;
     /** 活动描述 */
     private String activityDescription;
+    /** 活动图片URL */
+    private String pictureUrl;
     /** 注意事项 */
     private String notes;
 
