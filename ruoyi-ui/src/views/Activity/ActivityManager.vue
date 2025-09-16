@@ -227,7 +227,6 @@
                       :preview-src-list="[getActivityImageUrlSmart(props.row.pictureUrl)]"
                       fit="cover"
                       class="activity-image"
-                      @click="previewActivityImage(getActivityImageUrlSmart(props.row.pictureUrl))"
                     />
                   </div>
                 </div>
@@ -411,13 +410,11 @@
                     accept="image/*"
                     :disabled="isSubmitting">
                     <div v-if="form.pictureUrl" class="image-preview">
-                      <img 
-                        :src="getActivityImageUrlSmart(form.pictureUrl)" 
-                        class="uploaded-image" 
-                        @error="handleImageLoadError"
-                        @load="handleImageLoadSuccess"
-                        @loadstart="handleImageLoadStart"
-                        @abort="handleImageAbort"
+                      <el-image
+                        :src="getActivityImageUrlSmart(form.pictureUrl)"
+                        :preview-src-list="[getActivityImageUrlSmart(form.pictureUrl)]"
+                        fit="cover"
+                        class="uploaded-image"
                       />
                       <div class="image-overlay">
                         <i class="el-icon-zoom-in" @click.stop="previewImage"></i>

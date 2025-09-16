@@ -211,7 +211,6 @@
             :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
             fit="cover"
             class="activity-image"
-            @click="previewActivityImage(getActivityImageUrl(props.row.pictureUrl))"
           />
         </div>
                 </div>
