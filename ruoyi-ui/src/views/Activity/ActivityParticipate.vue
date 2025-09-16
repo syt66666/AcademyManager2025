@@ -205,13 +205,15 @@
               <div class="expand-row" v-if="props.row.pictureUrl">
                 <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
                 <div class="expand-content">
-                  <div class="activity-image-container">
-                    <img 
-                      :src="props.row.pictureUrl" 
-                      class="activity-image" 
-                      @click="previewActivityImage(props.row.pictureUrl)"
-                      alt="活动图片" />
-                  </div>
+        <div class="activity-image-container">
+          <el-image
+            :src="getActivityImageUrl(props.row.pictureUrl)"
+            :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
+            fit="cover"
+            class="activity-image"
+            @click="previewActivityImage(getActivityImageUrl(props.row.pictureUrl))"
+          />
+        </div>
                 </div>
               </div>
               <!-- <div class="expand-row">
@@ -1593,6 +1595,17 @@ export default {
     previewActivityImage(imageUrl) {
       this.previewActivityImageUrl = imageUrl;
       this.activityImagePreviewVisible = true;
+    },
+
+    /** 获取活动图片完整URL */
+    getActivityImageUrl(pictureUrl) {
+      if (!pictureUrl) return '';
+      // 如果已经是完整URL，直接返回
+      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+        return pictureUrl;
+      }
+      // 否则拼接基础API路径
+      return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
     }
 
   }

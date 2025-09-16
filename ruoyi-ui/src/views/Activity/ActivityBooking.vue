@@ -224,13 +224,15 @@
         <div class="detail-section-content" v-if="selectedActivity.pictureUrl">
           <h4 class="section-title"><i class="el-icon-picture"></i> 活动图片</h4>
           <div class="section-content">
-            <div class="activity-image-container">
-              <img 
-                :src="selectedActivity.pictureUrl" 
-                class="activity-image" 
-                @click="previewActivityImage(selectedActivity.pictureUrl)"
-                alt="活动图片" />
-            </div>
+        <div class="activity-image-container">
+          <el-image
+            :src="getActivityImageUrl(selectedActivity.pictureUrl)"
+            :preview-src-list="[getActivityImageUrl(selectedActivity.pictureUrl)]"
+            fit="cover"
+            class="activity-image"
+            @click="previewActivityImage(getActivityImageUrl(selectedActivity.pictureUrl))"
+          />
+        </div>
           </div>
         </div>
         <!-- 报名/取消按钮 -->
@@ -752,6 +754,17 @@ export default {
     previewActivityImage(imageUrl) {
       this.previewImageUrl = imageUrl;
       this.imagePreviewVisible = true;
+    },
+
+    /** 获取活动图片完整URL */
+    getActivityImageUrl(pictureUrl) {
+      if (!pictureUrl) return '';
+      // 如果已经是完整URL，直接返回
+      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+        return pictureUrl;
+      }
+      // 否则拼接基础API路径
+      return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
     }
   }
 };
