@@ -223,11 +223,11 @@
                 <div class="expand-content">
                   <div class="activity-image-container">
                     <el-image
-                      :src="getActivityImageUrl(props.row.pictureUrl)"
-                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
+                      :src="getActivityImageUrlFixed(props.row.pictureUrl)"
+                      :preview-src-list="[getActivityImageUrlFixed(props.row.pictureUrl)]"
                       fit="cover"
                       class="activity-image"
-                      @click="previewActivityImage(getActivityImageUrl(props.row.pictureUrl))"
+                      @click="previewActivityImage(getActivityImageUrlFixed(props.row.pictureUrl))"
                     />
                   </div>
                 </div>
@@ -412,7 +412,7 @@
                     :disabled="isSubmitting">
                     <div v-if="form.pictureUrl" class="image-preview">
                       <img 
-                        :src="form.pictureUrl" 
+                        :src="getActivityImageUrlFixed(form.pictureUrl)" 
                         class="uploaded-image" 
                         @error="handleImageLoadError"
                         @load="handleImageLoadSuccess"
@@ -1443,7 +1443,7 @@ export default {
 
     /** 预览图片 */
     previewImage() {
-      this.previewImageUrl = this.form.pictureUrl;
+      this.previewImageUrl = this.getActivityImageUrlFixed(this.form.pictureUrl);
       this.imagePreviewVisible = true;
     },
 
@@ -1500,6 +1500,43 @@ export default {
       
       // 其他情况直接返回
       console.log('⚠️ [ActivityManager] 未知URL格式，直接返回:', pictureUrl);
+      return pictureUrl;
+    },
+
+    /** 获取活动图片完整URL（处理中文编码问题） */
+    getActivityImageUrlFixed(pictureUrl) {
+      if (!pictureUrl) return '';
+      
+      // 如果已经是完整URL，直接返回
+      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+        // 检查URL中是否包含中文字符，如果有则进行编码处理
+        try {
+          // 解析URL
+          const url = new URL(pictureUrl);
+          // 重新构建URL，确保路径部分正确编码
+          const encodedPath = url.pathname.split('/').map(segment => {
+            // 对每个路径段进行编码，但保持已编码的部分不变
+            return encodeURIComponent(decodeURIComponent(segment));
+          }).join('/');
+          
+          const fixedUrl = `${url.protocol}//${url.host}${encodedPath}`;
+          console.log('🔧 [ActivityManager] 修复中文编码URL:', {
+            original: pictureUrl,
+            fixed: fixedUrl
+          });
+          return fixedUrl;
+        } catch (error) {
+          console.error('❌ [ActivityManager] URL解析失败:', error);
+          return pictureUrl;
+        }
+      }
+      
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
+      if (pictureUrl.startsWith('/profile/')) {
+        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
+        return this.getActivityImageUrlFixed(fullUrl);
+      }
+      
       return pictureUrl;
     },
 
