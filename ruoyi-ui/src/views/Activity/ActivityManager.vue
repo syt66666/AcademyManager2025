@@ -411,7 +411,14 @@
                     accept="image/*"
                     :disabled="isSubmitting">
                     <div v-if="form.pictureUrl" class="image-preview">
-                      <img :src="form.pictureUrl" class="uploaded-image" @error="handleImageLoadError" />
+                      <img 
+                        :src="form.pictureUrl" 
+                        class="uploaded-image" 
+                        @error="handleImageLoadError"
+                        @load="handleImageLoadSuccess"
+                        @loadstart="handleImageLoadStart"
+                        @abort="handleImageAbort"
+                      />
                       <div class="image-overlay">
                         <i class="el-icon-zoom-in" @click.stop="previewImage"></i>
                         <i class="el-icon-delete" @click.stop="removeImage"></i>
@@ -1321,10 +1328,117 @@ export default {
       this.$message.error('图片上传失败，请重试');
     },
 
+    /** 图片加载成功处理 */
+    handleImageLoadSuccess(event) {
+      console.log('✅ [ActivityManager] 图片加载成功:', {
+        src: event.target.src,
+        naturalWidth: event.target.naturalWidth,
+        naturalHeight: event.target.naturalHeight,
+        complete: event.target.complete
+      });
+    },
+
+    /** 图片开始加载处理 */
+    handleImageLoadStart(event) {
+      console.log('🔄 [ActivityManager] 图片开始加载:', {
+        src: event.target.src
+      });
+    },
+
+    /** 图片加载中断处理 */
+    handleImageAbort(event) {
+      console.log('⏹️ [ActivityManager] 图片加载中断:', {
+        src: event.target.src
+      });
+    },
+
     /** 图片加载错误处理 */
     handleImageLoadError(event) {
-      console.error('图片加载失败:', event);
-      this.$message.error('图片加载失败，请检查图片URL');
+      console.error('❌ [ActivityManager] 图片加载失败详情:', {
+        event: event,
+        target: event.target,
+        src: event.target?.src,
+        error: event.target?.error,
+        naturalWidth: event.target?.naturalWidth,
+        naturalHeight: event.target?.naturalHeight,
+        complete: event.target?.complete,
+        readyState: event.target?.readyState
+      });
+      
+      // 尝试获取更多错误信息
+      const img = event.target;
+      if (img) {
+        console.error('❌ [ActivityManager] 图片元素状态:', {
+          src: img.src,
+          currentSrc: img.currentSrc,
+          error: img.error,
+          networkState: img.networkState,
+          readyState: img.readyState
+        });
+        
+        // 检查是否是网络问题
+        if (img.error) {
+          console.error('❌ [ActivityManager] 图片错误代码:', img.error.code);
+        }
+      }
+      
+      // 尝试直接访问图片URL来测试
+      this.testImageUrl(event.target.src);
+      
+      this.$message.error('图片加载失败，请检查图片URL或网络连接');
+    },
+
+    /** 测试图片URL是否可访问 */
+    testImageUrl(url) {
+      console.log('🧪 [ActivityManager] 测试图片URL可访问性:', url);
+      
+      // 创建一个新的图片元素来测试
+      const testImg = new Image();
+      testImg.onload = () => {
+        console.log('✅ [ActivityManager] 图片URL测试成功 - 图片可以正常加载');
+      };
+      testImg.onerror = (error) => {
+        console.error('❌ [ActivityManager] 图片URL测试失败:', {
+          url: url,
+          error: error,
+          possibleCauses: [
+            '1. 网络连接问题',
+            '2. 服务器无法访问',
+            '3. CORS跨域问题',
+            '4. 图片文件不存在',
+            '5. 服务器配置问题'
+          ]
+        });
+        
+        // 尝试使用fetch测试
+        this.testImageWithFetch(url);
+      };
+      testImg.src = url;
+    },
+
+    /** 使用fetch测试图片URL */
+    async testImageWithFetch(url) {
+      try {
+        console.log('🌐 [ActivityManager] 使用fetch测试图片URL:', url);
+        const response = await fetch(url, { method: 'HEAD' });
+        console.log('📡 [ActivityManager] fetch响应状态:', {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        if (response.ok) {
+          console.log('✅ [ActivityManager] 图片URL通过fetch测试 - 服务器响应正常');
+        } else {
+          console.error('❌ [ActivityManager] 图片URL通过fetch测试失败 - 服务器返回错误状态');
+        }
+      } catch (error) {
+        console.error('❌ [ActivityManager] fetch测试异常:', {
+          error: error,
+          message: error.message,
+          name: error.name
+        });
+      }
     },
 
     /** 预览图片 */
