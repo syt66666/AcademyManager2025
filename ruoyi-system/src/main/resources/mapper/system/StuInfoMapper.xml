@@ -55,6 +55,11 @@
         where student_id = #{studentId}
     </select>
 
+    <select id="selectStuInfoByPrimaryId" parameterType="Long" resultMap="StuInfoResult">
+        <include refid="selectStuInfoVo"/>
+        where id = #{id}
+    </select>
+
     <insert id="insertStuInfo" parameterType="StuInfo" useGeneratedKeys="true" keyProperty="id">
         insert into stu_info
         <trim prefix="(" suffix=")" suffixOverrides=",">
