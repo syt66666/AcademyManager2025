@@ -17,14 +17,25 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-
-      <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
+      <el-form-item label="行政班" prop="studentClass">
         <el-input
-          v-model="queryParams.innovationClass"
-          placeholder="请输入是否创新班或拔尖班"
+          v-model="queryParams.studentClass"
+          placeholder="请输入行政班"
           clearable
           @keyup.enter.native="handleQuery"
         />
+      </el-form-item>
+
+      <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
+        <el-select
+          v-model="queryParams.innovationClass"
+          placeholder="请选择是否创新班或拔尖班"
+          clearable
+          @change="handleQuery"
+        >
+          <el-option label="是" :value="1"></el-option>
+          <el-option label="否" :value="0"></el-option>
+        </el-select>
       </el-form-item>
 
       <el-form-item>
@@ -87,7 +98,11 @@
       <el-table-column label="所属学域" align="center" prop="originalSystemMajor" />
       <el-table-column label="行政班" align="center" prop="studentClass" />
       <el-table-column label="分流形式" align="center" prop="divertForm" />
-      <el-table-column label="是否创新班或拔尖班" align="center" prop="innovationClass" />
+      <el-table-column label="是否创新班或拔尖班" align="center" prop="innovationClass">
+        <template slot-scope="scope">
+          {{ scope.row.innovationClass === 1 ? '是' : scope.row.innovationClass === 0 ? '否' : '' }}
+        </template>
+      </el-table-column>
 
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
@@ -137,7 +152,10 @@
           <el-input v-model="form.divertForm" placeholder="请输入分流形式" />
         </el-form-item>
         <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
-          <el-input v-model="form.innovationClass" placeholder="请输入是否创新班或拔尖班" />
+          <el-select v-model="form.innovationClass" placeholder="请选择是否创新班或拔尖班" clearable>
+            <el-option label="是" :value="1"></el-option>
+            <el-option label="否" :value="0"></el-option>
+          </el-select>
         </el-form-item>
 
       </el-form>

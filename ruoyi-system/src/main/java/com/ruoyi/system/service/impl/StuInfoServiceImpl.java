@@ -137,6 +137,26 @@ public class StuInfoServiceImpl implements IStuInfoService
                     throw new ServiceException("分流形式不能为空");
                 }
                 
+                // 处理创新班字段转换：是/否 -> 1/0
+                if (stuInfo.getInnovationClass() != null) {
+                    // 如果已经是数字类型，保持不变
+                    if (stuInfo.getInnovationClass() instanceof Integer) {
+                        // 已经是数字，不需要转换
+                    } else {
+                        // 如果是字符串类型，进行转换
+                        String innovationClassStr = stuInfo.getInnovationClass().toString();
+                        if ("是".equals(innovationClassStr) || "1".equals(innovationClassStr)) {
+                            stuInfo.setInnovationClass(1);
+                        } else if ("否".equals(innovationClassStr) || "0".equals(innovationClassStr)) {
+                            stuInfo.setInnovationClass(0);
+                        } else if (StringUtils.isEmpty(innovationClassStr)) {
+                            stuInfo.setInnovationClass(null);
+                        } else {
+                            throw new ServiceException("创新班字段值无效，请输入'是'、'否'、'1'或'0'");
+                        }
+                    }
+                }
+                
                 // 验证是否存在这个学生
                 StuInfo s = stuInfoMapper.selectStuInfoById(stuInfo.getStudentId());
                 if (StringUtils.isNull(s)) {

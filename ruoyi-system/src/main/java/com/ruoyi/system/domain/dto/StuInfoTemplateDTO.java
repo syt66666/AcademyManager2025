@@ -35,4 +35,8 @@ public class StuInfoTemplateDTO {
     /** 分流形式 */
     @Excel(name = "分流形式")
     private String divertForm;
+
+    /** 是否创新班或拔尖班 */
+    @Excel(name = "是否创新班或拔尖班")
+    private String innovationClass;
 }
