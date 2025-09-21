@@ -105,13 +105,13 @@
     </update>
 
     <delete id="deleteStuInfoById" parameterType="Long">
-        delete from stu_info where student_id = #{studentId}
+        delete from stu_info where id = #{id}
     </delete>
 
-    <delete id="deleteStuInfoByIds" parameterType="String">
-        delete from stu_info where student_id in
-        <foreach item="studentId" collection="array" open="(" separator="," close=")">
-            #{studentId}
+    <delete id="deleteStuInfoByIds" parameterType="Long">
+        delete from stu_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
         </foreach>
     </delete>
     <select id="getStudentChangeMajorInfo" parameterType="StuInfo" resultMap="StuInfoResult">

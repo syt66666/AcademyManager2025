@@ -18,15 +18,6 @@
         />
       </el-form-item>
 
-      <el-form-item label="所属学域" prop="originalSystemMajor">
-        <el-input
-          v-model="queryParams.originalSystemMajor"
-          placeholder="请输入所属学域"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-
       <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
         <el-input
           v-model="queryParams.innovationClass"
@@ -56,11 +47,10 @@
         <el-button
           type="success"
           plain
-          icon="el-icon-edit"
+          icon="el-icon-upload"
           size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-        >修改</el-button>
+          @click="handleImport"
+        >导入</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -140,6 +130,9 @@
         <el-form-item label="所在学域" prop="originalSystemMajor">
           <el-input v-model="form.originalSystemMajor" placeholder="请输入所在学域" />
         </el-form-item>
+        <el-form-item label="行政班" prop="studentClass">
+          <el-input v-model="form.studentClass" placeholder="请输入行政班" />
+        </el-form-item>
         <el-form-item label="分流形式" prop="divertForm">
           <el-input v-model="form.divertForm" placeholder="请输入分流形式" />
         </el-form-item>
@@ -151,6 +144,36 @@
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
         <el-button @click="cancel">取 消</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 导入对话框 -->
+    <el-dialog :title="upload.title" :visible.sync="upload.open" width="400px" append-to-body>
+      <el-upload
+        ref="upload"
+        :limit="1"
+        accept=".xlsx, .xls"
+        :headers="upload.headers"
+        :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :disabled="upload.isUploading"
+        :on-progress="handleFileUploadProgress"
+        :on-success="handleFileSuccess"
+        :auto-upload="false"
+        drag
+      >
+        <i class="el-icon-upload"></i>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div class="el-upload__tip text-center" slot="tip">
+          <div class="el-upload__tip" slot="tip">
+            <el-checkbox v-model="upload.updateSupport" /> 是否更新已经存在的学生数据
+          </div>
+          <span>仅允许导入xls、xlsx格式文件。</span>
+          <el-link type="primary" :underline="false" style="font-size:12px;vertical-align: baseline;" @click="importTemplate">下载模板</el-link>
+        </div>
+      </el-upload>
+      <div slot="footer" class="dialog-footer">
+        <el-button type="primary" @click="submitFileForm">确 定</el-button>
+        <el-button @click="upload.open = false">取 消</el-button>
       </div>
     </el-dialog>
   </div>
@@ -214,6 +237,30 @@ export default {
         academy: [
           { required: true, message: "所属书院不能为空", trigger: "blur" }
         ],
+        originalSystemMajor: [
+          { required: true, message: "所属学域不能为空", trigger: "blur" }
+        ],
+        studentClass: [
+          { required: true, message: "行政班不能为空", trigger: "blur" }
+        ],
+        divertForm: [
+          { required: true, message: "分流形式不能为空", trigger: "blur" }
+        ],
+      },
+      // 上传参数
+      upload: {
+        // 是否显示弹出层（用户导入）
+        open: false,
+        // 弹出层标题（用户导入）
+        title: "",
+        // 是否禁用上传
+        isUploading: false,
+        // 是否更新已经存在的用户数据
+        updateSupport: 0,
+        // 设置上传的请求头部
+        headers: { Authorization: "Bearer " + this.$store.state.user.token },
+        // 上传的地址
+        url: process.env.VUE_APP_BASE_API + "/system/student/importData"
       }
     };
   },
@@ -228,12 +275,14 @@ export default {
           console.log("获取到组织者名称:", nickName.msg);
           // 合并查询参数与组织者信息
           const params = { ...this.queryParams, academy: nickName.msg };
+          console.log("查询参数:", params);
           this.currentFilterParams = params; // 保存筛选参数
           this.getList(params);
         })
         .catch(error => {
           console.error("获取组织者名称失败:", error);
           // 失败时使用原始查询参数
+          console.log("使用原始查询参数:", this.queryParams);
           this.currentFilterParams = this.queryParams;
           this.getList(this.queryParams);
         });
@@ -246,6 +295,10 @@ export default {
         this.infoList = response.rows;
         this.total = response.total;
         this.loading = false;
+      }).catch(error => {
+        console.error("查询学生信息失败:", error);
+        this.loading = false;
+        this.$modal.msgError("查询学生信息失败，请检查网络连接或联系管理员");
       });
     },
     // 取消按钮
@@ -306,9 +359,9 @@ export default {
     /** 修改按钮操作 */
     handleUpdate(row) {
       this.reset();
-      const id = row.id || this.ids
+      const id = row.studentId || this.ids
       getStudent(id).then(response => {
-        this.form = response.data;
+        this.form = response.studentInfo;
         this.open = true;
         this.title = "修改学生信息";
       });
@@ -345,9 +398,44 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/info/export', {
+      this.download('system/student/export', {
         ...this.queryParams
-      }, `info_${new Date().getTime()}.xlsx`)
+      }, `student_${new Date().getTime()}.xlsx`)
+    },
+    /** 导入按钮操作 */
+    handleImport() {
+      this.upload.title = "学生信息导入";
+      this.upload.open = true;
+    },
+    /** 下载模板操作 */
+    importTemplate() {
+      this.downloadTemplate('system/student/importTemplate', `student_template_${new Date().getTime()}.xlsx`)
+    },
+    // 文件上传中处理
+    handleFileUploadProgress(event, file, fileList) {
+      this.upload.isUploading = true;
+    },
+    // 文件上传成功处理
+    handleFileSuccess(response, file, fileList) {
+      this.upload.open = false;
+      this.upload.isUploading = false;
+      this.$refs.upload.clearFiles();
+      this.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", { dangerouslyUseHTMLString: true });
+      this.getList();
+    },
+    // 提交上传文件
+    submitFileForm() {
+      this.$refs.upload.submit();
+    },
+    // 下载模板文件（使用GET请求）
+    downloadTemplate(url, filename) {
+      const link = document.createElement('a');
+      link.href = process.env.VUE_APP_BASE_API + '/' + url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }
 };

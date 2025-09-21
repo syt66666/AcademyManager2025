@@ -61,4 +61,14 @@ public interface IStuInfoService
     public StuInfo getStudentInfoById(String studentId);
     List<StuInfo> getStudentChangeMajorInfo(StuInfo stuInfo);
 
+    /**
+     * 导入学生信息数据
+     *
+     * @param stuInfoList 学生信息数据列表
+     * @param isUpdateSupport 是否更新支持，如果已存在，则进行更新数据
+     * @param operName 操作用户
+     * @return 结果
+     */
+    public String importStuInfo(List<StuInfo> stuInfoList, Boolean isUpdateSupport, String operName);
+
 }

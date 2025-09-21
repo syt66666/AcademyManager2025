@@ -4,6 +4,7 @@ import lombok.Data;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
 import lombok.EqualsAndHashCode;
+import javax.validation.constraints.NotBlank;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -28,6 +29,7 @@ public class StuInfo extends BaseEntity
 
     /** 原系统内专业 */
     @Excel(name = "原系统内专业")
+    @NotBlank(message = "原系统内专业不能为空")
     private String originalSystemMajor;
 
     /** 录取专业 */
@@ -40,10 +42,12 @@ public class StuInfo extends BaseEntity
 
     /** 行政班 */
     @Excel(name = "行政班")
+    @NotBlank(message = "行政班不能为空")
     private String studentClass;
 
     /** 分流形式 */
     @Excel(name = "分流形式")
+    @NotBlank(message = "分流形式不能为空")
     private String divertForm;
 
     /** 是否创新班或拔尖班（0不是 1是） */
