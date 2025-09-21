@@ -94,6 +94,16 @@ public class StuInfoController extends BaseController
     {
         return toAjax(stuInfoService.deleteStuInfoByIds(ids));
     }
+
+    /**
+     * 重置学生密码
+     */
+    @Log(title = "学生信息", businessType = BusinessType.UPDATE)
+    @PutMapping("/resetPassword/{id}")
+    public AjaxResult resetPassword(@PathVariable Long id)
+    {
+        return toAjax(stuInfoService.resetStudentPassword(id));
+    }
     /**
      * 获取指定学生信息
      */

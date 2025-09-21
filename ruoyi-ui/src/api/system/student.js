@@ -51,6 +51,14 @@ export function delStudent(id) {
   })
 }
 
+// 重置学生密码
+export function resetStudentPassword(id) {
+  return request({
+    url: '/system/student/resetPassword/' + id,
+    method: 'put'
+  })
+}
+
 // 查询用户昵称
 export function getNickName() {
   return request({

@@ -71,4 +71,12 @@ public interface IStuInfoService
      */
     public String importStuInfo(List<StuInfo> stuInfoList, Boolean isUpdateSupport, String operName);
 
+    /**
+     * 重置学生密码
+     *
+     * @param id 学生信息主键
+     * @return 结果
+     */
+    public int resetStudentPassword(Long id);
+
 }

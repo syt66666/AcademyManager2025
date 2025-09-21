@@ -111,13 +111,13 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-          >修改</el-button>
+          >修改信息</el-button>
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-delete"
-            @click="handleDelete(scope.row)"
-          >删除</el-button>
+            icon="el-icon-refresh"
+            @click="handleResetPassword(scope.row)"
+          >重置密码</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -198,7 +198,7 @@
 </template>
 
 <script>
-import { listStudent, getStudent, delStudent, addStudent, updateStudent, getNickName } from "@/api/system/student";
+import { listStudent, getStudent, delStudent, addStudent, updateStudent, getNickName, resetStudentPassword } from "@/api/system/student";
 export default {
   name: "Info",
   data() {
@@ -417,6 +417,17 @@ export default {
       }).then(() => {
         this.getList();
         this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
+    },
+    /** 重置密码按钮操作 */
+    handleResetPassword(row) {
+      const studentName = row.studentName;
+      const studentId = row.studentId;
+      this.$modal.confirm('是否确认重置学生"' + studentName + '"（学号：' + studentId + '）的密码为123456？').then(function() {
+        return resetStudentPassword(row.id);
+      }).then(() => {
+        this.getList();
+        this.$modal.msgSuccess("密码重置成功");
       }).catch(() => {});
     },
     /** 导出按钮操作 */

@@ -298,4 +298,33 @@ public class StuInfoServiceImpl implements IStuInfoService
         }
         return successMsg.toString();
     }
+
+    /**
+     * 重置学生密码
+     *
+     * @param id 学生信息主键
+     * @return 结果
+     */
+    @Override
+    public int resetStudentPassword(Long id) {
+        try {
+            // 根据学生信息主键ID获取学生信息
+            StuInfo stuInfo = stuInfoMapper.selectStuInfoByPrimaryId(id);
+            if (stuInfo != null && StringUtils.isNotEmpty(stuInfo.getStudentId())) {
+                // 根据学号查找对应的用户
+                SysUser user = userService.selectUserByUserName(stuInfo.getStudentId());
+                if (user != null) {
+                    // 重置密码为123456
+                    user.setPassword(SecurityUtils.encryptPassword("123456"));
+                    return userMapper.updateUser(user);
+                } else {
+                    throw new ServiceException("未找到对应的用户账号");
+                }
+            } else {
+                throw new ServiceException("未找到学生信息");
+            }
+        } catch (Exception e) {
+            throw new ServiceException("重置密码失败: " + e.getMessage());
+        }
+    }
 }
