@@ -17,54 +17,16 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="所属书院" prop="academy">
-        <el-input
-          v-model="queryParams.academy"
-          placeholder="请输入所属书院"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="原系统内专业" prop="originalSystemMajor">
+
+      <el-form-item label="所属学域" prop="originalSystemMajor">
         <el-input
           v-model="queryParams.originalSystemMajor"
-          placeholder="请输入原系统内专业"
+          placeholder="请输入所属学域"
           clearable
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="录取专业" prop="major">
-        <el-input
-          v-model="queryParams.major"
-          placeholder="请输入录取专业"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="分流后系统内专业" prop="systemMajor">
-        <el-input
-          v-model="queryParams.systemMajor"
-          placeholder="请输入分流后系统内专业"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="行政班" prop="studentClass">
-        <el-input
-          v-model="queryParams.studentClass"
-          placeholder="请输入行政班"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="分流形式" prop="divertForm">
-        <el-input
-          v-model="queryParams.divertForm"
-          placeholder="请输入分流形式"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+
       <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
         <el-input
           v-model="queryParams.innovationClass"
@@ -73,6 +35,7 @@
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
+
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -87,7 +50,6 @@
           icon="el-icon-plus"
           size="mini"
           @click="handleAdd"
-          v-hasPermi="['system:student:add']"
         >新增</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -98,7 +60,6 @@
           size="mini"
           :disabled="single"
           @click="handleUpdate"
-          v-hasPermi="['system:student:edit']"
         >修改</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -109,7 +70,6 @@
           size="mini"
           :disabled="multiple"
           @click="handleDelete"
-          v-hasPermi="['system:student:remove']"
         >删除</el-button>
       </el-col>
       <el-col :span="1.5">
@@ -119,26 +79,26 @@
           icon="el-icon-download"
           size="mini"
           @click="handleExport"
-          v-hasPermi="['system:student:export']"
         >导出</el-button>
       </el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
-    <el-table v-loading="loading" :data="studentList" @selection-change="handleSelectionChange">
+    <el-table v-loading="loading" :data="infoList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="${comment}" align="center" prop="id" />
+      <el-table-column label="序号" width="60" align="center">
+        <template slot-scope="scope">
+          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <el-table-column label="学生学号" align="center" prop="studentId" />
       <el-table-column label="学生姓名" align="center" prop="studentName" />
       <el-table-column label="所属书院" align="center" prop="academy" />
-      <el-table-column label="原系统内专业" align="center" prop="originalSystemMajor" />
-      <el-table-column label="录取专业" align="center" prop="major" />
-      <el-table-column label="分流后系统内专业" align="center" prop="systemMajor" />
+      <el-table-column label="所属学域" align="center" prop="originalSystemMajor" />
       <el-table-column label="行政班" align="center" prop="studentClass" />
       <el-table-column label="分流形式" align="center" prop="divertForm" />
       <el-table-column label="是否创新班或拔尖班" align="center" prop="innovationClass" />
-      <el-table-column label="创新班政策状态" align="center" prop="policyStatus" />
-      <el-table-column label="学生性别" align="center" prop="studentSex" />
+
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button
@@ -146,25 +106,23 @@
             type="text"
             icon="el-icon-edit"
             @click="handleUpdate(scope.row)"
-            v-hasPermi="['system:student:edit']"
           >修改</el-button>
           <el-button
             size="mini"
             type="text"
             icon="el-icon-delete"
             @click="handleDelete(scope.row)"
-            v-hasPermi="['system:student:remove']"
           >删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-
+    
     <pagination
       v-show="total>0"
       :total="total"
       :page.sync="queryParams.pageNum"
       :limit.sync="queryParams.pageSize"
-      @pagination="getList"
+      @pagination="handlePagination"
     />
 
     <!-- 添加或修改学生信息对话框 -->
@@ -179,17 +137,8 @@
         <el-form-item label="所属书院" prop="academy">
           <el-input v-model="form.academy" placeholder="请输入所属书院" />
         </el-form-item>
-        <el-form-item label="原系统内专业" prop="originalSystemMajor">
-          <el-input v-model="form.originalSystemMajor" placeholder="请输入原系统内专业" />
-        </el-form-item>
-        <el-form-item label="录取专业" prop="major">
-          <el-input v-model="form.major" placeholder="请输入录取专业" />
-        </el-form-item>
-        <el-form-item label="分流后系统内专业" prop="systemMajor">
-          <el-input v-model="form.systemMajor" placeholder="请输入分流后系统内专业" />
-        </el-form-item>
-        <el-form-item label="行政班" prop="studentClass">
-          <el-input v-model="form.studentClass" placeholder="请输入行政班" />
+        <el-form-item label="所在学域" prop="originalSystemMajor">
+          <el-input v-model="form.originalSystemMajor" placeholder="请输入所在学域" />
         </el-form-item>
         <el-form-item label="分流形式" prop="divertForm">
           <el-input v-model="form.divertForm" placeholder="请输入分流形式" />
@@ -197,6 +146,7 @@
         <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
           <el-input v-model="form.innovationClass" placeholder="请输入是否创新班或拔尖班" />
         </el-form-item>
+
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button type="primary" @click="submitForm">确 定</el-button>
@@ -207,10 +157,9 @@
 </template>
 
 <script>
-import { listStudent, getStudent, delStudent, addStudent, updateStudent } from "@/api/system/student";
-
+import { listStudent, getStudent, delStudent, addStudent, updateStudent, getNickName } from "@/api/system/student";
 export default {
-  name: "Student",
+  name: "Info",
   data() {
     return {
       // 遮罩层
@@ -226,7 +175,7 @@ export default {
       // 总条数
       total: 0,
       // 学生信息表格数据
-      studentList: [],
+      infoList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -243,12 +192,17 @@ export default {
         systemMajor: null,
         studentClass: null,
         divertForm: null,
+        ranking: null,
         innovationClass: null,
         policyStatus: null,
-        studentSex: null
+        studentSex: null,
+        gradeLevel: null,
+        changeMajorType: null
       },
       // 表单参数
       form: {},
+      // 当前筛选状态
+      currentFilterParams: null,
       // 表单校验
       rules: {
         studentId: [
@@ -264,14 +218,32 @@ export default {
     };
   },
   created() {
-    this.getList();
+    this.getNickName();
   },
   methods: {
+    /** 获取组织者名称并查询学生信息列表 */
+    getNickName() {
+      getNickName()
+        .then(nickName => {
+          console.log("获取到组织者名称:", nickName.msg);
+          // 合并查询参数与组织者信息
+          const params = { ...this.queryParams, academy: nickName.msg };
+          this.currentFilterParams = params; // 保存筛选参数
+          this.getList(params);
+        })
+        .catch(error => {
+          console.error("获取组织者名称失败:", error);
+          // 失败时使用原始查询参数
+          this.currentFilterParams = this.queryParams;
+          this.getList(this.queryParams);
+        });
+    },
     /** 查询学生信息列表 */
-    getList() {
+    getList(params = null) {
       this.loading = true;
-      listStudent(this.queryParams).then(response => {
-        this.studentList = response.rows;
+      const queryParams = params || this.queryParams;
+      listStudent(queryParams).then(response => {
+        this.infoList = response.rows;
         this.total = response.total;
         this.loading = false;
       });
@@ -293,11 +265,21 @@ export default {
         systemMajor: null,
         studentClass: null,
         divertForm: null,
+        ranking: null,
         innovationClass: null,
         policyStatus: null,
-        studentSex: null
+        studentSex: null,
+        gradeLevel: null,
+        changeMajorType: null
       };
       this.resetForm("form");
+    },
+
+    /** 分页处理 */
+    handlePagination() {
+      // 如果有筛选参数，使用筛选参数；否则使用原始查询参数
+      const params = this.currentFilterParams || this.queryParams;
+      this.getList(params);
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -363,10 +345,19 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/student/export', {
+      this.download('system/info/export', {
         ...this.queryParams
-      }, `student_${new Date().getTime()}.xlsx`)
+      }, `info_${new Date().getTime()}.xlsx`)
     }
   }
 };
 </script>
+<style scoped>
+/* 整体布局 */
+.app-container {
+  margin-left: 100px;
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+</style>

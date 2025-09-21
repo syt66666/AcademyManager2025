@@ -787,7 +787,7 @@ export default {
       };
 
       // 先获取组织者名称，作为默认筛选条件
-      getNickName()  // 注意：确保已引入getNickName方法
+      getNickName() 
         .then(nickName => {
           console.log("获取到组织者名称:", nickName.msg);
           // 合并查询参数与组织者信息
