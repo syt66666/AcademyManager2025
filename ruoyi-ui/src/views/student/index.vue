@@ -291,6 +291,12 @@ export default {
     getList(params = null) {
       this.loading = true;
       const queryParams = params || this.queryParams;
+      
+      // 自动添加academy限制，确保只查询当前书院的数据
+      if (this.currentFilterParams && this.currentFilterParams.academy) {
+        queryParams.academy = this.currentFilterParams.academy;
+      }
+      
       listStudent(queryParams).then(response => {
         this.infoList = response.rows;
         this.total = response.total;
@@ -330,9 +336,7 @@ export default {
 
     /** 分页处理 */
     handlePagination() {
-      // 如果有筛选参数，使用筛选参数；否则使用原始查询参数
-      const params = this.currentFilterParams || this.queryParams;
-      this.getList(params);
+      this.getList();
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -342,7 +346,8 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.resetForm("queryForm");
-      this.handleQuery();
+      this.queryParams.pageNum = 1;
+      this.getList();
     },
     // 多选框选中数据
     handleSelectionChange(selection) {

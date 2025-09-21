@@ -36,7 +36,7 @@
     <select id="selectStuInfoList" parameterType="StuInfo" resultMap="StuInfoResult">
         <include refid="selectStuInfoVo"/>
         <where>
-            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="studentId != null  and studentId != ''"> and student_id like concat('%', #{studentId}, '%')</if>
             <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
             <if test="academy != null  and academy != ''"> and academy = #{academy}</if>
             <if test="originalSystemMajor != null  and originalSystemMajor != ''"> and original_system_major = #{originalSystemMajor}</if>
