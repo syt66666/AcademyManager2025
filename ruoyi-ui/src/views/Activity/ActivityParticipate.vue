@@ -638,7 +638,7 @@ export default {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
         '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
         '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'info',      // 社会责任与领军意识活动类 - 灰色
+        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
         '其他': ''        // 默认蓝色
       }
       return map[activityType] || 'info';
@@ -1257,7 +1257,7 @@ export default {
         '1': 'progress-primary',   // 人格塑造与价值引领活动类 - 蓝色
         '2': 'progress-success',   // 知识融合与思维进阶活动类 - 绿色
         '3': 'progress-warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'progress-info'       // 社会责任与领军意识活动类 - 灰色
+        '4': 'progress-danger'     // 社会责任与领军意识活动类 - 红色
       };
       return map[activityType] || 'progress-info';
     },
@@ -1903,25 +1903,25 @@ export default {
   background: linear-gradient(135deg, #e65100, #d84315);
 }
 
-/* 社会责任与领军意识活动类 - 灰色系 */
-.progress-info-empty {
-  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+/* 社会责任与领军意识活动类 - 红色系 */
+.progress-danger-empty {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
 }
 
-.progress-info-low {
-  background: linear-gradient(135deg, #bdbdbd, #9e9e9e);
+.progress-danger-low {
+  background: linear-gradient(135deg, #ef9a9a, #e57373);
 }
 
-.progress-info-medium {
-  background: linear-gradient(135deg, #757575, #616161);
+.progress-danger-medium {
+  background: linear-gradient(135deg, #f44336, #e53935);
 }
 
-.progress-info-high {
-  background: linear-gradient(135deg, #424242, #303030);
+.progress-danger-high {
+  background: linear-gradient(135deg, #d32f2f, #c62828);
 }
 
-.progress-info-full {
-  background: linear-gradient(135deg, #212121, #000000);
+.progress-danger-full {
+  background: linear-gradient(135deg, #b71c1c, #8d1a1a);
 }
 
 .progress-text {
