@@ -4,6 +4,7 @@
       <div class="card-header">
         <i class="el-icon-search"></i>
         <span>搜索条件</span>
+        <span class="academy-info" v-if="currentAcademy">当前书院：{{ currentAcademy }}</span>
         <span class="time-range-info">{{ getTimeRangeText() }}</span>
       </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
@@ -295,6 +296,7 @@ import { listActivities, signUpCapacity, cancelSignUpCapacity } from "@/api/syst
 import { addBooking, deleteBookingsByActivityAndStudent } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 import { checkBookingSimple } from "@/api/system/bookings";
+import { getStudent } from "@/api/system/student";
 
 export default {
   name: "ActivitiesSignUp",
@@ -310,6 +312,8 @@ export default {
       // 图片预览相关
       imagePreviewVisible: false,
       previewImageUrl: '',
+      // 学生书院信息
+      currentAcademy: null,
       // 预定义的活动类型
       predefinedActivityTypes: [
         { value: '1', label: '人格塑造与价值引领活动类' },
@@ -328,8 +332,9 @@ export default {
       },
     };
   },
-  created() {
-    this.getList();
+  async created() {
+    // 先获取学生信息，再获取活动列表
+    await this.getCurrentStudentInfo();
   },
   async mounted() {
     // 检查报名状态
@@ -361,6 +366,30 @@ export default {
     },
   },
   methods: {
+  // 获取当前学生信息
+  async getCurrentStudentInfo() {
+      try {
+        const response = await getStudent(this.$store.state.user.name);
+        console.log('学生信息API响应:', response);
+        
+        if (response && response.studentInfo) {
+          this.currentAcademy = response.studentInfo.academy;
+          console.log('当前学生书院:', this.currentAcademy);
+          // 获取学生信息后，根据书院获取活动
+          this.getList();
+        } else {
+          console.error('获取学生信息失败，响应中没有studentInfo:', response);
+          this.currentAcademy = '未知';
+          // 即使获取失败，也尝试获取活动
+          this.getList();
+        }
+      } catch (error) {
+        console.error('获取学生信息异常:', error);
+        this.currentAcademy = '未知';
+        // 即使获取失败，也尝试获取活动
+        this.getList();
+      }
+    },
     // 活动类型映射函数：将数字转换为对应的类型名称
     getActivityTypeName(activityType) {
       const typeMap = {
@@ -386,18 +415,18 @@ export default {
     // 获取活动列表
     getList() {
       this.loading = true;
-      // 构建查询参数，获取所有活动数据
+      // 构建查询参数，只获取学生所在书院的活动
       const allParams = {
         pageNum: 1,
         pageSize: 1000, // 获取足够大的数量
         activityName: this.queryParams.activityName,
         activityType: this.queryParams.activityType,
         activityLocation: this.queryParams.activityLocation,
-        organizer: this.queryParams.organizer,
+        organizer: this.currentAcademy, // 只获取学生所在书院的活动
       };
 
       listActivities(allParams).then(response => {
-        // 过滤出上个月、本月、下个月的活动
+        // 过滤出本月的活动
         let filteredActivities = this.filterActivitiesByMonth(response.rows);
 
         // 如果选择了"只显示可报名活动"，进一步过滤
@@ -423,10 +452,6 @@ export default {
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth(); // 0-11
 
-      console.log('当前时间范围过滤:', {
-        currentMonth: `${currentYear}年${currentMonth + 1}月`
-      });
-
       const filteredActivities = activities.filter(activity => {
         if (!activity.startTime) {
           console.log('活动缺少开始时间:', activity.activityName);
@@ -439,18 +464,9 @@ export default {
 
         const isInRange = (activityYear === currentYear && activityMonth === currentMonth); // 只显示本月
 
-        if (isInRange) {
-          console.log('活动在范围内:', {
-            name: activity.activityName,
-            startTime: activity.startTime,
-            month: `${activityYear}年${activityMonth + 1}月`
-          });
-        }
-
         return isInRange;
       });
 
-      console.log(`过滤结果: 总共${activities.length}个活动，过滤后${filteredActivities.length}个活动`);
       return filteredActivities;
     },
 
@@ -477,8 +493,6 @@ export default {
 
         return isAvailable;
       });
-
-      console.log(`可报名过滤结果: 总共${activities.length}个活动，可报名${availableActivities.length}个活动`);
       return availableActivities;
     },
 
@@ -502,7 +516,6 @@ export default {
         checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
           // 使用 Vue.set 确保响应式更新
           this.$set(activity, 'isBooked', res.data.isBooked);
-          console.log(`活动 ${activity.activityName} 报名状态更新为: ${res.data.isBooked}`);
         }).catch(error => {
           console.error('检查报名状态失败:', error);
           this.$set(activity, 'isBooked', false);
@@ -831,9 +844,20 @@ export default {
   font-weight: 400;
 }
 
-.time-range-info {
+.academy-info {
   margin-left: auto;
   margin-right: 20px;
+  font-size: 13px;
+  color: #67C23A;
+  font-weight: 500;
+  background: rgba(103, 194, 58, 0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(103, 194, 58, 0.2);
+}
+
+.time-range-info {
+  margin-left: 20px;
   font-size: 13px;
   color: #409EFF;
   font-weight: 500;

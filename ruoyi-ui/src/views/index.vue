@@ -341,7 +341,7 @@ export default {
     // 判断是否为管理员
     isAdmin() {
       const userName = this.$store.state.user.name;
-      return userName && userName >= '10001' && userName <= '10007';
+      return userName && userName >= '10000' && userName <= '10007';
     },
     currentMonthTitle() {
       const d = new Date(this.calendarDate);
