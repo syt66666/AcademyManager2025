@@ -905,6 +905,15 @@ export default {
       }
       return map[activityType] || 'info';
     },
+
+    // 按活动开始时间排序
+    sortActivitiesByStartTime(activities) {
+      return activities.sort((a, b) => {
+        const timeA = new Date(a.startTime);
+        const timeB = new Date(b.startTime);
+        return timeB - timeA; // 从晚到早排序
+      });
+    },
     // 导出选课学生
     handleExportStudents() {
       if (this.selectedStudents.length === 0) {
@@ -999,6 +1008,9 @@ export default {
             });
           }
           
+          // 按活动开始时间排序（从晚到早）
+          allActivities = this.sortActivitiesByStartTime(allActivities);
+          
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
           const endIndex = startIndex + this.queryParams.pageSize;
@@ -1030,6 +1042,9 @@ export default {
               return status === this.queryParams.activityStatus;
             });
           }
+          
+          // 按活动开始时间排序（从晚到早）
+          allActivities = this.sortActivitiesByStartTime(allActivities);
           
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
