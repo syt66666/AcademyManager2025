@@ -78,6 +78,8 @@
               v-for="(progress, type) in activityProgress" 
               :key="type"
               class="progress-item"
+              :class="{ active: selectedActivityType === type }"
+              @click="filterByActivityType(type)"
             >
               <div class="progress-label">{{ getActivityTypeName(type) }}</div>
               <div class="progress-bar-container">
@@ -584,6 +586,8 @@ export default {
         '3': { completed: 0, percentage: 0 }, // 能力锻造与实践创新活动类
         '4': { completed: 0, percentage: 0 }  // 社会责任与领军意识活动类
       },
+          // 进度条筛选：当前选中的活动类型
+          selectedActivityType: null,
       isViewOnly: false, // 是否为只查看模式
       showFooterButtons: false, // 是否显示底部按钮
 
@@ -1131,12 +1135,42 @@ export default {
     getList() {
       this.loading = true;
       listBookingsWithActivity(this.queryParams).then(response => {
-        // 对活动列表按照材料提交状态进行排序
-        const sortedRows = this.sortActivitiesByStatus(response.rows);
+        let rows = response.rows || [];
+
+        // 本地筛选：如果选择了进度条类型，则只显示该类型且状态为“已通过”的记录
+        if (this.selectedActivityType) {
+          rows = rows.filter(item => String(item.activityType) === String(this.selectedActivityType) && item.status === '已通过');
+        }
+
+        // 对活动列表按照材料提交状态进行排序（同优先级下按开始时间由晚到早）
+        const sortedRows = this.sortActivitiesByStatus(rows);
         this.activitiesList = sortedRows;
-        this.total = response.total;
+        this.total = rows.length;
         this.loading = false;
       });
+    },
+
+    /** 通过进度条筛选：点击某类型，筛选出已通过的该类型活动；再次点击同类型则清除筛选 */
+    filterByActivityType(type) {
+      // 切换选中状态
+      if (this.selectedActivityType === type) {
+        this.selectedActivityType = null;
+      } else {
+        this.selectedActivityType = type;
+        // 同时将状态筛选切到“已通过”以匹配需求
+        this.selectedStatus = '已通过';
+        this.queryParams.pageNum = 1;
+        this.queryParams.status = '已通过';
+      }
+
+      // 当清空类型筛选时，还原状态筛选（仅当之前因类型筛选设置为已通过时）
+      if (this.selectedActivityType === null && this.selectedStatus === '已通过') {
+        this.selectedStatus = null;
+        delete this.queryParams.status;
+      }
+
+      // 重新拉取数据并应用本地筛选
+      this.getList();
     },
 
     /** 按照材料提交状态排序活动列表 */
@@ -1792,6 +1826,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 16px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
 }
 
 .progress-label {
@@ -1799,6 +1835,15 @@ export default {
   font-size: 14px;
   color: #606266;
   font-weight: 500;
+}
+
+.progress-item.active .progress-label {
+  color: #303133;
+  font-weight: 700;
+}
+
+.progress-item:hover {
+  transform: translateY(-1px);
 }
 
 .progress-bar-container {
