@@ -252,4 +252,11 @@
         </where>
         ORDER BY b.booked_at DESC
     </select>
+    <!-- 检查报名记录是否存在 -->
+    <select id="checkBookingExists" resultType="int">
+        SELECT COUNT(1)
+        FROM bookings
+        WHERE activity_id = #{activityId}
+          AND student_id = #{studentId}
+    </select>
 </mapper>

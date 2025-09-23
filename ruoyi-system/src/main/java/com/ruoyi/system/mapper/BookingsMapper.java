@@ -17,6 +17,7 @@ import java.util.Map;
  */
 @Mapper
 public interface BookingsMapper {
+
     /**
      * 查询预约列表
      * @param bookings 查询条件
@@ -58,6 +59,15 @@ public interface BookingsMapper {
      * @return 删除结果
      */
     int deleteBookingsByIds(Long[] bookingIds);
+
+    /**
+     * 检查报名记录是否存在
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @return 记录数量
+     */
+    int checkBookingExists(@Param("activityId") Long activityId,
+                           @Param("studentId") String studentId);
     /**
      * 根据活动ID和学生ID删除预约记录
      * @param activityId 活动ID
