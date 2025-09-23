@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.UserLimitMapper">
+
+    <resultMap type="UserLimit" id="UserLimitResult">
+        <result property="id"    column="id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="activityId"    column="activity_id"    />
+        <result property="isCancel"    column="is_cancel"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectUserLimitVo">
+        select id, student_id, activity_id, is_cancel, created_at from user_limite
+    </sql>
+
+    <select id="selectUserLimitList" parameterType="UserLimit" resultMap="UserLimitResult">
+        <include refid="selectUserLimitVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="activityId != null "> and activity_id = #{activityId}</if>
+            <if test="isCancel != null "> and is_cancel = #{isCancel}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+
+    <select id="selectUserLimitById" parameterType="Long" resultMap="UserLimitResult">
+        <include refid="selectUserLimitVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertUserLimit" parameterType="UserLimit" useGeneratedKeys="true" keyProperty="id">
+        insert into user_limite
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="activityId != null">activity_id,</if>
+            <if test="isCancel != null">is_cancel,</if>
+            <if test="createdAt != null">created_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="activityId != null">#{activityId},</if>
+            <if test="isCancel != null">#{isCancel},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+        </trim>
+    </insert>
+
+    <update id="updateUserLimit" parameterType="UserLimit">
+        update user_limite
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="activityId != null">activity_id = #{activityId},</if>
+            <if test="isCancel != null">is_cancel = #{isCancel},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteUserLimitById" parameterType="Long">
+        delete from user_limite where id = #{id}
+    </delete>
+
+    <delete id="deleteUserLimitByIds" parameterType="String">
+        delete from user_limite where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 查询用户本月取消次数 -->
+    <select id="selectCancelCountThisMonth" resultType="int">
+        SELECT COUNT(*)
+        FROM user_limite
+        WHERE student_id = #{studentId}
+            AND is_cancel = 1
+            AND YEAR(created_at) = YEAR(CURDATE())
+          AND MONTH(created_at) = MONTH(CURDATE())
+    </select>
+
+    <!-- 查询用户所有取消记录 -->
+    <select id="selectCancelRecordsByStudentId" resultMap="UserLimitResult">
+        <include refid="selectUserLimitVo"/>
+        WHERE student_id = #{studentId}
+        AND is_cancel = 1
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询所有记录（调试用） -->
+    <select id="selectAllRecords" resultMap="UserLimitResult">
+        <include refid="selectUserLimitVo"/>
+        ORDER BY created_at DESC
+    </select>
+
+</mapper>
