@@ -250,13 +250,13 @@
         </div>
         <!-- 报名/取消按钮 -->
         <div class="signup-status">
-          <!-- 添加取消限制提示 -->
+          <!-- 取消限制提示 -->
           <div v-if="exceedCancelLimit && getSignStatusText(selectedActivity) === '可报名'" class="cancel-limit-info">
             <el-alert
               title="报名限制"
               type="warning"
               :closable="false"
-              description="本月取消次数已达上限（3次），无法报名新活动"
+              description="本月取消次数已达上限（3次），无法报名新活动，但仍可取消已报名的活动"
               show-icon
               class="signup-alert"
             />
@@ -280,11 +280,10 @@
           >
             取消报名
           </el-button>
-
-          <!-- 添加剩余取消次数提示 -->
+          <!-- 剩余取消次数提示 -->
           <div v-if="!exceedCancelLimit && remainingCancels < 3" class="limit-tip">
             <i class="el-icon-info"></i>
-            本月还可取消 {{ remainingCancels }} 次（每月最多3次）
+            本月还可取消 {{ remainingCancels }} 次（每月最多3次，取消次数限制只影响新活动报名）
           </div>
 
           <el-alert
@@ -395,10 +394,11 @@ export default {
         this.selectedActivity.activityCapacity <= 0;
     },
 
-    // 显示取消报名按钮的条件
+    // 显示取消报名按钮的条件 - 不受取消次数限制
     showCancelButton() {
       if (!this.selectedActivity) return false;
       const status = this.getActivityStatusText(this.selectedActivity);
+      // 只要已报名且状态是"报名进行中"或"报名未开始"，就可以取消，不受取消次数限制
       return this.selectedActivity.isBooked &&
         (status === "报名进行中" || status === "报名未开始");
     },
@@ -845,10 +845,6 @@ export default {
       try {
         // 先检查取消限制
         const canCancel = await this.checkCancelLimit();
-        if (!canCancel) {
-          this.$message.warning('本月取消次数已达上限，无法继续取消报名');
-          return;
-        }
 
         this.$confirm('确定要取消该活动报名吗？', '确认取消', {
           confirmButtonText: '确定',
@@ -858,10 +854,9 @@ export default {
           this.submitCancelSignUp(row);
         }).catch(() => {
           this.$message.info('已取消取消报名操作');
-        });
+        });handleCancelSignUp
       } catch (error) {
-        console.error('检查取消限制失败:', error);
-        this.$message.error('检查取消限制失败，请稍后重试');
+
       }
     },
     // 修复：检查取消限制
@@ -1131,7 +1126,7 @@ export default {
         if (this.remainingCancels > 0) {
           this.$message.success(`取消报名成功！本月还可取消 ${this.remainingCancels} 次`);
         } else {
-          this.$message.warning('取消报名成功！本月取消次数已用完，将无法报名新活动');
+          this.$message.warning('取消报名成功！本月取消次数已用完，将无法报名新活动，但仍可取消已报名的活动');
         }
 
         this.detailDialogVisible = false;
