@@ -1,6 +1,8 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.domain.entity.SysUser;
+import com.ruoyi.system.utils.StuInfoDataValidator;
 
 /**
  * 学生信息Service业务层处理
@@ -27,6 +30,9 @@ public class StuInfoServiceImpl implements IStuInfoService
 {
     @Autowired
     private StuInfoMapper stuInfoMapper;
+    
+    @Autowired
+    private StuInfoDataValidator dataValidator;
 
     @Autowired
     private ISysUserService userService;
@@ -216,87 +222,150 @@ public class StuInfoServiceImpl implements IStuInfoService
         if (StringUtils.isNull(stuInfoList) || stuInfoList.size() == 0) {
             throw new ServiceException("导入学生数据不能为空！");
         }
+        
+        // 导入统计信息
         int successNum = 0;
         int failureNum = 0;
+        int skipNum = 0;
+        int totalNum = stuInfoList.size();
         StringBuilder successMsg = new StringBuilder();
         StringBuilder failureMsg = new StringBuilder();
-        for (StuInfo stuInfo : stuInfoList) {
+        StringBuilder skipMsg = new StringBuilder();
+        
+        // 用于检查重复学号
+        Set<String> processedStudentIds = new HashSet<>();
+        
+        System.out.println("开始处理导入数据，共" + stuInfoList.size() + "条记录");
+        
+        for (int i = 0; i < stuInfoList.size(); i++) {
+            StuInfo stuInfo = stuInfoList.get(i);
+            int rowIndex = i + 2; // Excel行号从2开始（第1行是表头）
+            
+            System.out.println("处理第" + rowIndex + "行数据...");
+            
             try {
-                // 验证必填字段
-                if (StringUtils.isEmpty(stuInfo.getStudentId())) {
-                    throw new ServiceException("学生学号不能为空");
-                }
-                if (StringUtils.isEmpty(stuInfo.getStudentName())) {
-                    throw new ServiceException("学生姓名不能为空");
-                }
-                if (StringUtils.isEmpty(stuInfo.getAcademy())) {
-                    throw new ServiceException("所属书院不能为空");
-                }
-                if (StringUtils.isEmpty(stuInfo.getOriginalSystemMajor())) {
-                    throw new ServiceException("原系统内专业不能为空");
-                }
-                if (StringUtils.isEmpty(stuInfo.getStudentClass())) {
-                    throw new ServiceException("行政班不能为空");
-                }
-                if (StringUtils.isEmpty(stuInfo.getDivertForm())) {
-                    throw new ServiceException("分流形式不能为空");
+                // 首先检查stuInfo对象是否为null
+                if (stuInfo == null) {
+                    System.out.println("❌ 第" + rowIndex + "行数据对象为null");
+                    failureNum++;
+                    failureMsg.append("<br/>第" + rowIndex + "行：数据解析失败，请检查Excel文件格式");
+                    continue;
                 }
                 
-                // 处理创新班字段转换：是/否 -> 1/0
-                if (stuInfo.getInnovationClass() != null) {
-                    // 如果已经是数字类型，保持不变
-                    if (stuInfo.getInnovationClass() instanceof Integer) {
-                        // 已经是数字，不需要转换
-                    } else {
-                        // 如果是字符串类型，进行转换
-                        String innovationClassStr = stuInfo.getInnovationClass().toString();
-                        if ("是".equals(innovationClassStr) || "1".equals(innovationClassStr)) {
-                            stuInfo.setInnovationClass(1);
-                        } else if ("否".equals(innovationClassStr) || "0".equals(innovationClassStr)) {
-                            stuInfo.setInnovationClass(0);
-                        } else if (StringUtils.isEmpty(innovationClassStr)) {
-                            stuInfo.setInnovationClass(null);
-                        } else {
-                            throw new ServiceException("创新班字段值无效，请输入'是'、'否'、'1'或'0'");
-                        }
-                    }
+                // 检查学号是否为空
+                if (StringUtils.isEmpty(stuInfo.getStudentId())) {
+                    failureNum++;
+                    failureMsg.append("<br/>第" + rowIndex + "行：学生学号不能为空");
+                    continue;
                 }
+                
+                // 检查Excel中是否有重复学号
+                if (processedStudentIds.contains(stuInfo.getStudentId())) {
+                    failureNum++;
+                    failureMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 在Excel中重复");
+                    continue;
+                }
+                processedStudentIds.add(stuInfo.getStudentId());
+                
+                // 使用数据验证器进行完整验证
+                System.out.println("开始验证第" + rowIndex + "行数据...");
+                StuInfoDataValidator.ValidationResult validationResult = dataValidator.validate(stuInfo, rowIndex);
+                if (!validationResult.isValid()) {
+                    System.out.println("❌ 第" + rowIndex + "行数据验证失败: " + validationResult.getErrorMessage());
+                    failureNum++;
+                    failureMsg.append("<br/>第" + rowIndex + "行：" + validationResult.getErrorMessage());
+                    continue;
+                }
+                System.out.println("✅ 第" + rowIndex + "行数据验证通过");
+                
+                // 创新班字段已经是Integer类型，不需要转换
                 
                 // 验证是否存在这个学生
-                StuInfo s = stuInfoMapper.selectStuInfoById(stuInfo.getStudentId());
-                if (StringUtils.isNull(s)) {
+                StuInfo existingStudent = stuInfoMapper.selectStuInfoById(stuInfo.getStudentId());
+                if (StringUtils.isNull(existingStudent)) {
+                    // 学生不存在，执行新增
                     stuInfo.setCreateBy(operName);
-                    // 使用insertStuInfo方法，会自动创建用户和角色
                     int insertResult = this.insertStuInfo(stuInfo);
                     if (insertResult > 0) {
                         successNum++;
-                        successMsg.append("<br/>" + successNum + "、学生学号 " + stuInfo.getStudentId() + " 导入成功");
+                        successMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 新增成功");
                     } else {
                         failureNum++;
-                        failureMsg.append("<br/>" + failureNum + "、学生学号 " + stuInfo.getStudentId() + " 导入失败");
+                        failureMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 新增失败，数据库操作异常");
                     }
                 } else if (isUpdateSupport) {
+                    // 学生存在且允许更新
+                    stuInfo.setId(existingStudent.getId());
                     stuInfo.setUpdateBy(operName);
-                    this.updateStuInfo(stuInfo);
-                    successNum++;
-                    successMsg.append("<br/>" + successNum + "、学生学号 " + stuInfo.getStudentId() + " 更新成功");
+                    int updateResult = this.updateStuInfo(stuInfo);
+                    if (updateResult > 0) {
+                        successNum++;
+                        successMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 更新成功");
+                    } else {
+                        failureNum++;
+                        failureMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 更新失败，数据库操作异常");
+                    }
                 } else {
-                    failureNum++;
-                    failureMsg.append("<br/>" + failureNum + "、学生学号 " + stuInfo.getStudentId() + " 已存在");
+                    // 学生存在但不允许更新
+                    skipNum++;
+                    skipMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 已存在，跳过导入");
                 }
             } catch (Exception e) {
                 failureNum++;
-                String msg = "<br/>" + failureNum + "、学生学号 " + stuInfo.getStudentId() + " 导入失败：";
-                failureMsg.append(msg + e.getMessage());
+                String errorDetail = e.getMessage();
+                if (errorDetail.contains("Duplicate entry")) {
+                    errorDetail = "学号已存在，请检查数据或选择更新模式";
+                } else if (errorDetail.contains("Data too long")) {
+                    errorDetail = "数据长度超出限制";
+                } else if (errorDetail.contains("Cannot be null")) {
+                    errorDetail = "必填字段为空";
+                }
+                failureMsg.append("<br/>第" + rowIndex + "行：学号 " + stuInfo.getStudentId() + " 导入失败 - " + errorDetail);
             }
         }
-        if (failureNum > 0) {
-            failureMsg.insert(0, "很抱歉，导入失败！共 " + failureNum + " 条数据格式不正确，错误如下：");
-            throw new ServiceException(failureMsg.toString());
-        } else {
-            successMsg.insert(0, "恭喜您，数据已全部导入成功！共 " + successNum + " 条，数据如下：");
+        
+        // 构建详细的导入结果报告
+        StringBuilder resultMsg = new StringBuilder();
+        resultMsg.append("<div style='font-family: Arial, sans-serif;'>");
+        resultMsg.append("<h3 style='color: #333; margin-bottom: 15px;'>📊 导入结果统计</h3>");
+        resultMsg.append("<div style='background: #f5f5f5; padding: 10px; border-radius: 5px; margin-bottom: 15px;'>");
+        resultMsg.append("<p><strong>总数据量：</strong>" + totalNum + " 条</p>");
+        resultMsg.append("<p style='color: #67C23A;'><strong>成功导入：</strong>" + successNum + " 条</p>");
+        if (skipNum > 0) {
+            resultMsg.append("<p style='color: #E6A23C;'><strong>跳过数据：</strong>" + skipNum + " 条</p>");
         }
-        return successMsg.toString();
+        resultMsg.append("<p style='color: #F56C6C;'><strong>失败数据：</strong>" + failureNum + " 条</p>");
+        resultMsg.append("</div>");
+        
+        if (successNum > 0) {
+            resultMsg.append("<div style='background: #f0f9ff; padding: 10px; border-left: 4px solid #67C23A; margin-bottom: 15px;'>");
+            resultMsg.append("<h4 style='color: #67C23A; margin-top: 0;'>✅ 成功导入的数据：</h4>");
+            resultMsg.append(successMsg.toString());
+            resultMsg.append("</div>");
+        }
+        
+        if (skipNum > 0) {
+            resultMsg.append("<div style='background: #fdf6ec; padding: 10px; border-left: 4px solid #E6A23C; margin-bottom: 15px;'>");
+            resultMsg.append("<h4 style='color: #E6A23C; margin-top: 0;'>⚠️ 跳过的数据：</h4>");
+            resultMsg.append(skipMsg.toString());
+            resultMsg.append("</div>");
+        }
+        
+        if (failureNum > 0) {
+            resultMsg.append("<div style='background: #fef0f0; padding: 10px; border-left: 4px solid #F56C6C; margin-bottom: 15px;'>");
+            resultMsg.append("<h4 style='color: #F56C6C; margin-top: 0;'>❌ 失败的数据：</h4>");
+            resultMsg.append(failureMsg.toString());
+            resultMsg.append("</div>");
+        }
+        
+        resultMsg.append("</div>");
+        
+        // 如果有失败的数据，抛出异常
+        if (failureNum > 0) {
+            throw new ServiceException(resultMsg.toString());
+        }
+        
+        return resultMsg.toString();
     }
 
     /**

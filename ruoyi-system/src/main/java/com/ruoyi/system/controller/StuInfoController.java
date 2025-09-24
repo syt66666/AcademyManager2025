@@ -23,7 +23,10 @@ import com.ruoyi.system.service.IStuInfoService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.core.domain.model.LoginUser;
-import com.ruoyi.system.domain.dto.StuInfoTemplateDTO;
+import com.ruoyi.system.utils.StuInfoExcelTemplateUtil;
+import com.ruoyi.system.utils.StuInfoExcelImportUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 学生信息Controller
@@ -35,8 +38,16 @@ import com.ruoyi.system.domain.dto.StuInfoTemplateDTO;
 @RequestMapping("/system/student")
 public class StuInfoController extends BaseController
 {
+    private static final Logger logger = LoggerFactory.getLogger(StuInfoController.class);
+    
     @Autowired
     private IStuInfoService stuInfoService;
+    
+    @Autowired
+    private StuInfoExcelTemplateUtil templateUtil;
+    
+    @Autowired
+    private StuInfoExcelImportUtil excelImportUtil;
 
     /**
      * 查询学生信息列表
@@ -134,21 +145,84 @@ public class StuInfoController extends BaseController
     @PostMapping("/importData")
     public AjaxResult importData(MultipartFile file, boolean updateSupport) throws Exception
     {
-        ExcelUtil<StuInfo> util = new ExcelUtil<StuInfo>(StuInfo.class);
-        List<StuInfo> stuInfoList = util.importExcel(file.getInputStream());
-        LoginUser loginUser = getLoginUser();
-        String operName = loginUser.getUsername();
-        String message = stuInfoService.importStuInfo(stuInfoList, updateSupport, operName);
-        return AjaxResult.success(message);
+        try {
+            // 检查文件是否为空
+            if (file == null || file.isEmpty()) {
+                return AjaxResult.error("上传文件不能为空");
+            }
+            
+            // 检查文件类型
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || (!fileName.endsWith(".xlsx") && !fileName.endsWith(".xls"))) {
+                return AjaxResult.error("只能上传Excel文件（.xlsx或.xls格式）");
+            }
+            
+            // 检查文件大小（限制10MB）
+            if (file.getSize() > 10 * 1024 * 1024) {
+                return AjaxResult.error("文件大小不能超过10MB");
+            }
+            
+            // 使用增强的Excel解析工具
+            StuInfoExcelImportUtil.ExcelImportResult importResult = excelImportUtil.importExcel(file.getInputStream());
+            
+            logger.info("Excel解析结果 - 总行数: {}, 有效行数: {}, 空行数: {}", 
+                importResult.getTotalRows(), importResult.getValidRows(), importResult.getNullRows());
+            
+            if (!importResult.isSuccess()) {
+                logger.error("Excel解析失败: {}", importResult.getErrorMessage());
+                return AjaxResult.error(importResult.getErrorMessage());
+            }
+            
+            List<StuInfo> stuInfoList = importResult.getStuInfoList();
+            
+            // 调试：记录解析的数据详情
+            if (stuInfoList != null && !stuInfoList.isEmpty()) {
+                logger.info("解析到{}条学生数据", stuInfoList.size());
+                for (int i = 0; i < Math.min(3, stuInfoList.size()); i++) {
+                    StuInfo stuInfo = stuInfoList.get(i);
+                    if (stuInfo != null) {
+                        logger.info("第{}行数据 - 学号: {}, 姓名: {}, 书院: {}, 专业: {}, 行政班: {}, 分流形式: {}, 创新班: {} (类型: {})", 
+                            i + 2, 
+                            stuInfo.getStudentId() != null ? stuInfo.getStudentId() : "NULL",
+                            stuInfo.getStudentName() != null ? stuInfo.getStudentName() : "NULL",
+                            stuInfo.getAcademy() != null ? stuInfo.getAcademy() : "NULL",
+                            stuInfo.getOriginalSystemMajor() != null ? stuInfo.getOriginalSystemMajor() : "NULL",
+                            stuInfo.getStudentClass() != null ? stuInfo.getStudentClass() : "NULL",
+                            stuInfo.getDivertForm() != null ? stuInfo.getDivertForm() : "NULL",
+                            stuInfo.getInnovationClass() != null ? stuInfo.getInnovationClass() : "NULL",
+                            stuInfo.getInnovationClass() != null ? stuInfo.getInnovationClass().getClass().getSimpleName() : "NULL");
+                    } else {
+                        logger.warn("第{}行数据为null", i + 2);
+                    }
+                }
+            } else {
+                logger.warn("解析结果为空列表");
+            }
+            
+            // 如果有空行错误，给出警告但继续处理
+            if (importResult.getNullRows() > 0) {
+                logger.warn("Excel文件中发现{}行空数据", importResult.getNullRows());
+            }
+            
+            LoginUser loginUser = getLoginUser();
+            String operName = loginUser.getUsername();
+            String message = stuInfoService.importStuInfo(stuInfoList, updateSupport, operName);
+            return AjaxResult.success(message);
+            
+        } catch (Exception e) {
+            // 记录详细错误信息
+            logger.error("导入学生信息失败", e);
+            return AjaxResult.error("导入失败：" + e.getMessage());
+        }
     }
 
     /**
      * 下载导入模板
      */
     @GetMapping("/importTemplate")
-    public void importTemplate(HttpServletResponse response) {
-        ExcelUtil<StuInfoTemplateDTO> util = new ExcelUtil<>(StuInfoTemplateDTO.class);
-        util.importTemplateExcel(response, "学生信息数据");
+    public void importTemplate(HttpServletResponse response) throws Exception {
+        // 使用增强版模板生成工具，包含数据验证和填写说明
+        templateUtil.generateTemplate(response);
     }
 }
 

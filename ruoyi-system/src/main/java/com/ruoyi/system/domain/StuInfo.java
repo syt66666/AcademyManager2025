@@ -28,7 +28,7 @@ public class StuInfo extends BaseEntity
     private String academy;
 
     /** 原系统内专业 */
-    @Excel(name = "原系统内专业")
+    @Excel(name = "系统内专业")
     @NotBlank(message = "原系统内专业不能为空")
     private String originalSystemMajor;
 
@@ -51,7 +51,7 @@ public class StuInfo extends BaseEntity
     private String divertForm;
 
     /** 是否创新班或拔尖班（0不是 1是） */
-    @Excel(name = "是否创新班或拔尖班")
+    @Excel(name = "是否创新班或拔尖班", readConverterExp = "1=是,0=否")
     private Integer innovationClass;
 
     /** 创新班政策状态（0保持 1放弃） */

@@ -42,15 +42,7 @@
           @click="handleAdd"
         >新增</el-button>
       </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          plain
-          icon="el-icon-upload"
-          size="mini"
-          @click="handleImport"
-        >导入</el-button>
-      </el-col>
+
       <el-col :span="1.5">
         <el-button
           type="danger"
@@ -60,6 +52,15 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="success"
+          plain
+          icon="el-icon-upload"
+          size="mini"
+          @click="handleImport"
+        >导入</el-button>
       </el-col>
       <el-col :span="1.5">
         <el-button
@@ -164,6 +165,8 @@
         :disabled="upload.isUploading"
         :on-progress="handleFileUploadProgress"
         :on-success="handleFileSuccess"
+        :on-error="handleFileError"
+        :before-upload="beforeUpload"
         :auto-upload="false"
         drag
       >
@@ -433,17 +436,108 @@ export default {
     // 文件上传中处理
     handleFileUploadProgress(event, file, fileList) {
       this.upload.isUploading = true;
+      // 显示上传进度
+      this.$message({
+        message: `正在上传文件：${file.name}，进度：${Math.round(event.percent)}%`,
+        type: 'info',
+        duration: 2000
+      });
     },
     // 文件上传成功处理
     handleFileSuccess(response, file, fileList) {
       this.upload.open = false;
       this.upload.isUploading = false;
       this.$refs.upload.clearFiles();
-      this.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", { dangerouslyUseHTMLString: true });
+      
+      // 检查响应状态
+      if (response.code === 200) {
+        // 成功情况
+        this.$alert(
+          "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + 
+          response.msg + 
+          "</div>", 
+          "✅ 导入成功", 
+          { 
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: '确定',
+            type: 'success'
+          }
+        );
+        this.$message.success('数据导入成功！');
+      } else {
+        // 失败情况
+        this.$alert(
+          "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + 
+          (response.msg || '导入过程中发生未知错误') + 
+          "</div>", 
+          "❌ 导入失败", 
+          { 
+            dangerouslyUseHTMLString: true,
+            confirmButtonText: '确定',
+            type: 'error'
+          }
+        );
+        this.$message.error('数据导入失败，请检查错误信息！');
+      }
+      
       this.getList();
+    },
+    // 文件上传失败处理
+    handleFileError(error, file, fileList) {
+      this.upload.isUploading = false;
+      this.$refs.upload.clearFiles();
+      
+      let errorMessage = '文件上传失败';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response && error.response.data && error.response.data.msg) {
+        errorMessage = error.response.data.msg;
+      }
+      
+      this.$alert(
+        "<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + 
+        errorMessage + 
+        "</div>", 
+        "❌ 上传失败", 
+        { 
+          dangerouslyUseHTMLString: true,
+          confirmButtonText: '确定',
+          type: 'error'
+        }
+      );
+      this.$message.error('文件上传失败！');
+    },
+    // 文件上传前验证
+    beforeUpload(file) {
+      // 检查文件类型
+      const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
+                     file.type === 'application/vnd.ms-excel' ||
+                     file.name.endsWith('.xlsx') || 
+                     file.name.endsWith('.xls');
+      
+      if (!isExcel) {
+        this.$message.error('只能上传 Excel 文件（.xlsx 或 .xls 格式）！');
+        return false;
+      }
+      
+      // 检查文件大小（限制为10MB）
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        this.$message.error('上传文件大小不能超过 10MB！');
+        return false;
+      }
+      
+      // 显示文件信息
+      this.$message.info(`准备上传文件：${file.name}，大小：${(file.size / 1024 / 1024).toFixed(2)}MB`);
+      return true;
     },
     // 提交上传文件
     submitFileForm() {
+      if (this.$refs.upload.uploadFiles.length === 0) {
+        this.$message.warning('请先选择要上传的文件！');
+        return;
+      }
+      
       this.$refs.upload.submit();
     },
     // 下载模板文件（使用GET请求）
