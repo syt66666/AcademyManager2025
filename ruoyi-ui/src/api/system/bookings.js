@@ -113,3 +113,4 @@ export function checkBookingSimple(activityId, studentId) {
     params: { activityId, studentId }
   })
 }
+
