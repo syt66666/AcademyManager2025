@@ -28,7 +28,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
  * @date 2025-09-24
  */
 @RestController
-@RequestMapping("/system/score")
+@RequestMapping("/student/score")
 public class CourseScoreController extends BaseController
 {
     @Autowired
@@ -37,7 +37,6 @@ public class CourseScoreController extends BaseController
     /**
      * 查询课程成绩列表
      */
-    @PreAuthorize("@ss.hasPermi('system:score:list')")
     @GetMapping("/list")
     public TableDataInfo list(CourseScore courseScore)
     {
@@ -49,7 +48,6 @@ public class CourseScoreController extends BaseController
     /**
      * 导出课程成绩列表
      */
-    @PreAuthorize("@ss.hasPermi('system:score:export')")
     @Log(title = "课程成绩", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, CourseScore courseScore)
@@ -62,7 +60,6 @@ public class CourseScoreController extends BaseController
     /**
      * 获取课程成绩详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:score:query')")
     @GetMapping(value = "/{scoreId}")
     public AjaxResult getInfo(@PathVariable("scoreId") Long scoreId)
     {
@@ -72,7 +69,6 @@ public class CourseScoreController extends BaseController
     /**
      * 新增课程成绩
      */
-    @PreAuthorize("@ss.hasPermi('system:score:add')")
     @Log(title = "课程成绩", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody CourseScore courseScore)
@@ -83,7 +79,6 @@ public class CourseScoreController extends BaseController
     /**
      * 修改课程成绩
      */
-    @PreAuthorize("@ss.hasPermi('system:score:edit')")
     @Log(title = "课程成绩", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody CourseScore courseScore)
@@ -94,7 +89,6 @@ public class CourseScoreController extends BaseController
     /**
      * 删除课程成绩
      */
-    @PreAuthorize("@ss.hasPermi('system:score:remove')")
     @Log(title = "课程成绩", businessType = BusinessType.DELETE)
 	@DeleteMapping("/{scoreIds}")
     public AjaxResult remove(@PathVariable Long[] scoreIds)
