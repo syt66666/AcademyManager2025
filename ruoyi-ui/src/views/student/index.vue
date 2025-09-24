@@ -26,18 +26,6 @@
         />
       </el-form-item>
 
-      <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
-        <el-select
-          v-model="queryParams.innovationClass"
-          placeholder="请选择是否创新班或拔尖班"
-          clearable
-          @change="handleQuery"
-        >
-          <el-option label="是" :value="1"></el-option>
-          <el-option label="否" :value="0"></el-option>
-        </el-select>
-      </el-form-item>
-
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -182,9 +170,6 @@
         <i class="el-icon-upload"></i>
         <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
         <div class="el-upload__tip text-center" slot="tip">
-          <div class="el-upload__tip" slot="tip">
-            <el-checkbox v-model="upload.updateSupport" /> 是否更新已经存在的学生数据
-          </div>
           <span>仅允许导入xls、xlsx格式文件。</span>
           <el-link type="primary" :underline="false" style="font-size:12px;vertical-align: baseline;" @click="importTemplate">下载模板</el-link>
         </div>

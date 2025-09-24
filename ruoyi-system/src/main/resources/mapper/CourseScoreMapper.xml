@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CourseScoreMapper">
+    
+    <resultMap type="CourseScore" id="CourseScoreResult">
+        <result property="scoreId"    column="score_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="courseId"    column="course_id"    />
+        <result property="academicYear"    column="academic_year"    />
+        <result property="semester"    column="semester"    />
+        <result property="scoreValue"    column="score_value"    />
+        <result property="gpa"    column="gpa"    />
+        <result property="scoreType"    column="score_type"    />
+        <result property="uploadTime"    column="upload_time"    />
+    </resultMap>
+
+    <sql id="selectCourseScoreVo">
+        select score_id, student_id, course_id, academic_year, semester, score_value, gpa, score_type, upload_time from course_score
+    </sql>
+
+    <select id="selectCourseScoreList" parameterType="CourseScore" resultMap="CourseScoreResult">
+        <include refid="selectCourseScoreVo"/>
+        <where>  
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="courseId != null  and courseId != ''"> and course_id = #{courseId}</if>
+            <if test="academicYear != null  and academicYear != ''"> and academic_year = #{academicYear}</if>
+            <if test="semester != null  and semester != ''"> and semester = #{semester}</if>
+            <if test="scoreValue != null  and scoreValue != ''"> and score_value = #{scoreValue}</if>
+            <if test="gpa != null "> and gpa = #{gpa}</if>
+            <if test="scoreType != null  and scoreType != ''"> and score_type = #{scoreType}</if>
+            <if test="uploadTime != null "> and upload_time = #{uploadTime}</if>
+        </where>
+    </select>
+    
+    <select id="selectCourseScoreByScoreId" parameterType="Long" resultMap="CourseScoreResult">
+        <include refid="selectCourseScoreVo"/>
+        where score_id = #{scoreId}
+    </select>
+
+    <insert id="insertCourseScore" parameterType="CourseScore" useGeneratedKeys="true" keyProperty="scoreId">
+        insert into course_score
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="courseId != null and courseId != ''">course_id,</if>
+            <if test="academicYear != null and academicYear != ''">academic_year,</if>
+            <if test="semester != null and semester != ''">semester,</if>
+            <if test="scoreValue != null and scoreValue != ''">score_value,</if>
+            <if test="gpa != null">gpa,</if>
+            <if test="scoreType != null">score_type,</if>
+            <if test="uploadTime != null">upload_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="courseId != null and courseId != ''">#{courseId},</if>
+            <if test="academicYear != null and academicYear != ''">#{academicYear},</if>
+            <if test="semester != null and semester != ''">#{semester},</if>
+            <if test="scoreValue != null and scoreValue != ''">#{scoreValue},</if>
+            <if test="gpa != null">#{gpa},</if>
+            <if test="scoreType != null">#{scoreType},</if>
+            <if test="uploadTime != null">#{uploadTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCourseScore" parameterType="CourseScore">
+        update course_score
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="courseId != null and courseId != ''">course_id = #{courseId},</if>
+            <if test="academicYear != null and academicYear != ''">academic_year = #{academicYear},</if>
+            <if test="semester != null and semester != ''">semester = #{semester},</if>
+            <if test="scoreValue != null and scoreValue != ''">score_value = #{scoreValue},</if>
+            <if test="gpa != null">gpa = #{gpa},</if>
+            <if test="scoreType != null">score_type = #{scoreType},</if>
+            <if test="uploadTime != null">upload_time = #{uploadTime},</if>
+        </trim>
+        where score_id = #{scoreId}
+    </update>
+
+    <delete id="deleteCourseScoreByScoreId" parameterType="Long">
+        delete from course_score where score_id = #{scoreId}
+    </delete>
+
+    <delete id="deleteCourseScoreByScoreIds" parameterType="String">
+        delete from course_score where score_id in 
+        <foreach item="scoreId" collection="array" open="(" separator="," close=")">
+            #{scoreId}
+        </foreach>
+    </delete>
+</mapper>
