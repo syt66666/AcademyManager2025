@@ -9,7 +9,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 课程选课记录对象 course_bookings
- * 
+ *
  * @author ruoyi
  * @date 2025-09-25
  */
@@ -72,120 +72,120 @@ public class CourseBookings extends BaseEntity
     @Excel(name = "更新时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date updatedTime;
 
-    public void setBookingId(Long bookingId) 
+    public void setBookingId(Long bookingId)
     {
         this.bookingId = bookingId;
     }
 
-    public Long getBookingId() 
+    public Long getBookingId()
     {
         return bookingId;
     }
-    public void setStudentId(String studentId) 
+    public void setStudentId(String studentId)
     {
         this.studentId = studentId;
     }
 
-    public String getStudentId() 
+    public String getStudentId()
     {
         return studentId;
     }
-    public void setCourseId(Long courseId) 
+    public void setCourseId(Long courseId)
     {
         this.courseId = courseId;
     }
 
-    public Long getCourseId() 
+    public Long getCourseId()
     {
         return courseId;
     }
-    public void setBookAt(Date bookAt) 
+    public void setBookAt(Date bookAt)
     {
         this.bookAt = bookAt;
     }
 
-    public Date getBookAt() 
+    public Date getBookAt()
     {
         return bookAt;
     }
-    public void setProof(String proof) 
+    public void setProof(String proof)
     {
         this.proof = proof;
     }
 
-    public String getProof() 
+    public String getProof()
     {
         return proof;
     }
-    public void setSummary(String summary) 
+    public void setSummary(String summary)
     {
         this.summary = summary;
     }
 
-    public String getSummary() 
+    public String getSummary()
     {
         return summary;
     }
-    public void setStatus(String status) 
+    public void setStatus(String status)
     {
         this.status = status;
     }
 
-    public String getStatus() 
+    public String getStatus()
     {
         return status;
     }
-    public void setReviewer(String reviewer) 
+    public void setReviewer(String reviewer)
     {
         this.reviewer = reviewer;
     }
 
-    public String getReviewer() 
+    public String getReviewer()
     {
         return reviewer;
     }
-    public void setReviewerComment(String reviewerComment) 
+    public void setReviewerComment(String reviewerComment)
     {
         this.reviewerComment = reviewerComment;
     }
 
-    public String getReviewerComment() 
+    public String getReviewerComment()
     {
         return reviewerComment;
     }
-    public void setReviewTime(Date reviewTime) 
+    public void setReviewTime(Date reviewTime)
     {
         this.reviewTime = reviewTime;
     }
 
-    public Date getReviewTime() 
+    public Date getReviewTime()
     {
         return reviewTime;
     }
-    public void setOrganizer(String organizer) 
+    public void setOrganizer(String organizer)
     {
         this.organizer = organizer;
     }
 
-    public String getOrganizer() 
+    public String getOrganizer()
     {
         return organizer;
     }
-    public void setCreatedTime(Date createdTime) 
+    public void setCreatedTime(Date createdTime)
     {
         this.createdTime = createdTime;
     }
 
-    public Date getCreatedTime() 
+    public Date getCreatedTime()
     {
         return createdTime;
     }
-    public void setUpdatedTime(Date updatedTime) 
+    public void setUpdatedTime(Date updatedTime)
     {
         this.updatedTime = updatedTime;
     }
 
-    public Date getUpdatedTime() 
+    public Date getUpdatedTime()
     {
         return updatedTime;
     }
@@ -193,19 +193,19 @@ public class CourseBookings extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("bookingId", getBookingId())
-            .append("studentId", getStudentId())
-            .append("courseId", getCourseId())
-            .append("bookAt", getBookAt())
-            .append("proof", getProof())
-            .append("summary", getSummary())
-            .append("status", getStatus())
-            .append("reviewer", getReviewer())
-            .append("reviewerComment", getReviewerComment())
-            .append("reviewTime", getReviewTime())
-            .append("organizer", getOrganizer())
-            .append("createdTime", getCreatedTime())
-            .append("updatedTime", getUpdatedTime())
-            .toString();
+                .append("bookingId", getBookingId())
+                .append("studentId", getStudentId())
+                .append("courseId", getCourseId())
+                .append("bookAt", getBookAt())
+                .append("proof", getProof())
+                .append("summary", getSummary())
+                .append("status", getStatus())
+                .append("reviewer", getReviewer())
+                .append("reviewerComment", getReviewerComment())
+                .append("reviewTime", getReviewTime())
+                .append("organizer", getOrganizer())
+                .append("createdTime", getCreatedTime())
+                .append("updatedTime", getUpdatedTime())
+                .toString();
     }
 }

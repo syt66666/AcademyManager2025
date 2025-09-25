@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.CoursesMapper">
-    
+
     <resultMap type="Courses" id="CoursesResult">
         <result property="courseId"    column="course_id"    />
         <result property="courseName"    column="course_name"    />
@@ -32,7 +32,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectCoursesList" parameterType="Courses" resultMap="CoursesResult">
         <include refid="selectCoursesVo"/>
-        <where>  
+        <where>
             <if test="courseName != null  and courseName != ''"> and course_name like concat('%', #{courseName}, '%')</if>
             <if test="courseType != null "> and course_type = #{courseType}</if>
             <if test="courseLocation != null  and courseLocation != ''"> and course_location = #{courseLocation}</if>
@@ -53,7 +53,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="courseCategory != null  and courseCategory != ''"> and course_category = #{courseCategory}</if>
         </where>
     </select>
-    
+
     <select id="selectCoursesByCourseId" parameterType="Long" resultMap="CoursesResult">
         <include refid="selectCoursesVo"/>
         where course_id = #{courseId}
@@ -80,7 +80,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="version != null">version,</if>
             <if test="courseCredit != null">course_credit,</if>
             <if test="courseCategory != null">course_category,</if>
-         </trim>
+        </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="courseName != null and courseName != ''">#{courseName},</if>
             <if test="courseType != null">#{courseType},</if>
@@ -100,7 +100,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="version != null">#{version},</if>
             <if test="courseCredit != null">#{courseCredit},</if>
             <if test="courseCategory != null">#{courseCategory},</if>
-         </trim>
+        </trim>
     </insert>
 
     <update id="updateCourses" parameterType="Courses">
@@ -133,7 +133,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteCoursesByCourseIds" parameterType="String">
-        delete from courses where course_id in 
+        delete from courses where course_id in
         <foreach item="courseId" collection="array" open="(" separator="," close=")">
             #{courseId}
         </foreach>

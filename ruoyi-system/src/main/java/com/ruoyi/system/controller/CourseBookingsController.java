@@ -23,12 +23,12 @@ import com.ruoyi.common.core.page.TableDataInfo;
 
 /**
  * 课程选课记录Controller
- * 
+ *
  * @author ruoyi
  * @date 2025-09-25
  */
 @RestController
-@RequestMapping("/system/course-bookings")
+@RequestMapping("/system/courseBookings")
 public class CourseBookingsController extends BaseController
 {
     @Autowired
@@ -37,7 +37,6 @@ public class CourseBookingsController extends BaseController
     /**
      * 查询课程选课记录列表
      */
-    @PreAuthorize("@ss.hasPermi('system:bookings:list')")
     @GetMapping("/list")
     public TableDataInfo list(CourseBookings courseBookings)
     {
@@ -49,7 +48,6 @@ public class CourseBookingsController extends BaseController
     /**
      * 导出课程选课记录列表
      */
-    @PreAuthorize("@ss.hasPermi('system:bookings:export')")
     @Log(title = "课程选课记录", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, CourseBookings courseBookings)
@@ -62,7 +60,6 @@ public class CourseBookingsController extends BaseController
     /**
      * 获取课程选课记录详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:bookings:query')")
     @GetMapping(value = "/{bookingId}")
     public AjaxResult getInfo(@PathVariable("bookingId") Long bookingId)
     {
@@ -72,7 +69,6 @@ public class CourseBookingsController extends BaseController
     /**
      * 新增课程选课记录
      */
-    @PreAuthorize("@ss.hasPermi('system:bookings:add')")
     @Log(title = "课程选课记录", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody CourseBookings courseBookings)
@@ -83,7 +79,6 @@ public class CourseBookingsController extends BaseController
     /**
      * 修改课程选课记录
      */
-    @PreAuthorize("@ss.hasPermi('system:bookings:edit')")
     @Log(title = "课程选课记录", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody CourseBookings courseBookings)
@@ -94,9 +89,8 @@ public class CourseBookingsController extends BaseController
     /**
      * 删除课程选课记录
      */
-    @PreAuthorize("@ss.hasPermi('system:bookings:remove')")
     @Log(title = "课程选课记录", businessType = BusinessType.DELETE)
-	@DeleteMapping("/{bookingIds}")
+    @DeleteMapping("/{bookingIds}")
     public AjaxResult remove(@PathVariable Long[] bookingIds)
     {
         return toAjax(courseBookingsService.deleteCourseBookingsByBookingIds(bookingIds));

@@ -9,19 +9,19 @@ import com.ruoyi.system.service.ICourseBookingsService;
 
 /**
  * 课程选课记录Service业务层处理
- * 
+ *
  * @author ruoyi
  * @date 2025-09-25
  */
 @Service
-public class CourseBookingsServiceImpl implements ICourseBookingsService 
+public class CourseBookingsServiceImpl implements ICourseBookingsService
 {
     @Autowired
     private CourseBookingsMapper courseBookingsMapper;
 
     /**
      * 查询课程选课记录
-     * 
+     *
      * @param bookingId 课程选课记录主键
      * @return 课程选课记录
      */
@@ -33,7 +33,7 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
 
     /**
      * 查询课程选课记录列表
-     * 
+     *
      * @param courseBookings 课程选课记录
      * @return 课程选课记录
      */
@@ -45,7 +45,7 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
 
     /**
      * 新增课程选课记录
-     * 
+     *
      * @param courseBookings 课程选课记录
      * @return 结果
      */
@@ -57,7 +57,7 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
 
     /**
      * 修改课程选课记录
-     * 
+     *
      * @param courseBookings 课程选课记录
      * @return 结果
      */
@@ -69,7 +69,7 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
 
     /**
      * 批量删除课程选课记录
-     * 
+     *
      * @param bookingIds 需要删除的课程选课记录主键
      * @return 结果
      */
@@ -81,7 +81,7 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
 
     /**
      * 删除课程选课记录信息
-     * 
+     *
      * @param bookingId 课程选课记录主键
      * @return 结果
      */

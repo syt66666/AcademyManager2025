@@ -9,19 +9,19 @@ import com.ruoyi.system.service.ICoursesService;
 
 /**
  * 【请填写功能名称】Service业务层处理
- * 
+ *
  * @author ruoyi
  * @date 2025-09-25
  */
 @Service
-public class CoursesServiceImpl implements ICoursesService 
+public class CoursesServiceImpl implements ICoursesService
 {
     @Autowired
     private CoursesMapper coursesMapper;
 
     /**
      * 查询【请填写功能名称】
-     * 
+     *
      * @param courseId 【请填写功能名称】主键
      * @return 【请填写功能名称】
      */
@@ -33,7 +33,7 @@ public class CoursesServiceImpl implements ICoursesService
 
     /**
      * 查询【请填写功能名称】列表
-     * 
+     *
      * @param courses 【请填写功能名称】
      * @return 【请填写功能名称】
      */
@@ -45,7 +45,7 @@ public class CoursesServiceImpl implements ICoursesService
 
     /**
      * 新增【请填写功能名称】
-     * 
+     *
      * @param courses 【请填写功能名称】
      * @return 结果
      */
@@ -57,7 +57,7 @@ public class CoursesServiceImpl implements ICoursesService
 
     /**
      * 修改【请填写功能名称】
-     * 
+     *
      * @param courses 【请填写功能名称】
      * @return 结果
      */
@@ -69,7 +69,7 @@ public class CoursesServiceImpl implements ICoursesService
 
     /**
      * 批量删除【请填写功能名称】
-     * 
+     *
      * @param courseIds 需要删除的【请填写功能名称】主键
      * @return 结果
      */
@@ -81,7 +81,7 @@ public class CoursesServiceImpl implements ICoursesService
 
     /**
      * 删除【请填写功能名称】信息
-     * 
+     *
      * @param courseId 【请填写功能名称】主键
      * @return 结果
      */

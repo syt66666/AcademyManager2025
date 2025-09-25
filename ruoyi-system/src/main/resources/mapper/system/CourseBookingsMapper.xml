@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.ruoyi.system.mapper.CourseBookingsMapper">
-    
+
     <resultMap type="CourseBookings" id="CourseBookingsResult">
         <result property="bookingId"    column="booking_id"    />
         <result property="studentId"    column="student_id"    />
@@ -26,7 +26,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <select id="selectCourseBookingsList" parameterType="CourseBookings" resultMap="CourseBookingsResult">
         <include refid="selectCourseBookingsVo"/>
-        <where>  
+        <where>
             <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
             <if test="courseId != null "> and course_id = #{courseId}</if>
             <if test="bookAt != null "> and book_at = #{bookAt}</if>
@@ -41,7 +41,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="updatedTime != null "> and updated_time = #{updatedTime}</if>
         </where>
     </select>
-    
+
     <select id="selectCourseBookingsByBookingId" parameterType="Long" resultMap="CourseBookingsResult">
         <include refid="selectCourseBookingsVo"/>
         where booking_id = #{bookingId}
@@ -62,7 +62,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="organizer != null">organizer,</if>
             <if test="createdTime != null">created_time,</if>
             <if test="updatedTime != null">updated_time,</if>
-         </trim>
+        </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
             <if test="courseId != null">#{courseId},</if>
@@ -76,7 +76,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="organizer != null">#{organizer},</if>
             <if test="createdTime != null">#{createdTime},</if>
             <if test="updatedTime != null">#{updatedTime},</if>
-         </trim>
+        </trim>
     </insert>
 
     <update id="updateCourseBookings" parameterType="CourseBookings">
@@ -103,7 +103,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </delete>
 
     <delete id="deleteCourseBookingsByBookingIds" parameterType="String">
-        delete from course_bookings where booking_id in 
+        delete from course_bookings where booking_id in
         <foreach item="bookingId" collection="array" open="(" separator="," close=")">
             #{bookingId}
         </foreach>

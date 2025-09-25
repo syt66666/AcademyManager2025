@@ -76,7 +76,7 @@ public class BookingsServiceImpl implements IBookingsService {
                 throw new ServiceException("您已经报名过该活动，不能重复报名");
             }
         }
-        
+
         // 设置默认状态为"未提交"
         if (bookings.getStatus() == null || bookings.getStatus().isEmpty()) {
             bookings.setStatus("未提交");
@@ -125,7 +125,7 @@ public class BookingsServiceImpl implements IBookingsService {
             // 1. 获取原始状态
             Bookings originalRecord = bookingsMapper.selectBookingsById(bookings.getBookingId());
             String beforeStatus = originalRecord.getStatus();
-            
+
             // 2. 执行审核状态更新（只更新审核相关字段）
             int updateResult = bookingsMapper.updateBookingsAudit(bookings);
             if (updateResult <= 0) {

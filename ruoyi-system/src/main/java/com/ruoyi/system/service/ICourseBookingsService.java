@@ -5,15 +5,15 @@ import com.ruoyi.system.domain.CourseBookings;
 
 /**
  * 课程选课记录Service接口
- * 
+ *
  * @author ruoyi
  * @date 2025-09-25
  */
-public interface ICourseBookingsService 
+public interface ICourseBookingsService
 {
     /**
      * 查询课程选课记录
-     * 
+     *
      * @param bookingId 课程选课记录主键
      * @return 课程选课记录
      */
@@ -21,7 +21,7 @@ public interface ICourseBookingsService
 
     /**
      * 查询课程选课记录列表
-     * 
+     *
      * @param courseBookings 课程选课记录
      * @return 课程选课记录集合
      */
@@ -29,7 +29,7 @@ public interface ICourseBookingsService
 
     /**
      * 新增课程选课记录
-     * 
+     *
      * @param courseBookings 课程选课记录
      * @return 结果
      */
@@ -37,7 +37,7 @@ public interface ICourseBookingsService
 
     /**
      * 修改课程选课记录
-     * 
+     *
      * @param courseBookings 课程选课记录
      * @return 结果
      */
@@ -45,7 +45,7 @@ public interface ICourseBookingsService
 
     /**
      * 批量删除课程选课记录
-     * 
+     *
      * @param bookingIds 需要删除的课程选课记录主键集合
      * @return 结果
      */
@@ -53,7 +53,7 @@ public interface ICourseBookingsService
 
     /**
      * 删除课程选课记录信息
-     * 
+     *
      * @param bookingId 课程选课记录主键
      * @return 结果
      */

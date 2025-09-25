@@ -10,7 +10,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
 
 /**
  * 【请填写功能名称】对象 courses
- * 
+ *
  * @author ruoyi
  * @date 2025-09-25
  */
@@ -98,174 +98,174 @@ public class Courses extends BaseEntity
     @Excel(name = "课程类别")
     private String courseCategory;
 
-    public void setCourseId(Long courseId) 
+    public void setCourseId(Long courseId)
     {
         this.courseId = courseId;
     }
 
-    public Long getCourseId() 
+    public Long getCourseId()
     {
         return courseId;
     }
-    public void setCourseName(String courseName) 
+    public void setCourseName(String courseName)
     {
         this.courseName = courseName;
     }
 
-    public String getCourseName() 
+    public String getCourseName()
     {
         return courseName;
     }
-    public void setCourseType(Long courseType) 
+    public void setCourseType(Long courseType)
     {
         this.courseType = courseType;
     }
 
-    public Long getCourseType() 
+    public Long getCourseType()
     {
         return courseType;
     }
-    public void setCourseLocation(String courseLocation) 
+    public void setCourseLocation(String courseLocation)
     {
         this.courseLocation = courseLocation;
     }
 
-    public String getCourseLocation() 
+    public String getCourseLocation()
     {
         return courseLocation;
     }
-    public void setCourseStart(Date courseStart) 
+    public void setCourseStart(Date courseStart)
     {
         this.courseStart = courseStart;
     }
 
-    public Date getCourseStart() 
+    public Date getCourseStart()
     {
         return courseStart;
     }
-    public void setCourseDeadline(Date courseDeadline) 
+    public void setCourseDeadline(Date courseDeadline)
     {
         this.courseDeadline = courseDeadline;
     }
 
-    public Date getCourseDeadline() 
+    public Date getCourseDeadline()
     {
         return courseDeadline;
     }
-    public void setStartTime(Date startTime) 
+    public void setStartTime(Date startTime)
     {
         this.startTime = startTime;
     }
 
-    public Date getStartTime() 
+    public Date getStartTime()
     {
         return startTime;
     }
-    public void setEndTime(Date endTime) 
+    public void setEndTime(Date endTime)
     {
         this.endTime = endTime;
     }
 
-    public Date getEndTime() 
+    public Date getEndTime()
     {
         return endTime;
     }
-    public void setCourseTotalCapacity(Long courseTotalCapacity) 
+    public void setCourseTotalCapacity(Long courseTotalCapacity)
     {
         this.courseTotalCapacity = courseTotalCapacity;
     }
 
-    public Long getCourseTotalCapacity() 
+    public Long getCourseTotalCapacity()
     {
         return courseTotalCapacity;
     }
-    public void setCourseCapacity(Long courseCapacity) 
+    public void setCourseCapacity(Long courseCapacity)
     {
         this.courseCapacity = courseCapacity;
     }
 
-    public Long getCourseCapacity() 
+    public Long getCourseCapacity()
     {
         return courseCapacity;
     }
-    public void setCourseDescription(String courseDescription) 
+    public void setCourseDescription(String courseDescription)
     {
         this.courseDescription = courseDescription;
     }
 
-    public String getCourseDescription() 
+    public String getCourseDescription()
     {
         return courseDescription;
     }
-    public void setPictureUrl(String pictureUrl) 
+    public void setPictureUrl(String pictureUrl)
     {
         this.pictureUrl = pictureUrl;
     }
 
-    public String getPictureUrl() 
+    public String getPictureUrl()
     {
         return pictureUrl;
     }
-    public void setStatus(String status) 
+    public void setStatus(String status)
     {
         this.status = status;
     }
 
-    public String getStatus() 
+    public String getStatus()
     {
         return status;
     }
-    public void setCreatedAt(Date createdAt) 
+    public void setCreatedAt(Date createdAt)
     {
         this.createdAt = createdAt;
     }
 
-    public Date getCreatedAt() 
+    public Date getCreatedAt()
     {
         return createdAt;
     }
-    public void setOrganizer(String organizer) 
+    public void setOrganizer(String organizer)
     {
         this.organizer = organizer;
     }
 
-    public String getOrganizer() 
+    public String getOrganizer()
     {
         return organizer;
     }
-    public void setNotes(String notes) 
+    public void setNotes(String notes)
     {
         this.notes = notes;
     }
 
-    public String getNotes() 
+    public String getNotes()
     {
         return notes;
     }
-    public void setVersion(Long version) 
+    public void setVersion(Long version)
     {
         this.version = version;
     }
 
-    public Long getVersion() 
+    public Long getVersion()
     {
         return version;
     }
-    public void setCourseCredit(BigDecimal courseCredit) 
+    public void setCourseCredit(BigDecimal courseCredit)
     {
         this.courseCredit = courseCredit;
     }
 
-    public BigDecimal getCourseCredit() 
+    public BigDecimal getCourseCredit()
     {
         return courseCredit;
     }
-    public void setCourseCategory(String courseCategory) 
+    public void setCourseCategory(String courseCategory)
     {
         this.courseCategory = courseCategory;
     }
 
-    public String getCourseCategory() 
+    public String getCourseCategory()
     {
         return courseCategory;
     }
@@ -273,25 +273,25 @@ public class Courses extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
-            .append("courseId", getCourseId())
-            .append("courseName", getCourseName())
-            .append("courseType", getCourseType())
-            .append("courseLocation", getCourseLocation())
-            .append("courseStart", getCourseStart())
-            .append("courseDeadline", getCourseDeadline())
-            .append("startTime", getStartTime())
-            .append("endTime", getEndTime())
-            .append("courseTotalCapacity", getCourseTotalCapacity())
-            .append("courseCapacity", getCourseCapacity())
-            .append("courseDescription", getCourseDescription())
-            .append("pictureUrl", getPictureUrl())
-            .append("status", getStatus())
-            .append("createdAt", getCreatedAt())
-            .append("organizer", getOrganizer())
-            .append("notes", getNotes())
-            .append("version", getVersion())
-            .append("courseCredit", getCourseCredit())
-            .append("courseCategory", getCourseCategory())
-            .toString();
+                .append("courseId", getCourseId())
+                .append("courseName", getCourseName())
+                .append("courseType", getCourseType())
+                .append("courseLocation", getCourseLocation())
+                .append("courseStart", getCourseStart())
+                .append("courseDeadline", getCourseDeadline())
+                .append("startTime", getStartTime())
+                .append("endTime", getEndTime())
+                .append("courseTotalCapacity", getCourseTotalCapacity())
+                .append("courseCapacity", getCourseCapacity())
+                .append("courseDescription", getCourseDescription())
+                .append("pictureUrl", getPictureUrl())
+                .append("status", getStatus())
+                .append("createdAt", getCreatedAt())
+                .append("organizer", getOrganizer())
+                .append("notes", getNotes())
+                .append("version", getVersion())
+                .append("courseCredit", getCourseCredit())
+                .append("courseCategory", getCourseCategory())
+                .toString();
     }
 }
