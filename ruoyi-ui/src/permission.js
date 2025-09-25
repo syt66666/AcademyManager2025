@@ -15,74 +15,46 @@ const isWhiteList = (path) => {
   return whiteList.some(pattern => isPathMatch(pattern, path))
 }
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach((to, from, next) => {
   NProgress.start()
-
-  try {
-    if (getToken()) {
-      to.meta.title && store.dispatch('settings/setTitle', to.meta.title)
-
-      /* has token*/
-      if (to.path === '/login') {
-        next({ path: '/' })
-        NProgress.done()
-        return
-      }
-
-      if (isWhiteList(to.path)) {
-        next()
-        return
-      }
-
-      // 修复：检查用户信息是否已加载
+  if (getToken()) {
+    to.meta.title && store.dispatch('settings/setTitle', to.meta.title)
+    /* has token*/
+    if (to.path === '/login') {
+      next({ path: '/' })
+      NProgress.done()
+    } else if (isWhiteList(to.path)) {
+      next()
+    } else {
       if (store.getters.roles.length === 0) {
         isRelogin.show = true
-
-        try {
-          // 获取用户信息
-          await store.dispatch('GetInfo')
+        // 判断当前用户是否已拉取完user_info信息
+        store.dispatch('GetInfo').then(() => {
           isRelogin.show = false
-
-          // 生成路由
-          const accessRoutes = await store.dispatch('GenerateRoutes')
-
-          // 修复：安全地添加路由
-          if (accessRoutes && Array.isArray(accessRoutes)) {
-            router.addRoutes(accessRoutes)
-
-            // 修复：确保路由添加完成后再跳转
-            if (to.redirectedFrom) {
-              next(to.redirectedFrom)
-            } else {
-              next({ ...to, replace: true })
-            }
-          } else {
-            throw new Error('生成的路由表无效')
-          }
-        } catch (err) {
-          console.error('权限验证错误:', err)
-          isRelogin.show = false
-
-          await store.dispatch('LogOut')
-          Message.error(err?.message || '权限验证失败，请重新登录')
-          next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
-        }
+          store.dispatch('GenerateRoutes').then(accessRoutes => {
+            // 根据roles权限生成可访问的路由表
+            router.addRoutes(accessRoutes) // 动态添加可访问路由表
+            next({ ...to, replace: true }) // hack方法 确保addRoutes已完成
+          })
+        }).catch(err => {
+            store.dispatch('LogOut').then(() => {
+              Message.error(err)
+              next({ path: '/' })
+            })
+          })
       } else {
         next()
-      }
-    } else {
-      // 没有token
-      if (isWhiteList(to.path)) {
-        next()
-      } else {
-        next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
-        NProgress.done()
       }
     }
-  } catch (error) {
-    console.error('路由守卫全局错误:', error)
-    NProgress.done()
-    next('/login') // 降级处理，跳转到登录页
+  } else {
+    // 没有token
+    if (isWhiteList(to.path)) {
+      // 在免登录白名单，直接进入
+      next()
+    } else {
+      next(`/login?redirect=${encodeURIComponent(to.fullPath)}`) // 否则全部重定向到登录页
+      NProgress.done()
+    }
   }
 })
 

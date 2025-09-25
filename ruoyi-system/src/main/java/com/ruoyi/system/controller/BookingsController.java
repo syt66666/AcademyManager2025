@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/course/bookings")
+@RequestMapping("/system/bookings")
 public class BookingsController extends BaseController {
 
     @Autowired

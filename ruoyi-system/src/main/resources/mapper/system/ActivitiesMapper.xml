@@ -14,7 +14,6 @@
         <result property="activityStart"    column="activity_start"    />
         <result property="activityDeadline"    column="activity_deadline"    />
         <result property="activityDescription" column="activity_description" />
-        <result property="pictureUrl"          column="picture_url" />
         <result property="organizer"           column="organizer"            />
         <result property="notes"               column="notes"                />
         <result property="activityType"        column="activity_type"        />
