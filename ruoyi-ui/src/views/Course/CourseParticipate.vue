@@ -252,7 +252,7 @@
     <el-dialog
       :title="uploadTitle"
       :visible.sync="uploadVisible"
-      width="60%"
+      width="40%"
       :close-on-click-modal="false"
     >
       <!-- 审核意见显示区域 -->
@@ -284,7 +284,7 @@
       </div>
 
       <!-- 压缩包上传区域 - 只在非只读模式下显示 -->
-      <div v-if="!isViewOnly" class="section">
+      <div v-if="!isViewOnly" class="section compact-section">
         <h3>上传证明材料压缩包</h3>
         <div class="zip-upload-container">
           <el-upload
@@ -299,7 +299,7 @@
             :auto-upload="true"
             drag
             class="zip-upload"
-            :show-file-list="false"
+            :show-file-list="true"
           >
             <div class="upload-drag-area">
               <i class="el-icon-upload upload-icon"></i>
@@ -349,72 +349,7 @@
       </div>
 
 
-      <!-- 文档上传区域 - 只在非只读模式下显示 -->
-      <div v-if="!isViewOnly" class="section">
-        <h3>上传文档材料</h3>
-        <div class="upload-container">
-          <el-upload
-            :action="uploadUrl"
-            :file-list="docFiles"
-            :on-remove="handleRemoveDoc"
-            :on-success="handleDocSuccess"
-            :limit="1"
-            accept=".pdf"
-            :before-upload="beforeDocUpload"
-            :headers="headers"
-            :data="{ filePath: 'bookingImages' }"
-            :auto-upload="true"
-            drag
-            class="document-upload"
-            :show-file-list="false"
-          >
-            <div class="upload-drag-area">
-              <i class="el-icon-upload upload-icon"></i>
-              <div class="upload-text">
-                <p class="upload-main-text">将PDF文件拖拽到此处，或</p>
-                <p class="upload-sub-text">点击选择文件</p>
-              </div>
-            </div>
-            <div slot="tip" class="upload-tip">
-              <i class="el-icon-info"></i>
-              仅支持上传PDF格式文档，大小不超过10MB
-            </div>
-          </el-upload>
 
-          <!-- 自定义文件列表显示 -->
-          <div v-if="docFiles && docFiles.length > 0" class="custom-file-list">
-            <div v-for="(file, index) in docFiles" :key="index" class="custom-file-item">
-              <i class="el-icon-document file-icon"></i>
-              <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
-              <el-button
-                type="text"
-                icon="el-icon-delete"
-                class="remove-btn"
-                @click="handleRemoveDoc(file)"
-              ></el-button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 文档展示区域 - 只在只读模式下显示 -->
-      <div v-if="isViewOnly" class="section">
-        <h3>文档材料</h3>
-        <div v-if="docFiles && docFiles.length" class="doc-card">
-          <div class="doc-left">
-            <i :class="['file-icon', getDocIconClass(docFiles[0].name)]"></i>
-            <div class="file-meta">
-              <div class="file-name" :title="docFiles[0].name">{{ docFiles[0].name }}</div>
-              <el-tag size="mini" type="info">{{ getFileType(docFiles[0].name).toUpperCase() }}</el-tag>
-            </div>
-          </div>
-          <div class="doc-actions">
-            <el-button size="mini" icon="el-icon-view" @click="handleDocumentPreview(docFiles[0])">预览</el-button>
-            <el-button size="mini" icon="el-icon-download" type="primary" @click="downloadFileReliably(docFiles[0])" :loading="docFiles[0].downloading">下载</el-button>
-          </div>
-        </div>
-        <div v-else class="empty-tip">暂无文档材料</div>
-      </div>
 
 
       <!-- 图片预览对话框 -->
@@ -727,8 +662,11 @@ export default {
 
     // 修复压缩包上传成功处理
     handleZipSuccess(response, file, fileList) {
+      console.log('压缩包上传成功回调:', { response, file, fileList });
+      
       if (response.code === 200) {
         const fileName = response.fileName || this.extractFileName(response.url);
+        console.log('提取的文件名:', fileName);
 
         this.zipFiles = fileList.map(f => {
           if (f.uid === file.uid) {
@@ -744,7 +682,11 @@ export default {
             downloading: f.downloading || false // 确保有下载状态
           };
         });
+        console.log('更新后的zipFiles:', this.zipFiles);
         this.$message.success('压缩包上传成功');
+      } else {
+        console.error('上传失败:', response);
+        this.$message.error('压缩包上传失败: ' + (response.msg || '未知错误'));
       }
     },
 
@@ -999,11 +941,19 @@ export default {
 
     // 压缩包上传前校验
     beforeZipUpload(file) {
+      console.log('压缩包上传前验证:', { 
+        name: file.name, 
+        type: file.type, 
+        size: file.size 
+      });
+      
       const isZip = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'].includes(file.type) || 
                    file.name.toLowerCase().endsWith('.zip') || 
                    file.name.toLowerCase().endsWith('.rar') || 
                    file.name.toLowerCase().endsWith('.7z');
       const isLt50M = file.size / 1024 / 1024 < 50;
+
+      console.log('文件验证结果:', { isZip, isLt50M, sizeMB: (file.size / 1024 / 1024).toFixed(2) });
 
       if (!isZip) {
         this.$message.error('请上传压缩包格式文件(ZIP/RAR/7Z)!');
@@ -1013,6 +963,8 @@ export default {
         this.$message.error('上传文件大小不能超过 50MB!');
         return false;
       }
+      
+      console.log('文件验证通过，开始上传');
       return true;
     },
 
@@ -2965,5 +2917,55 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* 紧凑样式 */
+.compact-section {
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+.compact-section h3 {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.upload-drag-area {
+  padding: 15px;
+  min-height: 80px;
+}
+
+.upload-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.upload-main-text {
+  font-size: 13px;
+  margin: 0 0 4px 0;
+}
+
+.upload-sub-text {
+  font-size: 11px;
+  margin: 0;
+}
+
+.upload-tip {
+  margin-top: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.custom-file-item {
+  padding: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.custom-file-item .file-icon {
+  font-size: 16px;
+  margin-right: 8px;
+}
+
+.custom-file-item .file-name {
+  font-size: 13px;
+}
 
 </style>
