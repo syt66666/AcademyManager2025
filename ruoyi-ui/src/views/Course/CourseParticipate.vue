@@ -90,7 +90,7 @@
                     :class="getProgressBarClass(progress.percentage, type)"
                   ></div>
                 </div>
-                <div class="progress-text">{{ progress.completed }}/8</div>
+                <div class="progress-text">{{ Math.round(progress.percentage) }}%</div>
               </div>
             </div>
           </div>
@@ -992,7 +992,7 @@ export default {
       const statsParams = {
         pageNum: 1,
         pageSize: 1000, // 获取足够多的数据
-        studentId: this.$store.state.user.id || this.$store.state.user.name
+        studentId: this.$store.state.user.name
       };
 
       console.log('获取统计数据参数:', statsParams);
@@ -1118,26 +1118,59 @@ export default {
 
     /** 计算课程类型进度 */
     calculateCourseProgress() {
+      console.log('开始计算课程完成进度...');
+      console.log('当前 coursesList:', this.coursesList);
+      
       // 重置进度
       Object.keys(this.courseProgress).forEach(type => {
         this.courseProgress[type] = { completed: 0, percentage: 0 };
       });
 
-      // 统计已通过的课程（使用所有选课数据）
-      this.allCoursesList.forEach(course => {
-        if (course.status === '已通过' && course.courseType) {
+      // 计算每个类型课程的进行时间百分比（基于当前显示的列表）
+      this.coursesList.forEach(course => {
+        if (course.courseType && course.startTime && course.endTime) {
           const type = course.courseType.toString();
+          const now = new Date();
+          const startTime = new Date(course.startTime);
+          const endTime = new Date(course.endTime);
+          
+          console.log(`--- 正在计算课程: ${course.courseName} (类型: ${type}) ---`);
+          console.log(`  课程开始时间: ${course.startTime} -> ${startTime}`);
+          console.log(`  课程结束时间: ${course.endTime} -> ${endTime}`);
+          console.log(`  当前系统时间: ${now}`);
+          
           if (this.courseProgress[type]) {
-            this.courseProgress[type].completed++;
+            // 计算课程进行的时间百分比
+            let percentage = 0;
+            
+            if (now < startTime) {
+              // 课程还未开始
+              percentage = 0;
+              console.log('  结果: 课程还未开始。');
+            } else if (now >= endTime) {
+              // 课程已结束
+              percentage = 100;
+              console.log('  结果: 课程已结束。');
+            } else {
+              // 课程进行中，计算百分比
+              const totalDuration = endTime.getTime() - startTime.getTime();
+              const elapsed = now.getTime() - startTime.getTime();
+              percentage = Math.min((elapsed / totalDuration) * 100, 100);
+              console.log(`  结果: 课程进行中。已进行时间: ${elapsed}ms, 总时长: ${totalDuration}ms, 百分比: ${percentage}%`);
+            }
+            
+            // 更新该类型的进度（取最大值，因为可能有多个同类型课程）
+            this.courseProgress[type].percentage = Math.max(this.courseProgress[type].percentage, percentage);
+            this.courseProgress[type].completed = percentage > 0 ? 1 : 0;
+            console.log(`  更新类型 ${type} 的进度为: ${this.courseProgress[type].percentage}%`);
           }
+        } else {
+          console.warn(`跳过课程 ${course.courseName} 的进度计算，因为缺少课程类型、开始时间或结束时间。`);
         }
       });
-
-      // 计算百分比（每个类型完成8次满进度）
-      Object.keys(this.courseProgress).forEach(type => {
-        const completed = this.courseProgress[type].completed;
-        this.courseProgress[type].percentage = Math.min((completed / 8) * 100, 100);
-      });
+      
+      console.log('--- 课程完成进度计算结束 ---');
+      console.log('最终 courseProgress 对象:', this.courseProgress);
     },
 
     /** 根据状态筛选 */
