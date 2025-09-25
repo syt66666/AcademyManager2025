@@ -325,7 +325,7 @@
 import { listCourses, getCourses, delCourses, addCourses, updateCourses } from "@/api/system/courses";
 import {parseTime} from "@/utils/ruoyi";
 import {signUpCapacity,cancelSignUpCapacity,checkCourseUnique} from "@/api/system/courses";
-import {addBooking, checkCourseBookingSimple, deleteBookingsByCourseAndStudent} from "@/api/course/bookings";
+import {addBooking, checkCourseBookingSimple, deleteBookingsByCourseAndStudent} from "@/api/system/bookings";
 import {getStudent} from "@/api/system/student";
 import {getCancelCount, recordCancel} from "@/api/system/userLimit";
 
@@ -661,7 +661,7 @@ export default {
         // 1. 先检查是否已经选过课
         try {
           console.log('检查选课状态...');
-          const bookingStatus = awaitcheckCourseBookingSimple({
+          const bookingStatus = await checkBookingSimple({
             courseId: Number(course.courseId),  // 转换为数字
             studentId: this.$store.state.user.name
           });
@@ -751,7 +751,7 @@ export default {
 
 
 
-// 修复checkCourseBookingSimple 方法的调用
+// 修复 checkBookingSimple 方法的调用
     async checkBookingStatus() {
       if (!this.coursesList || this.coursesList.length === 0) return;
 
@@ -765,7 +765,7 @@ export default {
 
           console.log('检查选课状态参数:', params);
 
-          return checkCourseBookingSimple(params)
+          return checkBookingSimple(params)
             .then(res => {
               this.$set(course, 'isBooked', res.data.isBooked || false);
             })

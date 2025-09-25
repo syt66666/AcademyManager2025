@@ -55,9 +55,15 @@ export function checkCourseBookingSimple(courseId, studentId) {
 // 删除选课记录
 export function deleteBookingsByCourseAndStudent(courseId, studentId) {
   return request({
-    url: '/course/bookings/deleteByCourseAndStudent',
+    url: '/course/booking/deleteByCourseAndStudent',
     method: 'delete',
     params: { courseId, studentId }
   })
 }
-
+export function checkBookingSimple(courseId, studentId) {
+  return request({
+    url: '/course/bookings/checkBooking',
+    method: 'get',
+    params: { courseId, studentId }
+  })
+}

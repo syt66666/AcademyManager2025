@@ -1,8 +1,6 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
-
-import org.apache.ibatis.annotations.Mapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.CoursesMapper;
@@ -15,7 +13,6 @@ import com.ruoyi.system.service.ICoursesService;
  * @author ruoyi
  * @date 2025-09-22
  */
-
 @Service
 public class CoursesServiceImpl implements ICoursesService 
 {

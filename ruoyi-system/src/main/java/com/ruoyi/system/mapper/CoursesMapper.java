@@ -2,14 +2,13 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.Courses;
-import org.apache.ibatis.annotations.Mapper;
+
 /**
  * 书院选课Mapper接口
  * 
  * @author ruoyi
  * @date 2025-09-22
  */
-@Mapper  // 确保有这个注解
 public interface CoursesMapper 
 {
     /**
