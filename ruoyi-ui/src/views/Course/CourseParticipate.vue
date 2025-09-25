@@ -63,7 +63,7 @@
                 <i class="el-icon-view"></i>
               </div>
               <div class="status-info">
-                <div class="status-count">{{ allCoursesList.length }}</div>
+                <div class="status-count">{{ total }}</div>
                 <div class="status-label">全部</div>
               </div>
             </div>
@@ -299,7 +299,7 @@
             :auto-upload="true"
             drag
             class="zip-upload"
-            :show-file-list="true"
+            :show-file-list="false"
           >
             <div class="upload-drag-area">
               <i class="el-icon-upload upload-icon"></i>
@@ -507,7 +507,7 @@ export default {
       allCoursesList: [], // 所有选课数据，用于统计计算
       statusCounts: {
         unsubmitted: 0,  // 未提交
-        rejected: 0,     // 已拒绝
+        rejected: 0,     // 未通过
         approved: 0      // 已通过
       },
       courseProgress: {
@@ -665,14 +665,16 @@ export default {
       console.log('压缩包上传成功回调:', { response, file, fileList });
       
       if (response.code === 200) {
-        const fileName = response.fileName || this.extractFileName(response.url);
-        console.log('提取的文件名:', fileName);
+        const serverFileName = response.fileName || this.extractFileName(response.url);
+        const originalFileName = file.name; // 使用原始文件名（不包含日期戳）
+        console.log('服务器文件名:', serverFileName);
+        console.log('原始文件名:', originalFileName);
 
         this.zipFiles = fileList.map(f => {
           if (f.uid === file.uid) {
             return {
-              name: fileName,
-              url: this.getFileFullUrl(fileName),
+              name: originalFileName, // 显示原始文件名
+              url: this.getFileFullUrl(serverFileName), // 使用服务器文件名作为URL
               isOld: false,
               downloading: false // 添加下载状态
             };
@@ -925,7 +927,7 @@ export default {
           this.$message.success("材料提交成功");
           this.uploadVisible = false;
           this.getList(); // 刷新列表
-          this.getAllActivitiesForStats(); // 刷新统计数据
+          this.getAllCoursesForStats(); // 刷新统计数据
         } else {
           this.$message.error("材料提交失败: " + res.msg);
         }
@@ -1024,6 +1026,10 @@ export default {
         const sortedRows = this.sortCoursesByStatus(rows);
         this.coursesList = sortedRows;
         this.total = rows.length;
+        
+        // 更新状态统计（基于当前显示的列表）
+        this.calculateStatusCounts();
+        
         this.loading = false;
       }).catch(error => {
         console.error('获取选课列表失败:', error);
@@ -1094,8 +1100,8 @@ export default {
         approved: 0
       };
 
-      // 使用所有选课数据计算统计
-      this.allCoursesList.forEach(course => {
+      // 使用当前显示的列表数据计算统计
+      this.coursesList.forEach(course => {
         switch(course.status) {
           case '未提交':
             this.statusCounts.unsubmitted++;
