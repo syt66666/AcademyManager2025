@@ -17,6 +17,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.domain.CourseBookings;
+import com.ruoyi.system.domain.CourseBookingDTO;
 import com.ruoyi.system.service.ICourseBookingsService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -42,6 +43,17 @@ public class CourseBookingsController extends BaseController
     {
         startPage();
         List<CourseBookings> list = courseBookingsService.selectCourseBookingsList(courseBookings);
+        return getDataTable(list);
+    }
+
+    /**
+     * 查询课程选课记录列表（包含课程信息）
+     */
+    @GetMapping("/listWithCourse")
+    public TableDataInfo listWithCourse(CourseBookings courseBookings)
+    {
+        startPage();
+        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsWithCourseList(courseBookings);
         return getDataTable(list);
     }
 

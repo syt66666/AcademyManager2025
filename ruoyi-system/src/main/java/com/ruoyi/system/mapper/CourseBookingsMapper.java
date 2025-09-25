@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.CourseBookings;
+import com.ruoyi.system.domain.CourseBookingDTO;
 
 /**
  * 课程选课记录Mapper接口
@@ -58,4 +59,12 @@ public interface CourseBookingsMapper
      * @return 结果
      */
     public int deleteCourseBookingsByBookingIds(Long[] bookingIds);
+
+    /**
+     * 查询课程选课记录列表（包含课程信息）
+     *
+     * @param courseBookings 课程选课记录
+     * @return 课程选课记录集合（包含课程信息）
+     */
+    public List<CourseBookingDTO> selectCourseBookingsWithCourseList(CourseBookings courseBookings);
 }

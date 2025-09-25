@@ -9,6 +9,15 @@ export function listBookings(query) {
   })
 }
 
+// 查询课程选课记录列表（包含课程信息）
+export function listBookingsWithCourse(query) {
+  return request({
+    url: '/system/courseBookings/listWithCourse',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询课程选课记录详细
 export function getBookings(bookingId) {
   return request({

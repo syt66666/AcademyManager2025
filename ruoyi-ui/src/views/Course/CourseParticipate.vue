@@ -4,13 +4,13 @@
     <div class="stats-card">
       <div class="card-header">
         <i class="el-icon-data-analysis"></i>
-        <span>活动统计</span>
+        <span>选课统计</span>
       </div>
 
       <div class="stats-content">
         <!-- 左侧状态统计 -->
         <div class="status-stats">
-          <h3>活动状态筛选</h3>
+          <h3>选课状态筛选</h3>
           <div class="status-items">
             <div
               class="status-item"
@@ -63,7 +63,7 @@
                 <i class="el-icon-view"></i>
               </div>
               <div class="status-info">
-                <div class="status-count">{{ allActivitiesList.length }}</div>
+                <div class="status-count">{{ allCoursesList.length }}</div>
                 <div class="status-label">全部</div>
               </div>
             </div>
@@ -72,16 +72,16 @@
 
         <!-- 右侧进度条 -->
         <div class="progress-stats">
-          <h3>活动完成进度</h3>
+          <h3>课程完成进度</h3>
           <div class="progress-items">
             <div
-              v-for="(progress, type) in activityProgress"
+              v-for="(progress, type) in courseProgress"
               :key="type"
               class="progress-item"
-              :class="{ active: selectedActivityType === type }"
-              @click="filterByActivityType(type)"
+              :class="{ active: selectedCourseType === type }"
+              @click="filterByCourseType(type)"
             >
-              <div class="progress-label">{{ getActivityTypeName(type) }}</div>
+              <div class="progress-label">{{ getCourseTypeName(type) }}</div>
               <div class="progress-bar-container">
                 <div class="progress-bar">
                   <div
@@ -102,12 +102,12 @@
     <div class="table-card">
       <div class="card-header">
         <i class="el-icon-tickets"></i>
-        <span>我的活动记录</span>
+        <span>我的选课记录</span>
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
       <el-table
         v-loading="loading"
-        :data="activitiesList"
+        :data="coursesList"
         style="width: 100%"
         class="modern-table"
         :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
@@ -124,22 +124,22 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="活动名称" align="center" prop="activityName" />
-        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
+        <el-table-column label="课程名称" align="center" prop="courseName" />
+        <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
-            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
+            <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
+              {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="活动地点" align="center" prop="activityLocation" />
+        <el-table-column label="上课地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
-        <el-table-column label="活动开始时间" align="center" prop="startTime" >
+        <el-table-column label="课程开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="活动结束时间" align="center" prop="endTime">
+        <el-table-column label="课程结束时间" align="center" prop="endTime">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
@@ -147,14 +147,14 @@
 
         <el-table-column label="材料提交" align="center" width="120">
           <template slot-scope="scope">
-            <!-- 活动未结束时显示提示信息 -->
+            <!-- 课程未结束时显示提示信息 -->
             <el-tag
-              v-if="!isActivityEnded(scope.row.endTime)"
+              v-if="!isCourseEnded(scope.row.endTime)"
               type="info"
               effect="light"
               class="status-tag"
-            >活动未结束</el-tag>
-            <!-- 活动结束后显示上传按钮或状态标签 -->
+            >课程未结束</el-tag>
+            <!-- 课程结束后显示上传按钮或状态标签 -->
             <template v-else>
               <el-button
                 v-if="scope.row.status === '未提交'"
@@ -201,31 +201,35 @@
           <template slot-scope="props">
             <div class="expand-card">
               <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
-                <div class="expand-content">{{ props.row.activityDescription }}</div>
+                <div class="expand-label"><i class="el-icon-document"></i> 课程描述:</div>
+                <div class="expand-content">{{ props.row.notes || '暂无描述' }}</div>
+              </div>
+              <div class="expand-row">
+                <div class="expand-label"><i class="el-icon-coin"></i> 课程学分:</div>
+                <div class="expand-content">{{ props.row.courseCredit }} 学分</div>
+              </div>
+              <div class="expand-row">
+                <div class="expand-label"><i class="el-icon-collection-tag"></i> 课程类别:</div>
+                <div class="expand-content">{{ props.row.courseCategory }}</div>
               </div>
               <div class="expand-row" v-if="props.row.pictureUrl">
-                <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
+                <div class="expand-label"><i class="el-icon-picture"></i> 课程图片:</div>
                 <div class="expand-content">
-                  <div class="activity-image-container">
+                  <div class="course-image-container">
                     <el-image
-                      :src="getActivityImageUrl(props.row.pictureUrl)"
-                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
+                      :src="getCourseImageUrl(props.row.pictureUrl)"
+                      :preview-src-list="[getCourseImageUrl(props.row.pictureUrl)]"
                       fit="cover"
-                      class="activity-image"
+                      class="course-image"
                     />
                   </div>
                 </div>
               </div>
-              <!-- <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-warning"></i> 注意事项:</div>
-                <div class="expand-content">{{ props.row.notes }}</div>
-              </div> -->
-              <div class="expand-row" v-if="!isActivityEnded(props.row.endTime)">
+              <div class="expand-row" v-if="!isCourseEnded(props.row.endTime)">
                 <div class="expand-label"><i class="el-icon-time"></i> 材料提交提示:</div>
                 <div class="expand-content upload-tip">
                   <i class="el-icon-info"></i>
-                  活动尚未结束，请等待活动结束后再提交证明材料。活动结束时间：{{ parseTime(props.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+                  课程尚未结束，请等待课程结束后再提交证明材料。课程结束时间：{{ parseTime(props.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
                 </div>
               </div>
             </div>
@@ -279,74 +283,69 @@
         </el-alert>
       </div>
 
-      <!-- 图片上传区域 - 只在非只读模式下显示 -->
+      <!-- 压缩包上传区域 - 只在非只读模式下显示 -->
       <div v-if="!isViewOnly" class="section">
-        <h3>上传图片证明材料</h3>
-        <div class="image-upload-container">
+        <h3>上传证明材料压缩包</h3>
+        <div class="zip-upload-container">
           <el-upload
             :action="uploadUrl"
-            list-type="picture-card"
-            :file-list="imageFiles"
-            :on-preview="handlePicturePreview"
-            :on-remove="handleRemoveImage"
-            :on-success="handleImageSuccess"
-            :limit="5"
-            multiple
-            accept=".jpg,.jpeg,.png,.gif"
-            :before-upload="beforeImageUpload"
+            :file-list="zipFiles"
+            :on-remove="handleRemoveZip"
+            :on-success="handleZipSuccess"
+            :limit="1"
+            accept=".zip,.rar,.7z"
+            :before-upload="beforeZipUpload"
             :headers="headers"
             :auto-upload="true"
-            class="image-upload"
+            drag
+            class="zip-upload"
+            :show-file-list="false"
           >
-            <div class="upload-add-card">
-              <i class="el-icon-plus upload-add-icon"></i>
-              <div class="upload-add-text">添加图片</div>
+            <div class="upload-drag-area">
+              <i class="el-icon-upload upload-icon"></i>
+              <div class="upload-text">
+                <p class="upload-main-text">将压缩包文件拖拽到此处，或</p>
+                <p class="upload-sub-text">点击选择文件</p>
+              </div>
+            </div>
+            <div slot="tip" class="upload-tip">
+              <i class="el-icon-info"></i>
+              仅支持上传ZIP、RAR、7Z格式压缩包，大小不超过50MB
             </div>
           </el-upload>
-          <div class="upload-tip">
-            <i class="el-icon-info"></i>
-            最多可上传5张图片，每张大小不超过2MB，支持JPG、PNG、GIF格式
+
+          <!-- 自定义文件列表显示 -->
+          <div v-if="zipFiles && zipFiles.length > 0" class="custom-file-list">
+            <div v-for="(file, index) in zipFiles" :key="index" class="custom-file-item">
+              <i class="el-icon-folder file-icon"></i>
+              <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
+              <el-button
+                type="text"
+                icon="el-icon-delete"
+                class="remove-btn"
+                @click="handleRemoveZip(file)"
+              ></el-button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 图片展示区域 - 只在只读模式下显示 -->
+      <!-- 压缩包展示区域 - 只在只读模式下显示 -->
       <div v-if="isViewOnly" class="section">
-        <h3>图片材料</h3>
-        <div v-if="imageFiles && imageFiles.length" class="proof-grid">
-          <div
-            v-for="(file, idx) in imageFiles"
-            :key="idx"
-            class="proof-card"
-          >
-            <el-image
-              :src="getPreviewImageUrl(file)"
-              fit="cover"
-              class="proof-thumb"
-              @click="handlePicturePreview(file)"
-            />
-            <div class="proof-overlay">
-              <el-button
-                size="mini"
-                circle
-                icon="el-icon-view"
-                @click.stop="handlePicturePreview(file)"
-              />
-              <el-button
-                size="mini"
-                circle
-                icon="el-icon-download"
-                @click.stop="downloadFileReliably(file)"
-                :loading="file.downloading"
-              />
+        <h3>证明材料压缩包</h3>
+        <div v-if="zipFiles && zipFiles.length" class="zip-card">
+          <div class="zip-left">
+            <i class="el-icon-folder file-icon"></i>
+            <div class="file-meta">
+              <div class="file-name" :title="zipFiles[0].name">{{ zipFiles[0].name }}</div>
+              <el-tag size="mini" type="info">{{ getFileType(zipFiles[0].name).toUpperCase() }}</el-tag>
             </div>
           </div>
-          <div class="proof-actions">
-            <el-button size="small" icon="el-icon-view" @click="handlePicturePreview(imageFiles[0])">预览全部</el-button>
-            <el-button size="small" icon="el-icon-download" type="primary" @click="downloadAllImages">全部下载</el-button>
+          <div class="zip-actions">
+            <el-button size="mini" icon="el-icon-download" type="primary" @click="downloadFileReliably(zipFiles[0])" :loading="zipFiles[0].downloading">下载</el-button>
           </div>
         </div>
-        <div v-else class="empty-tip">暂无图片材料</div>
+        <div v-else class="empty-tip">暂无压缩包材料</div>
       </div>
 
 
@@ -535,11 +534,12 @@
 
 
 <script>
-import { listBookingsWithActivity, updateBooking, getBooking } from "@/api/system/bookings";
+import { listBookings, listBookingsWithCourse, updateBookings, getBookings } from "@/api/system/courseBookings";
+import { listCourse } from "@/api/system/course";
 import { getToken } from "@/utils/auth";
 
 export default {
-  name: "Activities",
+  name: "CourseParticipate",
   data() {
     return {
       // 上传相关数据
@@ -551,13 +551,8 @@ export default {
       uploadUrl: process.env.VUE_APP_BASE_API + "/common/upload",
       headers: { Authorization: "Bearer " + getToken() },
 
-      // 图片上传
-      imageFiles: [],
-      previewImageUrl: "",
-      imagePreviewVisible: false,
-
-      // 文档上传
-      docFiles: [],
+      // 压缩包上传
+      zipFiles: [],
 
       // 已有文件
       existingFiles: [],
@@ -565,7 +560,7 @@ export default {
       // 遮罩层
       loading: true,
       total: 0,
-      activitiesList: [],
+      coursesList: [],
       queryParams: {
         pageNum: 1,
         pageSize: 10,
@@ -574,20 +569,20 @@ export default {
 
       // 统计相关数据
       selectedStatus: null, // 当前选中的状态筛选
-      allActivitiesList: [], // 所有活动数据，用于统计计算
+      allCoursesList: [], // 所有选课数据，用于统计计算
       statusCounts: {
         unsubmitted: 0,  // 未提交
         rejected: 0,     // 已拒绝
         approved: 0      // 已通过
       },
-      activityProgress: {
-        '1': { completed: 0, percentage: 0 }, // 人格塑造与价值引领活动类
-        '2': { completed: 0, percentage: 0 }, // 知识融合与思维进阶活动类
-        '3': { completed: 0, percentage: 0 }, // 能力锻造与实践创新活动类
-        '4': { completed: 0, percentage: 0 }  // 社会责任与领军意识活动类
+      courseProgress: {
+        '1': { completed: 0, percentage: 0 }, // 必修课程
+        '2': { completed: 0, percentage: 0 }, // 选修课程
+        '3': { completed: 0, percentage: 0 }, // 实践课程
+        '4': { completed: 0, percentage: 0 }  // 其他课程
       },
-      // 进度条筛选：当前选中的活动类型
-      selectedActivityType: null,
+      // 进度条筛选：当前选中的课程类型
+      selectedCourseType: null,
       isViewOnly: false, // 是否为只查看模式
       showFooterButtons: false, // 是否显示底部按钮
 
@@ -614,38 +609,41 @@ export default {
     };
   },
   created() {
-    this.getAllActivitiesForStats();
+    console.log('当前用户信息:', this.$store.state.user);
+    console.log('用户ID:', this.$store.state.user.id);
+    console.log('用户名:', this.$store.state.user.name);
+    this.getAllCoursesForStats();
     this.getList();
   },
   methods: {
-    // 活动类型映射函数：将数字转换为对应的类型名称
-    getActivityTypeName(activityType) {
+    // 课程类型映射函数：将数字转换为对应的类型名称
+    getCourseTypeName(courseType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
         '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
-      return typeMap[activityType] || activityType;
+      return typeMap[courseType] || courseType;
     },
 
-    // 检查活动是否已结束
-    isActivityEnded(endTime) {
+    // 检查课程是否已结束
+    isCourseEnded(endTime) {
       if (!endTime) return false;
       const now = new Date();
-      const activityEndTime = new Date(endTime);
-      return now > activityEndTime;
+      const courseEndTime = new Date(endTime);
+      return now > courseEndTime;
     },
 
-    getActivityTypeTagType(activityType) {
+    getCourseTypeTagType(courseType) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
+        '1': 'primary',   // 必修课程 - 蓝色
+        '2': 'success',   // 选修课程 - 绿色
+        '3': 'warning',   // 实践课程 - 橙色
+        '4': 'danger',    // 其他课程 - 红色
         '其他': ''        // 默认蓝色
       }
-      return map[activityType] || 'info';
+      return map[courseType] || 'info';
     },
     // 获取文件的完整URL（用于显示）
     getFileFullUrl(fileName) {
@@ -711,44 +709,28 @@ export default {
 
     // 初始化文件列表
     initFileLists(data) {
-      this.imageFiles = [];
-      this.docFiles = [];
-      // 初始化图片文件
-      if (data.proof && Array.isArray(data.proof)) {
-        data.proof.forEach(fileName => {
-          if (fileName) {
-            const fullUrl = this.getFileFullUrl(fileName);
-            this.imageFiles.push({
-              name: this.extractFileName(fileName),
-              url: fullUrl,
-              isOld: true,
-              downloading: false // 添加下载状态
-            });
-          }
-        });
-      }
-      // 初始化文档文件
-      if (data.summary) {
-        const fullUrl = this.getFileFullUrl(data.summary);
-        this.docFiles.push({
-          name: this.extractFileName(data.summary),
+      this.zipFiles = [];
+      // 初始化压缩包文件
+      if (data.proof) {
+        const fullUrl = this.getFileFullUrl(data.proof);
+        this.zipFiles.push({
+          name: this.extractFileName(data.proof),
           url: fullUrl,
           isOld: true,
-          downloading: false
+          downloading: false // 添加下载状态
         });
       }
       console.log('初始化文件列表完成:', {
-        imageFiles: this.imageFiles,
-        docFiles: this.docFiles
+        zipFiles: this.zipFiles
       });
     },
 
-    // 修复图片上传成功处理
-    handleImageSuccess(response, file, fileList) {
+    // 修复压缩包上传成功处理
+    handleZipSuccess(response, file, fileList) {
       if (response.code === 200) {
         const fileName = response.fileName || this.extractFileName(response.url);
 
-        this.imageFiles = fileList.map(f => {
+        this.zipFiles = fileList.map(f => {
           if (f.uid === file.uid) {
             return {
               name: fileName,
@@ -762,29 +744,7 @@ export default {
             downloading: f.downloading || false // 确保有下载状态
           };
         });
-        this.$message.success('图片上传成功');
-      }
-    },
-    // 修复文档上传成功处理
-    handleDocSuccess(response, file, fileList) {
-      if (response.code === 200) {
-        const fileName = response.fileName || this.extractFileName(response.url);
-
-        this.docFiles = fileList.map(f => {
-          if (f.uid === file.uid) {
-            return {
-              name: fileName,
-              url: this.getFileFullUrl(fileName),
-              isOld: false,
-              downloading: false // 添加下载状态
-            };
-          }
-          return {
-            ...f,
-            downloading: f.downloading || false // 确保有下载状态
-          };
-        });
-        this.$message.success('文档上传成功');
+        this.$message.success('压缩包上传成功');
       }
     },
 
@@ -930,32 +890,32 @@ export default {
     },
 
     // 打开上传对话框
-    async openUploadDialog(booking) {
-      // 检查活动是否已结束
-      if (!this.isActivityEnded(booking.endTime)) {
-        this.$message.warning("活动尚未结束，无法提交材料。请等待活动结束后再提交。");
+    async openUploadDialog(enrollment) {
+      // 检查课程是否已结束
+      if (!this.isCourseEnded(enrollment.endTime)) {
+        this.$message.warning("课程尚未结束，无法提交材料。请等待课程结束后再提交。");
         return;
       }
 
-      this.currentBooking = booking;
+      this.currentBooking = enrollment;
       // 根据状态设置不同的对话框标题、模式和按钮显示
       let title = "提交材料";
       let viewOnly = false;
       let showButtons = true;
 
-      if (booking.status === '未通过') {
+      if (enrollment.status === '未通过') {
         title = '重新提交';
         viewOnly = false;
         showButtons = true;
-      } else if (booking.status === '未审核') {
+      } else if (enrollment.status === '未审核') {
         title = '查看材料';
         viewOnly = true;
         showButtons = false;
-      } else if (booking.status === '已通过') {
+      } else if (enrollment.status === '已通过') {
         title = '查看材料';
         viewOnly = true;
         showButtons = false;
-      } else if (booking.status === '未提交') {
+      } else if (enrollment.status === '未提交') {
         title = '提交材料';
         viewOnly = false;
         showButtons = true;
@@ -970,10 +930,10 @@ export default {
 
       try {
         // 获取已有的材料信息
-        const res = await getBooking(booking.bookingId);
+        const res = await getBookings(enrollment.bookingId);
         if (res.code === 200) {
           const data = res.data || {};
-          // 更新当前预约信息，包含审核意见等详细字段
+          // 更新当前选课信息，包含审核意见等详细字段
           this.currentBooking = {
             ...this.currentBooking,
             ...data
@@ -991,43 +951,31 @@ export default {
     async submitProof() {
       if (!this.currentBooking) return;
 
-      // 再次检查活动是否已结束（防止在对话框打开期间活动状态变化）
-      if (!this.isActivityEnded(this.currentBooking.endTime)) {
-        this.$message.warning("活动尚未结束，无法提交材料。请等待活动结束后再提交。");
+      // 再次检查课程是否已结束（防止在对话框打开期间课程状态变化）
+      if (!this.isCourseEnded(this.currentBooking.endTime)) {
+        this.$message.warning("课程尚未结束，无法提交材料。请等待课程结束后再提交。");
         this.uploadVisible = false;
         return;
       }
 
       try {
         // 准备proof字段 - 区分已有文件和新上传文件
-        const proofFileNames = this.imageFiles.map(file => {
-          if (file.isOld) {
+        let proofFileName = null;
+        if (this.zipFiles.length > 0) {
+          const zipFile = this.zipFiles[0];
+          if (zipFile.isOld) {
             // 对于已有文件，从URL中提取完整路径
-            return file.url.replace(process.env.VUE_APP_BASE_API, '');
+            proofFileName = zipFile.url.replace(process.env.VUE_APP_BASE_API, '');
           } else {
             // 对于新上传的文件，使用文件名
-            return file.name;
-          }
-        });
-
-        // 准备summary字段 - 区分已有文件和新上传文件
-        let summaryFileName = null;
-        if (this.docFiles.length > 0) {
-          const docFile = this.docFiles[0];
-          if (docFile.isOld) {
-            // 对于已有文件，从URL中提取完整路径
-            summaryFileName = docFile.url.replace(process.env.VUE_APP_BASE_API, '');
-          } else {
-            // 对于新上传的文件，使用文件名
-            summaryFileName = docFile.name;
+            proofFileName = zipFile.name;
           }
         }
 
         // 提交到后端
-        const res = await updateBooking({
+        const res = await updateBookings({
           bookingId: this.currentBooking.bookingId,
-          proof: proofFileNames,
-          summary: summaryFileName,
+          proof: proofFileName,
           status: "未审核"
         });
 
@@ -1046,117 +994,99 @@ export default {
 
     // 重置上传状态
     resetUploadState() {
-      this.imageFiles = [];
-      this.docFiles = [];
-      this.imagePreviewVisible = false;
+      this.zipFiles = [];
     },
 
-    // 图片上传前校验
-    beforeImageUpload(file) {
-      const isImage = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type);
-      const isLt2M = file.size / 1024 / 1024 < 2;
+    // 压缩包上传前校验
+    beforeZipUpload(file) {
+      const isZip = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'].includes(file.type) || 
+                   file.name.toLowerCase().endsWith('.zip') || 
+                   file.name.toLowerCase().endsWith('.rar') || 
+                   file.name.toLowerCase().endsWith('.7z');
+      const isLt50M = file.size / 1024 / 1024 < 50;
 
-      if (!isImage) {
-        this.$message.error('请上传图片格式文件!');
+      if (!isZip) {
+        this.$message.error('请上传压缩包格式文件(ZIP/RAR/7Z)!');
         return false;
       }
-      if (!isLt2M) {
-        this.$message.error('上传图片大小不能超过 2MB!');
+      if (!isLt50M) {
+        this.$message.error('上传文件大小不能超过 50MB!');
         return false;
       }
       return true;
     },
 
-    // 文档上传前校验
-    beforeDocUpload(file) {
-      const isPdf = file.type === 'application/pdf';
-      const isLt10M = file.size / 1024 / 1024 < 10;
 
-      if (!isPdf) {
-        this.$message.error('请上传PDF格式文件!');
-        return false;
-      }
-      if (!isLt10M) {
-        this.$message.error('上传文件大小不能超过 10MB!');
-        return false;
-      }
-      return true;
-    },
-
-    // 移除图片
-    handleRemoveImage(file, fileList) {
+    // 移除压缩包
+    handleRemoveZip(file, fileList) {
       if (fileList) {
         // Element UI 上传组件调用时，fileList 参数存在
-        this.imageFiles = [...fileList];
+        this.zipFiles = [...fileList];
       } else {
         // 手动删除时，从数组中移除文件
-        const index = this.imageFiles.findIndex(f => f.uid === file.uid || f.name === file.name);
+        const index = this.zipFiles.findIndex(f => f.uid === file.uid || f.name === file.name);
         if (index > -1) {
-          this.imageFiles.splice(index, 1);
+          this.zipFiles.splice(index, 1);
         }
       }
       this.$forceUpdate(); // 强制更新视图
     },
 
-    // 移除文档
-    handleRemoveDoc(file, fileList) {
-      if (fileList) {
-        // Element UI 上传组件调用时，fileList 参数存在
-        this.docFiles = [...fileList];
-      } else {
-        // 自定义删除按钮调用时，手动从数组中移除文件
-        const index = this.docFiles.findIndex(f => f.uid === file.uid || f.name === file.name);
-        if (index > -1) {
-          this.docFiles.splice(index, 1);
-        }
-      }
-      this.$forceUpdate(); // 强制更新视图
-    },
 
-    /** 获取所有活动数据用于统计 */
-    getAllActivitiesForStats() {
+    /** 获取所有选课数据用于统计 */
+    getAllCoursesForStats() {
       const statsParams = {
         pageNum: 1,
         pageSize: 1000, // 获取足够多的数据
-        studentId: this.$store.state.user.name
+        studentId: this.$store.state.user.id || this.$store.state.user.name
       };
 
-      listBookingsWithActivity(statsParams).then(response => {
-        this.allActivitiesList = response.rows || [];
+      console.log('获取统计数据参数:', statsParams);
+      
+      listBookingsWithCourse(statsParams).then(response => {
+        console.log('统计数据响应:', response);
+        this.allCoursesList = response.rows || [];
         // 更新统计数据
         this.updateStatistics();
       }).catch(error => {
         console.error('获取统计数据失败:', error);
-        this.allActivitiesList = [];
+        this.allCoursesList = [];
       });
     },
 
-    /** 查询活动列表 */
+    /** 查询选课列表 */
     getList() {
       this.loading = true;
-      listBookingsWithActivity(this.queryParams).then(response => {
+      console.log('查询参数:', this.queryParams);
+      
+      listBookingsWithCourse(this.queryParams).then(response => {
+        console.log('查询响应:', response);
         let rows = response.rows || [];
 
-        // 本地筛选：如果选择了进度条类型，则只显示该类型且状态为“已通过”的记录
-        if (this.selectedActivityType) {
-          rows = rows.filter(item => String(item.activityType) === String(this.selectedActivityType) && item.status === '已通过');
+        // 本地筛选：如果选择了进度条类型，则只显示该类型且状态为"已通过"的记录
+        if (this.selectedCourseType) {
+          rows = rows.filter(item => String(item.courseType) === String(this.selectedCourseType) && item.status === '已通过');
         }
 
-        // 对活动列表按照材料提交状态进行排序（同优先级下按开始时间由晚到早）
-        const sortedRows = this.sortActivitiesByStatus(rows);
-        this.activitiesList = sortedRows;
+        // 对选课列表按照材料提交状态进行排序（同优先级下按开始时间由晚到早）
+        const sortedRows = this.sortCoursesByStatus(rows);
+        this.coursesList = sortedRows;
         this.total = rows.length;
         this.loading = false;
+      }).catch(error => {
+        console.error('获取选课列表失败:', error);
+        this.loading = false;
+        this.$message.error('获取选课列表失败');
       });
     },
 
-    /** 通过进度条筛选：点击某类型，筛选出已通过的该类型活动；再次点击同类型则清除筛选 */
-    filterByActivityType(type) {
+    /** 通过进度条筛选：点击某类型，筛选出已通过的该类型课程；再次点击同类型则清除筛选 */
+    filterByCourseType(type) {
       // 切换选中状态
-      if (this.selectedActivityType === type) {
-        this.selectedActivityType = null;
+      if (this.selectedCourseType === type) {
+        this.selectedCourseType = null;
       } else {
-        this.selectedActivityType = type;
+        this.selectedCourseType = type;
         // 同时将状态筛选切到“已通过”以匹配需求
         this.selectedStatus = '已通过';
         this.queryParams.pageNum = 1;
@@ -1164,7 +1094,7 @@ export default {
       }
 
       // 当清空类型筛选时，还原状态筛选（仅当之前因类型筛选设置为已通过时）
-      if (this.selectedActivityType === null && this.selectedStatus === '已通过') {
+      if (this.selectedCourseType === null && this.selectedStatus === '已通过') {
         this.selectedStatus = null;
         delete this.queryParams.status;
       }
@@ -1173,22 +1103,22 @@ export default {
       this.getList();
     },
 
-    /** 按照材料提交状态排序活动列表 */
-    sortActivitiesByStatus(activities) {
-      // 定义状态优先级：未通过 > 活动未结束 > 未审核 > 已通过
+    /** 按照材料提交状态排序选课列表 */
+    sortCoursesByStatus(courses) {
+      // 定义状态优先级：未通过 > 课程未结束 > 未审核 > 已通过
       const statusPriority = {
         '未通过': 1,
-        '未提交': 2,  // 活动未结束对应未提交状态
+        '未提交': 2,  // 课程未结束对应未提交状态
         '未审核': 3,
         '已通过': 4
       };
 
-      return activities.sort((a, b) => {
+      return courses.sort((a, b) => {
         // 获取状态优先级
         const priorityA = statusPriority[a.status] || 999;
         const priorityB = statusPriority[b.status] || 999;
 
-        // 如果优先级相同，按活动开始时间排序（最新的在前）
+        // 如果优先级相同，按课程开始时间排序（最新的在前）
         if (priorityA === priorityB) {
           return new Date(b.startTime) - new Date(a.startTime);
         }
@@ -1201,7 +1131,7 @@ export default {
     /** 更新统计数据 */
     updateStatistics() {
       this.calculateStatusCounts();
-      this.calculateActivityProgress();
+      this.calculateCourseProgress();
     },
 
     /** 计算状态统计 */
@@ -1212,9 +1142,9 @@ export default {
         approved: 0
       };
 
-      // 使用所有活动数据计算统计
-      this.allActivitiesList.forEach(activity => {
-        switch(activity.status) {
+      // 使用所有选课数据计算统计
+      this.allCoursesList.forEach(course => {
+        switch(course.status) {
           case '未提交':
             this.statusCounts.unsubmitted++;
             break;
@@ -1228,27 +1158,27 @@ export default {
       });
     },
 
-    /** 计算活动类型进度 */
-    calculateActivityProgress() {
+    /** 计算课程类型进度 */
+    calculateCourseProgress() {
       // 重置进度
-      Object.keys(this.activityProgress).forEach(type => {
-        this.activityProgress[type] = { completed: 0, percentage: 0 };
+      Object.keys(this.courseProgress).forEach(type => {
+        this.courseProgress[type] = { completed: 0, percentage: 0 };
       });
 
-      // 统计已通过的活动（使用所有活动数据）
-      this.allActivitiesList.forEach(activity => {
-        if (activity.status === '已通过' && activity.activityType) {
-          const type = activity.activityType.toString();
-          if (this.activityProgress[type]) {
-            this.activityProgress[type].completed++;
+      // 统计已通过的课程（使用所有选课数据）
+      this.allCoursesList.forEach(course => {
+        if (course.status === '已通过' && course.courseType) {
+          const type = course.courseType.toString();
+          if (this.courseProgress[type]) {
+            this.courseProgress[type].completed++;
           }
         }
       });
 
       // 计算百分比（每个类型完成8次满进度）
-      Object.keys(this.activityProgress).forEach(type => {
-        const completed = this.activityProgress[type].completed;
-        this.activityProgress[type].percentage = Math.min((completed / 8) * 100, 100);
+      Object.keys(this.courseProgress).forEach(type => {
+        const completed = this.courseProgress[type].completed;
+        this.courseProgress[type].percentage = Math.min((completed / 8) * 100, 100);
       });
     },
 
@@ -1276,8 +1206,8 @@ export default {
     },
 
     /** 获取进度条样式类 */
-    getProgressBarClass(percentage, activityType) {
-      const baseClass = this.getActivityTypeBaseClass(activityType);
+    getProgressBarClass(percentage, courseType) {
+      const baseClass = this.getCourseTypeBaseClass(courseType);
       if (percentage >= 100) return `${baseClass}-full`;
       if (percentage >= 75) return `${baseClass}-high`;
       if (percentage >= 50) return `${baseClass}-medium`;
@@ -1285,15 +1215,15 @@ export default {
       return `${baseClass}-empty`;
     },
 
-    /** 获取活动类型对应的基础样式类 */
-    getActivityTypeBaseClass(activityType) {
+    /** 获取课程类型对应的基础样式类 */
+    getCourseTypeBaseClass(courseType) {
       const map = {
-        '1': 'progress-primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'progress-success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'progress-warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'progress-danger'     // 社会责任与领军意识活动类 - 红色
+        '1': 'progress-primary',   // 必修课程 - 蓝色
+        '2': 'progress-success',   // 选修课程 - 绿色
+        '3': 'progress-warning',   // 实践课程 - 橙色
+        '4': 'progress-danger'     // 其他课程 - 红色
       };
-      return map[activityType] || 'progress-info';
+      return map[courseType] || 'progress-info';
     },
 
     /** 获取表格行的CSS类名 */
@@ -1630,8 +1560,8 @@ export default {
       this.activityImagePreviewVisible = true;
     },
 
-    /** 获取活动图片完整URL（仿照审核界面实现） */
-    getActivityImageUrl(pictureUrl) {
+    /** 获取课程图片完整URL（仿照审核界面实现） */
+    getCourseImageUrl(pictureUrl) {
       if (!pictureUrl) return '';
 
       // 如果已经是完整URL，直接返回
@@ -1885,7 +1815,7 @@ export default {
   100% { transform: translateX(100%); }
 }
 
-/* 人格塑造与价值引领活动类 - 蓝色系 */
+/* 必修课程 - 蓝色系 */
 .progress-primary-empty {
   background: linear-gradient(135deg, #e3f2fd, #bbdefb);
 }
@@ -1906,7 +1836,7 @@ export default {
   background: linear-gradient(135deg, #1565c0, #0d47a1);
 }
 
-/* 知识融合与思维进阶活动类 - 绿色系 */
+/* 选修课程 - 绿色系 */
 .progress-success-empty {
   background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
 }
@@ -1927,7 +1857,7 @@ export default {
   background: linear-gradient(135deg, #2e7d32, #1b5e20);
 }
 
-/* 能力锻造与实践创新活动类 - 橙色系 */
+/* 实践课程 - 橙色系 */
 .progress-warning-empty {
   background: linear-gradient(135deg, #fff3e0, #ffcc80);
 }
@@ -1948,7 +1878,7 @@ export default {
   background: linear-gradient(135deg, #e65100, #d84315);
 }
 
-/* 社会责任与领军意识活动类 - 红色系 */
+/* 其他课程 - 红色系 */
 .progress-danger-empty {
   background: linear-gradient(135deg, #ffebee, #ffcdd2);
 }
@@ -2077,8 +2007,8 @@ export default {
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
-/* 活动类型标签 */
-.activity-type-tag {
+/* 课程类型标签 */
+.course-type-tag {
   font-weight: 500;
   padding: 0 16px;
   height: 32px;
@@ -2955,59 +2885,68 @@ export default {
   transition: transform 0.2s ease;
 }
 
-/* 活动图片展示样式 */
-.activity-image-container {
+/* 课程图片展示样式 */
+.course-image-container {
   display: flex;
   justify-content: center;
   margin-top: 8px;
 }
 
-.activity-image {
+.course-image {
   max-width: 300px;
   max-height: 200px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
 }
 
-/* 图片预览对话框样式 */
-.image-preview-dialog {
-  .el-dialog {
-    border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-  }
+.course-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
 
-  .el-dialog__header {
-    background: linear-gradient(to right, #409EFF, #64b5ff);
-    color: white;
-    border-radius: 12px 12px 0 0;
-    padding: 20px 24px;
+/* 压缩包上传样式 */
+.zip-upload-container {
+  margin-top: 15px;
+}
 
-    .el-dialog__title {
-      font-size: 18px;
-      font-weight: 600;
-    }
+.zip-upload {
+  width: 100%;
+}
 
-    .el-dialog__close {
-      color: white;
-      font-size: 20px;
+.zip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fff;
+  margin-top: 15px;
+}
 
-      &:hover {
-        color: rgba(255, 255, 255, 0.8);
-      }
-    }
-  }
+.zip-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  .el-dialog__body {
-    padding: 0;
-    background: #f8f9fa;
-  }
+.zip-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  background: #f56c6c;
 }
 
 .preview-container {

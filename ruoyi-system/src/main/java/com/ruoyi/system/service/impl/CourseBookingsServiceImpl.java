@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.CourseBookingsMapper;
 import com.ruoyi.system.domain.CourseBookings;
+import com.ruoyi.system.domain.CourseBookingDTO;
 import com.ruoyi.system.service.ICourseBookingsService;
 
 /**
@@ -89,5 +90,17 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
     public int deleteCourseBookingsByBookingId(Long bookingId)
     {
         return courseBookingsMapper.deleteCourseBookingsByBookingId(bookingId);
+    }
+
+    /**
+     * 查询课程选课记录列表（包含课程信息）
+     *
+     * @param courseBookings 课程选课记录
+     * @return 课程选课记录集合（包含课程信息）
+     */
+    @Override
+    public List<CourseBookingDTO> selectCourseBookingsWithCourseList(CourseBookings courseBookings)
+    {
+        return courseBookingsMapper.selectCourseBookingsWithCourseList(courseBookings);
     }
 }
