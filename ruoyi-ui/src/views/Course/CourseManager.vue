@@ -1,115 +1,68 @@
 <template>
-  <div class="app-container" :class="{ 'home-mode': isHomeMode }">
-    <!-- 搜索区域 -->
+
+  <div class="app-container">
     <div class="search-card">
-      <div class="card-header">
-        <i class="el-icon-search"></i>
-        <span>搜索条件</span>
-      </div>
-      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
-        <div class="search-row">
-          <el-form-item label="活动名称" prop="activityName">
-            <el-input
-              v-model="queryParams.activityName"
-              placeholder="请输入活动名称"
-              clearable
-              prefix-icon="el-icon-search"
-              class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <!-- <el-form-item label="活动地点" prop="activityLocation">
-            <el-input
-              v-model="queryParams.activityLocation"
-              placeholder="请输入活动地点"
-              clearable
-              prefix-icon="el-icon-location-outline"
-              class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item> -->
-          <!-- <el-form-item label="组织单位" prop="organizer">
-            <el-input
-              v-model="queryParams.organizer"
-              placeholder="请输入组织单位"
-              clearable
-              prefix-icon="el-icon-office-building"
-              class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item> -->
-          <el-form-item label="活动类型" prop="activityType">
-            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
-              <el-option
-                v-for="type in predefinedActivityTypes"
-                :key="type.value"
-                :label="type.label"
-                :value="type.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="活动状态" prop="activityStatus">
-            <el-select v-model="queryParams.activityStatus" clearable placeholder="请选择活动状态" class="search-input">
-              <el-option
-                v-for="status in activityStatusOptions"
-                :key="status.value"
-                :label="status.label"
-                :value="status.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item class="search-actions">
-            <el-button-group class="action-buttons">
-              <el-button
-                type="primary"
-                icon="el-icon-search"
-                @click="handleQuery"
-                class="search-button"
-              >搜索</el-button>
-              <el-button
-                icon="el-icon-refresh"
-                @click="resetQuery"
-                class="refresh-button"
-              >重置</el-button>
-            </el-button-group>
-          </el-form-item>
+      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+        <div class="card-header">
+          <i class="el-icon-search"></i>
+          <span>搜索条件</span>
         </div>
+        <el-form-item label="课程名称" prop="courseName">
+          <el-input
+            v-model="queryParams.courseName"
+            placeholder="请输入课程名称"
+            clearable
+            @keyup.enter.native="handleQuery"
+          />
+        </el-form-item>
+        <el-form-item label="课程状态" prop="status">
+          <el-select v-model="queryParams.status" clearable placeholder="请选择课程状态" class="search-input" @change="handleQuery">
+            <el-option
+              v-for="status in courseStatusOptions"
+              :key="status.value"
+              :label="status.label"
+              :value="status.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+        </el-form-item>
       </el-form>
     </div>
-
-    <!-- 按钮区域 -->
-    <div class="button-bar">
-      <el-button-group>
-        <el-button
-          type="primary"
-          plain
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-        >新增</el-button>
-        <el-button
-          type="danger"
-          plain
-          icon="el-icon-delete"
-          size="mini"
-          :disabled="multiple"
-          @click="handleDelete"
-        >删除</el-button>
-      </el-button-group>
-      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </div>
-
     <!-- 表格卡片 -->
     <div class="table-card">
       <div class="card-header">
         <i class="el-icon-s-grid"></i>
-        <span>活动列表</span>
+        <span>课程列表</span>
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
 
-      <!-- 表格美化 -->
-      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
-        <el-table-column type="selection" width="45" align="center"/>
+      <el-row :gutter="10" class="mb8">
+        <el-col :span="1.5">
+          <el-button
+            type="primary"
+            plain
+            icon="el-icon-plus"
+            size="mini"
+            @click="handleAdd"
+          >新增</el-button>
+        </el-col>
+        <el-col :span="1.5">
+          <el-button
+            type="warning"
+            plain
+            icon="el-icon-download"
+            size="mini"
+            @click="handleExport"
+          >导出</el-button>
+        </el-col>
+        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+      </el-row>
+
+      <el-table v-loading="loading" :data="coursesList" @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center" />
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
           <span class="index-badge">
@@ -117,522 +70,191 @@
           </span>
           </template>
         </el-table-column>
-        <el-table-column label="活动名称" align="center" prop="activityName" width="180">
+        <el-table-column label="课程名称" align="center" prop="courseName">
           <template slot-scope="scope">
-            <div class="activity-name">{{ scope.row.activityName }}</div>
+            <span class="course-name">{{ scope.row.courseName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
+        <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
-            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
+            <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
+              {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
             </el-tag>
           </template>
         </el-table-column>
-        <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="学分" align="center" prop="courseCredit" width="80">
           <template slot-scope="scope">
-            <div class="time-schedule-inline">
-              <!-- 报名时间 -->
-              <div class="time-inline-item signup-time">
-                <i class="el-icon-user"></i>
-                <span class="time-inline-label">报名时间</span>
-                <span class="time-inline-content">
-                  {{ formatDateTime(scope.row.activityStart) }} 至 {{ formatDateTime(scope.row.activityDeadline) }}
-                </span>
-              </div>
-
-              <!-- 活动时间 -->
-              <div class="time-inline-item activity-time">
-                <i class="el-icon-date"></i>
-                <span class="time-inline-label">活动时间</span>
-                <span class="time-inline-content">
-                  {{ formatDateTime(scope.row.startTime) }} 至 {{ formatDateTime(scope.row.endTime) }}
-                </span>
-              </div>
-            </div>
+            <span class="credit-text">{{ scope.row.courseCredit || '0' }}</span>
           </template>
         </el-table-column>
-
-        <!-- 活动状态列 -->
-        <el-table-column label="活动状态" align="center" width="100">
+        <el-table-column label="课程地点" align="center" prop="courseLocation" width="150">
           <template slot-scope="scope">
-            <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
-              {{ getActivityStatusText(scope.row) }}
+            <span class="location-text">{{ scope.row.courseLocation || '未设置' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="选课开始时间" align="center" prop="courseStart" width="200">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="选课截止时间" align="center" prop="courseDeadline" width="200">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}</span>
+          </template>
+        </el-table-column>
+        <!-- 课程状态列 -->
+        <el-table-column label="课程状态" align="center" prop="status" width="100">
+          <template slot-scope="scope">
+            <!-- 1. 绑定标签内容：显示当前课程的状态文本（scope.row.status） -->
+            <!-- 2. 绑定标签类型：通过计算属性将业务状态映射为el-tag支持的类型 -->
+            <el-tag
+              :type="getStatusTagType(scope.row.status)"
+              effect="dark"
+              class="status-tag"
+            >
+              {{ scope.row.status }} <!-- 关键：渲染状态文本 -->
             </el-tag>
           </template>
         </el-table-column>
-
-        <el-table-column label="报名人数" align="center" width="100">
+        <!-- 报名人数列：放在“课程状态”列之后 -->
+        <el-table-column label="报名人数" align="center" width="160"> <!-- 宽度调整为160px，适配进度条 -->
           <template #default="scope">
+            <!-- 容器：垂直排列进度条和人数文本 -->
             <div class="participants">
+              <!-- 进度条：展示报名占比 -->
               <el-progress
                 :percentage="calculateCapacityPercentage(scope.row)"
                 :color="getProgressColor(calculateCapacityPercentage(scope.row))"
                 :show-text="false"
-                :stroke-width="10"
+                :stroke-width="8"
                 class="progress-bar"
-              />
+              ></el-progress>
+              <!-- 人数文本：显示“已报名/总容量” -->
               <div class="count">
-                <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
-                </span>
+        <span :class="getCapacityClass(scope.row)">
+          {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}/{{ scope.row.courseTotalCapacity }}
+        </span>
               </div>
             </div>
           </template>
         </el-table-column>
-
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
           <template slot-scope="scope">
-            <div class="action-buttons">
-              <el-button
-                size="mini"
-                type="text"
-                @click="handleViewStudents(scope.row)"
-                class="action-button view-button">
-                已选学生
-              </el-button>
-
-              <el-button
-                size="mini"
-                type="text"
-                :disabled="isActivityEnded(scope.row)"
-                @click="handleUpdate(scope.row)"
-                class="action-button edit-button"
-                :class="{ 'disabled-button': isActivityEnded(scope.row) }">
-                编辑活动
-              </el-button>
-            </div>
-          </template>
-        </el-table-column>
-
-        <!-- 活动详细信息 -->
-        <el-table-column type="expand" width="60" align="center">
-          <template slot-scope="props">
-            <div class="expand-card">
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-location"></i> 活动地点:</div>
-                <div class="expand-content">{{ props.row.activityLocation || "未设置地点" }}</div>
-              </div>
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
-                <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
-              </div>
-              <div class="expand-row" v-if="props.row.pictureUrl">
-                <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
-                <div class="expand-content">
-                  <div class="activity-image-container">
-                    <el-image
-                      :src="getActivityImageUrl(props.row.pictureUrl)"
-                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
-                      fit="cover"
-                      class="activity-image"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-edit"
+              @click="handleUpdate(scope.row)"
+            >修改</el-button>
+            <el-button
+              size="mini"
+              type="text"
+              icon="el-icon-delete"
+              @click="handleDelete(scope.row)"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
 
-      <!-- 分页组件 -->
       <pagination
         v-show="total>0"
         :total="total"
         :page.sync="queryParams.pageNum"
         :limit.sync="queryParams.pageSize"
         @pagination="getList"
-        class="custom-pagination"
       />
-    </div>
 
-
-    <!-- 添加或修改活动对话框 -->
-    <el-dialog
-      :title="title"
-      :visible.sync="open"
-      width="600px"
-      append-to-body
-      class="activity-form-dialog"
-      :before-close="handleDialogClose">
-
-      <!-- 对话框头部 -->
-      <div slot="title" class="dialog-header">
-        <div class="header-content">
-          <div class="header-icon">
-            <i :class="form.activityId ? 'el-icon-edit' : 'el-icon-plus'"></i>
-          </div>
-          <div class="header-text">
-            <h3>{{ title }}</h3>
-            <p>{{ form.activityId ? '修改活动信息' : '创建新的活动' }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 表单内容 -->
-      <div class="dialog-body">
-        <el-form ref="form" :model="form" :rules="rules" label-width="100px" class="activity-form">
-
-          <!-- 基本信息区域 -->
-          <div class="form-section">
-            <div class="section-header">
-              <i class="el-icon-info"></i>
-              <span>基本信息</span>
-            </div>
-            <div class="section-content">
-              <el-form-item label="活动名称" prop="activityName">
-                <el-input
-                  v-model="form.activityName"
-                  placeholder="请输入活动名称"
-                  prefix-icon="el-icon-trophy"
-                  class="form-input">
-                </el-input>
-                <div class="form-tip">
-                  <i class="el-icon-info"></i>
-                  活动名称在当前组织单位下必须唯一
-                </div>
-              </el-form-item>
-
-              <el-form-item label="活动类型" prop="activityType">
-                <el-select v-model="form.activityType" placeholder="请选择活动类型" class="form-select">
-                  <el-option
-                    v-for="type in predefinedActivityTypes"
-                    :key="type.value"
-                    :label="type.label"
-                    :value="type.value">
-                    <span style="float: left">{{ type.label }}</span>
-                    <span style="float: right; color: #8492a6; font-size: 13px">{{ type.value }}</span>
-                  </el-option>
-                </el-select>
-              </el-form-item>
-
-              <el-form-item label="活动地点" prop="activityLocation">
-                <el-input
-                  v-model="form.activityLocation"
-                  placeholder="请输入活动地点"
-                  prefix-icon="el-icon-location"
-                  class="form-input">
-                </el-input>
-              </el-form-item>
-
-              <el-form-item label="活动容量" prop="activityTotalCapacity">
-                <el-input-number
-                  v-model="form.activityTotalCapacity"
-                  :min="1"
-                  :max="1000"
-                  controls-position="right"
-                  class="form-number">
-                </el-input-number>
-                <span class="capacity-tip">人</span>
-              </el-form-item>
-            </div>
-          </div>
-
-          <!-- 时间安排区域 -->
-          <div class="form-section">
-            <div class="section-header">
-              <i class="el-icon-time"></i>
-              <span>时间安排</span>
-            </div>
-            <div class="section-content">
-              <div class="time-grid">
-                <el-form-item label="报名开始" prop="activityStart" class="time-item">
-                  <el-date-picker
-                    v-model="form.activityStart"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择报名开始时间"
-                    class="form-datetime">
-                  </el-date-picker>
-                </el-form-item>
-
-                <el-form-item label="报名截止" prop="activityDeadline" class="time-item">
-                  <el-date-picker
-                    v-model="form.activityDeadline"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择报名截止时间"
-                    class="form-datetime">
-                  </el-date-picker>
-                </el-form-item>
-
-                <el-form-item label="活动开始" prop="startTime" class="time-item">
-                  <el-date-picker
-                    v-model="form.startTime"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择活动开始时间"
-                    class="form-datetime">
-                  </el-date-picker>
-                </el-form-item>
-
-                <el-form-item label="活动结束" prop="endTime" class="time-item">
-                  <el-date-picker
-                    v-model="form.endTime"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择活动结束时间"
-                    class="form-datetime">
-                  </el-date-picker>
-                </el-form-item>
-              </div>
-            </div>
-          </div>
-
-          <!-- 详细信息区域 -->
-          <div class="form-section">
-            <div class="section-header">
-              <i class="el-icon-document"></i>
-              <span>详细信息</span>
-            </div>
-            <div class="section-content">
-              <el-form-item label="活动描述" prop="activityDescription">
-                <el-input
-                  type="textarea"
-                  v-model="form.activityDescription"
-                  :rows="6"
-                  placeholder="请输入活动描述"
-                  class="form-textarea"
-                />
-              </el-form-item>
-
-              <el-form-item label="活动图片" prop="pictureUrl">
-                <div class="image-upload-container">
-                  <el-upload
-                    class="image-uploader"
-                    :action="uploadUrl"
-                    :headers="uploadHeaders"
-                    :show-file-list="false"
-                    :on-success="handleImageSuccess"
-                    :on-error="handleImageError"
-                    :before-upload="beforeImageUpload"
-                    accept="image/*"
-                    :disabled="isSubmitting">
-                    <div v-if="form.pictureUrl" class="image-preview">
-                      <el-image
-                        :src="getActivityImageUrl(form.pictureUrl)"
-                        :preview-src-list="[getActivityImageUrl(form.pictureUrl)]"
-                        fit="cover"
-                        class="uploaded-image"
-                      />
-                      <div class="image-overlay">
-                        <i class="el-icon-zoom-in" @click.stop="previewImage"></i>
-                        <i class="el-icon-delete" @click.stop="removeImage"></i>
-                      </div>
-                    </div>
-                    <div v-else class="upload-placeholder">
-                      <i class="el-icon-plus"></i>
-                      <div class="upload-text">点击上传图片</div>
-                      <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 2MB</div>
-                    </div>
-                  </el-upload>
-                </div>
-              </el-form-item>
-            </div>
-          </div>
+      <!-- 新增或修改书院选课对话框 -->
+      <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
+        <el-form ref="form" :model="form" :rules="rules" label-width="80px">
+          <el-form-item label="课程名称" prop="courseName">
+            <el-input v-model="form.courseName" placeholder="请输入课程名称" />
+          </el-form-item>
+          <el-form-item label="课程地点" prop="courseLocation">
+            <el-input v-model="form.courseLocation" placeholder="请输入课程地点" />
+          </el-form-item>
+          <el-form-item label="选课开始时间" prop="courseStart">
+            <el-date-picker clearable
+                            v-model="form.courseStart"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="请选择选课开始时间">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="选课截止时间" prop="courseDeadline">
+            <el-date-picker clearable
+                            v-model="form.courseDeadline"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="请选择选课截止时间">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="课程开始时间" prop="startTime">
+            <el-date-picker clearable
+                            v-model="form.startTime"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="请选择课程开始时间">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="课程结束时间" prop="endTime">
+            <el-date-picker clearable
+                            v-model="form.endTime"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="请选择课程结束时间">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="课程容量" prop="courseTotalCapacity">
+            <el-input v-model="form.courseTotalCapacity" placeholder="请输入课程容量" />
+          </el-form-item>
+          <el-form-item label="课程剩余容量" prop="courseCapacity">
+            <el-input v-model="form.courseCapacity" placeholder="请输入课程剩余容量" />
+          </el-form-item>
+          <el-form-item label="${comment}" prop="courseDescription">
+            <el-input v-model="form.courseDescription" type="textarea" placeholder="请输入内容" />
+          </el-form-item>
+          <el-form-item label="创建时间" prop="createdAt">
+            <el-date-picker clearable
+                            v-model="form.createdAt"
+                            type="date"
+                            value-format="yyyy-MM-dd"
+                            placeholder="请选择创建时间">
+            </el-date-picker>
+          </el-form-item>
+          <el-form-item label="组织者" prop="organizer">
+            <el-input v-model="form.organizer" placeholder="请输入组织者" />
+          </el-form-item>
+          <el-form-item label="注意事项" prop="notes">
+            <el-input v-model="form.notes" type="textarea" placeholder="请输入内容" />
+          </el-form-item>
         </el-form>
-      </div>
-
-      <!-- 对话框底部 -->
-      <div slot="footer" class="dialog-footer">
-        <div class="footer-left">
-          <div class="form-status" v-if="isSubmitting">
-            <i class="el-icon-loading"></i>
-            <span>正在{{ form.activityId ? '保存修改' : '创建活动' }}...</span>
-          </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="submitForm">确 定</el-button>
+          <el-button @click="cancel">取 消</el-button>
         </div>
-        <div class="footer-right">
-          <el-button
-            @click="cancel"
-            :disabled="isSubmitting"
-            class="cancel-btn">
-            <i class="el-icon-close"></i>
-            取消
-          </el-button>
-          <el-button
-            type="primary"
-            @click="submitForm"
-            :loading="isSubmitting"
-            :disabled="isSubmitting"
-            class="submit-btn">
-            <i :class="form.activityId ? 'el-icon-check' : 'el-icon-plus'"></i>
-            {{ form.activityId ? '保存修改' : '创建活动' }}
-          </el-button>
-        </div>
-      </div>
-    </el-dialog>
-    <!-- 学生预约活动对话框 -->
-    <el-dialog
-      title="预约活动学生列表"
-      :visible.sync="dialogVisibleStudents"
-      width="60%"
-      append-to-body
-      class="student-dialog"
-      :before-close="handleStudentDialogClose">
-
-      <!-- 学生统计信息 -->
-      <div class="student-stats" v-if="selectedStudents.length > 0">
-        <div class="stats-card">
-          <div class="stat-item">
-            <div class="stat-number">{{ selectedStudents.length }}</div>
-            <div class="stat-label">总报名人数</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('approved') }}</div>
-            <div class="stat-label">已通过</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('submitted') }}</div>
-            <div class="stat-label">待审核</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('rejected') }}</div>
-            <div class="stat-label">未通过</div>
-          </div>
-        </div>
-      </div>
-
-
-      <!-- 学生表格 -->
-      <div class="student-table-container">
-        <el-table
-          :data="filteredStudents"
-          border
-          v-loading="studentLoading"
-          class="enhanced-student-table"
-          :header-cell-style="{
-            'background': '#f8fafc',
-            'color': '#2d3540',
-            'font-weight': '600',
-            'border-bottom': '2px solid #e2e8f0'
-          }"
-          :row-class-name="getStudentRowClassName">
-
-          <el-table-column label="序号" width="70" align="center">
-            <template v-slot="scope">
-              <span class="index-badge">
-                {{ scope.$index + 1 }}
-              </span>
-            </template>
-          </el-table-column>
-
-          <el-table-column prop="studentId" label="学号" min-width="140" sortable>
-            <template slot-scope="{row}">
-              <div class="student-id-container">
-                <span class="student-id">{{ row.studentId }}</span>
-                <el-button
-                  v-if="row.studentId"
-                  type="text"
-                  size="mini"
-                  icon="el-icon-copy-document"
-                  @click="copyToClipboard(row.studentId)"
-                  class="copy-btn">
-                </el-button>
-              </div>
-            </template>
-          </el-table-column>
-
-          <el-table-column prop="studentName" label="姓名" min-width="100" sortable>
-            <template slot-scope="{row}">
-              <div class="student-name-container">
-                <span class="student-name">{{ row.studentName }}</span>
-                <el-tag v-if="row.isBooked" type="success" size="mini" effect="plain">已报名</el-tag>
-              </div>
-            </template>
-          </el-table-column>
-
-          <el-table-column prop="academy" label="所属书院" min-width="120" sortable>
-            <template slot-scope="{row}">
-              <el-tag size="small" :type="getAcademyTagType(row.academy)" effect="plain">
-                {{ row.academy || '未知' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-
-
-          <el-table-column prop="status" label="审核状态" min-width="110" align="center">
-            <template slot-scope="{row}">
-              <el-tag :type="getBookingStatusTag(row.status)" size="small" effect="dark">
-                {{ getBookingStatusText(row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-
-
-        </el-table>
-      </div>
-
-
-      <div slot="footer" class="dialog-footer">
-        <div class="footer-left">
-          <span class="total-info">共 {{ filteredStudents.length }} 名学生</span>
-        </div>
-        <div class="footer-right">
-          <el-button
-            type="primary"
-            icon="el-icon-download"
-            @click="handleExportStudents"
-            class="export-btn">
-            导出名单
-          </el-button>
-          <el-button @click="dialogVisibleStudents = false">关闭</el-button>
-        </div>
-      </div>
-    </el-dialog>
-
-    <!-- 图片预览对话框 -->
-    <el-dialog
-      title="图片预览"
-      :visible.sync="imagePreviewVisible"
-      width="60%"
-      append-to-body
-      class="image-preview-dialog">
-      <div class="preview-container">
-        <img :src="previewImageUrl" class="preview-image" />
-      </div>
-    </el-dialog>
+      </el-dialog>
+    </div>
   </div>
 </template>
 
-
 <script>
-import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique} from "@/api/system/activities";
-import {getToken} from "@/utils/auth";
-import {listBookingsWithActivity} from "@/api/system/bookings";
-import {getNickName} from "@/api/system/student";
-import { parseTime } from "@/utils/ruoyi";
+import { listCourses, getCourses, delCourses, addCourses, updateCourses } from "@/api/system/courses";
+import RightToolbar from '@/components/RightToolbar';
+import Pagination from '@/components/Pagination';
 
 export default {
-  name: "Activities",
-  props: {
-    isHomeMode: {
-      type: Boolean,
-      default: false
-    }
-  },
+  name: "Courses",
   components: {
+    RightToolbar,
+    Pagination
   },
   data() {
     return {
-
-      // 新增状态
-      dialogVisibleStudents: false,
-      selectedStudents: [],
-      studentLoading: false,
-      // 图片上传相关
-      imagePreviewVisible: false,
-      previewImageUrl: '',
-      uploadUrl: process.env.VUE_APP_BASE_API + '/common/upload', // 上传接口地址
-      uploadHeaders: {
-        'Authorization': 'Bearer ' + getToken()
-      },
       // 遮罩层
       loading: true,
       // 选中数组
       ids: [],
-      // 选中数组
-      names: [],
       // 非单个禁用
       single: true,
       // 非多个禁用
@@ -641,25 +263,8 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 活动表格数据
-      activitiesList: [],
-      // 可用的活动类型列表
-      availableActivityTypes: [],
-      // 预定义的活动类型
-      predefinedActivityTypes: [
-        { value: '1', label: '人格塑造与价值引领活动类' },
-        { value: '2', label: '知识融合与思维进阶活动类' },
-        { value: '3', label: '能力锻造与实践创新活动类' },
-        { value: '4', label: '社会责任与领军意识活动类' }
-      ],
-      // 活动状态选项
-      activityStatusOptions: [
-        { value: '报名未开始', label: '报名未开始' },
-        { value: '报名进行中', label: '报名进行中' },
-        { value: '报名已截止', label: '报名已截止' },
-        { value: '活动进行中', label: '活动进行中' },
-        { value: '活动已结束', label: '活动已结束' }
-      ],
+      // 书院选课表格数据
+      coursesList: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -667,235 +272,180 @@ export default {
       // 查询参数
       queryParams: {
         pageNum: 1,
-        pageSize: 10, // 恢复合理的分页大小
-        activityId: null,
-        activityName: null,
-        startTime: null,
-        endTime: null,
-        activityLocation: null,
-        activityCapacity: null,
-        activityTotalCapacity: null,
-        activityStart:null,
-        activityDeadline: null,
-        activityDescription: null,
-        activityType: null,
-        activityStatus: null,
-        createdAt: null,
+        pageSize: 10,
+        courseName: null,
+        courseLocation: null,
+        courseType: null,
         organizer: null,
-        notes: null,
+
       },
+      // 课程状态选项
+      courseStatusOptions: [
+        { value: '未开始', label: '未开始' },
+        { value: '选课中', label: '选课中' },
+        { value: '已截止', label: '已截止' }
+      ],
       // 表单参数
       form: {},
-      // 提交状态控制
-      isSubmitting: false,
-
       // 表单校验
       rules: {
-        activityName: [
-          {required: true, message: "活动名称不能为空", trigger: "blur"}
+        courseName: [
+          { required: true, message: "课程名称不能为空", trigger: "blur" }
         ],
-        activityLocation: [
-          {required: true, message: "活动地点不能为空", trigger: "blur"}
-        ],
-        activityTotalCapacity: [
-          { required: true, message: "活动容量不能为空", trigger: "blur" }
-        ],
-        activityType: [
-          { required: true, message: "请选择活动类型", trigger: "change" }
-        ],
-        activityStart: [
-          {required: true, message: "报名开始时间不能为空", trigger: "blur"}
-        ],
-        activityDeadline: [
-          {required: true, message: "报名截止时间不能为空", trigger: "blur"},
-          {
-            validator: (rule, value, callback) => {
-              if (this.form.activityStart && value) {
-                const start = new Date(this.form.activityStart).getTime();
-                const deadline = new Date(value).getTime();
-                // 检查截止时间是否在开始时间后（至少1秒）
-                if (deadline - start < 1000) {
-                  callback(new Error("报名截止时间必须晚于报名开始时间"));
-                } else {
-                  callback();
-                }
-              } else {
-                callback();
-              }
-            },
-            trigger: "blur"
-          }
-        ],
-        organizer: [
-          {required: true, message: "组织单位不能为空", trigger: "blur"}
+        courseLocation: [
+          { required: true, message: "课程地点不能为空", trigger: "blur" }
         ],
         startTime: [
-          { required: true, message: "开始时间不能为空", trigger: "blur" },
-          {
-            validator: (rule, value, callback) => {
-              if (this.form.activityDeadline && value) {
-                const deadline = new Date(this.form.activityDeadline).getTime();
-                const start = new Date(value).getTime();
-                if (start - deadline < 1000) {
-                  callback(new Error("开始时间必须晚于报名截止时间"));
-                } else {
-                  callback();
-                }
-              } else {
-                callback();
-              }
-            },
-            trigger: "blur"
-          }
+          { required: true, message: "课程开始时间不能为空", trigger: "blur" }
         ],
         endTime: [
-          { required: true, message: "结束时间不能为空", trigger: "blur" },
-          {
-            validator: (rule, value, callback) => {
-              if (this.form.startTime && value) {
-                const start = new Date(this.form.startTime).getTime();
-                const end = new Date(value).getTime();
-                if (end - start < 1000) {
-                  callback(new Error("结束时间必须晚于开始时间"));
-                } else {
-                  callback();
-                }
-              } else {
-                callback();
-              }
-            },
-            trigger: "blur"
-          }
-        ]
+          { required: true, message: "课程结束时间不能为空", trigger: "blur" }
+        ],
+        courseTotalCapacity: [
+          { required: true, message: "课程容量不能为空", trigger: "blur" }
+        ],
+        organizer: [
+          { required: true, message: "组织者不能为空", trigger: "blur" }
+        ],
       }
     };
-  },
-  computed: {
-    // 学生列表（直接显示所有学生，不进行过滤）
-    filteredStudents() {
-      return this.selectedStudents;
-    }
   },
   created() {
     this.getList();
   },
   methods: {
-    statusTagType(status) {
-      const map = {
-        '未开始': '',         // 默认蓝色（适合未开始状态）
-        '可报名': 'success',  // 绿色（表示可以报名）
-        '已截止': 'danger',   // 红色（表示已截止不可报名）
-        '进行中': 'warning',  // 黄色（表示活动正在进行中）
-        '已结束': 'info'      // 灰色（表示活动已结束）
-      }
-      return map[status] || 'info'; // 默认使用灰色
+    // 序号计算（跨页连续）
+    indexMethod(index) {
+      return (this.queryParams.pageNum - 1) * this.queryParams.pageSize + index + 1;
     },
-
-    /** 格式化日期时间 */
-    formatDateTime(time) {
-      return parseTime(time, "{y}-{m}-{d} {h}:{i}");
+    /** 查询书院选课列表 */
+    getList() {
+      this.loading = true;
+      listCourses(this.queryParams).then(response => {
+        const rows = response.rows || [];
+        // 若后端未按状态过滤，则在前端按需过滤
+        const selected = (this.queryParams.status || '').trim();
+        const withStatus = rows.map(item => ({
+          ...item,
+          status: item.status || this.computeCourseStatus(item)
+        }));
+        this.coursesList = selected ? withStatus.filter(r => r.status === selected) : withStatus;
+        this.total = response.total;
+        this.loading = false;
+      });
     },
-
-    /** 获取活动状态文本 */
-    getActivityStatusText(row) {
+    // 兜底：根据时间推导课程状态
+    computeCourseStatus(item) {
       const now = new Date();
-      const start = new Date(row.startTime);
-      const end = new Date(row.endTime);
-      const deadline = new Date(row.activityDeadline);
-      const activityStart = new Date(row.activityStart);
-
-      if (now < activityStart) return "报名未开始";
-      if (now < deadline && now >= activityStart) return "报名进行中";
-      if (now >= deadline && now < start) return "报名已截止";
-      if (now >= start && now <= end) return "活动进行中";
-      if (now > end) return "活动已结束";
-      return row.status || "未知";
+      const start = item.courseStart ? new Date(item.courseStart) : null;
+      const deadline = item.courseDeadline ? new Date(item.courseDeadline) : null;
+      if (start && now < start) return '未开始';
+      if (start && deadline && now >= start && now <= deadline) return '选课中';
+      if (deadline && now > deadline) return '已截止';
+      return item.status || '未开始';
+    },
+    // 取消按钮
+    cancel() {
+      this.open = false;
+      this.reset();
     },
 
-    /** 获取活动状态标签类型 */
-    getActivityStatusTag(row) {
-      const status = this.getActivityStatusText(row);
+    // 表单重置
+    reset() {
+      this.form = {
+        courseId: null,
+        courseName: null,
+        courseType: null,
+        courseLocation: null,
+        courseStart: null,
+        courseDeadline: null,
+        startTime: null,
+        endTime: null,
+        courseTotalCapacity: null,
+        courseCapacity: null,
+        courseDescription: null,
+        pictureUrl: null,
+        status: null,
+        createdAt: null,
+        organizer: null,
+        notes: null,
+        version: null
+      };
+      this.resetForm("form");
+    },
+    // 状态与标签类型的映射：返回el-tag支持的type值
+    getStatusTagType(status) {
       switch (status) {
-        case "报名未开始": return "info";
-        case "报名进行中": return "success";
-        case "报名已截止": return "warning";
-        case "活动进行中": return "primary";
-        case "活动已结束": return "";
-        default: return "danger";
+        case '未开始':
+          return 'info'; // 蓝色标签
+        case '选课中':
+          return 'success'; // 绿色标签
+        case '已截止':
+          return 'danger'; // 红色标签
+        default:
+          return 'warning'; // 橙色标签（默认，应对异常状态）
+      }
+    },
+    /**
+     * 1. 计算报名占比（百分比）
+     * @param {Object} row - 当前课程行数据
+     * @returns {Number} 占比（0-100，避免负数或超过100）
+     */
+    calculateCapacityPercentage(row) {
+      // 处理异常值（如总容量为0或null，避免除以0）
+      if (!row.courseTotalCapacity || row.courseTotalCapacity <= 0) {
+        return 0;
+      }
+      // 计算已报名人数 = 总容量 - 剩余容量
+      const enrolled = row.courseTotalCapacity - row.courseCapacity;
+      // 计算占比并取整（确保在0-100之间）
+      const percentage = Math.round((enrolled / row.courseTotalCapacity) * 100);
+      return Math.max(0, Math.min(100, percentage));
+    },
+
+    /**
+     * 2. 根据占比获取进度条颜色（分3档：低/中/高）
+     * @param {Number} percentage - 报名占比
+     * @returns {String} 进度条颜色（Element UI支持的颜色值）
+     */
+    getProgressColor(percentage) {
+      if (percentage < 50) {
+        return '#67C23A'; // 绿色：报名率低（<50%）
+      } else if (percentage < 90) {
+        return '#E6A23C'; // 橙色：报名率中（50%-90%）
+      } else {
+        return '#F56C6C'; // 红色：报名率高（≥90%）
       }
     },
 
-    /** 判断活动是否已结束 */
-    isActivityEnded(row) {
-      const now = new Date();
-      const end = new Date(row.endTime);
-      return now > end;
-    },
-
-    /** 计算容量百分比 */
-    calculateCapacityPercentage(row) {
-      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
-      const used = row.activityTotalCapacity - row.activityCapacity;
-      return Math.round((used / row.activityTotalCapacity) * 100);
-    },
-
-    /** 获取进度条颜色 */
-    getProgressColor(percentage) {
-      if (percentage >= 80) return '#f87171';
-      if (percentage >= 50) return '#fbbf24';
-      return '#4ade80';
-    },
-
-    /** 获取容量文字样式类 */
+    /**
+     * 3. 根据占比获取人数文本样式（和进度条颜色对应）
+     * @param {Object} row - 当前课程行数据
+     * @returns {String} 样式类名（对应CSS中的颜色类）
+     */
     getCapacityClass(row) {
       const percentage = this.calculateCapacityPercentage(row);
-      if (percentage >= 80) return 'capacity-high';
-      if (percentage >= 50) return 'capacity-medium';
-      return 'capacity-low';
+      if (percentage < 50) {
+        return 'capacity-low'; // 绿色文本
+      } else if (percentage < 90) {
+        return 'capacity-medium'; // 橙色文本
+      } else {
+        return 'capacity-high'; // 红色文本
+      }
     },
 
-    /** 获取预约状态文本 */
-    getBookingStatusText(status) {
-      console.log('审核状态原始值:', status, '类型:', typeof status);
-      const statusMap = {
-        'pending': '未提交',
-        'submitted': '未审核',
-        'approved': '已通过',
-        'rejected': '未通过',
-        '未提交': '未提交',
-        '未审核': '未审核',
-        '已通过': '已通过',
-        '未通过': '未通过'
-      };
-      return statusMap[status] || '未知';
-    },
-
-    /** 获取预约状态标签类型 */
-    getBookingStatusTag(status) {
-      const tagMap = {
-        'pending': 'info',      // 未提交 - 灰色
-        'submitted': 'warning', // 未审核 - 橙色
-        'approved': 'success',  // 已通过 - 绿色
-        'rejected': 'danger',   // 未通过 - 红色
-        '未提交': 'info',       // 未提交 - 灰色
-        '未审核': 'warning',    // 未审核 - 橙色
-        '已通过': 'success',    // 已通过 - 绿色
-        '未通过': 'danger'      // 未通过 - 红色
-      };
-      return tagMap[status] || 'info';
-    },
-    // 活动类型映射函数：将数字转换为对应的类型名称
-    getActivityTypeName(activityType) {
+    // 课程类型映射函数：将数字转换为对应的类型名称
+    getCourseTypeName(coursetype) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
         '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
-      return typeMap[activityType] || activityType;
+      return typeMap[coursetype] || coursetype;
     },
 
-    getActivityTypeTagType(activityType) {
+    getCourseTypeTagType(coursetype) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
         '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
@@ -903,205 +453,9 @@ export default {
         '4': 'danger',    // 社会责任与领军意识活动类 - 红色
         '其他': ''        // 默认蓝色
       }
-      return map[activityType] || 'info';
+      return map[coursetype] || 'info';
     },
 
-    // 按活动开始时间排序
-    sortActivitiesByStartTime(activities) {
-      return activities.sort((a, b) => {
-        const timeA = new Date(a.startTime);
-        const timeB = new Date(b.startTime);
-        return timeB - timeA; // 从晚到早排序
-      });
-    },
-    // 导出选课学生
-    handleExportStudents() {
-      if (this.selectedStudents.length === 0) {
-        this.$message.warning("没有可导出的数据");
-        return;
-      }
-
-      const activityId = this.selectedStudents[0]?.activityId;
-      const activityName = this.selectedStudents[0]?.activityName;
-
-      if (!activityId) {
-        this.$message.error("缺少活动ID参数");
-        return;
-      }
-
-      this.download('/system/bookings/exportStudents', {
-        activityId: activityId
-      }, `预约学生名单_${activityName}_${this.parseTime(new Date(), '{y}{m}{d}')}.xlsx`)
-
-      this.dialogVisibleStudents = false; // 导出后自动关闭对话框
-    },
-    // 查看选课学生
-    async handleViewStudents(row) {
-      this.studentLoading = true;
-      try {
-        const res = await listBookingsWithActivity({
-          activityId: row.activityId // 使用当前行的活动ID，而不是硬编码的6
-        });
-
-        if (res.rows && res.rows.length) {
-          this.selectedStudents = res.rows;
-          this.dialogVisibleStudents = true;
-        } else {
-          // 使用正确的消息提示方法
-          this.$message.info("当前活动暂无学生预约");
-        }
-      } catch (e) {
-        console.error("获取学生预约活动数据失败", e);
-        // 添加错误提示
-        this.$message.error("获取学生预约活动数据失败，请稍后再试");
-      } finally {
-        this.studentLoading = false;
-      }
-    },
-    /** 计算活动状态 */
-    calculateStatus() {
-      // 获取当前时间（使用服务器时间更准确，这里先用客户端时间）
-      const now = new Date().getTime();
-      const startSign = new Date(this.form.activityStart).getTime();
-      const deadline = new Date(this.form.activityDeadline).getTime();
-      const startActivity = new Date(this.form.startTime).getTime();
-      const endActivity = new Date(this.form.endTime).getTime();
-
-      // 检查时间点是否有效
-      if (!isNaN(startSign) && !isNaN(deadline) &&
-        !isNaN(startActivity) && !isNaN(endActivity)) {
-
-        if (now < startSign) {
-          this.form.status = '未开始';
-        } else if (now <= deadline) {
-          this.form.status = '可报名';
-        } else if (now < startActivity) {
-          this.form.status = '已截止';
-        } else if (now <= endActivity) {
-          this.form.status = '进行中';
-        } else {
-          this.form.status = '已结束';
-        }
-      } else {
-        this.form.status = '未开始';
-      }
-    },
-    /** 查询活动列表 */
-    getList() {
-      this.loading = true;
-      console.log("开始获取活动列表，queryParams:", this.queryParams);
-      getNickName().then(nickName => {
-        this.queryParams.organizer = nickName.msg; // 更新组织者
-        console.log("获取到组织者名称:", nickName.msg);
-        // 🔽 确保在 organizer 更新后调用列表接口
-        // 先获取所有活动数据（不分页）
-        const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
-          console.log("获取活动列表成功:", response);
-          let allActivities = response.rows;
-
-          // 如果有活动状态筛选条件，进行前端筛选
-          if (this.queryParams.activityStatus) {
-            allActivities = allActivities.filter(activity => {
-              const status = this.getActivityStatusText(activity);
-              return status === this.queryParams.activityStatus;
-            });
-          }
-
-          // 按活动开始时间排序（从晚到早）
-          allActivities = this.sortActivitiesByStartTime(allActivities);
-
-          // 对筛选后的数据进行分页
-          const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
-          const endIndex = startIndex + this.queryParams.pageSize;
-          const paginatedList = allActivities.slice(startIndex, endIndex);
-
-          this.activitiesList = paginatedList;
-          this.total = allActivities.length; // 使用筛选后的总数量
-          this.loading = false;
-          // 更新可用的活动类型列表
-          this.updateAvailableActivityTypes();
-        }).catch(error => {
-          console.error("获取活动列表失败:", error);
-          this.loading = false;
-          this.$message.error("获取活动列表失败");
-        });
-      }).catch(error => {
-        console.error("获取组织者名称失败:", error);
-        // 即使获取组织者名称失败，也尝试获取活动列表
-        // 先获取所有活动数据（不分页）
-        const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
-          console.log("获取活动列表成功（无组织者）:", response);
-          let allActivities = response.rows;
-
-          // 如果有活动状态筛选条件，进行前端筛选
-          if (this.queryParams.activityStatus) {
-            allActivities = allActivities.filter(activity => {
-              const status = this.getActivityStatusText(activity);
-              return status === this.queryParams.activityStatus;
-            });
-          }
-
-          // 按活动开始时间排序（从晚到早）
-          allActivities = this.sortActivitiesByStartTime(allActivities);
-
-          // 对筛选后的数据进行分页
-          const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
-          const endIndex = startIndex + this.queryParams.pageSize;
-          const paginatedList = allActivities.slice(startIndex, endIndex);
-
-          this.activitiesList = paginatedList;
-          this.total = allActivities.length; // 使用筛选后的总数量
-          this.loading = false;
-          // 更新可用的活动类型列表
-          this.updateAvailableActivityTypes();
-        }).catch(listError => {
-          console.error("获取活动列表失败:", listError);
-          this.loading = false;
-          this.$message.error("获取活动列表失败");
-        });
-      });
-    },
-    // 取消按钮
-    cancel() {
-      this.open = false;
-      this.isSubmitting = false;
-      this.reset();
-    },
-
-    // 对话框关闭处理
-    handleDialogClose(done) {
-      if (this.isSubmitting) {
-        this.$message.warning('正在处理中，请稍候...');
-        return;
-      }
-      this.cancel();
-      done();
-    },
-    // 表单重置
-    reset() {
-      this.form = {
-        activityId: null,
-        activityName: null,
-        startTime: null,
-        endTime: null,
-        activityLocation: null,
-        activityCapacity: null,
-        activityTotalCapacity: null,
-        activityStart:null,
-        activityDeadline: null,
-        activityDescription: null,
-        activityType: null,
-        status: null,
-        createdAt: null,
-        organizer: null,
-        notes: null,
-        pictureUrl: null,
-        version: 0
-      };
-      this.resetForm("form");
-    },
     /** 搜索按钮操作 */
     handleQuery() {
       this.queryParams.pageNum = 1;
@@ -1109,505 +463,70 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
-      // 手动重置查询参数，确保活动状态被清空
-      this.queryParams.activityStatus = null;
       this.resetForm("queryForm");
       this.handleQuery();
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
-      this.ids = selection.map(item => item.activityId)
-      this.names = selection.map(item => item.activityName)
-      this.single = selection.length !== 1
+      this.ids = selection.map(item => item.courseId)
+      this.single = selection.length!==1
       this.multiple = !selection.length
     },
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加活动信息";
+      this.title = "添加书院选课";
     },
-    // /** 修改按钮操作 */
-    // handleUpdate(row) {
-    //   this.reset();
-    //   const activityId = row.activityId || this.ids
-    //   getActivities(activityId).then(response => {
-    //     this.form = response.data;
-    //     this.open = true;
-    //     this.title = "修改活动信息";
-    //   });
-    // },
-
     /** 修改按钮操作 */
-    async handleUpdate(row) {
-      // 检查活动是否已结束
-      if (this.isActivityEnded(row)) {
-        this.$message.warning('活动已结束，不允许编辑活动信息');
-        return;
-      }
-
+    handleUpdate(row) {
       this.reset();
-      const activityId = row.activityId || this.ids;
-
-      this.loading = true;
-      try {
-        const response = await getActivities(activityId);
+      const courseId = row.courseId || this.ids
+      getCourses(courseId).then(response => {
         this.form = response.data;
-
-        // 确保活动描述字段有值
-        if (!this.form.activityDescription) {
-          this.form.activityDescription = '';
-        }
-
         this.open = true;
-        this.title = "修改活动信息";
-
-        // 等待对话框和编辑器完全渲染
-        await this.$nextTick();
-
-        // 可添加额外处理
-      } catch (error) {
-        console.error('获取活动详情失败:', error);
-        this.$message.error('获取活动详情失败');
-      } finally {
-        this.loading = false;
-      }
+        this.title = "修改书院选课";
+      });
     },
-
     /** 提交按钮 */
-    /** 提交按钮 */
-    async submitForm() {
-      // 防止重复提交
-      if (this.isSubmitting) {
-        this.$message.warning("数据正在处理，请勿重复提交");
-        return;
-      }
-
-      this.isSubmitting = true;
-
-      try {
-        // 1. 先确保获取组织者名称
-        const result = await getNickName();
-        this.form.organizer = result.msg;
-
-        // 普通文本内容无需特殊处理
-
-        // 3. 验证表单
-        const valid = await new Promise((resolve) => {
-          this.$refs.form.validate(resolve);
-        });
-
-        if (!valid) {
-          this.isSubmitting = false;
-          return; // 验证不通过则停止
+    submitForm() {
+      this.$refs["form"].validate(valid => {
+        if (valid) {
+          if (this.form.courseId != null) {
+            updateCourses(this.form).then(response => {
+              this.$modal.msgSuccess("修改成功");
+              this.open = false;
+              this.getList();
+            });
+          } else {
+            addCourses(this.form).then(response => {
+              this.$modal.msgSuccess("新增成功");
+              this.open = false;
+              this.getList();
+            });
+          }
         }
-
-        // 4. 计算活动状态
-        this.calculateStatus();
-
-
-        // 5. 根据情况执行新增/修改
-        if (this.form.activityId != null) {
-          await updateActivities2(this.form);
-          this.$message.success("修改成功");
-        } else {
-          await addActivities(this.form);
-          this.$message.success("新增成功");
-        }
-
-        // 6. 关闭弹窗并刷新列表
-        this.open = false;
-        await this.getList();
-      } catch (error) {
-        console.error("表单提交失败:", error);
-        if (error.message && error.message.includes("活动名称和组织单位组合已存在")) {
-          this.$message.error("活动名称和组织单位组合已存在，不能重复添加！");
-        } else {
-          this.$message.error(`操作失败: ${error.message || '未知错误'}`);
-        }
-      } finally {
-        this.isSubmitting = false;
-      }
+      });
     },
-
-// 处理富文本中的图片，将Base64图片上传到服务器并替换为URL
-
-
     /** 删除按钮操作 */
     handleDelete(row) {
-      const activityIds = row.activityId || this.ids;
-      const activityNames = row.activityName || this.names;
-      this.$modal.confirm('是否确认删除活动名称为"' + activityNames + '"的数据项？').then(function () {
-        return delActivities(activityIds);
+      const courseIds = row.courseId || this.ids;
+      this.$modal.confirm('是否确认删除书院选课编号为"' + courseIds + '"的数据项？').then(function() {
+        return delCourses(courseIds);
       }).then(() => {
         this.getList();
-        this.$message.success("删除成功");
-      }).catch(() => {
-      });
+        this.$modal.msgSuccess("删除成功");
+      }).catch(() => {});
     },
-
-    /** 更新可用的活动类型列表 */
-    updateAvailableActivityTypes() {
-      // 使用预定义的活动类型
-      this.availableActivityTypes = ['1', '2', '3', '4'];
-    },
-
-    // ========== 学生列表相关方法 ==========
-
-    /** 获取状态统计数量 */
-    getStatusCount(status) {
-      return this.selectedStudents.filter(student => student.status === status).length;
-    },
-
-    /** 获取书院标签类型 */
-    getAcademyTagType(academy) {
-      const academyColors = {
-        '知行书院': 'primary',
-        '明德书院': 'success',
-        '博雅书院': 'warning',
-        '至善书院': 'info',
-        '未知': ''
-      };
-      return academyColors[academy] || 'info';
-    },
-
-    /** 获取学生行样式类名 */
-    getStudentRowClassName({row}) {
-      if (row.status === 'approved') return 'approved-row';
-      if (row.status === 'rejected') return 'rejected-row';
-      if (row.status === 'submitted') return 'pending-row';
-      return '';
-    },
-
-
-    /** 复制到剪贴板 */
-    copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        this.$message.success('已复制到剪贴板');
-      }).catch(() => {
-        this.$message.error('复制失败');
-      });
-    },
-
-    /** 学生对话框关闭处理 */
-    handleStudentDialogClose(done) {
-      done();
-    },
-
-    // ========== 图片上传相关方法 ==========
-
-    /** 图片上传前验证 */
-    beforeImageUpload(file) {
-      const isImage = file.type.startsWith('image/');
-      const isLt2M = file.size / 1024 / 1024 < 2;
-
-      if (!isImage) {
-        this.$message.error('只能上传图片文件!');
-        return false;
-      }
-      if (!isLt2M) {
-        this.$message.error('上传图片大小不能超过 2MB!');
-        return false;
-      }
-      return true;
-    },
-
-    /** 图片上传成功回调 */
-    handleImageSuccess(response, file) {
-      console.log('📤 [ActivityManager] 图片上传响应:', response);
-      console.log('📁 [ActivityManager] 文件信息:', file);
-
-      if (response.code === 200 && response.url) {
-        // 提取相对路径部分（如：/profile/upload/...）
-        const relativePath = response.fileName || response.url.replace(/^https?:\/\/[^\/]+/, '');
-        console.log('✅ [ActivityManager] 上传成功，设置图片相对路径:', relativePath);
-        console.log('🔍 [ActivityManager] 原始URL:', response.url);
-        console.log('🔍 [ActivityManager] 提取的相对路径:', relativePath);
-
-        // 使用Vue.set确保响应式更新，存储相对路径
-        this.$set(this.form, 'pictureUrl', relativePath);
-        this.$message.success('图片上传成功');
-
-        // 强制更新视图
-        this.$forceUpdate();
-
-        // 测试URL处理
-        console.log('🧪 [ActivityManager] 测试URL处理结果:', this.getActivityImageUrl(relativePath));
-      } else {
-        console.log('❌ [ActivityManager] 上传失败:', response.msg);
-        this.$message.error(response.msg || '图片上传失败');
-      }
-    },
-
-    /** 图片上传失败回调 */
-    handleImageError(error) {
-      console.error('图片上传失败:', error);
-      this.$message.error('图片上传失败，请重试');
-    },
-
-    /** 图片加载成功处理 */
-    handleImageLoadSuccess(event) {
-      console.log('✅ [ActivityManager] 图片加载成功:', {
-        src: event.target.src,
-        naturalWidth: event.target.naturalWidth,
-        naturalHeight: event.target.naturalHeight,
-        complete: event.target.complete
-      });
-    },
-
-    /** 图片开始加载处理 */
-    handleImageLoadStart(event) {
-      console.log('🔄 [ActivityManager] 图片开始加载:', {
-        src: event.target.src
-      });
-    },
-
-    /** 图片加载中断处理 */
-    handleImageAbort(event) {
-      console.log('⏹️ [ActivityManager] 图片加载中断:', {
-        src: event.target.src
-      });
-    },
-
-    /** 图片加载错误处理 */
-    handleImageLoadError(event) {
-      console.error('❌ [ActivityManager] 图片加载失败详情:', {
-        event: event,
-        target: event.target,
-        src: event.target?.src,
-        error: event.target?.error,
-        naturalWidth: event.target?.naturalWidth,
-        naturalHeight: event.target?.naturalHeight,
-        complete: event.target?.complete,
-        readyState: event.target?.readyState
-      });
-
-      // 尝试获取更多错误信息
-      const img = event.target;
-      if (img) {
-        console.error('❌ [ActivityManager] 图片元素状态:', {
-          src: img.src,
-          currentSrc: img.currentSrc,
-          error: img.error,
-          networkState: img.networkState,
-          readyState: img.readyState
-        });
-
-        // 检查是否是网络问题
-        if (img.error) {
-          console.error('❌ [ActivityManager] 图片错误代码:', img.error.code);
-        }
-      }
-
-      // 尝试直接访问图片URL来测试
-      this.testImageUrl(event.target.src);
-
-      this.$message.error('图片加载失败，请检查图片URL或网络连接');
-    },
-
-    /** 测试图片URL是否可访问 */
-    testImageUrl(url) {
-      console.log('🧪 [ActivityManager] 测试图片URL可访问性:', url);
-
-      // 创建一个新的图片元素来测试
-      const testImg = new Image();
-      testImg.onload = () => {
-        console.log('✅ [ActivityManager] 图片URL测试成功 - 图片可以正常加载');
-      };
-      testImg.onerror = (error) => {
-        console.error('❌ [ActivityManager] 图片URL测试失败:', {
-          url: url,
-          error: error,
-          possibleCauses: [
-            '1. 网络连接问题',
-            '2. 服务器无法访问',
-            '3. CORS跨域问题',
-            '4. 图片文件不存在',
-            '5. 服务器配置问题'
-          ]
-        });
-
-        // 尝试使用fetch测试
-        this.testImageWithFetch(url);
-      };
-      testImg.src = url;
-    },
-
-    /** 使用fetch测试图片URL */
-    async testImageWithFetch(url) {
-      try {
-        console.log('🌐 [ActivityManager] 使用fetch测试图片URL:', url);
-        const response = await fetch(url, { method: 'HEAD' });
-        console.log('📡 [ActivityManager] fetch响应状态:', {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-
-        if (response.ok) {
-          console.log('✅ [ActivityManager] 图片URL通过fetch测试 - 服务器响应正常');
-        } else {
-          console.error('❌ [ActivityManager] 图片URL通过fetch测试失败 - 服务器返回错误状态');
-        }
-      } catch (error) {
-        console.error('❌ [ActivityManager] fetch测试异常:', {
-          error: error,
-          message: error.message,
-          name: error.name
-        });
-      }
-    },
-
-    /** 预览图片 */
-    previewImage() {
-      this.previewImageUrl = this.getActivityImageUrl(this.form.pictureUrl);
-      this.imagePreviewVisible = true;
-    },
-
-    /** 删除图片 */
-    removeImage() {
-      this.$confirm('确定要删除这张图片吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.$set(this.form, 'pictureUrl', null);
-        this.$message.success('图片已删除');
-      }).catch(() => {
-        // 用户取消删除
-      });
-    },
-
-    /** 预览活动图片 */
-    previewActivityImage(imageUrl) {
-      this.previewImageUrl = imageUrl;
-      this.imagePreviewVisible = true;
-    },
-
-    /** 获取活动图片完整URL */
-    getActivityImageUrl(pictureUrl) {
-      console.log('🔍 [ActivityManager] 处理图片URL:', {
-        originalUrl: pictureUrl,
-        baseAPI: process.env.VUE_APP_BASE_API,
-        isCompleteUrl: pictureUrl && (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')),
-        isProfilePath: pictureUrl && pictureUrl.startsWith('/profile/')
-      });
-
-      if (!pictureUrl) {
-        console.log('❌ [ActivityManager] 图片URL为空');
-        return '';
-      }
-
-      // 如果已经是完整URL，直接返回
-      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('✅ [ActivityManager] 使用完整URL:', pictureUrl);
-        return pictureUrl;
-      }
-
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
-      if (pictureUrl.startsWith('/profile/')) {
-        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        console.log('🔗 [ActivityManager] 拼接相对路径:', {
-          baseAPI: process.env.VUE_APP_BASE_API,
-          relativePath: pictureUrl,
-          result: fullUrl
-        });
-        return fullUrl;
-      }
-
-      // 其他情况直接返回
-      console.log('⚠️ [ActivityManager] 未知URL格式，直接返回:', pictureUrl);
-      return pictureUrl;
-    },
-
-    /** 获取活动图片完整URL（处理中文编码问题） */
-    getActivityImageUrlFixed(pictureUrl) {
-      if (!pictureUrl) return '';
-
-      // 如果已经是完整URL，直接返回
-      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('🔧 [ActivityManager] 尝试使用原始URL（不编码）:', pictureUrl);
-        return pictureUrl;
-      }
-
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
-      if (pictureUrl.startsWith('/profile/')) {
-        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        return this.getActivityImageUrlFixed(fullUrl);
-      }
-
-      return pictureUrl;
-    },
-
-    /** 获取活动图片完整URL（尝试编码版本） */
-    getActivityImageUrlEncoded(pictureUrl) {
-      if (!pictureUrl) return '';
-
-      // 如果已经是完整URL，尝试编码处理
-      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        try {
-          // 解析URL
-          const url = new URL(pictureUrl);
-          // 重新构建URL，确保路径部分正确编码
-          const encodedPath = url.pathname.split('/').map(segment => {
-            // 对每个路径段进行编码，但保持已编码的部分不变
-            return encodeURIComponent(decodeURIComponent(segment));
-          }).join('/');
-
-          const encodedUrl = `${url.protocol}//${url.host}${encodedPath}`;
-          console.log('🔧 [ActivityManager] 尝试编码URL:', {
-            original: pictureUrl,
-            encoded: encodedUrl
-          });
-          return encodedUrl;
-        } catch (error) {
-          console.error('❌ [ActivityManager] URL解析失败:', error);
-          return pictureUrl;
-        }
-      }
-
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
-      if (pictureUrl.startsWith('/profile/')) {
-        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        return this.getActivityImageUrlEncoded(fullUrl);
-      }
-
-      return pictureUrl;
-    },
-
-    /** 智能获取活动图片URL（仿照审核界面实现） */
-    getActivityImageUrlSmart(pictureUrl) {
-      if (!pictureUrl) return '';
-
-      // 如果已经是完整URL，直接返回
-      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('🧠 [ActivityManager] 智能URL处理 - 使用完整URL:', pictureUrl);
-        return pictureUrl;
-      }
-
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
-      if (pictureUrl.startsWith('/profile/')) {
-        const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        console.log('🧠 [ActivityManager] 智能URL处理 - 拼接相对路径:', {
-          baseAPI: process.env.VUE_APP_BASE_API,
-          relativePath: pictureUrl,
-          result: fullUrl
-        });
-        return fullUrl;
-      }
-
-      return pictureUrl;
-    },
-
-  },
-  watch: {
-    'form.activityTotalCapacity'(newVal) {
-      this.form.activityCapacity = newVal;
+    /** 导出按钮操作 */
+    handleExport() {
+      this.download('system/courses/export', {
+        ...this.queryParams
+      }, `courses_${new Date().getTime()}.xlsx`)
     }
   }
 };
 </script>
-
 <style scoped>
 /* 扩展卡片 */
 .expand-card {
@@ -1646,6 +565,38 @@ export default {
   padding: 20px;
   background: #f5f7fa;
   min-height: 100vh;
+}
+
+/* 报名人数容器：垂直排列，居中对齐 */
+.participants {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px; /* 进度条和文本的间距 */
+  padding: 2px 0;
+}
+
+/* 进度条：控制宽度，适配表格列 */
+.progress-bar {
+  width: 100%;
+  margin: 2px 0;
+}
+
+/* 人数文本：统一字体大小和权重 */
+.count {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 报名率颜色类（和进度条颜色对应） */
+.capacity-low {
+  color: #67C23A; /* 绿色 */
+}
+.capacity-medium {
+  color: #E6A23C; /* 橙色 */
+}
+.capacity-high {
+  color: #F56C6C; /* 红色 */
 }
 
 /* 首页模式样式 */
@@ -1839,7 +790,7 @@ export default {
   line-height: 28px;
 }
 
-.activity-type-tag {
+.course-type-tag {
   font-weight: 500;
   padding: 0 16px;
   height: 32px;
@@ -1849,7 +800,7 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.activity-name {
+.course-name {
   font-size: 15px;
   font-weight: 600;
   color: #303133;
@@ -1891,7 +842,7 @@ export default {
     }
   }
 
-  &.activity-time {
+  &.course-time {
     i {
       color: #67C23A;
       margin-right: 4px;
@@ -1933,7 +884,7 @@ export default {
     }
   }
 
-  &.activity-time {
+  &.course-time {
     .time-header i {
       color: #67C23A;
     }
@@ -2354,8 +1305,8 @@ export default {
 
 
 
-/* 活动表单对话框美化样式 */
-.activity-form-dialog {
+/* 课程表单对话框美化样式 */
+.course-form-dialog {
   .el-dialog {
     border-radius: 16px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -2430,8 +1381,8 @@ export default {
   overflow-y: auto;
 }
 
-/* 活动表单 */
-.activity-form {
+/* 课程表单 */
+.course-form {
   .form-section {
     background: white;
     border-radius: 12px;
@@ -2658,7 +1609,7 @@ export default {
 
 /* 响应式调整 */
 @media (max-width: 768px) {
-  .activity-form-dialog {
+  .course-form-dialog {
     .el-dialog {
       width: 95% !important;
       margin: 0 auto;
@@ -2793,14 +1744,14 @@ export default {
   }
 }
 
-/* 活动图片展示 */
-.activity-image-container {
+/*课程图片展示 */
+.course-image-container {
   display: flex;
   justify-content: center;
   margin-top: 8px;
 }
 
-.activity-image {
+.course-image {
   max-width: 200px;
   max-height: 150px;
   border-radius: 8px;
@@ -2864,6 +1815,23 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* 学分和地点列样式 */
+.credit-text {
+  font-weight: 600;
+  color: #409EFF;
+  font-size: 14px;
+}
+
+.location-text {
+  color: #606266;
+  font-size: 13px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
   .upload-placeholder {
@@ -2886,7 +1854,7 @@ export default {
     height: 150px;
   }
 
-  .activity-image {
+  .course-image {
     max-width: 150px;
     max-height: 100px;
   }
