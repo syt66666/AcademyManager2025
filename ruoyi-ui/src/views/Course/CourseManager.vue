@@ -25,6 +25,16 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="课程类型" prop="courseType">
+          <el-select v-model="queryParams.courseType" clearable placeholder="请选择课程类型" class="search-input" @change="handleQuery">
+            <el-option
+              v-for="type in courseTypeOptions"
+              :key="type.value"
+              :label="type.label"
+              :value="type.value"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
           <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -84,7 +94,14 @@
         </el-table-column>
         <el-table-column label="学分" align="center" prop="courseCredit" width="80">
           <template slot-scope="scope">
-            <span class="credit-text">{{ scope.row.courseCredit || '0' }}</span>
+            <span class="credit-text">{{ (scope.row.courseCredit || 0).toFixed(1) }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="课程种类" align="center" prop="courseCategory" width="100">
+          <template slot-scope="scope">
+            <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
+              {{ getCourseCategoryName(scope.row.courseCategory) || '未设置' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="课程地点" align="center" prop="courseLocation" width="150">
@@ -92,14 +109,28 @@
             <span class="location-text">{{ scope.row.courseLocation || '未设置' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="选课开始时间" align="center" prop="courseStart" width="200">
+        <el-table-column label="时间安排" align="center" width="400">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="选课截止时间" align="center" prop="courseDeadline" width="200">
-          <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}</span>
+            <div class="time-schedule">
+              <div class="time-item">
+                <i class="el-icon-user time-icon registration"></i>
+                <div class="time-content">
+                  <span class="time-label">报名时间：</span>
+                  <span class="time-range">
+                    {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
+                  </span>
+                </div>
+              </div>
+              <div class="time-item">
+                <i class="el-icon-date time-icon activity"></i>
+                <div class="time-content">
+                  <span class="time-label">课程时间：</span>
+                  <span class="time-range">
+                    {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </template>
         </el-table-column>
         <!-- 课程状态列 -->
@@ -164,74 +195,226 @@
         @pagination="getList"
       />
 
-      <!-- 新增或修改书院选课对话框 -->
-      <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-        <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-          <el-form-item label="课程名称" prop="courseName">
-            <el-input v-model="form.courseName" placeholder="请输入课程名称" />
-          </el-form-item>
-          <el-form-item label="课程地点" prop="courseLocation">
-            <el-input v-model="form.courseLocation" placeholder="请输入课程地点" />
-          </el-form-item>
-          <el-form-item label="选课开始时间" prop="courseStart">
-            <el-date-picker clearable
-                            v-model="form.courseStart"
-                            type="date"
-                            value-format="yyyy-MM-dd"
-                            placeholder="请选择选课开始时间">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="选课截止时间" prop="courseDeadline">
-            <el-date-picker clearable
-                            v-model="form.courseDeadline"
-                            type="date"
-                            value-format="yyyy-MM-dd"
-                            placeholder="请选择选课截止时间">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="课程开始时间" prop="startTime">
-            <el-date-picker clearable
-                            v-model="form.startTime"
-                            type="date"
-                            value-format="yyyy-MM-dd"
-                            placeholder="请选择课程开始时间">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="课程结束时间" prop="endTime">
-            <el-date-picker clearable
-                            v-model="form.endTime"
-                            type="date"
-                            value-format="yyyy-MM-dd"
-                            placeholder="请选择课程结束时间">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="课程容量" prop="courseTotalCapacity">
-            <el-input v-model="form.courseTotalCapacity" placeholder="请输入课程容量" />
-          </el-form-item>
-          <el-form-item label="课程剩余容量" prop="courseCapacity">
-            <el-input v-model="form.courseCapacity" placeholder="请输入课程剩余容量" />
-          </el-form-item>
-          <el-form-item label="${comment}" prop="courseDescription">
-            <el-input v-model="form.courseDescription" type="textarea" placeholder="请输入内容" />
-          </el-form-item>
-          <el-form-item label="创建时间" prop="createdAt">
-            <el-date-picker clearable
-                            v-model="form.createdAt"
-                            type="date"
-                            value-format="yyyy-MM-dd"
-                            placeholder="请选择创建时间">
-            </el-date-picker>
-          </el-form-item>
-          <el-form-item label="组织者" prop="organizer">
-            <el-input v-model="form.organizer" placeholder="请输入组织者" />
-          </el-form-item>
-          <el-form-item label="注意事项" prop="notes">
-            <el-input v-model="form.notes" type="textarea" placeholder="请输入内容" />
-          </el-form-item>
-        </el-form>
+      <!-- 添加或修改课程对话框 -->
+      <el-dialog
+        :title="title"
+        :visible.sync="open"
+        width="700px"
+        append-to-body
+        class="course-form-dialog"
+        :before-close="handleDialogClose">
+
+        <!-- 对话框头部 -->
+        <div slot="title" class="dialog-header">
+          <div class="header-content">
+            <div class="header-icon">
+              <i :class="form.courseId ? 'el-icon-edit' : 'el-icon-plus'"></i>
+            </div>
+            <div class="header-text">
+              <h3>{{ title }}</h3>
+              <p>{{ form.courseId ? '修改课程信息' : '创建新的课程' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 表单内容 -->
+        <div class="dialog-body">
+          <el-form ref="form" :model="form" :rules="rules" label-width="100px" class="course-form">
+
+            <!-- 基本信息区域 -->
+            <div class="form-section">
+              <div class="section-header">
+                <i class="el-icon-info"></i>
+                <span>基本信息</span>
+              </div>
+              <div class="section-content">
+                <el-form-item label="课程名称" prop="courseName">
+                  <el-input
+                    v-model="form.courseName"
+                    placeholder="请输入课程名称"
+                    prefix-icon="el-icon-reading"
+                    class="form-input">
+                  </el-input>
+                  <div class="form-tip">
+                    <i class="el-icon-info"></i>
+                    课程名称在当前组织单位下必须唯一
+                  </div>
+                </el-form-item>
+
+                <el-form-item label="课程类型" prop="courseType">
+                  <el-select v-model="form.courseType" placeholder="请选择课程类型" class="form-select">
+                    <el-option
+                      v-for="type in courseTypeOptions"
+                      :key="type.value"
+                      :label="type.label"
+                      :value="type.value">
+                      <span style="float: left">{{ type.label }}</span>
+                      <span style="float: right; color: #8492a6; font-size: 13px">{{ type.value }}</span>
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="课程种类" prop="courseCategory">
+                  <el-select v-model="form.courseCategory" placeholder="请选择课程种类" class="form-select">
+                    <el-option
+                      v-for="category in courseCategoryOptions"
+                      :key="category.value"
+                      :label="category.label"
+                      :value="category.value">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+
+                <el-form-item label="课程地点" prop="courseLocation">
+                  <el-input
+                    v-model="form.courseLocation"
+                    placeholder="请输入课程地点"
+                    prefix-icon="el-icon-location"
+                    class="form-input">
+                  </el-input>
+                </el-form-item>
+
+                <div class="form-row">
+                  <el-form-item label="课程学分" prop="courseCredit" class="form-item-half">
+                    <div class="input-with-unit">
+                      <el-input-number
+                        v-model="form.courseCredit"
+                        :min="0"
+                        :max="10"
+                        :precision="1"
+                        :step="0.5"
+                        controls-position="right"
+                        class="form-number">
+                      </el-input-number>
+                      <span class="unit-text">学分</span>
+                    </div>
+                  </el-form-item>
+
+                  <el-form-item label="课程容量" prop="courseTotalCapacity" class="form-item-half">
+                    <div class="input-with-unit">
+                      <el-input-number
+                        v-model="form.courseTotalCapacity"
+                        :min="1"
+                        :max="1000"
+                        controls-position="right"
+                        class="form-number"
+                        @change="handleCapacityChange">
+                      </el-input-number>
+                      <span class="unit-text">人</span>
+                    </div>
+                  </el-form-item>
+                </div>
+              </div>
+            </div>
+
+            <!-- 时间安排区域 -->
+            <div class="form-section">
+              <div class="section-header">
+                <i class="el-icon-time"></i>
+                <span>时间安排</span>
+              </div>
+              <div class="section-content">
+                <div class="time-grid">
+                  <el-form-item label="选课开始" prop="courseStart" class="time-item">
+                    <el-date-picker
+                      v-model="form.courseStart"
+                      type="datetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      placeholder="选择选课开始时间"
+                      class="form-datetime"
+                      style="width: 100%">
+                    </el-date-picker>
+                  </el-form-item>
+
+                  <el-form-item label="选课截止" prop="courseDeadline" class="time-item">
+                    <el-date-picker
+                      v-model="form.courseDeadline"
+                      type="datetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      placeholder="选择选课截止时间"
+                      class="form-datetime"
+                      style="width: 100%">
+                    </el-date-picker>
+                  </el-form-item>
+
+                  <el-form-item label="课程开始" prop="startTime" class="time-item">
+                    <el-date-picker
+                      v-model="form.startTime"
+                      type="datetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      placeholder="选择课程开始时间"
+                      class="form-datetime"
+                      style="width: 100%">
+                    </el-date-picker>
+                  </el-form-item>
+
+                  <el-form-item label="课程结束" prop="endTime" class="time-item">
+                    <el-date-picker
+                      v-model="form.endTime"
+                      type="datetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      placeholder="选择课程结束时间"
+                      class="form-datetime"
+                      style="width: 100%">
+                    </el-date-picker>
+                  </el-form-item>
+                </div>
+              </div>
+            </div>
+
+            <!-- 详细信息区域 -->
+            <div class="form-section">
+              <div class="section-header">
+                <i class="el-icon-document"></i>
+                <span>详细信息</span>
+              </div>
+              <div class="section-content">
+                <el-form-item label="课程描述" prop="courseDescription">
+                  <el-input
+                    type="textarea"
+                    v-model="form.courseDescription"
+                    :rows="4"
+                    placeholder="请输入课程描述"
+                    class="form-textarea"
+                  />
+                </el-form-item>
+
+                <el-form-item label="组织者" prop="organizer">
+                  <el-input
+                    v-model="form.organizer"
+                    placeholder="请输入组织者"
+                    prefix-icon="el-icon-user"
+                    class="form-input">
+                  </el-input>
+                </el-form-item>
+              </div>
+            </div>
+          </el-form>
+        </div>
+
+        <!-- 对话框底部 -->
         <div slot="footer" class="dialog-footer">
-          <el-button type="primary" @click="submitForm">确 定</el-button>
-          <el-button @click="cancel">取 消</el-button>
+          <div class="footer-left">
+            <div class="form-status" v-if="isSubmitting">
+              <i class="el-icon-loading"></i>
+              <span>正在{{ form.courseId ? '保存修改' : '创建课程' }}...</span>
+            </div>
+          </div>
+          <div class="footer-right">
+            <el-button
+              @click="cancel"
+              :disabled="isSubmitting"
+              class="cancel-btn">
+              取消
+            </el-button>
+            <el-button
+              type="primary"
+              @click="submitForm"
+              :loading="isSubmitting"
+              class="submit-btn">
+              {{ form.courseId ? '保存修改' : '创建课程' }}
+            </el-button>
+          </div>
         </div>
       </el-dialog>
     </div>
@@ -285,6 +468,20 @@ export default {
         { value: '选课中', label: '选课中' },
         { value: '已截止', label: '已截止' }
       ],
+      // 课程类型选项
+      courseTypeOptions: [
+        { value: '1', label: '人格塑造与价值引领活动类' },
+        { value: '2', label: '知识融合与思维进阶活动类' },
+        { value: '3', label: '能力锻造与实践创新活动类' },
+        { value: '4', label: '社会责任与领军意识活动类' }
+      ],
+      // 课程种类选项
+      courseCategoryOptions: [
+        { value: '必修', label: '必修' },
+        { value: '选修', label: '选修' }
+      ],
+      // 表单提交状态
+      isSubmitting: false,
       // 表单参数
       form: {},
       // 表单校验
@@ -324,12 +521,29 @@ export default {
       listCourses(this.queryParams).then(response => {
         const rows = response.rows || [];
         // 若后端未按状态过滤，则在前端按需过滤
-        const selected = (this.queryParams.status || '').trim();
+        const selectedStatus = (this.queryParams.status || '').trim();
+        const selectedType = (this.queryParams.courseType || '').trim();
+        
         const withStatus = rows.map(item => ({
           ...item,
           status: item.status || this.computeCourseStatus(item)
         }));
-        this.coursesList = selected ? withStatus.filter(r => r.status === selected) : withStatus;
+        
+        // 按状态过滤
+        let filteredList = selectedStatus ? withStatus.filter(r => r.status === selectedStatus) : withStatus;
+        
+        // 按课程类型过滤
+        if (selectedType) {
+          filteredList = filteredList.filter(r => r.courseType === selectedType);
+        }
+        
+        // 按照课程开始时间排序（从早到晚）
+        this.coursesList = filteredList.sort((a, b) => {
+          const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
+          const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
+          return timeA - timeB;
+        });
+        
         this.total = response.total;
         this.loading = false;
       });
@@ -444,6 +658,14 @@ export default {
       };
       return typeMap[coursetype] || coursetype;
     },
+    // 课程种类映射函数：获取种类名称
+    getCourseCategoryName(category) {
+      const categoryMap = {
+        '必修': '必修',
+        '选修': '选修'
+      };
+      return categoryMap[category] || category;
+    },
 
     getCourseTypeTagType(coursetype) {
       const map = {
@@ -454,6 +676,14 @@ export default {
         '其他': ''        // 默认蓝色
       }
       return map[coursetype] || 'info';
+    },
+    // 课程种类标签类型映射
+    getCourseCategoryTagType(category) {
+      const map = {
+        '必修': 'danger',    // 必修 - 红色
+        '选修': 'success'    // 选修 - 绿色
+      };
+      return map[category] || 'info';
     },
 
     /** 搜索按钮操作 */
@@ -484,6 +714,12 @@ export default {
       const courseId = row.courseId || this.ids
       getCourses(courseId).then(response => {
         this.form = response.data;
+        // 保持原有的已报名人数，不重置剩余容量
+        // 如果剩余容量为空或无效，则根据已报名人数计算
+        if (!this.form.courseCapacity || this.form.courseCapacity < 0) {
+          // 如果剩余容量无效，假设没有已报名人数
+          this.form.courseCapacity = this.form.courseTotalCapacity || 0;
+        }
         this.open = true;
         this.title = "修改书院选课";
       });
@@ -492,17 +728,26 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          this.isSubmitting = true;
           if (this.form.courseId != null) {
             updateCourses(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
               this.open = false;
               this.getList();
+            }).catch(() => {
+              // 错误处理
+            }).finally(() => {
+              this.isSubmitting = false;
             });
           } else {
             addCourses(this.form).then(response => {
               this.$modal.msgSuccess("新增成功");
               this.open = false;
               this.getList();
+            }).catch(() => {
+              // 错误处理
+            }).finally(() => {
+              this.isSubmitting = false;
             });
           }
         }
@@ -523,6 +768,30 @@ export default {
       this.download('system/courses/export', {
         ...this.queryParams
       }, `courses_${new Date().getTime()}.xlsx`)
+    },
+    /** 对话框关闭处理 */
+    handleDialogClose(done) {
+      if (this.isSubmitting) {
+        this.$message.warning('正在提交中，请稍候...');
+        return;
+      }
+      done();
+    },
+    /** 处理容量变化 */
+    handleCapacityChange(value) {
+      // 当总容量变化时，根据当前已报名人数计算剩余容量
+      if (value && value > 0) {
+        // 计算当前已报名人数
+        const currentEnrolled = this.form.courseTotalCapacity && this.form.courseCapacity
+          ? this.form.courseTotalCapacity - this.form.courseCapacity
+          : 0;
+
+        // 新的剩余容量 = 新总容量 - 当前已报名人数
+        const newRemainingCapacity = value - currentEnrolled;
+
+        // 确保剩余容量不为负数
+        this.form.courseCapacity = Math.max(0, newRemainingCapacity);
+      }
     }
   }
 };
@@ -1483,10 +1752,17 @@ export default {
   }
 }
 
-.capacity-tip {
-  margin-left: 8px;
+.input-with-unit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unit-text {
   color: #909399;
   font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .form-textarea {
@@ -1832,38 +2108,432 @@ export default {
   display: inline-block;
 }
 
+/* 课程种类标签样式 */
+.category-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+/* 时间安排样式 */
+.time-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.time-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.time-icon.registration {
+  color: #409EFF;
+}
+
+.time-icon.activity {
+  color: #67C23A;
+}
+
+.time-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.time-label {
+  font-size: 14px;
+  color: #909399;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.time-range {
+  font-size: 14px;
+  color: #606266;
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+/* 课程表单对话框美化样式 */
+.course-form-dialog {
+  .el-dialog {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+
+  .el-dialog__header {
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+
+  .el-dialog__footer {
+    padding: 20px 24px;
+    background: white;
+    border-top: 1px solid #e4e7ed;
+  }
+}
+
+/* 对话框头部 */
+.dialog-header {
+  padding: 24px;
+  color: white;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+
+      i {
+        font-size: 24px;
+        color: white;
+      }
+    }
+
+    .header-text {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+}
+
+/* 对话框主体 */
+.dialog-body {
+  padding: 24px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+/* 课程表单 */
+.course-form {
+  .form-section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e4e7ed;
+    overflow: hidden;
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid #e4e7ed;
+
+      i {
+        font-size: 16px;
+        color: #409EFF;
+        margin-right: 8px;
+      }
+
+      span {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 14px;
+      }
+    }
+
+    .section-content {
+      padding: 20px;
+
+      .form-input {
+        width: 100%;
+      }
+
+      .form-select {
+        width: 100%;
+      }
+
+      .form-textarea {
+        width: 100%;
+      }
+
+      .form-datetime {
+        width: 100%;
+      }
+
+      .form-number {
+        width: 100%;
+      }
+
+      .form-tip {
+        display: flex;
+        align-items: center;
+        margin-top: 8px;
+        font-size: 12px;
+        color: #909399;
+
+        i {
+          margin-right: 4px;
+        }
+      }
+
+      .form-row {
+        display: flex;
+        gap: 16px;
+
+        .form-item-half {
+          flex: 1;
+        }
+      }
+
+      .input-with-unit {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .unit-text {
+        color: #909399;
+        font-size: 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .time-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+
+        .time-item {
+          margin-bottom: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          
+          .el-form-item__content {
+            flex: 1;
+            margin-left: 0;
+            min-width: 0;
+          }
+          
+          .el-form-item__label {
+            font-size: 12px;
+            line-height: 1.2;
+            white-space: nowrap;
+            flex-shrink: 0;
+            width: auto;
+            min-width: 60px;
+            max-width: 70px;
+            margin-right: 0;
+            padding-right: 0;
+            text-align: left;
+          }
+          
+            .el-date-editor {
+              width: 100% !important;
+              min-width: 0;
+              background: white;
+              border: 1px solid #dcdfe6;
+              border-radius: 4px;
+            
+            .el-input__inner {
+              font-size: 11px;
+              padding: 6px 10px;
+              height: 32px;
+              line-height: 1.2;
+              white-space: nowrap;
+              overflow: visible;
+              text-overflow: unset;
+              background: white;
+              border: none;
+              border-radius: 4px;
+              color: #606266;
+            }
+            
+            .el-input__prefix {
+              left: 8px;
+              
+              .el-input__icon {
+                font-size: 11px;
+                color: #c0c4cc;
+              }
+            }
+            
+            .el-input__suffix {
+              right: 8px;
+              
+              .el-input__icon {
+                font-size: 11px;
+                color: #c0c4cc;
+              }
+            }
+            
+            &:hover {
+              border-color: #c0c4cc;
+            }
+            
+            &:focus-within {
+              border-color: #409EFF;
+              box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+
+/* 对话框底部 */
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .footer-left {
+    .form-status {
+      display: flex;
+      align-items: center;
+      color: #409EFF;
+      font-size: 14px;
+
+      i {
+        margin-right: 8px;
+        animation: spin 1s linear infinite;
+      }
+    }
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 12px;
+
+    .cancel-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+    }
+
+    .submit-btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
-  .upload-placeholder {
-    height: 150px;
-
-    i {
-      font-size: 36px;
-    }
-
-    .upload-text {
-      font-size: 14px;
-    }
-
-    .upload-tip {
-      font-size: 11px;
-    }
-  }
-
-  .image-preview {
-    height: 150px;
-  }
-
-  .course-image {
-    max-width: 150px;
-    max-height: 100px;
-  }
-
-  .image-preview-dialog {
+  .course-form-dialog {
     .el-dialog {
       width: 95% !important;
       margin: 0 auto;
     }
   }
+
+  .dialog-body {
+    padding: 20px;
+  }
+
+  .course-form .form-section .section-content .time-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    
+    .time-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      .el-form-item__label {
+        font-size: 11px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        width: auto;
+        min-width: 60px;
+        max-width: 70px;
+        text-align: left;
+      }
+      
+      .el-form-item__content {
+        flex: 1;
+        margin-left: 0;
+        min-width: 0;
+      }
+      
+      .el-date-editor {
+        width: 100% !important;
+        min-width: 0;
+        background: white;
+        border: 1px solid #dcdfe6;
+        border-radius: 4px;
+        
+        .el-input__inner {
+          font-size: 10px;
+          height: 28px;
+          padding: 5px 8px;
+          white-space: nowrap;
+          overflow: visible;
+          text-overflow: unset;
+          background: white;
+          border: none;
+          border-radius: 4px;
+          color: #606266;
+        }
+        
+        .el-input__prefix .el-input__icon {
+          color: #c0c4cc;
+        }
+        
+        .el-input__suffix .el-input__icon {
+          color: #c0c4cc;
+        }
+        
+        &:hover {
+          border-color: #c0c4cc;
+        }
+        
+        &:focus-within {
+          border-color: #409EFF;
+          box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+        }
+      }
+    }
+  }
+
+  .course-form .form-section .section-content .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
 }
+
 </style>
