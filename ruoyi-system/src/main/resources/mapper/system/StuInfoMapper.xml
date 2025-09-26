@@ -8,6 +8,7 @@
         <result property="id"    column="id"    />
         <result property="studentId"    column="student_id"    />
         <result property="studentName"    column="student_name"    />
+        <result property="enrollmentYear"    column="enrollment_year"    />
         <result property="academy"    column="academy"    />
         <result property="originalSystemMajor"    column="original_system_major"    />
         <result property="major"    column="major"    />
@@ -23,7 +24,7 @@
         <result property="studentNum"    column="student_count"    />
     </resultMap>
     <sql id="selectStuInfoVo">
-        select id, student_id, student_name, academy, original_system_major, major, system_major, student_class, divert_form, innovation_class, policy_status, student_sex from stu_info
+        select id, student_id, student_name, enrollment_year, academy, original_system_major, major, system_major, student_class, divert_form, innovation_class, policy_status, student_sex from stu_info
     </sql>
     <select id="getAcademyNum" resultMap="StuInfoResult2">
         SELECT
@@ -38,6 +39,7 @@
         <where>
             <if test="studentId != null  and studentId != ''"> and student_id like concat('%', #{studentId}, '%')</if>
             <if test="studentName != null  and studentName != ''"> and student_name like concat('%', #{studentName}, '%')</if>
+            <if test="enrollmentYear != null  and enrollmentYear != ''"> and enrollment_year = #{enrollmentYear}</if>
             <if test="academy != null  and academy != ''"> and academy = #{academy}</if>
             <if test="originalSystemMajor != null  and originalSystemMajor != ''"> and original_system_major = #{originalSystemMajor}</if>
             <if test="major != null  and major != ''"> and major = #{major}</if>
@@ -65,6 +67,7 @@
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id,</if>
             <if test="studentName != null and studentName != ''">student_name,</if>
+            <if test="enrollmentYear != null and enrollmentYear != ''">enrollment_year,</if>
             <if test="academy != null and academy != ''">academy,</if>
             <if test="originalSystemMajor != null">original_system_major,</if>
             <if test="major != null">major,</if>
@@ -78,6 +81,7 @@
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">#{studentId},</if>
             <if test="studentName != null and studentName != ''">#{studentName},</if>
+            <if test="enrollmentYear != null and enrollmentYear != ''">#{enrollmentYear},</if>
             <if test="academy != null and academy != ''">#{academy},</if>
             <if test="originalSystemMajor != null">#{originalSystemMajor},</if>
             <if test="major != null">#{major},</if>
@@ -95,6 +99,7 @@
         <trim prefix="SET" suffixOverrides=",">
             <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
             <if test="studentName != null and studentName != ''">student_name = #{studentName},</if>
+            <if test="enrollmentYear != null and enrollmentYear != ''">enrollment_year = #{enrollmentYear},</if>
             <if test="academy != null and academy != ''">academy = #{academy},</if>
             <if test="originalSystemMajor != null">original_system_major = #{originalSystemMajor},</if>
             <if test="major != null">major = #{major},</if>

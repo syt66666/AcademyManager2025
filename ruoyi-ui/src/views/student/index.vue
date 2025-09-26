@@ -38,6 +38,16 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
+          <el-form-item label="入学年份" prop="enrollmentYear">
+            <el-input
+              v-model="queryParams.enrollmentYear"
+              placeholder="请输入入学年份"
+              clearable
+              prefix-icon="el-icon-date"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
               <el-button
@@ -121,6 +131,13 @@
         <el-table-column label="学生姓名" align="center" prop="studentName" min-width="120">
           <template slot-scope="scope">
             <div class="student-name">{{ scope.row.studentName }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="入学年份" align="center" prop="enrollmentYear" min-width="100">
+          <template slot-scope="scope">
+            <el-tag size="small" type="success" effect="plain" class="enrollment-year-tag">
+              {{ scope.row.enrollmentYear }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="所属书院" align="center" prop="academy" min-width="120">
@@ -239,6 +256,19 @@
                   prefix-icon="el-icon-user-solid"
                   class="form-input">
                 </el-input>
+              </el-form-item>
+
+              <el-form-item label="入学年份" prop="enrollmentYear">
+                <el-input
+                  v-model="form.enrollmentYear"
+                  placeholder="请输入入学年份"
+                  prefix-icon="el-icon-date"
+                  class="form-input">
+                </el-input>
+                <div class="form-tip">
+                  <i class="el-icon-info"></i>
+                  请输入4位数字年份，如：2024
+                </div>
               </el-form-item>
 
               <el-form-item label="所属书院" prop="academy">
@@ -389,7 +419,8 @@ export default {
         policyStatus: null,
         studentSex: null,
         gradeLevel: null,
-        changeMajorType: null
+        changeMajorType: null,
+        enrollmentYear: null
       },
       // 表单参数
       form: {},
@@ -498,7 +529,8 @@ export default {
         policyStatus: null,
         studentSex: null,
         gradeLevel: null,
-        changeMajorType: null
+        changeMajorType: null,
+        enrollmentYear: null
       };
       this.resetForm("form");
     },
@@ -925,6 +957,16 @@ export default {
   font-size: 14px;
   color: #606266;
   font-weight: 500;
+}
+
+.enrollment-year-tag {
+  font-weight: 600;
+  padding: 0 10px;
+  height: 26px;
+  line-height: 26px;
+  font-size: 13px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(103, 194, 58, 0.2);
 }
 
 .class-tag {

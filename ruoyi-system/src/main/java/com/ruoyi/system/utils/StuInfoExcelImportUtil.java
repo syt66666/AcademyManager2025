@@ -89,7 +89,7 @@ public class StuInfoExcelImportUtil {
             byte[] excelData = org.apache.commons.io.IOUtils.toByteArray(inputStream);
             
             // 尝试不同的表头位置（0-10行）
-            for (int headerRow = 0; headerRow <= 10; headerRow++) {
+            for (int headerRow = 0; headerRow <= 15; headerRow++) {
                 try {
                     // 重新创建输入流
                     InputStream newStream = new java.io.ByteArrayInputStream(excelData);

@@ -23,6 +23,10 @@ public class StuInfo extends BaseEntity
     @Excel(name = "学生姓名")
     private String studentName;
 
+    /** 入学年份 */
+    @Excel(name = "入学年份")
+    private String enrollmentYear;
+
     /** 所属书院 */
     @Excel(name = "所属书院")
     private String academy;
