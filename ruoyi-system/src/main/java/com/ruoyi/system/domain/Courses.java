@@ -72,7 +72,7 @@ public class Courses extends BaseEntity
 
     /** 课程学分 */
     @Excel(name = "课程学分")
-    private Long courseCredit;
+    private Double courseCredit;
 
     /** 课程分类 */
     @Excel(name = "课程分类")
@@ -210,12 +210,12 @@ public class Courses extends BaseEntity
     {
         return status;
     }
-    public void setCourseCredit(Long courseCredit) 
+    public void setCourseCredit(Double courseCredit) 
     {
         this.courseCredit = courseCredit;
     }
 
-    public Long getCourseCredit() 
+    public Double getCourseCredit() 
     {
         return courseCredit;
     }
