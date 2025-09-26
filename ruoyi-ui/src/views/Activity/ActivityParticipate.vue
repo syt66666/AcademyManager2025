@@ -737,10 +737,6 @@ export default {
           downloading: false
         });
       }
-      console.log('初始化文件列表完成:', {
-        imageFiles: this.imageFiles,
-        docFiles: this.docFiles
-      });
     },
 
     // 修复图片上传成功处理
@@ -790,8 +786,6 @@ export default {
 
 // 处理图片预览
     handlePicturePreview(file) {
-      console.log('=== 开始预览图片 ===');
-      console.log('预览图片:', file);
 
       // 构建预览图片数组，包含URL和文件名
       this.previewImages = this.imageFiles
@@ -804,7 +798,6 @@ export default {
           name: f.name || this.extractFileNameFromUrl(this.getPreviewImageUrl(f))
         }));
 
-      console.log('预览图片数组:', this.previewImages);
 
       if (this.previewImages.length === 0) {
         this.$message.warning('没有可预览的图片');
@@ -818,16 +811,9 @@ export default {
       this.currentPreviewIndex = currentIndex >= 0 ? currentIndex : 0;
       this.updatePreviewImage();
 
-      console.log('设置预览状态:', {
-        previewVisible: this.previewVisible,
-        currentPreviewIndex: this.currentPreviewIndex,
-        currentPreviewImage: this.currentPreviewImage,
-        currentPreviewName: this.currentPreviewName
-      });
 
       this.previewVisible = true;
       
-      console.log('预览对话框应该已显示');
     },
 
     // 更新当前预览图片
@@ -982,7 +968,6 @@ export default {
           this.initFileLists(data);
         }
       } catch (error) {
-        console.error("获取材料信息失败:", error);
         this.$message.error("获取材料信息失败");
       }
     },
@@ -1126,7 +1111,6 @@ export default {
         // 更新统计数据
         this.updateStatistics();
       }).catch(error => {
-        console.error('获取统计数据失败:', error);
         this.allActivitiesList = [];
       });
     },
@@ -1340,33 +1324,24 @@ export default {
         window.location.hostname !== '127.0.0.1' &&
         !window.location.hostname.includes('192.168.');
 
-      console.log('环境检测:', {
-        hostname: window.location.hostname,
-        isProduction: isProduction,
-        hasToken: !!token
-      });
 
       if (isProduction && token) {
         // 生产环境：使用文件访问接口
         try {
           const filePath = url.replace(process.env.VUE_APP_BASE_API, '');
           const accessUrl = `${process.env.VUE_APP_BASE_API}/file/access?path=${encodeURIComponent(filePath)}&token=${token}#toolbar=0&navpanes=0&scrollbar=0`;
-          console.log('使用文件访问接口:', accessUrl);
           return accessUrl;
         } catch (error) {
-          console.warn('文件访问接口构建失败，回退到原始方式:', error);
         }
       }
 
       // 本地开发环境或回退方案：使用原始URL
       const fallbackUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
-      console.log('使用原始URL:', fallbackUrl);
       return fallbackUrl;
     },
 
     // 处理PDF预览错误
     handlePdfError(event) {
-      console.error('PDF预览错误:', event);
       this.pdfError = 'PDF文件加载失败，请检查文件是否存在或网络连接';
     },
 
@@ -1389,7 +1364,6 @@ export default {
         iframeDoc.addEventListener('contextmenu', e => e.preventDefault());
         iframeDoc.body.style.userSelect = 'none';
       } catch (error) {
-        console.log('安全策略限制，部分交互禁用失败');
       }
     },
 
@@ -1461,7 +1435,6 @@ export default {
           throw new Error('无法获取文件下载地址');
         }
 
-        console.log('开始下载文件:', { downloadUrl, fileName });
 
         // 方法1: 使用fetch API下载
         try {
@@ -1487,7 +1460,6 @@ export default {
           this.$message.success('文件下载成功');
           return;
         } catch (fetchError) {
-          console.log('Fetch下载失败，尝试备用方法:', fetchError);
         }
 
         // 方法2: 直接创建链接下载（备用）
@@ -1505,7 +1477,6 @@ export default {
         this.$message.info('文件下载已开始');
 
       } catch (error) {
-        console.error('文件下载失败:', error);
         this.$message.error(`下载失败: ${error.message || '请稍后重试'}`);
 
         // 最终备用方案：在新窗口打开
@@ -1545,7 +1516,6 @@ export default {
           throw new Error('无法获取文件路径');
         }
 
-        console.log('下载文件:', { filePath, fileName, file });
 
         // 使用API下载文件
         const response = await downloadFile(filePath, fileName);
@@ -1556,7 +1526,6 @@ export default {
           throw new Error(response.msg || '下载失败');
         }
       } catch (error) {
-        console.error('文件下载失败:', error);
         this.$message.error('文件下载失败: ' + (error.message || '请稍后重试'));
 
         // 降级方案：尝试直接下载
@@ -1591,7 +1560,6 @@ export default {
           this.$message.info('正在尝试下载文件...');
         }
       } catch (fallbackError) {
-        console.error('降级下载也失败了:', fallbackError);
       }
     },
 
@@ -1617,7 +1585,6 @@ export default {
         });
 
       } catch (error) {
-        console.error('图片下载失败:', error);
         this.$message.error('图片下载失败');
       } finally {
         this.currentPreviewDownloading = false;

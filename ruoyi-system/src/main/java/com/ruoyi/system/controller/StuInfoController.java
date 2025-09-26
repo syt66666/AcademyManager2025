@@ -19,6 +19,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.domain.StuInfo;
+import com.ruoyi.system.domain.dto.StuInfoExportDTO;
 import com.ruoyi.system.service.IStuInfoService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -73,6 +74,34 @@ public class StuInfoController extends BaseController
         List<StuInfo> list = stuInfoService.selectStuInfoList(stuInfo);
         ExcelUtil<StuInfo> util = new ExcelUtil<StuInfo>(StuInfo.class);
         util.exportExcel(response, list, "学生信息数据");
+    }
+
+    /**
+     * 导出学生信息列表（指定字段）
+     */
+    @Log(title = "学生信息", businessType = BusinessType.EXPORT)
+    @PostMapping("/exportSelected")
+    public void exportSelected(HttpServletResponse response, StuInfo stuInfo)
+    {
+        List<StuInfo> list = stuInfoService.selectStuInfoList(stuInfo);
+        
+        // 转换为导出DTO
+        List<StuInfoExportDTO> exportList = list.stream().map(stu -> {
+            StuInfoExportDTO dto = new StuInfoExportDTO();
+            dto.setStudentId(stu.getStudentId());
+            dto.setStudentName(stu.getStudentName());
+            dto.setEnrollmentYear(stu.getEnrollmentYear());
+            dto.setAcademy(stu.getAcademy());
+            dto.setOriginalSystemMajor(stu.getOriginalSystemMajor());
+            dto.setMajor(stu.getMajor());
+            dto.setStudentClass(stu.getStudentClass());
+            dto.setDivertForm(stu.getDivertForm());
+            dto.setInnovationClass(stu.getInnovationClass());
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+        
+        ExcelUtil<StuInfoExportDTO> util = new ExcelUtil<StuInfoExportDTO>(StuInfoExportDTO.class);
+        util.exportExcel(response, exportList, "学生信息数据");
     }
 
     /**

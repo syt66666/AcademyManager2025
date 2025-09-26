@@ -856,7 +856,6 @@ export default {
 
     /** 获取预约状态文本 */
     getBookingStatusText(status) {
-      console.log('审核状态原始值:', status, '类型:', typeof status);
       const statusMap = {
         'pending': '未提交',
         'submitted': '未审核',
@@ -951,7 +950,6 @@ export default {
           this.$message.info("当前活动暂无学生预约");
         }
       } catch (e) {
-        console.error("获取学生预约活动数据失败", e);
         // 添加错误提示
         this.$message.error("获取学生预约活动数据失败，请稍后再试");
       } finally {
@@ -989,15 +987,12 @@ export default {
     /** 查询活动列表 */
     getList() {
       this.loading = true;
-      console.log("开始获取活动列表，queryParams:", this.queryParams);
       getNickName().then(nickName => {
         this.queryParams.organizer = nickName.msg; // 更新组织者
-        console.log("获取到组织者名称:", nickName.msg);
         // 🔽 确保在 organizer 更新后调用列表接口
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
         listActivities(allDataParams).then(response => {
-          console.log("获取活动列表成功:", response);
           let allActivities = response.rows;
           
           // 如果有活动状态筛选条件，进行前端筛选
@@ -1022,17 +1017,14 @@ export default {
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
         }).catch(error => {
-          console.error("获取活动列表失败:", error);
           this.loading = false;
           this.$message.error("获取活动列表失败");
         });
       }).catch(error => {
-        console.error("获取组织者名称失败:", error);
         // 即使获取组织者名称失败，也尝试获取活动列表
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
         listActivities(allDataParams).then(response => {
-          console.log("获取活动列表成功（无组织者）:", response);
           let allActivities = response.rows;
           
           // 如果有活动状态筛选条件，进行前端筛选
@@ -1057,7 +1049,6 @@ export default {
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
         }).catch(listError => {
-          console.error("获取活动列表失败:", listError);
           this.loading = false;
           this.$message.error("获取活动列表失败");
         });
@@ -1167,7 +1158,6 @@ export default {
 
         // 可添加额外处理
       } catch (error) {
-        console.error('获取活动详情失败:', error);
         this.$message.error('获取活动详情失败');
       } finally {
         this.loading = false;
@@ -1219,7 +1209,6 @@ export default {
         this.open = false;
         await this.getList();
       } catch (error) {
-        console.error("表单提交失败:", error);
         if (error.message && error.message.includes("活动名称和组织单位组合已存在")) {
           this.$message.error("活动名称和组织单位组合已存在，不能重复添加！");
         } else {
@@ -1314,15 +1303,10 @@ export default {
 
     /** 图片上传成功回调 */
     handleImageSuccess(response, file) {
-      console.log('📤 [ActivityManager] 图片上传响应:', response);
-      console.log('📁 [ActivityManager] 文件信息:', file);
       
       if (response.code === 200 && response.url) {
         // 提取相对路径部分（如：/profile/upload/...）
         const relativePath = response.fileName || response.url.replace(/^https?:\/\/[^\/]+/, '');
-        console.log('✅ [ActivityManager] 上传成功，设置图片相对路径:', relativePath);
-        console.log('🔍 [ActivityManager] 原始URL:', response.url);
-        console.log('🔍 [ActivityManager] 提取的相对路径:', relativePath);
         
         // 使用Vue.set确保响应式更新，存储相对路径
         this.$set(this.form, 'pictureUrl', relativePath);
@@ -1332,70 +1316,37 @@ export default {
         this.$forceUpdate();
         
         // 测试URL处理
-        console.log('🧪 [ActivityManager] 测试URL处理结果:', this.getActivityImageUrl(relativePath));
       } else {
-        console.log('❌ [ActivityManager] 上传失败:', response.msg);
         this.$message.error(response.msg || '图片上传失败');
       }
     },
 
     /** 图片上传失败回调 */
     handleImageError(error) {
-      console.error('图片上传失败:', error);
       this.$message.error('图片上传失败，请重试');
     },
 
     /** 图片加载成功处理 */
     handleImageLoadSuccess(event) {
-      console.log('✅ [ActivityManager] 图片加载成功:', {
-        src: event.target.src,
-        naturalWidth: event.target.naturalWidth,
-        naturalHeight: event.target.naturalHeight,
-        complete: event.target.complete
-      });
     },
 
     /** 图片开始加载处理 */
     handleImageLoadStart(event) {
-      console.log('🔄 [ActivityManager] 图片开始加载:', {
-        src: event.target.src
-      });
     },
 
     /** 图片加载中断处理 */
     handleImageAbort(event) {
-      console.log('⏹️ [ActivityManager] 图片加载中断:', {
-        src: event.target.src
-      });
     },
 
     /** 图片加载错误处理 */
     handleImageLoadError(event) {
-      console.error('❌ [ActivityManager] 图片加载失败详情:', {
-        event: event,
-        target: event.target,
-        src: event.target?.src,
-        error: event.target?.error,
-        naturalWidth: event.target?.naturalWidth,
-        naturalHeight: event.target?.naturalHeight,
-        complete: event.target?.complete,
-        readyState: event.target?.readyState
-      });
       
       // 尝试获取更多错误信息
       const img = event.target;
       if (img) {
-        console.error('❌ [ActivityManager] 图片元素状态:', {
-          src: img.src,
-          currentSrc: img.currentSrc,
-          error: img.error,
-          networkState: img.networkState,
-          readyState: img.readyState
-        });
         
         // 检查是否是网络问题
         if (img.error) {
-          console.error('❌ [ActivityManager] 图片错误代码:', img.error.code);
         }
       }
       
@@ -1407,25 +1358,12 @@ export default {
 
     /** 测试图片URL是否可访问 */
     testImageUrl(url) {
-      console.log('🧪 [ActivityManager] 测试图片URL可访问性:', url);
       
       // 创建一个新的图片元素来测试
       const testImg = new Image();
       testImg.onload = () => {
-        console.log('✅ [ActivityManager] 图片URL测试成功 - 图片可以正常加载');
       };
       testImg.onerror = (error) => {
-        console.error('❌ [ActivityManager] 图片URL测试失败:', {
-          url: url,
-          error: error,
-          possibleCauses: [
-            '1. 网络连接问题',
-            '2. 服务器无法访问',
-            '3. CORS跨域问题',
-            '4. 图片文件不存在',
-            '5. 服务器配置问题'
-          ]
-        });
         
         // 尝试使用fetch测试
         this.testImageWithFetch(url);
@@ -1436,25 +1374,12 @@ export default {
     /** 使用fetch测试图片URL */
     async testImageWithFetch(url) {
       try {
-        console.log('🌐 [ActivityManager] 使用fetch测试图片URL:', url);
         const response = await fetch(url, { method: 'HEAD' });
-        console.log('📡 [ActivityManager] fetch响应状态:', {
-          status: response.status,
-          statusText: response.statusText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
         
         if (response.ok) {
-          console.log('✅ [ActivityManager] 图片URL通过fetch测试 - 服务器响应正常');
         } else {
-          console.error('❌ [ActivityManager] 图片URL通过fetch测试失败 - 服务器返回错误状态');
         }
       } catch (error) {
-        console.error('❌ [ActivityManager] fetch测试异常:', {
-          error: error,
-          message: error.message,
-          name: error.name
-        });
       }
     },
 
@@ -1486,37 +1411,23 @@ export default {
 
     /** 获取活动图片完整URL */
     getActivityImageUrl(pictureUrl) {
-      console.log('🔍 [ActivityManager] 处理图片URL:', {
-        originalUrl: pictureUrl,
-        baseAPI: process.env.VUE_APP_BASE_API,
-        isCompleteUrl: pictureUrl && (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')),
-        isProfilePath: pictureUrl && pictureUrl.startsWith('/profile/')
-      });
       
       if (!pictureUrl) {
-        console.log('❌ [ActivityManager] 图片URL为空');
         return '';
       }
       
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('✅ [ActivityManager] 使用完整URL:', pictureUrl);
         return pictureUrl;
       }
       
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        console.log('🔗 [ActivityManager] 拼接相对路径:', {
-          baseAPI: process.env.VUE_APP_BASE_API,
-          relativePath: pictureUrl,
-          result: fullUrl
-        });
         return fullUrl;
       }
       
       // 其他情况直接返回
-      console.log('⚠️ [ActivityManager] 未知URL格式，直接返回:', pictureUrl);
       return pictureUrl;
     },
 
@@ -1526,7 +1437,6 @@ export default {
       
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('🔧 [ActivityManager] 尝试使用原始URL（不编码）:', pictureUrl);
         return pictureUrl;
       }
       
@@ -1555,13 +1465,8 @@ export default {
           }).join('/');
           
           const encodedUrl = `${url.protocol}//${url.host}${encodedPath}`;
-          console.log('🔧 [ActivityManager] 尝试编码URL:', {
-            original: pictureUrl,
-            encoded: encodedUrl
-          });
           return encodedUrl;
         } catch (error) {
-          console.error('❌ [ActivityManager] URL解析失败:', error);
           return pictureUrl;
         }
       }
@@ -1581,18 +1486,12 @@ export default {
       
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
-        console.log('🧠 [ActivityManager] 智能URL处理 - 使用完整URL:', pictureUrl);
         return pictureUrl;
       }
       
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
-        console.log('🧠 [ActivityManager] 智能URL处理 - 拼接相对路径:', {
-          baseAPI: process.env.VUE_APP_BASE_API,
-          relativePath: pictureUrl,
-          result: fullUrl
-        });
         return fullUrl;
       }
       

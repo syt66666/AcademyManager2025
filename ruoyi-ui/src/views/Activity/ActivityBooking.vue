@@ -409,44 +409,6 @@ export default {
     // 初始加载取消限制信息
     await this.loadCancelLimitInfo();
 
-    // 调试API响应格式
-    await this.testApiResponseFormat();
-  },
-  // 测试API响应格式
-  async testApiResponseFormat() {
-    try {
-      console.log('测试checkCancelLimit API...');
-      const checkResponse = await checkCancelLimit(this.$store.state.user.name);
-      console.log('checkCancelLimit响应格式:', {
-        hasCode: checkResponse.code !== undefined,
-        code: checkResponse.code,
-        hasCancelCount: checkResponse.cancelCount !== undefined,
-        cancelCount: checkResponse.cancelCount,
-        hasCanCancel: checkResponse.canCancel !== undefined,
-        canCancel: checkResponse.canCancel,
-        hasMaxCancelCount: checkResponse.maxCancelCount !== undefined,
-        maxCancelCount: checkResponse.maxCancelCount,
-        fullResponse: checkResponse
-      });
-
-      console.log('测试getCancelCount API...');
-      const countResponse = await getCancelCount(this.$store.state.user.name);
-      console.log('getCancelCount响应格式:', {
-        hasCode: countResponse.code !== undefined,
-        code: countResponse.code,
-        hasData: countResponse.data !== undefined,
-        data: countResponse.data,
-        fullResponse: countResponse
-      });
-
-      return {
-        checkResponse,
-        countResponse
-      };
-    } catch (error) {
-      console.error('API测试失败:', error);
-      throw error;
-    }
   },
   async mounted() {
     // 检查报名状态
@@ -460,7 +422,6 @@ export default {
     async loadCancelLimitInfo() {
       try {
         const response = await getCancelCount(this.$store.state.user.name);
-        console.log('获取取消次数响应:', response);
 
         // 检查响应数据结构
         if (response && response.code === 200) {
@@ -468,17 +429,13 @@ export default {
           if (response.data !== undefined) {
             const cancelCount = response.data;
             this.remainingCancels = Math.max(0, 3 - cancelCount);
-            console.log(`更新取消限制信息: 已取消${cancelCount}次，剩余${this.remainingCancels}次`);
           } else {
-            console.warn('获取取消次数响应缺少data字段:', response);
             this.remainingCancels = 3;
           }
         } else {
-          console.warn('获取取消次数响应格式异常:', response);
           this.remainingCancels = 3;
         }
       } catch (error) {
-        console.error('加载取消限制信息失败:', error);
         this.remainingCancels = 3;
       }
     },
@@ -487,21 +444,17 @@ export default {
     async getCurrentStudentInfo() {
       try {
         const response = await getStudent(this.$store.state.user.name);
-        console.log('学生信息API响应:', response);
 
         if (response && response.studentInfo) {
           this.currentAcademy = response.studentInfo.academy;
-          console.log('当前学生书院:', this.currentAcademy);
           // 获取学生信息后，根据书院获取活动
           this.getList();
         } else {
-          console.error('获取学生信息失败，响应中没有studentInfo:', response);
           this.currentAcademy = '未知';
           // 即使获取失败，也尝试获取活动
           this.getList();
         }
       } catch (error) {
-        console.error('获取学生信息异常:', error);
         this.currentAcademy = '未知';
         // 即使获取失败，也尝试获取活动
         this.getList();
@@ -572,7 +525,6 @@ export default {
 
       const filteredActivities = activities.filter(activity => {
         if (!activity.startTime) {
-          console.log('活动缺少开始时间:', activity.activityName);
           return false;
         }
 
@@ -600,15 +552,6 @@ export default {
 
         const isAvailable = isSignUpActive && hasCapacity;
 
-        if (isAvailable) {
-          console.log('可报名活动:', {
-            name: activity.activityName,
-            status: status,
-            capacity: `${activity.activityTotalCapacity - activity.activityCapacity}/${activity.activityTotalCapacity}`,
-            remaining: activity.activityCapacity
-          });
-        }
-
         return isAvailable;
       });
       return availableActivities;
@@ -635,7 +578,6 @@ export default {
           // 使用 Vue.set 确保响应式更新
           this.$set(activity, 'isBooked', res.data.isBooked);
         }).catch(error => {
-          console.error('检查报名状态失败:', error);
           this.$set(activity, 'isBooked', false);
         })
       );
@@ -727,14 +669,6 @@ export default {
       }
       return '';
     },
-// 调试方法
-    debugCancelStatus() {
-      console.log('当前取消状态:', {
-        remainingCancels: this.remainingCancels,
-        exceedCancelLimit: this.exceedCancelLimit,
-        selectedActivity: this.selectedActivity
-      });
-    },
     // 获取容量样式
     getCapacityClass(activity) {
       const percentage = (activity.activityTotalCapacity - activity.activityCapacity) / activity.activityTotalCapacity;
@@ -763,17 +697,6 @@ export default {
 
       return `${currentMonthText}`;
     },
-    safeDebugCancelStatus() {
-      try {
-        if (typeof this.debugCancelStatus === 'function') {
-          this.debugCancelStatus();
-        } else {
-          console.warn('debugCancelStatus方法未定义');
-        }
-      } catch (error) {
-        console.error('调试方法调用失败:', error);
-      }
-    },
 // 修复：处理详情
     async handleDetail(row) {
       this.selectedActivity = { ...row };
@@ -781,10 +704,6 @@ export default {
 
       // 加载最新的取消限制信息
       await this.loadCancelLimitInfo();
-
-
-      // 调试当前状态
-      this.debugCancelStatus();
     },
 
     // 处理详情弹窗关闭
@@ -806,40 +725,6 @@ export default {
     //     this.$message.info('已取消报名');
     //   });
     // },
-// 添加调试方法
-    async debugCancelRecordInsertion(studentId, activityId) {
-      try {
-        console.log('调试取消记录插入...');
-
-        // 1. 检查当前取消次数
-        const currentCount = await getCancelCount(studentId);
-        console.log('当前取消次数:', currentCount);
-
-        // 2. 尝试插入取消记录
-        const cancelData = {
-          studentId: studentId,
-          activityId: activityId,
-          cancelTime: new Date().toISOString()
-        };
-        console.log('取消记录数据:', cancelData);
-
-        const result = await recordCancel(cancelData);
-        console.log('插入结果:', result);
-
-        // 3. 再次检查取消次数
-        const newCount = await getCancelCount(studentId);
-        console.log('插入后取消次数:', newCount);
-
-        return {
-          before: currentCount,
-          result: result,
-          after: newCount
-        };
-      } catch (error) {
-        console.error('调试取消记录插入失败:', error);
-        throw error;
-      }
-    },
     // 修复：处理取消报名
     async handleCancel(row) {
       try {
@@ -863,7 +748,6 @@ export default {
     async checkCancelLimit() {
       try {
         const response = await checkCancelLimit(this.$store.state.user.name);
-        console.log('检查取消限制响应:', response);
 
         // 检查响应数据结构
         if (response && response.code === 200) {
@@ -871,15 +755,12 @@ export default {
           if (response.cancelCount !== undefined && response.canCancel !== undefined) {
             return response.canCancel;
           } else {
-            console.warn('检查取消限制响应缺少必要字段:', response);
             return true; // 默认允许取消
           }
         } else {
-          console.warn('检查取消限制响应格式异常:', response);
           return true; // 默认允许取消
         }
       } catch (error) {
-        console.error('检查取消限制失败:', error);
         return true; // 默认允许取消，避免影响正常流程
       }
     },
@@ -904,7 +785,6 @@ export default {
           this.$message.info('已取消报名');
         });
       } catch (error) {
-        console.error('检查报名限制失败:', error);
         this.$message.error('检查报名限制失败，请稍后重试');
       }
     },
@@ -918,7 +798,6 @@ export default {
 
       try {
         const response = await getCancelCount(this.$store.state.user.name);
-        console.log('获取取消次数响应(报名检查):', response);
 
         // 检查响应数据结构
         if (response && response.code === 200) {
@@ -927,15 +806,12 @@ export default {
             const cancelCount = response.data;
             return cancelCount < 3; // 取消次数小于3次才允许报名
           } else {
-            console.warn('获取取消次数响应缺少data字段:', response);
             return true; // 默认允许报名
           }
         } else {
-          console.warn('获取取消次数响应格式异常:', response);
           return true; // 默认允许报名
         }
       } catch (error) {
-        console.error('检查取消限制失败:', error);
         return true; // 默认允许报名，避免影响正常流程
       }
     },
@@ -965,7 +841,6 @@ export default {
         if (index !== -1) {
           // 使用 Vue.set 确保响应式更新
           this.$set(this.activitiesList, index, updatedActivity);
-          console.log(`活动 ${activity.activityName} 报名状态已更新为已报名`);
         }
 
         this.$message.success("报名成功！");
@@ -977,7 +852,6 @@ export default {
         // 重新检查报名状态以确保数据同步
         await this.checkBookingStatus();
       } catch (error) {
-        console.error("报名失败:", error);
         this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
       }
     },
@@ -985,70 +859,51 @@ export default {
     // 修复：提交取消报名
     async submitCancelSignUp(activity) {
       try {
-        console.log('开始取消报名流程，活动ID:', activity.activityId);
-
         // 1. 先检查报名记录是否存在
-        console.log('检查报名记录是否存在...');
         let bookingExists = false;
         try {
           const bookingStatus = await checkBookingSimple(activity.activityId, this.$store.state.user.name);
-          console.log('报名状态检查结果:', bookingStatus);
           bookingExists = bookingStatus.data.isBooked;
         } catch (checkError) {
-          console.error('检查报名状态失败:', checkError);
           // 如果检查失败，假设记录不存在
           bookingExists = false;
         }
 
         // 2. 如果报名记录存在，则删除
         if (bookingExists) {
-          console.log('报名记录存在，执行删除...');
           try {
             const deleteResult = await deleteBookingsByActivityAndStudent(
               activity.activityId,
               this.$store.state.user.name
             );
-            console.log('删除报名记录结果:', deleteResult);
 
             // 检查删除是否成功
             if (!deleteResult || deleteResult.code !== 200) {
-              console.warn('删除报名记录返回非成功状态:', deleteResult);
               // 不抛出异常，继续执行，但记录警告
             }
           } catch (deleteError) {
-            console.error('删除报名记录异常:', deleteError);
             // 如果删除失败，尝试继续执行，但记录警告
-            console.warn('删除报名记录失败，但继续执行取消流程');
           }
-        } else {
-          console.log('报名记录不存在，跳过删除步骤');
         }
 
         // 3. 恢复活动容量
-        console.log('恢复活动容量...');
         try {
           const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
-          console.log('恢复容量结果:', capacityResult);
 
           // 检查容量恢复是否成功
           if (!capacityResult || capacityResult.code !== 200) {
-            console.warn('恢复活动容量返回非成功状态:', capacityResult);
             // 不抛出异常，继续执行，但记录警告
           }
         } catch (capacityError) {
-          console.error('恢复活动容量异常:', capacityError);
           // 如果容量恢复失败，尝试继续执行，但记录警告
-          console.warn('恢复活动容量失败，但继续执行取消流程');
         }
 
         // 4. 记录取消信息到数据库 - 添加重试机制
-        console.log('记录取消信息...');
         const cancelData = {
           studentId: this.$store.state.user.name,
           activityId: activity.activityId,
           cancelTime: new Date().toISOString()
         };
-        console.log('取消记录数据:', cancelData);
 
         // 添加重试机制
         let cancelResult = null;
@@ -1059,23 +914,18 @@ export default {
         while (!cancelSuccess && retryCount < maxRetries) {
           try {
             retryCount++;
-            console.log(`发送recordCancel请求，第${retryCount}次尝试...`);
             cancelResult = await recordCancel(cancelData);
-            console.log(`recordCancel响应，第${retryCount}次尝试:`, cancelResult);
 
             // 检查取消记录是否成功保存
             if (cancelResult && cancelResult.code === 200) {
               cancelSuccess = true;
-              console.log('取消记录成功保存到数据库');
             } else {
-              console.warn(`取消记录保存失败，第${retryCount}次尝试，响应:`, cancelResult);
               if (retryCount < maxRetries) {
                 // 等待一段时间后重试
                 await new Promise(resolve => setTimeout(resolve, 1000));
               }
             }
           } catch (recordError) {
-            console.error(`记录取消信息异常，第${retryCount}次尝试:`, recordError);
             if (retryCount < maxRetries) {
               // 等待一段时间后重试
               await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1089,17 +939,13 @@ export default {
         }
 
         // 5. 立即查询数据库验证取消记录
-        console.log('验证取消记录是否保存...');
         const verifyResponse = await getCancelCount(this.$store.state.user.name);
-        console.log('验证取消次数响应:', verifyResponse);
 
         if (verifyResponse && verifyResponse.code === 200) {
           const actualCancelCount = verifyResponse.data;
-          console.log(`实际取消次数: ${actualCancelCount}`);
 
           // 如果实际取消次数没有增加，说明有问题
           if (actualCancelCount === 0) {
-            console.warn('警告：取消记录可能没有正确保存到数据库');
             // 不抛出异常，继续执行，但记录警告
           }
         }
@@ -1119,9 +965,7 @@ export default {
         }
 
         // 8. 重新加载取消限制信息，而不是直接更新
-        console.log('重新加载取消限制信息...');
         await this.loadCancelLimitInfo();
-        console.log(`重新加载后剩余取消次数: ${this.remainingCancels}`);
 
         if (this.remainingCancels > 0) {
           this.$message.success(`取消报名成功！本月还可取消 ${this.remainingCancels} 次`);
@@ -1134,14 +978,10 @@ export default {
         await this.checkBookingStatus();
 
       } catch (error) {
-        console.error("取消报名失败:", error);
-
         // 更详细的错误信息
         if (error.response) {
-          console.error('错误响应:', error.response);
           this.$message.error(`取消报名失败: ${error.response.data?.msg || error.response.statusText}`);
         } else if (error.request) {
-          console.error('请求错误:', error.request);
           this.$message.error("取消报名失败: 网络连接错误");
         } else {
           this.$message.error("取消报名失败: " + (error.message || "请稍后重试"));
@@ -1155,7 +995,6 @@ export default {
         try {
           return await operation();
         } catch (error) {
-          console.warn(`操作失败，第${i + 1}次重试:`, error);
           if (i === maxRetries - 1) {
             throw error;
           }

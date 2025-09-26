@@ -769,17 +769,14 @@ export default {
     // 获取活动列表
     getList() {
       this.loading = true;
-      console.log("开始获取审核列表，queryParams:", this.queryParams);
 
       // 封装获取审核列表的逻辑
       const fetchAuditList = (params) => {
         listBookingsAudit(params).then(response => {
-          console.log("获取审核列表成功:", response);
           this.activityList = response.rows;
           this.total = response.total;
           this.updateAvailableActivityTypes();
         }).catch(error => {
-          console.error("获取审核列表失败:", error);
           this.$message.error("获取审核列表失败");
         }).finally(() => {
           this.loading = false;
@@ -789,13 +786,11 @@ export default {
       // 先获取组织者名称，作为默认筛选条件
       getNickName() 
         .then(nickName => {
-          console.log("获取到组织者名称:", nickName.msg);
           // 合并查询参数与组织者信息
           const params = { ...this.queryParams, organizer: nickName.msg };
           fetchAuditList(params);
         })
         .catch(error => {
-          console.error("获取组织者名称失败:", error);
           // 失败时使用原始查询参数
           fetchAuditList(this.queryParams);
         });
@@ -811,7 +806,7 @@ export default {
           this.auditStats = data;
         }
       } catch (error) {
-        console.error("获取统计数据失败:", error);
+        // 静默处理错误
       }
     },
 
@@ -913,7 +908,6 @@ export default {
               timeout: 30000
             });
           } catch (authError) {
-            console.warn('带认证头请求失败，尝试匿名访问:', authError.message);
             // 方式2：匿名访问（如果服务器配置了permitAll）
             response = await axios.get(this.currentDocument.url, {
               responseType: 'arraybuffer',
@@ -928,18 +922,17 @@ export default {
           this.docxContent = result.html;
         }
         this.docPreviewVisible = true;
-      } catch (error) {
-        console.error('文档预览失败:', error);
-        if (error.response && error.response.status === 401) {
-          this.$message.error('文档访问权限不足，请重新登录后重试');
-        } else if (error.response && error.response.status === 403) {
-          this.$message.error('文档访问被拒绝，请联系管理员');
-        } else if (error.code === 'ECONNABORTED') {
-          this.$message.error('文档加载超时，请检查网络连接');
-        } else {
-          this.$message.error(`预览失败: ${error.message || '未知错误'}`);
-        }
-      } finally {
+        } catch (error) {
+          if (error.response && error.response.status === 401) {
+            this.$message.error('文档访问权限不足，请重新登录后重试');
+          } else if (error.response && error.response.status === 403) {
+            this.$message.error('文档访问被拒绝，请联系管理员');
+          } else if (error.code === 'ECONNABORTED') {
+            this.$message.error('文档加载超时，请检查网络连接');
+          } else {
+            this.$message.error(`预览失败: ${error.message || '未知错误'}`);
+          }
+        } finally {
         loading.close();
       }
     },
@@ -974,7 +967,6 @@ export default {
         const result = await mammoth.convertToHtml({arrayBuffer});
         return {html: result.value};
       } catch (error) {
-        console.error('DOCX解析失败:', error);
         return {html: '<p>文档解析失败，请下载后查看</p>'};
       }
     },
@@ -1017,7 +1009,7 @@ export default {
           this.$message.success('文件下载成功');
           return;
         } catch (fetchError) {
-          console.log('Fetch下载失败，尝试备用方法:', fetchError);
+          // Fetch下载失败，尝试备用方法
         }
         
         // 方法2: 直接创建链接下载（备用）
@@ -1035,7 +1027,6 @@ export default {
         this.$message.info('文件下载已开始');
         
       } catch (error) {
-        console.error('文件下载失败:', error);
         this.$message.error(`下载失败: ${error.message || '请稍后重试'}`);
         
         // 最终备用方案：在新窗口打开
@@ -1052,33 +1043,24 @@ export default {
                           window.location.hostname !== '127.0.0.1' &&
                           !window.location.hostname.includes('192.168.');
       
-      console.log('环境检测:', {
-        hostname: window.location.hostname,
-        isProduction: isProduction,
-        hasToken: !!token
-      });
-      
       if (isProduction && token) {
         // 生产环境：使用文件访问接口
         try {
           const filePath = url.replace(process.env.VUE_APP_BASE_API, '');
           const accessUrl = `${process.env.VUE_APP_BASE_API}/file/access?path=${encodeURIComponent(filePath)}&token=${token}#toolbar=0&navpanes=0&scrollbar=0`;
-          console.log('使用文件访问接口:', accessUrl);
           return accessUrl;
         } catch (error) {
-          console.warn('文件访问接口构建失败，回退到原始方式:', error);
+          // 文件访问接口构建失败，回退到原始方式
         }
       }
       
       // 本地开发环境或回退方案：使用原始URL
       const fallbackUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
-      console.log('使用原始URL:', fallbackUrl);
       return fallbackUrl;
     },
 
     // 处理PDF预览错误
     handlePdfError(event) {
-      console.error('PDF预览错误:', event);
       this.pdfError = 'PDF文件加载失败，请检查文件是否存在或网络连接';
     },
 
@@ -1101,7 +1083,7 @@ export default {
         iframeDoc.addEventListener('contextmenu', e => e.preventDefault());
         iframeDoc.body.style.userSelect = 'none';
       } catch (error) {
-        console.log('安全策略限制，部分交互禁用失败');
+        // 安全策略限制，部分交互禁用失败
       }
     },
 

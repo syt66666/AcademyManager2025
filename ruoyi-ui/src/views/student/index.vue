@@ -39,14 +39,19 @@
             />
           </el-form-item>
           <el-form-item label="入学年份" prop="enrollmentYear">
-            <el-input
+            <el-select
               v-model="queryParams.enrollmentYear"
-              placeholder="请输入入学年份"
+              placeholder="请选择入学年份"
               clearable
-              prefix-icon="el-icon-date"
               class="search-input"
-              @keyup.enter.native="handleQuery"
-            />
+              @change="handleQuery">
+              <el-option
+                v-for="year in enrollmentYearOptions"
+                :key="year"
+                :label="year"
+                :value="year">
+              </el-option>
+            </el-select>
           </el-form-item>
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
@@ -148,6 +153,11 @@
         <el-table-column label="所属学域" align="center" prop="originalSystemMajor" min-width="200">
           <template slot-scope="scope">
             <div class="major-info">{{ scope.row.originalSystemMajor }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="录取专业" align="center" prop="major" min-width="180">
+          <template slot-scope="scope">
+            <div class="major-info">{{ scope.row.major }}</div>
           </template>
         </el-table-column>
         <el-table-column label="行政班" align="center" prop="studentClass" min-width="120">
@@ -398,6 +408,8 @@ export default {
       total: 0,
       // 学生信息表格数据
       infoList: [],
+      // 入学年份选项
+      enrollmentYearOptions: [],
       // 弹出层标题
       title: "",
       // 是否显示弹出层
@@ -467,25 +479,82 @@ export default {
   created() {
     this.getNickName();
   },
+  mounted() {
+    // 页面加载完成后，再次尝试获取入学年份选项
+    this.$nextTick(() => {
+      setTimeout(() => {
+        if (this.enrollmentYearOptions.length === 0) {
+          this.getEnrollmentYearOptions();
+        }
+      }, 1000);
+    });
+  },
   methods: {
     /** 获取组织者名称并查询学生信息列表 */
     getNickName() {
       getNickName()
         .then(nickName => {
-          console.log("获取到组织者名称:", nickName.msg);
           // 合并查询参数与组织者信息
           const params = { ...this.queryParams, academy: nickName.msg };
-          console.log("查询参数:", params);
           this.currentFilterParams = params; // 保存筛选参数
           this.getList(params);
+          // 获取入学年份选项
+          this.getEnrollmentYearOptions();
         })
         .catch(error => {
-          console.error("获取组织者名称失败:", error);
           // 失败时使用原始查询参数
-          console.log("使用原始查询参数:", this.queryParams);
           this.currentFilterParams = this.queryParams;
           this.getList(this.queryParams);
+          // 获取入学年份选项
+          this.getEnrollmentYearOptions();
         });
+    },
+    /** 获取入学年份选项 */
+    getEnrollmentYearOptions() {
+      // 获取所有学生数据来提取入学年份
+      const params = { pageNum: 1, pageSize: 10000 }; // 获取大量数据
+      
+      // 如果有当前筛选参数，使用它；否则等待获取书院信息
+      if (this.currentFilterParams && this.currentFilterParams.academy) {
+        params.academy = this.currentFilterParams.academy;
+      } else {
+        return;
+      }
+      
+      listStudent(params).then(response => {
+        if (response.rows && response.rows.length > 0) {
+          // 提取所有入学年份并去重
+          const years = response.rows
+            .map(student => student.enrollmentYear)
+            .filter(year => year && year.trim() !== '')
+            .map(year => year.trim())
+            .filter((year, index, arr) => arr.indexOf(year) === index) // 去重
+            .sort((a, b) => b.localeCompare(a)); // 按年份降序排列
+          
+          this.enrollmentYearOptions = years;
+        }
+      }).catch(error => {
+        // 静默处理错误
+      });
+    },
+    /** 从当前学生列表更新入学年份选项 */
+    updateEnrollmentYearOptionsFromCurrentList() {
+      if (this.infoList && this.infoList.length > 0) {
+        // 从当前学生列表中提取入学年份并去重
+        const years = this.infoList
+          .map(student => student.enrollmentYear)
+          .filter(year => year && year.trim() !== '')
+          .map(year => year.trim())
+          .filter((year, index, arr) => arr.indexOf(year) === index) // 去重
+          .sort((a, b) => b.localeCompare(a)); // 按年份降序排列
+        
+        // 合并到现有选项中，避免重复
+        const existingYears = this.enrollmentYearOptions || [];
+        const allYears = [...new Set([...existingYears, ...years])]
+          .sort((a, b) => b.localeCompare(a));
+        
+        this.enrollmentYearOptions = allYears;
+      }
     },
     /** 查询学生信息列表 */
     getList(params = null) {
@@ -501,8 +570,10 @@ export default {
         this.infoList = response.rows;
         this.total = response.total;
         this.loading = false;
+        
+        // 从当前学生列表中提取入学年份选项
+        this.updateEnrollmentYearOptionsFromCurrentList();
       }).catch(error => {
-        console.error("查询学生信息失败:", error);
         this.loading = false;
         this.$modal.msgError("查询学生信息失败，请检查网络连接或联系管理员");
       });
@@ -615,7 +686,7 @@ export default {
     },
     /** 导出按钮操作 */
     handleExport() {
-      this.download('system/student/export', {
+      this.download('system/student/exportSelected', {
         ...this.queryParams
       }, `student_${new Date().getTime()}.xlsx`)
     },
