@@ -1,46 +1,90 @@
 <template>
-
   <div class="app-container">
+    <!-- 搜索区域 -->
     <div class="search-card">
-      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-        <div class="card-header">
-          <i class="el-icon-search"></i>
-          <span>搜索条件</span>
+      <div class="card-header">
+        <i class="el-icon-search"></i>
+        <span>搜索条件</span>
+      </div>
+      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
+        <div class="search-row">
+          <el-form-item label="课程名称" prop="courseName">
+            <el-input
+              v-model="queryParams.courseName"
+              placeholder="请输入课程名称"
+              clearable
+              prefix-icon="el-icon-search"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="课程状态" prop="status">
+            <el-select v-model="queryParams.status" clearable placeholder="请选择课程状态" class="search-input" @change="handleQuery">
+              <el-option
+                v-for="status in courseStatusOptions"
+                :key="status.value"
+                :label="status.label"
+                :value="status.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="课程类型" prop="courseType">
+            <el-select v-model="queryParams.courseType" clearable placeholder="请选择课程类型" class="search-input" @change="handleQuery">
+              <el-option
+                v-for="type in courseTypeOptions"
+                :key="type.value"
+                :label="type.label"
+                :value="type.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item class="search-actions">
+            <el-button-group class="action-buttons">
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleQuery"
+                class="search-button"
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetQuery"
+                class="refresh-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
         </div>
-        <el-form-item label="课程名称" prop="courseName">
-          <el-input
-            v-model="queryParams.courseName"
-            placeholder="请输入课程名称"
-            clearable
-            @keyup.enter.native="handleQuery"
-          />
-        </el-form-item>
-        <el-form-item label="课程状态" prop="status">
-          <el-select v-model="queryParams.status" clearable placeholder="请选择课程状态" class="search-input" @change="handleQuery">
-            <el-option
-              v-for="status in courseStatusOptions"
-              :key="status.value"
-              :label="status.label"
-              :value="status.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="课程类型" prop="courseType">
-          <el-select v-model="queryParams.courseType" clearable placeholder="请选择课程类型" class="search-input" @change="handleQuery">
-            <el-option
-              v-for="type in courseTypeOptions"
-              :key="type.value"
-              :label="type.label"
-              :value="type.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-          <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-        </el-form-item>
       </el-form>
     </div>
+    <!-- 按钮区域 -->
+    <div class="button-bar">
+      <el-button-group>
+        <el-button
+          type="primary"
+          plain
+          icon="el-icon-plus"
+          size="mini"
+          @click="handleAdd"
+        >新增</el-button>
+        <el-button
+          type="danger"
+          plain
+          icon="el-icon-delete"
+          size="mini"
+          :disabled="multiple"
+          @click="handleDelete"
+        >删除</el-button>
+        <el-button
+          type="warning"
+          plain
+          icon="el-icon-download"
+          size="mini"
+          @click="handleExport"
+        >导出</el-button>
+      </el-button-group>
+      <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+    </div>
+
     <!-- 表格卡片 -->
     <div class="table-card">
       <div class="card-header">
@@ -49,30 +93,9 @@
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
 
-      <el-row :gutter="10" class="mb8">
-        <el-col :span="1.5">
-          <el-button
-            type="primary"
-            plain
-            icon="el-icon-plus"
-            size="mini"
-            @click="handleAdd"
-          >新增</el-button>
-        </el-col>
-        <el-col :span="1.5">
-          <el-button
-            type="warning"
-            plain
-            icon="el-icon-download"
-            size="mini"
-            @click="handleExport"
-          >导出</el-button>
-        </el-col>
-        <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-      </el-row>
-
-      <el-table v-loading="loading" :data="coursesList" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center" />
+      <!-- 表格美化 -->
+      <el-table v-loading="loading" :data="coursesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
+        <el-table-column type="selection" width="45" align="center"/>
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
           <span class="index-badge">
@@ -80,9 +103,9 @@
           </span>
           </template>
         </el-table-column>
-        <el-table-column label="课程名称" align="center" prop="courseName">
+        <el-table-column label="课程名称" align="center" prop="courseName" width="180">
           <template slot-scope="scope">
-            <span class="course-name">{{ scope.row.courseName }}</span>
+            <div class="course-name">{{ scope.row.courseName }}</div>
           </template>
         </el-table-column>
         <el-table-column label="课程类型" align="center" prop="courseType" width="200">
@@ -109,94 +132,91 @@
             <span class="location-text">{{ scope.row.courseLocation || '未设置' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="时间安排" align="center" width="400">
+        <el-table-column label="时间安排" align="center" min-width="320">
           <template slot-scope="scope">
-            <div class="time-schedule">
-              <div class="time-item">
-                <i class="el-icon-user time-icon registration"></i>
-                <div class="time-content">
-                  <span class="time-label">报名时间：</span>
-                  <span class="time-range">
-                    {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
-                  </span>
-                </div>
+            <div class="time-schedule-inline">
+              <!-- 选课时间 -->
+              <div class="time-inline-item signup-time">
+                <i class="el-icon-user"></i>
+                <span class="time-inline-label">选课时间</span>
+                <span class="time-inline-content">
+                  {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
               </div>
-              <div class="time-item">
-                <i class="el-icon-date time-icon activity"></i>
-                <div class="time-content">
-                  <span class="time-label">课程时间：</span>
-                  <span class="time-range">
-                    {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
-                  </span>
-                </div>
+
+              <!-- 课程时间 -->
+              <div class="time-inline-item activity-time">
+                <i class="el-icon-date"></i>
+                <span class="time-inline-label">课程时间</span>
+                <span class="time-inline-content">
+                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
               </div>
             </div>
           </template>
         </el-table-column>
         <!-- 课程状态列 -->
-        <el-table-column label="课程状态" align="center" prop="status" width="100">
+        <el-table-column label="课程状态" align="center" width="100">
           <template slot-scope="scope">
-            <!-- 1. 绑定标签内容：显示当前课程的状态文本（scope.row.status） -->
-            <!-- 2. 绑定标签类型：通过计算属性将业务状态映射为el-tag支持的类型 -->
-            <el-tag
-              :type="getStatusTagType(scope.row.status)"
-              effect="dark"
-              class="status-tag"
-            >
-              {{ scope.row.status }} <!-- 关键：渲染状态文本 -->
+            <el-tag :type="getStatusTagType(scope.row.status)" effect="dark" class="status-tag">
+              {{ scope.row.status }}
             </el-tag>
           </template>
         </el-table-column>
-        <!-- 报名人数列：放在“课程状态”列之后 -->
-        <el-table-column label="报名人数" align="center" width="160"> <!-- 宽度调整为160px，适配进度条 -->
+
+        <el-table-column label="报名人数" align="center" width="100">
           <template #default="scope">
-            <!-- 容器：垂直排列进度条和人数文本 -->
             <div class="participants">
-              <!-- 进度条：展示报名占比 -->
               <el-progress
                 :percentage="calculateCapacityPercentage(scope.row)"
                 :color="getProgressColor(calculateCapacityPercentage(scope.row))"
                 :show-text="false"
-                :stroke-width="8"
+                :stroke-width="10"
                 class="progress-bar"
-              ></el-progress>
-              <!-- 人数文本：显示“已报名/总容量” -->
+              />
               <div class="count">
-        <span :class="getCapacityClass(scope.row)">
-          {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}/{{ scope.row.courseTotalCapacity }}
-        </span>
+                <span :class="getCapacityClass(scope.row)">
+                  {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}/{{ scope.row.courseTotalCapacity }}
+                </span>
               </div>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+        <el-table-column label="操作" width="150">
           <template slot-scope="scope">
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-edit"
-              @click="handleUpdate(scope.row)"
-            >修改</el-button>
-            <el-button
-              size="mini"
-              type="text"
-              icon="el-icon-delete"
-              @click="handleDelete(scope.row)"
-            >删除</el-button>
+            <div class="action-buttons">
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleUpdate(scope.row)"
+                class="action-button edit-button">
+                修改
+              </el-button>
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleDelete(scope.row)"
+                class="action-button delete-button">
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
 
+      <!-- 分页组件 -->
       <pagination
         v-show="total>0"
         :total="total"
         :page.sync="queryParams.pageNum"
         :limit.sync="queryParams.pageSize"
         @pagination="getList"
+        class="custom-pagination"
       />
+    </div>
 
-      <!-- 添加或修改课程对话框 -->
-      <el-dialog
+    <!-- 添加或修改课程对话框 -->
+    <el-dialog
         :title="title"
         :visible.sync="open"
         width="700px"
@@ -797,43 +817,589 @@ export default {
 };
 </script>
 <style scoped>
-/* 扩展卡片 */
-.expand-card {
-  background: #f9fafc;
-  border-radius: 8px;
-  padding: 15px;
-  margin: 5px;
-  border-left: 3px solid #409EFF;
-}
-
-.expand-row {
-  display: flex;
-  margin-bottom: 12px;
-}
-
-.expand-label {
-  font-weight: 600;
-  min-width: 100px;
-  color: #409EFF;
-  display: flex;
-  align-items: center;
-}
-
-.expand-label i {
-  margin-right: 8px;
-}
-
-.expand-content {
-  flex: 1;
-  color: #606266;
-  line-height: 1.6;
-}
 /* 整体布局 */
 .app-container {
   margin-left: 100px;
   padding: 20px;
   background: #f5f7fa;
   min-height: 100vh;
+}
+
+/* 统一卡片样式 */
+.search-card,
+.table-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+}
+
+.search-card:hover,
+.table-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
+}
+
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
+
+/* 搜索表单 */
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+.search-input {
+  min-width: 220px;
+  transition: all 0.3s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+}
+
+.search-actions {
+  margin-left: auto;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* 按钮样式 */
+.search-button {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+}
+
+.refresh-button {
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  color: #606266;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-button:hover {
+  background: #e4e7ed;
+  color: #333;
+  transform: translateY(-2px);
+}
+
+/* 按钮区域 */
+.button-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0 5px;
+}
+
+.el-button-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* 现代化表格 */
+.modern-table {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e4e7ed;
+}
+
+.modern-table th {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.modern-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
+}
+
+.modern-table tr:hover td {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+}
+
+.index-badge {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+.course-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.status-tag {
+  font-weight: 600;
+  padding: 0 10px;
+  height: 28px;
+  line-height: 28px;
+}
+
+.course-type-tag {
+  font-weight: 500;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 内联时间安排样式 */
+.time-schedule-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.time-inline-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  &.signup-time {
+    i {
+      color: #409EFF;
+      margin-right: 4px;
+    }
+    .time-inline-label {
+      color: #409EFF;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+  }
+
+  &.activity-time {
+    i {
+      color: #67C23A;
+      margin-right: 4px;
+    }
+    .time-inline-label {
+      color: #67C23A;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+  }
+
+  i {
+    font-size: 14px;
+  }
+
+  .time-inline-label {
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .time-inline-content {
+    color: #606266;
+    font-weight: 500;
+  }
+}
+
+/* 报名人数容器：垂直排列，居中对齐 */
+.participants {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px; /* 进度条和文本的间距 */
+  padding: 2px 0;
+}
+
+/* 进度条：控制宽度，适配表格列 */
+.progress-bar {
+  width: 100%;
+  margin: 2px 0;
+}
+
+/* 人数文本：统一字体大小和权重 */
+.count {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 报名率颜色类（和进度条颜色对应） */
+.capacity-low {
+  color: #67C23A; /* 绿色 */
+}
+.capacity-medium {
+  color: #E6A23C; /* 橙色 */
+}
+.capacity-high {
+  color: #F56C6C; /* 红色 */
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.edit-button { 
+  background: #f4f4f5; 
+  border-color: #d3d4d6; 
+  color: #909399; 
+}
+
+.delete-button { 
+  background: #fef0f0; 
+  border-color: #fde2e2; 
+  color: #f56c6c; 
+}
+
+/* 分页样式 */
+.custom-pagination {
+  display: flex;
+  justify-content: center !important;
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.custom-pagination /deep/ .el-pager li:hover {
+  border-color: #409EFF;
+  color: #409EFF;
+}
+
+/* 课程表单对话框美化样式 */
+.course-form-dialog {
+  .el-dialog {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+
+  .el-dialog__header {
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+
+  .el-dialog__footer {
+    padding: 0;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+  }
+}
+
+/* 对话框头部 */
+.dialog-header {
+  padding: 24px 32px;
+  color: white;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+
+      i {
+        font-size: 24px;
+        color: white;
+      }
+    }
+
+    .header-text {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+}
+
+/* 对话框主体 */
+.dialog-body {
+  padding: 32px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* 课程表单 */
+.course-form {
+  .form-section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e4e7ed;
+    overflow: hidden;
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid #e4e7ed;
+
+      i {
+        font-size: 16px;
+        color: #409EFF;
+        margin-right: 8px;
+      }
+
+      span {
+        font-size: 16px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+
+    .section-content {
+      padding: 24px;
+    }
+  }
+}
+
+/* 表单输入框样式 */
+.form-input {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+.form-select {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+/* 表单提示样式 */
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(64, 158, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #409EFF;
+
+  i {
+    margin-right: 6px;
+    color: #409EFF;
+    font-size: 14px;
+  }
+}
+
+/* 对话框底部 */
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 32px;
+  background: #f8f9fa;
+  border-top: 1px solid #e4e7ed;
+
+  .footer-left {
+    .form-status {
+      display: flex;
+      align-items: center;
+      color: #409EFF;
+      font-size: 14px;
+
+      i {
+        margin-right: 8px;
+        animation: rotating 2s linear infinite;
+      }
+    }
+  }
+
+  .footer-right {
+    display: flex;
+    gap: 12px;
+
+    .cancel-btn {
+      background: #f5f7fa;
+      border: 1px solid #dcdfe6;
+      color: #606266;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #ecf5ff;
+        border-color: #b3d8ff;
+        color: #409EFF;
+      }
+
+      i {
+        margin-right: 6px;
+      }
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #409EFF 0%, #64b5ff 100%);
+      border: none;
+      color: white;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        background: linear-gradient(135deg, #3a8ee6 0%, #5a9fd8 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+      }
+
+      i {
+        margin-right: 6px;
+      }
+    }
+  }
+}
+
+/* 旋转动画 */
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .course-form-dialog {
+    .el-dialog {
+      width: 95% !important;
+      margin: 0 auto;
+    }
+  }
+
+  .dialog-body {
+    padding: 20px;
+  }
+
+  .dialog-footer {
+    flex-direction: column;
+    gap: 16px;
+
+    .footer-right {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 
 /* 报名人数容器：垂直排列，居中对齐 */
