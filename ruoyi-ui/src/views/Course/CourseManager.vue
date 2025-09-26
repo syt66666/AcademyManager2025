@@ -75,7 +75,7 @@
             <span class="course-name">{{ scope.row.courseName }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="活动类型" align="center" prop="courseType" width="200">
+        <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
               {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
@@ -92,8 +92,8 @@
             <span>{{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}</span>
           </template>
         </el-table-column>
-        <!-- 活动状态列 -->
-        <el-table-column label="活动状态" align="center" prop="status" width="100">
+        <!-- 课程状态列 -->
+        <el-table-column label="课程状态" align="center" prop="status" width="100">
           <template slot-scope="scope">
             <!-- 1. 绑定标签内容：显示当前课程的状态文本（scope.row.status） -->
             <!-- 2. 绑定标签类型：通过计算属性将业务状态映射为el-tag支持的类型 -->
@@ -106,7 +106,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <!-- 报名人数列：放在“活动状态”列之后 -->
+        <!-- 报名人数列：放在“课程状态”列之后 -->
         <el-table-column label="报名人数" align="center" width="160"> <!-- 宽度调整为160px，适配进度条 -->
           <template #default="scope">
             <!-- 容器：垂直排列进度条和人数文本 -->
@@ -424,7 +424,7 @@ export default {
       }
     },
 
-    // 活动类型映射函数：将数字转换为对应的类型名称
+    // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(coursetype) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
@@ -1295,7 +1295,7 @@ export default {
 
 
 
-/* 活动表单对话框美化样式 */
+/* 课程表单对话框美化样式 */
 .course-form-dialog {
   .el-dialog {
     border-radius: 16px;
@@ -1371,7 +1371,7 @@ export default {
   overflow-y: auto;
 }
 
-/* 活动表单 */
+/* 课程表单 */
 .course-form {
   .form-section {
     background: white;
@@ -1734,7 +1734,7 @@ export default {
   }
 }
 
-/* 活动图片展示 */
+/*课程图片展示 */
 .course-image-container {
   display: flex;
   justify-content: center;
