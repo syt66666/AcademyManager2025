@@ -82,6 +82,16 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="学分" align="center" prop="courseCredit" width="80">
+          <template slot-scope="scope">
+            <span class="credit-text">{{ scope.row.courseCredit || '0' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="课程地点" align="center" prop="courseLocation" width="150">
+          <template slot-scope="scope">
+            <span class="location-text">{{ scope.row.courseLocation || '未设置' }}</span>
+          </template>
+        </el-table-column>
         <el-table-column label="选课开始时间" align="center" prop="courseStart" width="200">
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }}</span>
@@ -1803,6 +1813,23 @@ export default {
   max-height: 70vh;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 学分和地点列样式 */
+.credit-text {
+  font-weight: 600;
+  color: #409EFF;
+  font-size: 14px;
+}
+
+.location-text {
+  color: #606266;
+  font-size: 13px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 /* 响应式调整 */
