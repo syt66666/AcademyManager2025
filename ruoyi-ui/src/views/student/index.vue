@@ -1,39 +1,65 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="学生学号" prop="studentId">
-        <el-input
-          v-model="queryParams.studentId"
-          placeholder="请输入学生学号"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="学生姓名" prop="studentName">
-        <el-input
-          v-model="queryParams.studentName"
-          placeholder="请输入学生姓名"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="行政班" prop="studentClass">
-        <el-input
-          v-model="queryParams.studentClass"
-          placeholder="请输入行政班"
-          clearable
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+    <!-- 搜索区域 -->
+    <div class="search-card">
+      <div class="card-header">
+        <i class="el-icon-search"></i>
+        <span>搜索条件</span>
+      </div>
+      <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
+        <div class="search-row">
+          <el-form-item label="学生学号" prop="studentId">
+            <el-input
+              v-model="queryParams.studentId"
+              placeholder="请输入学生学号"
+              clearable
+              prefix-icon="el-icon-user"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="学生姓名" prop="studentName">
+            <el-input
+              v-model="queryParams.studentName"
+              placeholder="请输入学生姓名"
+              clearable
+              prefix-icon="el-icon-user-solid"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="行政班" prop="studentClass">
+            <el-input
+              v-model="queryParams.studentClass"
+              placeholder="请输入行政班"
+              clearable
+              prefix-icon="el-icon-school"
+              class="search-input"
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item class="search-actions">
+            <el-button-group class="action-buttons">
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleQuery"
+                class="search-button"
+              >搜索</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetQuery"
+                class="refresh-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
+        </div>
+      </el-form>
+    </div>
 
-      <el-form-item>
-        <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-        <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
+    <!-- 按钮区域 -->
+    <div class="button-bar">
+      <el-button-group>
         <el-button
           type="primary"
           plain
@@ -41,9 +67,6 @@
           size="mini"
           @click="handleAdd"
         >新增</el-button>
-      </el-col>
-
-      <el-col :span="1.5">
         <el-button
           type="danger"
           plain
@@ -52,8 +75,6 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
-      </el-col>
-      <el-col :span="1.5">
         <el-button
           type="success"
           plain
@@ -61,8 +82,6 @@
           size="mini"
           @click="handleImport"
         >导入</el-button>
-      </el-col>
-      <el-col :span="1.5">
         <el-button
           type="warning"
           plain
@@ -70,87 +89,231 @@
           size="mini"
           @click="handleExport"
         >导出</el-button>
-      </el-col>
+      </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-    </el-row>
+    </div>
 
-    <el-table v-loading="loading" :data="infoList" @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="序号" width="60" align="center">
-        <template slot-scope="scope">
-          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-        </template>
-      </el-table-column>
-      <el-table-column label="学生学号" align="center" prop="studentId" />
-      <el-table-column label="学生姓名" align="center" prop="studentName" />
-      <el-table-column label="所属书院" align="center" prop="academy" />
-      <el-table-column label="所属学域" align="center" prop="originalSystemMajor" />
-      <el-table-column label="行政班" align="center" prop="studentClass" />
-      <el-table-column label="分流形式" align="center" prop="divertForm" />
-      <el-table-column label="是否创新班或拔尖班" align="center" prop="innovationClass">
-        <template slot-scope="scope">
-          {{ scope.row.innovationClass === 1 ? '是' : scope.row.innovationClass === 0 ? '否' : '' }}
-        </template>
-      </el-table-column>
+    <!-- 表格卡片 -->
+    <div class="table-card">
+      <div class="card-header">
+        <i class="el-icon-s-grid"></i>
+        <span>学生列表</span>
+        <span class="record-count">共 {{ total }} 条记录</span>
+      </div>
 
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template slot-scope="scope">
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-edit"
-            @click="handleUpdate(scope.row)"
-          >修改信息</el-button>
-          <el-button
-            size="mini"
-            type="text"
-            icon="el-icon-refresh"
-            @click="handleResetPassword(scope.row)"
-          >重置密码</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="handlePagination"
-    />
+      <!-- 表格美化 -->
+      <el-table v-loading="loading" :data="infoList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
+        <el-table-column type="selection" width="45" align="center"/>
+        <el-table-column label="序号" width="80" align="center">
+          <template slot-scope="scope">
+            <span class="index-badge">
+              {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="学生学号" align="center" prop="studentId" min-width="160">
+          <template slot-scope="scope">
+            <div class="student-id-container">
+              <span class="student-id">{{ scope.row.studentId }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column label="学生姓名" align="center" prop="studentName" min-width="120">
+          <template slot-scope="scope">
+            <div class="student-name">{{ scope.row.studentName }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="所属书院" align="center" prop="academy" min-width="120">
+          <template slot-scope="scope">
+            <div class="academy-text">{{ scope.row.academy }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="所属学域" align="center" prop="originalSystemMajor" min-width="200">
+          <template slot-scope="scope">
+            <div class="major-info">{{ scope.row.originalSystemMajor }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="行政班" align="center" prop="studentClass" min-width="120">
+          <template slot-scope="scope">
+            <el-tag size="small" type="primary" effect="plain" class="class-tag">
+              {{ scope.row.studentClass }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="分流形式" align="center" prop="divertForm" min-width="180">
+          <template slot-scope="scope">
+            <div class="divert-form">{{ scope.row.divertForm }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="创新班/拔尖班" align="center" prop="innovationClass" min-width="140">
+          <template slot-scope="scope">
+            <el-tag :type="scope.row.innovationClass === 1 ? 'success' : 'info'" effect="dark" class="innovation-tag">
+              {{ scope.row.innovationClass === 1 ? '是' : scope.row.innovationClass === 0 ? '否' : '未知' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+
+        <el-table-column label="操作" align="center" min-width="180">
+          <template slot-scope="scope">
+            <div class="action-buttons">
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-edit"
+                @click="handleUpdate(scope.row)"
+                class="action-button edit-button"
+              >修改信息</el-button>
+              <el-button
+                size="mini"
+                type="text"
+                icon="el-icon-refresh"
+                @click="handleResetPassword(scope.row)"
+                class="action-button reset-button"
+              >重置密码</el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页组件 -->
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="handlePagination"
+        class="custom-pagination"
+      />
+    </div>
 
     <!-- 添加或修改学生信息对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px" append-to-body>
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="学生学号" prop="studentId">
-          <el-input v-model="form.studentId" placeholder="请输入学生学号" />
-        </el-form-item>
-        <el-form-item label="学生姓名" prop="studentName">
-          <el-input v-model="form.studentName" placeholder="请输入学生姓名" />
-        </el-form-item>
-        <el-form-item label="所属书院" prop="academy">
-          <el-input v-model="form.academy" placeholder="请输入所属书院" />
-        </el-form-item>
-        <el-form-item label="所在学域" prop="originalSystemMajor">
-          <el-input v-model="form.originalSystemMajor" placeholder="请输入所在学域" />
-        </el-form-item>
-        <el-form-item label="行政班" prop="studentClass">
-          <el-input v-model="form.studentClass" placeholder="请输入行政班" />
-        </el-form-item>
-        <el-form-item label="分流形式" prop="divertForm">
-          <el-input v-model="form.divertForm" placeholder="请输入分流形式" />
-        </el-form-item>
-        <el-form-item label="是否创新班或拔尖班" prop="innovationClass">
-          <el-select v-model="form.innovationClass" placeholder="请选择是否创新班或拔尖班" clearable>
-            <el-option label="是" :value="1"></el-option>
-            <el-option label="否" :value="0"></el-option>
-          </el-select>
-        </el-form-item>
+    <el-dialog
+      :title="title"
+      :visible.sync="open"
+      width="600px"
+      append-to-body
+      class="student-form-dialog"
+      :before-close="handleDialogClose">
 
-      </el-form>
+      <!-- 对话框头部 -->
+      <div slot="title" class="dialog-header">
+        <div class="header-content">
+          <div class="header-icon">
+            <i :class="form.id ? 'el-icon-edit' : 'el-icon-plus'"></i>
+          </div>
+          <div class="header-text">
+            <h3>{{ title }}</h3>
+            <p>{{ form.id ? '修改学生信息' : '添加新的学生' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 表单内容 -->
+      <div class="dialog-body">
+        <el-form ref="form" :model="form" :rules="rules" label-width="100px" class="student-form">
+
+          <!-- 基本信息区域 -->
+          <div class="form-section">
+            <div class="section-header">
+              <i class="el-icon-user"></i>
+              <span>基本信息</span>
+            </div>
+            <div class="section-content">
+              <el-form-item label="学生学号" prop="studentId">
+                <el-input
+                  v-model="form.studentId"
+                  placeholder="请输入学生学号"
+                  prefix-icon="el-icon-user"
+                  class="form-input">
+                </el-input>
+                <div class="form-tip">
+                  <i class="el-icon-info"></i>
+                  学生学号必须唯一
+                </div>
+              </el-form-item>
+
+              <el-form-item label="学生姓名" prop="studentName">
+                <el-input
+                  v-model="form.studentName"
+                  placeholder="请输入学生姓名"
+                  prefix-icon="el-icon-user-solid"
+                  class="form-input">
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="所属书院" prop="academy">
+                <el-input
+                  v-model="form.academy"
+                  placeholder="请输入所属书院"
+                  prefix-icon="el-icon-office-building"
+                  class="form-input">
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="所在学域" prop="originalSystemMajor">
+                <el-input
+                  v-model="form.originalSystemMajor"
+                  placeholder="请输入所在学域"
+                  prefix-icon="el-icon-school"
+                  class="form-input">
+                </el-input>
+              </el-form-item>
+            </div>
+          </div>
+
+          <!-- 班级信息区域 -->
+          <div class="form-section">
+            <div class="section-header">
+              <i class="el-icon-s-grid"></i>
+              <span>班级信息</span>
+            </div>
+            <div class="section-content">
+              <el-form-item label="行政班" prop="studentClass">
+                <el-input
+                  v-model="form.studentClass"
+                  placeholder="请输入行政班"
+                  prefix-icon="el-icon-s-grid"
+                  class="form-input">
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="分流形式" prop="divertForm">
+                <el-input
+                  v-model="form.divertForm"
+                  placeholder="请输入分流形式"
+                  prefix-icon="el-icon-connection"
+                  class="form-input">
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="创新班/拔尖班" prop="innovationClass">
+                <el-select v-model="form.innovationClass" placeholder="请选择是否创新班或拔尖班" clearable class="form-select">
+                  <el-option label="是" :value="1"></el-option>
+                  <el-option label="否" :value="0"></el-option>
+                </el-select>
+              </el-form-item>
+            </div>
+          </div>
+        </el-form>
+      </div>
+
+      <!-- 对话框底部 -->
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
+        <div class="footer-right">
+          <el-button
+            @click="cancel"
+            class="cancel-btn">
+            <i class="el-icon-close"></i>
+            取消
+          </el-button>
+          <el-button
+            type="primary"
+            @click="submitForm"
+            class="submit-btn">
+            <i :class="form.id ? 'el-icon-check' : 'el-icon-plus'"></i>
+            {{ form.id ? '保存修改' : '添加学生' }}
+          </el-button>
+        </div>
       </div>
     </el-dialog>
 
@@ -549,6 +712,22 @@ export default {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    },
+    // 获取书院标签类型
+    getAcademyTagType(academy) {
+      const academyColors = {
+        '知行书院': 'primary',
+        '明德书院': 'success',
+        '博雅书院': 'warning',
+        '至善书院': 'info',
+        '未知': ''
+      };
+      return academyColors[academy] || 'info';
+    },
+    // 对话框关闭处理
+    handleDialogClose(done) {
+      this.cancel();
+      done();
     }
   }
 };
@@ -560,5 +739,508 @@ export default {
   padding: 20px;
   background: #f5f7fa;
   min-height: 100vh;
+}
+
+/* 统一卡片样式 */
+.search-card,
+.table-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.search-card:hover,
+.table-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #f0f2f5;
+}
+
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
+
+/* 搜索表单 */
+.search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: center;
+}
+
+.search-input {
+  min-width: 220px;
+  transition: all 0.3s ease;
+}
+
+.search-input:hover {
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+}
+
+.search-actions {
+  margin-left: auto;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* 按钮样式 */
+.search-button {
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.search-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+}
+
+.refresh-button {
+  background: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  color: #606266;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.refresh-button:hover {
+  background: #e4e7ed;
+  color: #333;
+  transform: translateY(-2px);
+}
+
+/* 按钮区域 */
+.button-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0 5px;
+}
+
+.el-button-group {
+  display: flex;
+  gap: 8px;
+}
+
+/* 现代化表格 */
+.modern-table {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e4e7ed;
+  width: 100%;
+  table-layout: auto;
+}
+
+.modern-table th {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  font-weight: 600;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
+}
+
+.modern-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
+}
+
+.modern-table tr:hover td {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+}
+
+.index-badge {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+.student-id-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.student-id {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  color: #409EFF;
+  font-weight: 500;
+  text-align: center;
+}
+
+.student-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.academy-text {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.class-tag {
+  font-weight: 500;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.innovation-tag {
+  font-weight: 600;
+  padding: 0 10px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+}
+
+.major-info {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.divert-form {
+  font-size: 14px;
+  color: #606266;
+  font-weight: 500;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.edit-button { 
+  background: #f4f4f5; 
+  border-color: #d3d4d6; 
+  color: #909399; 
+}
+
+.reset-button { 
+  background: #f0f9eb; 
+  border-color: #e1f3d8; 
+  color: #67c23a; 
+}
+
+/* 分页样式 */
+.custom-pagination {
+  display: flex;
+  justify-content: center !important;
+  margin: 20px auto 0;
+  padding: 12px 0;
+  width: 100%;
+}
+
+.custom-pagination /deep/ .el-pagination {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.custom-pagination /deep/ .el-pager li:hover {
+  border-color: #409EFF;
+  color: #409EFF;
+}
+
+/* 学生表单对话框美化样式 */
+.student-form-dialog {
+  .el-dialog {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+  }
+
+  .el-dialog__header {
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .el-dialog__body {
+    padding: 0;
+    background: #f8f9fa;
+  }
+
+  .el-dialog__footer {
+    padding: 0;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+  }
+}
+
+/* 对话框头部 */
+.dialog-header {
+  padding: 24px 32px;
+  color: white;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .header-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+
+      i {
+        font-size: 24px;
+        color: white;
+      }
+    }
+
+    .header-text {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: white;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+}
+
+/* 对话框主体 */
+.dialog-body {
+  padding: 32px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* 学生表单 */
+.student-form {
+  .form-section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e4e7ed;
+    overflow: hidden;
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-bottom: 1px solid #e4e7ed;
+
+      i {
+        font-size: 16px;
+        color: #409EFF;
+        margin-right: 8px;
+      }
+
+      span {
+        font-size: 16px;
+        font-weight: 600;
+        color: #303133;
+      }
+    }
+
+    .section-content {
+      padding: 24px;
+    }
+  }
+}
+
+/* 表单输入框样式 */
+.form-input {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+.form-select {
+  .el-input__inner {
+    border-radius: 8px;
+    border: 1px solid #dcdfe6;
+    transition: all 0.3s ease;
+
+    &:focus {
+      border-color: #409EFF;
+      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
+    }
+  }
+}
+
+/* 表单提示样式 */
+.form-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(64, 158, 255, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #409EFF;
+
+  i {
+    margin-right: 6px;
+    color: #409EFF;
+    font-size: 14px;
+  }
+}
+
+/* 对话框底部 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 20px 32px;
+  background: #f8f9fa;
+  border-top: 1px solid #e4e7ed;
+
+  .footer-right {
+    display: flex;
+    gap: 12px;
+
+    .cancel-btn {
+      background: #f5f7fa;
+      border: 1px solid #dcdfe6;
+      color: #606266;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #ecf5ff;
+        border-color: #b3d8ff;
+        color: #409EFF;
+      }
+
+      i {
+        margin-right: 6px;
+      }
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #409EFF 0%, #64b5ff 100%);
+      border: none;
+      color: white;
+      border-radius: 8px;
+      padding: 10px 24px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+        background: linear-gradient(135deg, #3a8ee6 0%, #5a9fd8 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+      }
+
+      i {
+        margin-right: 6px;
+      }
+    }
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .student-form-dialog {
+    .el-dialog {
+      width: 95% !important;
+      margin: 0 auto;
+    }
+  }
+
+  .dialog-body {
+    padding: 20px;
+  }
+
+  .dialog-footer {
+    flex-direction: column;
+    gap: 16px;
+
+    .footer-right {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }
 </style>
