@@ -129,25 +129,11 @@
           </template>
         </el-table-column>
         <el-table-column label="课程名称" align="center" prop="courseName" />
-                <!-- 类型列 -->
-                <el-table-column label="课程性质" align="center" width="120">
-          <template slot-scope="scope">
-            <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
-              {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
-            </el-tag>
-          </template>
-        </el-table-column>
         <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
               {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
             </el-tag>
-          </template>
-        </el-table-column>
-                <!-- 学分列 -->
-                <el-table-column label="学分" align="center" width="80">
-          <template slot-scope="scope">
-            <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
           </template>
         </el-table-column>
         <el-table-column label="上课地点" align="center" prop="courseLocation" />
@@ -162,8 +148,6 @@
             <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
-
-
 
         <el-table-column label="材料提交" align="center" width="120">
           <template slot-scope="scope">
@@ -600,28 +584,6 @@ export default {
         '其他': ''        // 默认蓝色
       }
       return map[courseType] || 'info';
-    },
-
-    // 获取课程分类名称
-    getCourseCategoryName(courseCategory) {
-      const categoryMap = {
-        '必修': '必修',
-        '选修': '选修',
-        '实践': '实践',
-        '其他': '其他'
-      };
-      return categoryMap[courseCategory] || courseCategory;
-    },
-
-    // 获取课程分类标签颜色
-    getCourseCategoryTagType(courseCategory) {
-      const map = {
-        '必修': 'danger',    // 必修 - 红色
-        '选修': 'success',   // 选修 - 绿色
-        '实践': 'warning',   // 实践 - 橙色
-        '其他': 'info'       // 其他 - 蓝色
-      }
-      return map[courseCategory] || 'info';
     },
     // 获取文件的完整URL（用于显示）
     getFileFullUrl(fileName) {
@@ -2121,27 +2083,6 @@ export default {
   font-size: 13px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 学分显示样式 */
-.credit-value {
-  font-weight: 600;
-  color: #409EFF;
-  background: rgba(64, 158, 255, 0.1);
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 13px;
-}
-
-/* 课程分类标签样式 */
-.category-tag {
-  font-weight: 500;
-  padding: 0 12px;
-  height: 28px;
-  line-height: 28px;
-  font-size: 12px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 扩展卡片 */

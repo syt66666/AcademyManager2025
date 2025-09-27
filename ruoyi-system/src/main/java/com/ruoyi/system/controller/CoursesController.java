@@ -3,6 +3,7 @@ package com.ruoyi.system.controller;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -95,26 +96,38 @@ public class CoursesController extends BaseController
     {
         return toAjax(coursesService.deleteCoursesByCourseIds(courseIds));
     }
-
     /**
-     * 选课容量变化
+     * 报名
+     *
+     * @param params
+     * @return
      */
     @PostMapping("/signUpCapacity")
-    public AjaxResult signUpCapacity(@RequestBody Map<String, Object> params) {
-        Long courseId = Long.valueOf(params.get("courseId").toString());
-        Integer version = Integer.valueOf(params.get("version").toString());
-        int result = coursesService.decreaseCapacity(courseId, version);
+    public AjaxResult signUpCapacity(@RequestBody Map<String, Integer> params) {
+        Integer courseId = params.get("courseId");
+        Integer version = params.get("version"); // 获取请求体中的 version
+        int result = coursesService.decreaseCapacity(courseId,version);
         return result > 0 ? AjaxResult.success("选课成功") : AjaxResult.error("选课失败");
     }
 
-    /**
-     * 取消选课容量变化
-     */
     @PostMapping("/cancelSignUpCapacity")
-    public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Object> params) {
-        Long courseId = Long.valueOf(params.get("courseId").toString());
-        Integer version = Integer.valueOf(params.get("version").toString());
-        int result = coursesService.increaseCapacity(courseId, version);
+    public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Integer> params) {
+        Integer courseId = params.get("courseId");
+        Integer version = params.get("version");
+        int result = coursesService.increaseCapacity(courseId,version);
         return result > 0 ? AjaxResult.success("取消选课成功") : AjaxResult.error("取消选课失败");
+    }
+
+    /**
+     * 检查活动名称和组织单位的唯一性
+     */
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody Map<String, Object> params) {
+        String courseName = (String) params.get("courseName");
+        String organizer = (String) params.get("organizer");
+        Integer courseId = (Integer) params.get("courseId");
+
+        boolean isUnique = coursesService.checkCourseUnique(courseName, organizer, courseId);
+        return AjaxResult.success(isUnique);
     }
 }

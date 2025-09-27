@@ -1,6 +1,9 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
+
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.system.domain.Courses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.CoursesMapper;
@@ -90,30 +93,39 @@ public class CoursesServiceImpl implements ICoursesService
     {
         return coursesMapper.deleteCoursesByCourseId(courseId);
     }
-
     /**
-     * 减少课程容量
-     *
-     * @param courseId 课程ID
-     * @param version 版本号
-     * @return 结果
+     * 修改活动容量
      */
     @Override
-    public int decreaseCapacity(Long courseId, Integer version)
-    {
-        return coursesMapper.decreaseCapacity(courseId, version);
+    public int increaseCapacity(Integer courseId,Integer version) {
+        Courses course = coursesMapper.selectCoursesByCourseId((long)courseId);
+        if (course == null) {
+            throw new ServiceException("活动不存在！");
+        }
+        int result = coursesMapper.increaseCapacity(courseId, version);
+        if (result == 0) {
+            throw new ServiceException("数据出现错误，请刷新重试！");
+        }
+        return result;
     }
 
-    /**
-     * 增加课程容量
-     *
-     * @param courseId 课程ID
-     * @param version 版本号
-     * @return 结果
-     */
     @Override
-    public int increaseCapacity(Long courseId, Integer version)
-    {
-        return coursesMapper.increaseCapacity(courseId, version);
+    public int decreaseCapacity(Integer courseId,Integer version) {
+        Courses course = coursesMapper.selectCoursesByCourseId((long)courseId);
+        if (course == null) {
+            throw new ServiceException("活动不存在！");
+        }
+        int result = coursesMapper.decreaseCapacity(courseId, version);
+        if (result == 0) {
+            throw new ServiceException("数据出现错误，请刷新重试！");
+        }
+        return result;
     }
+
+    @Override
+    public boolean checkCourseUnique(String courseName, String organizer, Integer courseId) {
+        int count = coursesMapper.checkCourseUnique(courseName, organizer, courseId);
+        return count == 0;
+    }
+
 }

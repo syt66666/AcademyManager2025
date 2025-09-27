@@ -138,22 +138,33 @@
             #{courseId}
         </foreach>
     </delete>
-
-    <update id="decreaseCapacity">
-        UPDATE courses 
-        SET course_capacity = course_capacity - 1,
-            version = version + 1
-        WHERE course_id = #{courseId} 
-          AND version = #{version}
-          AND course_capacity &gt; 0
-    </update>
-
-    <update id="increaseCapacity">
-        UPDATE courses 
+    <update id="increaseCapacity" parameterType="Integer">
+        UPDATE courses
         SET course_capacity = course_capacity + 1,
-            version = version + 1
-        WHERE course_id = #{courseId} 
-          AND version = #{version}
-          AND course_capacity &lt; course_total_capacity
+            version = version +1
+        WHERE course_id = #{courseId}
+          and version = #{version}
     </update>
+
+    <update id="decreaseCapacity" parameterType="Integer">
+        UPDATE courses
+        SET course_capacity = CASE
+                                    WHEN course_capacity > 0 THEN course_capacity - 1
+                                    ELSE 0
+            END,
+            version = version +1
+        WHERE course_id = #{courseId}
+          and version = #{version}
+          AND course_capacity > 0
+    </update>
+    <!-- 检查活动名称和组织单位的唯一性 -->
+    <select id="checkCourseUnique" resultType="int">
+        SELECT COUNT(1)
+        FROM courses
+        WHERE course_name = #{courseName}
+        AND organizer = #{organizer}
+        <if test="courseId != null">
+            AND course_id != #{courseId}
+        </if>
+    </select>
 </mapper>

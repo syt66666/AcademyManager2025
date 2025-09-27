@@ -42,6 +42,35 @@ export function delCourses(courseId) {
     method: 'delete'
   })
 }
+export function signUpCapacity(courseId,version) {
+  return request({
+    url: '/system/courses/signUpCapacity',
+    method: 'post',
+    data: {
+      courseId: courseId,
+      version: version
+    }
+  })
+}
+//取消报名容量变化
+export function cancelSignUpCapacity(courseId,version) {
+  return request({
+    url: '/system/courses/cancelSignUpCapacity',
+    method: 'post',
+    data: {
+      courseId: courseId,
+      version: version
+    }
+  })
+}
+// 检查课程唯一性
+export function checkCourseUnique(params) {
+  return request({
+    url: '/system/coursees/checkUnique',
+    method: 'post',
+    data: params
+  })
+}
 
 // 获取课程预约学生列表
 export function getCourseBookings(courseId) {
@@ -59,38 +88,5 @@ export function exportCourseStudents(courseId) {
     method: 'post',
     responseType: 'blob',
     data: { courseId: courseId }
-  })
-}
-
-// 选课容量变化
-export function signUpCapacity(courseId, version) {
-  return request({
-    url: '/system/courses/signUpCapacity',
-    method: 'post',
-    data: {
-      courseId: courseId,
-      version: version
-    }
-  })
-}
-
-// 取消选课容量变化
-export function cancelSignUpCapacity(courseId, version) {
-  return request({
-    url: '/system/courses/cancelSignUpCapacity',
-    method: 'post',
-    data: {
-      courseId: courseId,
-      version: version
-    }
-  })
-}
-
-// 检查课程唯一性
-export function checkCourseUnique(params) {
-  return request({
-    url: '/system/courses/checkUnique',
-    method: 'post',
-    data: params
   })
 }
