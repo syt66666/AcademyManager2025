@@ -1,5 +1,5 @@
 <template>
-  <div class="coursebooking-container">
+  <div class="app-container">
 
     <!-- 搜索区域（保留原有功能） -->
     <div class="search-card">
@@ -19,6 +19,20 @@
               class="search-input"
               @keyup.enter.native="handleQuery"
             />
+          </el-form-item>
+          <el-form-item label="课程类型" prop="courseType">
+            <el-select
+              v-model="queryParams.courseType"
+              placeholder="请选择课程类型"
+              clearable
+              class="search-select"
+              @change="handleQuery"
+            >
+              <el-option label="人格塑造与价值引领活动类" value="1" />
+              <el-option label="知识融合与思维进阶活动类" value="2" />
+              <el-option label="能力锻造与实践创新活动类" value="3" />
+              <el-option label="社会责任与领军意识活动类" value="4" />
+            </el-select>
           </el-form-item>
           <el-form-item prop="availableOnly">
             <el-checkbox v-model="queryParams.availableOnly" @change="handleQuery">
@@ -67,7 +81,9 @@
         <!-- 序号列 -->
         <el-table-column label="序号" align="center" width="80">
           <template slot-scope="scope">
-            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+            <span class="index-badge">
+              {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+            </span>
           </template>
         </el-table-column>
         <!-- 课程名称列 -->
@@ -165,6 +181,7 @@
         :page.sync="queryParams.pageNum"
         :limit.sync="queryParams.pageSize"
         @pagination="getList"
+        class="custom-pagination"
       />
     </div>
 
@@ -238,7 +255,7 @@
             </div>
           </div>
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-collection-tag"></i> 课程分类：</div>
+            <div class="detail-label"><i class="el-icon-collection-tag"></i> 课程性质：</div>
             <div class="detail-value">
               <el-tag :type="getCourseCategoryTagType(selectedCourse.courseCategory)" effect="plain" class="category-tag">
                 {{ getCourseCategoryName(selectedCourse.courseCategory) || '未分类' }}
@@ -1024,18 +1041,13 @@ export default {
 
 <style scoped>
 /* 整体布局 */
-.coursebooking-container {
+.app-container {
   margin-left: 100px;
   padding: 20px;
   background: #f5f7fa;
   min-height: 100vh;
 }
-/* 保留原有样式，确保布局正常 */
-.coursebooking-container {
-  padding: 16px;
-  background: #f5f7fa;  /* 灰色背景作为整体容器背景 */
-  min-height: auto;
-}
+
 
 .search-card, .table-card {
   background: #fff;
@@ -1056,6 +1068,24 @@ export default {
   border-bottom: 2px solid #f0f2f5;
 }
 
+.card-header i {
+  font-size: 20px;
+  color: #409EFF;
+  margin-right: 12px;
+}
+
+.card-header span {
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.record-count {
+  margin-left: auto;
+  font-size: 14px;
+  color: #909399;
+  font-weight: 400;
+}
 
 .table-card {
   padding-bottom: 0;
@@ -1086,8 +1116,26 @@ export default {
   width: 200px;
 }
 
+.search-select {
+  width: 200px;
+}
+
 .search-actions {
-  margin-left: auto;  /* 这个让按钮组靠右对齐 */
+  margin-left: auto;
+}
+
+/* 可报名活动单选框样式 */
+.el-form-item:has(.el-checkbox) {
+  margin-bottom: 0;
+}
+
+.el-checkbox {
+  font-weight: 500;
+}
+
+.el-checkbox__label {
+  color: #409EFF;
+  font-size: 14px;
 }
 
 .action-buttons {
@@ -1370,6 +1418,20 @@ export default {
   max-height: none;
 }
 
+.index-badge {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
 .dialog-footer {
   text-align: right;
   margin-top: 16px;
@@ -1405,5 +1467,100 @@ export default {
   font-size: 12px;
   border-radius: 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 已选课课程行样式 */
+.booked-row {
+  background: linear-gradient(135deg, #f0fff4 0%, #e6fff1 100%) !important;
+  border-left: 4px solid #27ae60 !important;
+  position: relative;
+}
+
+.booked-row:hover {
+  background: linear-gradient(135deg, #e6fff1 0%, #d4f4dd 100%) !important;
+}
+
+.booked-row::before {
+  content: '✓';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background: #27ae60;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.detail-button {
+  color: #409EFF;
+}
+
+.detail-button:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.signup-button {
+  color: #67C23A;
+}
+
+.signup-button:hover {
+  background-color: rgba(103, 194, 58, 0.1);
+}
+
+.cancel-button {
+  color: #F56C6C;
+}
+
+.cancel-button:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
+.full-button {
+  color: #F56C6C;
+  cursor: not-allowed;
+}
+
+.full-button:hover {
+  background-color: rgba(245, 108, 108, 0.1);
+}
+
+.disabled-button {
+  color: #C0C4CC;
+  cursor: not-allowed;
+}
+
+.disabled-button:hover {
+  background-color: rgba(192, 196, 204, 0.1);
+}
+
+.custom-pagination {
+  margin-top: 24px;
+  text-align: center;
+  padding: 20px 0;
+  background: white;
+  border-top: 1px solid #e4e7ed;
+  border-radius: 0 0 16px 16px;
+  min-height: 60px;
+  width: 100%;
 }
 </style>
