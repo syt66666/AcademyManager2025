@@ -70,20 +70,40 @@
             {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
           </template>
         </el-table-column>
-        <!-- 课程名称列（核心修改：宽度设为150px，比默认缩小，适配短名称显示） -->
-        <el-table-column label="课程名称" align="center" prop="courseName"  show-overflow-tooltip />
-        <!-- 选课开始时间列 -->
-        <el-table-column label="选课开始时间" align="center" prop="courseStart" >
+        <!-- 课程名称列 -->
+        <el-table-column label="课程名称" align="center" prop="courseName" show-overflow-tooltip />
+        <el-table-column label="课程性质" align="center" width="120">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:00') }}</span>
+            <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
+              {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
+            </el-tag>
+          </template>
+        </el-table-column> 
+        <!-- 课程类型列 -->
+        <el-table-column label="课程类型" align="center" prop="courseType" width="200">
+          <template slot-scope="scope">
+            <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
+              {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
+            </el-tag>
           </template>
         </el-table-column>
-        <!-- 选课截止时间列 -->
-        <el-table-column label="选课截止时间" align="center" prop="courseDeadline" >
+        <!-- 上课地点列 -->
+        <el-table-column label="上课地点" align="center" prop="courseLocation" show-overflow-tooltip />
+        <!-- 组织单位列 -->
+
+        <!-- 课程开始时间列 -->
+        <el-table-column label="课程开始时间" align="center" prop="startTime" width="180">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
+        <!-- 课程结束时间列 -->
+        <el-table-column label="课程结束时间" align="center" prop="endTime" width="180">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+
         <!-- 课程状态列 -->
         <el-table-column label="课程状态" align="center" prop="status" >
           <template slot-scope="scope">
@@ -101,6 +121,8 @@
           </span>
           </template>
         </el-table-column>
+       
+
         <!-- 操作列（保留原有功能） -->
         <el-table-column label="操作" align="center" fixed="right" width="120">
           <template slot-scope="scope">
@@ -184,13 +206,18 @@
         </div>
         <el-divider></el-divider>
         <div class="detail-grid">
+          <!-- 基本信息 -->
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-location"></i> 上课地点：</div>
             <div class="detail-value">{{ selectedCourse.courseLocation }}</div>
           </div>
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-office-building"></i> 课程类型：</div>
-            <div class="detail-value">{{ getCourseTypeName(selectedCourse.courseType) }}</div>
+            <div class="detail-label"><i class="el-icon-collection-tag"></i> 课程类型：</div>
+            <div class="detail-value">
+              <el-tag :type="getCourseTypeTagType(selectedCourse.courseType)" effect="plain" class="course-type-tag">
+                {{ getCourseTypeName(selectedCourse.courseType) }}
+              </el-tag>
+            </div>
           </div>
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
@@ -205,13 +232,20 @@
             </div>
           </div>
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课开始：</div>
-            <div class="detail-value">{{ formatDateTime(selectedCourse.courseStart) }}</div>
+            <div class="detail-label"><i class="el-icon-coin"></i> 课程学分：</div>
+            <div class="detail-value">
+              <span class="credit-value">{{ selectedCourse.courseCredit || 0 }}学分</span>
+            </div>
           </div>
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课截止：</div>
-            <div class="detail-value">{{ formatDateTime(selectedCourse.courseDeadline) }}</div>
+            <div class="detail-label"><i class="el-icon-collection-tag"></i> 课程分类：</div>
+            <div class="detail-value">
+              <el-tag :type="getCourseCategoryTagType(selectedCourse.courseCategory)" effect="plain" class="category-tag">
+                {{ getCourseCategoryName(selectedCourse.courseCategory) || '未分类' }}
+              </el-tag>
+            </div>
           </div>
+          <!-- 课程时间 -->
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-time"></i> 课程开始：</div>
             <div class="detail-value">{{ formatDateTime(selectedCourse.startTime) }}</div>
@@ -219,6 +253,15 @@
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-time"></i> 课程结束：</div>
             <div class="detail-value">{{ formatDateTime(selectedCourse.endTime) }}</div>
+          </div>
+          <!-- 选课时间 -->
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.courseStart) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课截止：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.courseDeadline) }}</div>
           </div>
         </div>
         <el-divider></el-divider>
@@ -734,6 +777,40 @@ export default {
         '4': '社会责任与领军意识活动类'
       };
       return typeMap[courseType] || courseType;
+    },
+
+    // 获取课程类型标签颜色
+    getCourseTypeTagType(courseType) {
+      const map = {
+        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
+        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
+        '其他': ''        // 默认蓝色
+      }
+      return map[courseType] || 'info';
+    },
+
+    // 获取课程分类名称
+    getCourseCategoryName(courseCategory) {
+      const categoryMap = {
+        '必修': '必修',
+        '选修': '选修',
+        '实践': '实践',
+        '其他': '其他'
+      };
+      return categoryMap[courseCategory] || courseCategory;
+    },
+
+    // 获取课程分类标签颜色
+    getCourseCategoryTagType(courseCategory) {
+      const map = {
+        '必修': 'danger',    // 必修 - 红色
+        '选修': 'success',   // 选修 - 绿色
+        '实践': 'warning',   // 实践 - 橙色
+        '其他': 'info'       // 其他 - 蓝色
+      }
+      return map[courseCategory] || 'info';
     },
     // 获取选课状态标签类型
     getSignStatusTag(course) {
@@ -1296,5 +1373,37 @@ export default {
 .dialog-footer {
   text-align: right;
   margin-top: 16px;
+}
+
+/* 课程类型标签样式 */
+.course-type-tag {
+  font-weight: 500;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 学分显示样式 */
+.credit-value {
+  font-weight: 600;
+  color: #409EFF;
+  background: rgba(64, 158, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* 课程分类标签样式 */
+.category-tag {
+  font-weight: 500;
+  padding: 0 12px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 </style>
