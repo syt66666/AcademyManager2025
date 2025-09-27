@@ -191,8 +191,13 @@ public class StuInfoController extends BaseController
                 return AjaxResult.error("文件大小不能超过10MB");
             }
             
+            // 获取当前用户的书院和学域信息
+            LoginUser loginUser = getLoginUser();
+            String academy = loginUser.getUser().getNickName(); // 假设nickName存储的是书院信息
+            String domain = getDomainByAcademy(academy);
+            
             // 使用增强的Excel解析工具
-            StuInfoExcelImportUtil.ExcelImportResult importResult = excelImportUtil.importExcel(file.getInputStream());
+            StuInfoExcelImportUtil.ExcelImportResult importResult = excelImportUtil.importExcel(file.getInputStream(), academy, domain);
             
             logger.info("Excel解析结果 - 总行数: {}, 有效行数: {}, 空行数: {}", 
                 importResult.getTotalRows(), importResult.getValidRows(), importResult.getNullRows());
@@ -233,7 +238,6 @@ public class StuInfoController extends BaseController
                 logger.warn("Excel文件中发现{}行空数据", importResult.getNullRows());
             }
             
-            LoginUser loginUser = getLoginUser();
             String operName = loginUser.getUsername();
             String message = stuInfoService.importStuInfo(stuInfoList, updateSupport, operName);
             return AjaxResult.success(message);
@@ -252,6 +256,32 @@ public class StuInfoController extends BaseController
     public void importTemplate(HttpServletResponse response) throws Exception {
         // 使用增强版模板生成工具，包含数据验证和填写说明
         templateUtil.generateTemplate(response);
+    }
+    
+    /**
+     * 根据书院获取对应的学域
+     */
+    private String getDomainByAcademy(String academy) {
+        if (academy == null) return "";
+        
+        switch (academy) {
+            case "大煜书院":
+                return "物质创造学域";
+            case "伯川书院":
+                return "智能制造学域";
+            case "笃学书院":
+                return "理科强基学域";
+            case "令希书院":
+                return "智能建造学域";
+            case "厚德书院":
+                return "人文社科学域";
+            case "知行书院":
+                return "信息技术学域（一）";
+            case "求实书院":
+                return "信息技术学域（二）";
+            default:
+                return "";
+        }
     }
 }
 

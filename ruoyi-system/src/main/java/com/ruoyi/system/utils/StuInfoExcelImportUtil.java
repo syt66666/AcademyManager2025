@@ -21,14 +21,16 @@ public class StuInfoExcelImportUtil {
      * 安全地解析Excel文件
      *
      * @param inputStream Excel文件输入流
+     * @param academy 当前用户所属书院
+     * @param domain 当前用户所属学域
      * @return 解析结果
      */
-    public ExcelImportResult importExcel(InputStream inputStream) {
+    public ExcelImportResult importExcel(InputStream inputStream, String academy, String domain) {
         ExcelImportResult result = new ExcelImportResult();
         
         try {
             // 自动检测表头位置并解析Excel
-            List<StuInfo> stuInfoList = tryParseWithDifferentHeaderPositions(inputStream);
+            List<StuInfo> stuInfoList = tryParseWithDifferentHeaderPositions(inputStream, academy, domain);
             
             // 检查解析结果
             if (stuInfoList == null) {
@@ -58,6 +60,9 @@ public class StuInfoExcelImportUtil {
                     String studentName = stuInfo.getStudentName() != null ? stuInfo.getStudentName().trim() : "";
                     
                     if (!isSampleData(studentId, studentName)) {
+                        // 自动设置所属书院和系统内专业
+                        stuInfo.setAcademy(academy);
+                        stuInfo.setOriginalSystemMajor(domain);
                         validList.add(stuInfo);
                     }
                 }
@@ -81,7 +86,7 @@ public class StuInfoExcelImportUtil {
     /**
      * 自动检测表头位置并解析Excel
      */
-    private List<StuInfo> tryParseWithDifferentHeaderPositions(InputStream inputStream) {
+    private List<StuInfo> tryParseWithDifferentHeaderPositions(InputStream inputStream, String academy, String domain) {
         List<StuInfo> result = null;
         
         try {
@@ -108,7 +113,9 @@ public class StuInfoExcelImportUtil {
                                 
                                 // 过滤掉测试数据
                                 if (!isSampleData(studentId, studentName)) {
-                                    // 过滤掉测试数据
+                                    // 自动设置所属书院和系统内专业
+                                    info.setAcademy(academy);
+                                    info.setOriginalSystemMajor(domain);
                                     validData.add(info);
                                 }
                             }

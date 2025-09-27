@@ -43,11 +43,11 @@ public class StuInfoExcelTemplateUtil {
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue("学生信息导入模板 - 填写说明");
         titleCell.setCellStyle(headerStyle);
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 8));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 6));
         
         // 创建说明行
         createInstructionRows(sheet, rowNum, instructionStyle);
-        rowNum += 9; // 跳过说明行（9行说明）
+        rowNum += 8; // 跳过说明行（8行说明）
         
         // 创建表头
         createHeaders(sheet, rowNum, headerStyle);
@@ -78,12 +78,10 @@ public class StuInfoExcelTemplateUtil {
         sheet.setColumnWidth(0, 15 * 256);  // 学生学号
         sheet.setColumnWidth(1, 12 * 256);  // 学生姓名
         sheet.setColumnWidth(2, 12 * 256);  // 入学年份
-        sheet.setColumnWidth(3, 15 * 256);  // 所属书院
-        sheet.setColumnWidth(4, 25 * 256);  // 系统内专业
-        sheet.setColumnWidth(5, 20 * 256);  // 录取专业
-        sheet.setColumnWidth(6, 20 * 256);  // 行政班
-        sheet.setColumnWidth(7, 30 * 256);  // 分流形式
-        sheet.setColumnWidth(8, 20 * 256);  // 是否创新班或拔尖班
+        sheet.setColumnWidth(3, 20 * 256);  // 录取专业
+        sheet.setColumnWidth(4, 20 * 256);  // 行政班
+        sheet.setColumnWidth(5, 30 * 256);  // 分流形式
+        sheet.setColumnWidth(6, 20 * 256);  // 是否创新班或拔尖班
     }
     
     /**
@@ -140,15 +138,14 @@ public class StuInfoExcelTemplateUtil {
     private void createInstructionRows(Sheet sheet, int startRow, CellStyle style) {
         String[] instructions = {
             "填写说明：",
-            "1. 以下字段为必填项，不能为空：学生学号、学生姓名、入学年份、所属书院、系统内专业、录取专业、行政班、分流形式、是否创新班或拔尖班",
+            "1. 以下字段为必填项，不能为空：学生学号、学生姓名、入学年份、录取专业、行政班、分流形式、是否创新班或拔尖班",
             "2. 学生学号：11位数字，如：20250000001",
             "3. 入学年份：4位数字，如：2025",
-            "4. 所属书院：请从下拉列表选择（大煜书院、伯川书院、笃学书院、令希书院、厚德书院、知行书院、求实书院）",
-            "5. 系统内专业：请从下拉列表选择（物质创造学域、智能制造学域、理科强基学域、智能建造学域、人文社科学域、信息技术学域（一）、信息技术学域（二））",
-            "6. 录取专业：必填，如：计算机科学与技术、软件工程、电子信息工程等",
-            "7. 分流形式：请从下拉列表选择（不可变更专业、仅可转专业、可类内任选，并转专业、可类内任选，不可转专业、可域内任选，并转专业）",
-            "8. 是否创新班或拔尖班：输入 是 或 否",
-            "9. 行政班：必填，格式：书院名+年级+班级，如：求实2501班、大煜2502班"
+            "4. 录取专业：必填，如：计算机科学与技术、软件工程、电子信息工程等",
+            "5. 分流形式：请从下拉列表选择（不可变更专业、仅可转专业、可类内任选，并转专业、可类内任选，不可转专业、可域内任选，并转专业）",
+            "6. 是否创新班或拔尖班：输入 是 或 否",
+            "7. 行政班：必填，格式：书院名+年级+班级，如：求实2501班、大煜2502班",
+            "8. 注意：所属书院和系统内专业将根据当前用户自动设置，无需填写"
         };
         
         for (int i = 0; i < instructions.length; i++) {
@@ -156,7 +153,7 @@ public class StuInfoExcelTemplateUtil {
             Cell cell = row.createCell(0);
             cell.setCellValue(instructions[i]);
             cell.setCellStyle(style);
-            sheet.addMergedRegion(new CellRangeAddress(startRow + i, startRow + i, 0, 8));
+            sheet.addMergedRegion(new CellRangeAddress(startRow + i, startRow + i, 0, 6));
         }
     }
     
@@ -169,8 +166,8 @@ public class StuInfoExcelTemplateUtil {
         
         Row headerRow = sheet.createRow(rowNum);
         String[] headers = {
-            "学生学号", "学生姓名", "入学年份", "所属书院", "系统内专业", 
-            "录取专业", "行政班", "分流形式", "是否创新班或拔尖班"
+            "学生学号", "学生姓名", "入学年份", "录取专业", 
+            "行政班", "分流形式", "是否创新班或拔尖班"
         };
         
         for (int i = 0; i < headers.length; i++) {
@@ -198,8 +195,8 @@ public class StuInfoExcelTemplateUtil {
     private void createSampleData(Sheet sheet, int rowNum, CellStyle style) {
         Row dataRow = sheet.createRow(rowNum);
         String[] sampleData = {
-            "20250000001", "张三", "2025", "大煜书院", "物质创造学域", 
-            "计算机科学与技术", "大煜2501班", "不可变更专业", "否"
+            "20250000001", "张三", "2025", "计算机科学与技术", 
+            "求实2501班", "不可变更专业", "否"
         };
         
         for (int i = 0; i < sampleData.length; i++) {
@@ -215,21 +212,13 @@ public class StuInfoExcelTemplateUtil {
     private void addDataValidation(Sheet sheet, int startRow) {
         DataValidationHelper validationHelper = sheet.getDataValidationHelper();
         
-        // 所属书院下拉列表
-        List<String> academyList = Arrays.asList("大煜书院", "伯川书院", "笃学书院", "令希书院", "厚德书院", "知行书院", "求实书院");
-        addDropdownValidation(sheet, validationHelper, 3, startRow, 1000, academyList);
-        
-        // 系统内专业下拉列表
-        List<String> majorList = Arrays.asList("物质创造学域", "智能制造学域", "理科强基学域", "智能建造学域", "人文社科学域", "信息技术学域（一）", "信息技术学域（二）");
-        addDropdownValidation(sheet, validationHelper, 4, startRow, 1000, majorList);
-        
         // 分流形式下拉列表
         List<String> divertFormList = Arrays.asList("不可变更专业", "仅可转专业", "可类内任选，并转专业", "可类内任选，不可转专业", "可域内任选，并转专业");
-        addDropdownValidation(sheet, validationHelper, 7, startRow, 1000, divertFormList);
+        addDropdownValidation(sheet, validationHelper, 5, startRow, 1000, divertFormList);
         
         // 是否创新班或拔尖班下拉列表
         List<String> innovationList = Arrays.asList("是", "否");
-        addDropdownValidation(sheet, validationHelper, 8, startRow, 1000, innovationList);
+        addDropdownValidation(sheet, validationHelper, 6, startRow, 1000, innovationList);
     }
     
     /**
