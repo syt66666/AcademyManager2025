@@ -369,10 +369,6 @@ export default {
     
     // 动态页面标题
     pageTitle() {
-      const userName = this.$store.state.user.name;
-      if (userName === 'admin') {
-        return '首页';
-      }
       return this.isAdmin ? '活动管理' : '活动预约';
     },
     currentMonthTitle() {
@@ -420,8 +416,6 @@ export default {
     this.getCurrentStudentInfo();
     // 初始加载取消限制信息
     this.loadCancelLimitInfo();
-    // 设置动态页面标题
-    this.updatePageTitle();
   },
   mounted() {
     this.hideEmptyCalendarRows();
@@ -429,10 +423,6 @@ export default {
     this.hideTodayButton();
   },
   watch: {
-    // 监听用户角色变化，更新页面标题
-    isAdmin() {
-      this.updatePageTitle();
-    },
     
     calendarDate() {
       this.$nextTick(() => {
@@ -455,17 +445,6 @@ export default {
     }
   },
   methods: {
-    // 更新页面标题
-    updatePageTitle() {
-      // 更新浏览器标签页标题
-      document.title = this.pageTitle;
-      
-      // 更新路由meta中的title（如果支持的话）
-      if (this.$route.meta) {
-        this.$route.meta.title = this.pageTitle;
-      }
-    },
-    
     // 加载取消限制信息
     async loadCancelLimitInfo() {
       try {

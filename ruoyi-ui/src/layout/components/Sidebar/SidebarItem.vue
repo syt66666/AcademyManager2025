@@ -3,7 +3,7 @@
     <template v-if="hasOneShowingChild(item.children,item) && (!onlyOneChild.children||onlyOneChild.noShowingChildren)&&!item.alwaysShow">
       <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path, onlyOneChild.query)">
         <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown':!isNest}">
-          <item :icon="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" :title="onlyOneChild.meta.title" />
+          <item :icon="onlyOneChild.meta.icon||(item.meta&&item.meta.icon)" :title="getDynamicTitle(onlyOneChild.meta)" />
         </el-menu-item>
       </app-link>
     </template>
@@ -55,6 +55,20 @@ export default {
     return {}
   },
   methods: {
+    // 获取动态标题
+    getDynamicTitle(meta) {
+      if (meta && meta.dynamicTitle) {
+        // 判断用户角色
+        const userName = this.$store.state.user.name;
+        const isAdmin = userName && userName >= '10000' && userName <= '10007';
+        
+        if (meta.title === '首页') {
+          return isAdmin ? '活动管理' : '活动预约';
+        }
+      }
+      return meta ? meta.title : '';
+    },
+    
     hasOneShowingChild(children = [], parent) {
       if (!children) {
         children = [];
