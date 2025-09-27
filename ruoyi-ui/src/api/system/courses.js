@@ -42,3 +42,22 @@ export function delCourses(courseId) {
     method: 'delete'
   })
 }
+
+// 获取课程预约学生列表
+export function getCourseBookings(courseId) {
+  return request({
+    url: '/system/courseBookings/list',
+    method: 'get',
+    params: { courseId: courseId }
+  })
+}
+
+// 导出课程学生名单
+export function exportCourseStudents(courseId) {
+  return request({
+    url: '/system/courseBookings/export',
+    method: 'post',
+    responseType: 'blob',
+    data: { courseId: courseId }
+  })
+}
