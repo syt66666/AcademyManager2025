@@ -1,6 +1,7 @@
 package com.ruoyi.system.controller;
 
 import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,5 +95,39 @@ public class CoursesController extends BaseController
     public AjaxResult remove(@PathVariable Long[] courseIds)
     {
         return toAjax(coursesService.deleteCoursesByCourseIds(courseIds));
+    }
+    /**
+     * 报名
+     *
+     * @param params
+     * @return
+     */
+    @PostMapping("/signUpCapacity")
+    public AjaxResult signUpCapacity(@RequestBody Map<String, Integer> params) {
+        Integer courseId = params.get("courseId");
+        Integer version = params.get("version"); // 获取请求体中的 version
+        int result = coursesService.decreaseCapacity(courseId,version);
+        return result > 0 ? AjaxResult.success("选课成功") : AjaxResult.error("选课失败");
+    }
+
+    @PostMapping("/cancelSignUpCapacity")
+    public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Integer> params) {
+        Integer courseId = params.get("courseId");
+        Integer version = params.get("version");
+        int result = coursesService.increaseCapacity(courseId,version);
+        return result > 0 ? AjaxResult.success("取消选课成功") : AjaxResult.error("取消选课失败");
+    }
+
+    /**
+     * 检查活动名称和组织单位的唯一性
+     */
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody Map<String, Object> params) {
+        String courseName = (String) params.get("courseName");
+        String organizer = (String) params.get("organizer");
+        Integer courseId = (Integer) params.get("courseId");
+
+        boolean isUnique = coursesService.checkCourseUnique(courseName, organizer, courseId);
+        return AjaxResult.success(isUnique);
     }
 }
