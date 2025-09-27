@@ -119,7 +119,9 @@
         </el-table-column>
         <el-table-column label="活动名称" align="center" prop="activityName" width="180">
           <template slot-scope="scope">
-            <div class="activity-name">{{ scope.row.activityName }}</div>
+            <div class="activity-name" :title="scope.row.activityName">
+              {{ truncateText(scope.row.activityName, 12) }}
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="活动类型" align="center" prop="activityType" width="200">
@@ -1241,6 +1243,13 @@ export default {
       this.availableActivityTypes = ['1', '2', '3', '4'];
     },
 
+    /** 截断文本显示 */
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
+    },
+
     // ========== 学生列表相关方法 ==========
 
     /** 获取状态统计数量 */
@@ -1752,6 +1761,15 @@ export default {
   font-size: 15px;
   font-weight: 600;
   color: #303133;
+  cursor: help;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.activity-name:hover {
+  color: #409EFF;
 }
 
 /* 时间安排样式 */

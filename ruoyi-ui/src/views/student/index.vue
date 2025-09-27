@@ -793,8 +793,6 @@ export default {
         return false;
       }
       
-      // 显示文件信息
-      this.$message.info(`准备上传文件：${file.name}，大小：${(file.size / 1024 / 1024).toFixed(2)}MB`);
       return true;
     },
     // 提交上传文件

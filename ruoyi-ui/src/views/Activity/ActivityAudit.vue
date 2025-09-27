@@ -182,7 +182,13 @@
         </el-table-column>
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
-        <el-table-column label="活动名称" align="center" prop="activityName"/>
+        <el-table-column label="活动名称" align="center" prop="activityName" width="200">
+          <template slot-scope="scope">
+            <div class="activity-name" :title="scope.row.activityName">
+              {{ truncateText(scope.row.activityName, 15) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="活动类型" align="center" prop="activityType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
@@ -1179,6 +1185,13 @@ export default {
       return rowIndex % 2 === 0 ? 'striped-row' : '';
     },
 
+    /** 截断文本显示 */
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
+    },
+
   }
 };
 </script>
@@ -1512,6 +1525,22 @@ export default {
 .operation-info {
   font-size: 13px;
   color: #909399;
+}
+
+/* 活动名称样式 */
+.activity-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  cursor: help;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.activity-name:hover {
+  color: #409EFF;
 }
 
 /* 活动类型标签样式 */

@@ -124,7 +124,13 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="活动名称" align="center" prop="activityName" />
+        <el-table-column label="活动名称" align="center" prop="activityName" width="200">
+          <template slot-scope="scope">
+            <div class="activity-name" :title="scope.row.activityName">
+              {{ truncateText(scope.row.activityName, 15) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="活动类型" align="center" prop="activityType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
@@ -1612,6 +1618,13 @@ export default {
       }
       
       return pictureUrl;
+    },
+
+    /** 截断文本显示 */
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
     }
 
   }
@@ -2042,6 +2055,22 @@ export default {
 .index-badge.rejected-badge {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* 活动名称样式 */
+.activity-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  cursor: help;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.3s ease;
+}
+
+.activity-name:hover {
+  color: #409EFF;
 }
 
 /* 活动类型标签 */

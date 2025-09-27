@@ -88,7 +88,11 @@
                     class="progress-fill"
                     :style="{ width: progress.percentage + '%' }"
                     :class="getProgressBarClass(progress.percentage, type)"
-                  ></div>
+                  >
+                    <div class="progress-status-text" :class="getProgressTextClass(progress.status)">
+                      {{ progress.status }}
+                    </div>
+                  </div>
                 </div>
                 <div class="progress-text">{{ Math.round(progress.percentage) }}%</div>
               </div>
@@ -296,6 +300,7 @@
             accept=".zip,.rar,.7z"
             :before-upload="beforeZipUpload"
             :headers="headers"
+            :data="{ filePath: 'courseBookings' }"
             :auto-upload="true"
             drag
             class="zip-upload"
@@ -645,7 +650,7 @@ export default {
     // 初始化文件列表
     initFileLists(data) {
       this.zipFiles = [];
-      // 初始化压缩包文件
+      // 初始化压缩包文件 - 课程预约只支持单个文件
       if (data.proof) {
         const fullUrl = this.getFileFullUrl(data.proof);
         this.zipFiles.push({
@@ -662,19 +667,14 @@ export default {
 
     // 修复压缩包上传成功处理
     handleZipSuccess(response, file, fileList) {
-      console.log('压缩包上传成功回调:', { response, file, fileList });
-      
       if (response.code === 200) {
-        const serverFileName = response.fileName || this.extractFileName(response.url);
-        const originalFileName = file.name; // 使用原始文件名（不包含日期戳）
-        console.log('服务器文件名:', serverFileName);
-        console.log('原始文件名:', originalFileName);
+        const fileName = response.fileName || this.extractFileName(response.url);
 
         this.zipFiles = fileList.map(f => {
           if (f.uid === file.uid) {
             return {
-              name: originalFileName, // 显示原始文件名
-              url: this.getFileFullUrl(serverFileName), // 使用服务器文件名作为URL
+              name: fileName,
+              url: this.getFileFullUrl(fileName),
               isOld: false,
               downloading: false // 添加下载状态
             };
@@ -684,11 +684,7 @@ export default {
             downloading: f.downloading || false // 确保有下载状态
           };
         });
-        console.log('更新后的zipFiles:', this.zipFiles);
         this.$message.success('压缩包上传成功');
-      } else {
-        console.error('上传失败:', response);
-        this.$message.error('压缩包上传失败: ' + (response.msg || '未知错误'));
       }
     },
 
@@ -903,15 +899,15 @@ export default {
       }
 
       try {
-        // 准备proof字段 - 区分已有文件和新上传文件
+        // 准备proof字段 - 课程预约只支持单个文件（与活动预约不同）
         let proofFileName = null;
         if (this.zipFiles.length > 0) {
-          const zipFile = this.zipFiles[0];
+          const zipFile = this.zipFiles[0]; // 只取第一个文件
           if (zipFile.isOld) {
             // 对于已有文件，从URL中提取完整路径
             proofFileName = zipFile.url.replace(process.env.VUE_APP_BASE_API, '');
           } else {
-            // 对于新上传的文件，使用文件名
+            // 对于新上传的文件，使用服务器文件名（包含时间戳）
             proofFileName = zipFile.name;
           }
         }
@@ -1017,9 +1013,9 @@ export default {
         console.log('查询响应:', response);
         let rows = response.rows || [];
 
-        // 本地筛选：如果选择了进度条类型，则只显示该类型且状态为"已通过"的记录
+        // 本地筛选：如果选择了进度条类型，则只显示该类型的记录
         if (this.selectedCourseType) {
-          rows = rows.filter(item => String(item.courseType) === String(this.selectedCourseType) && item.status === '已通过');
+          rows = rows.filter(item => String(item.courseType) === String(this.selectedCourseType));
         }
 
         // 对选课列表按照材料提交状态进行排序（同优先级下按开始时间由晚到早）
@@ -1038,23 +1034,14 @@ export default {
       });
     },
 
-    /** 通过进度条筛选：点击某类型，筛选出已通过的该类型课程；再次点击同类型则清除筛选 */
+    /** 通过进度条筛选：点击某类型，筛选出该类型的课程；再次点击同类型则清除筛选 */
     filterByCourseType(type) {
       // 切换选中状态
       if (this.selectedCourseType === type) {
         this.selectedCourseType = null;
       } else {
         this.selectedCourseType = type;
-        // 同时将状态筛选切到“已通过”以匹配需求
-        this.selectedStatus = '已通过';
         this.queryParams.pageNum = 1;
-        this.queryParams.status = '已通过';
-      }
-
-      // 当清空类型筛选时，还原状态筛选（仅当之前因类型筛选设置为已通过时）
-      if (this.selectedCourseType === null && this.selectedStatus === '已通过') {
-        this.selectedStatus = null;
-        delete this.queryParams.status;
       }
 
       // 重新拉取数据并应用本地筛选
@@ -1119,15 +1106,15 @@ export default {
     /** 计算课程类型进度 */
     calculateCourseProgress() {
       console.log('开始计算课程完成进度...');
-      console.log('当前 coursesList:', this.coursesList);
+      console.log('所有课程数据:', this.allCoursesList);
       
       // 重置进度
       Object.keys(this.courseProgress).forEach(type => {
-        this.courseProgress[type] = { completed: 0, percentage: 0 };
+        this.courseProgress[type] = { completed: 0, percentage: 0, status: '未开始' };
       });
 
-      // 计算每个类型课程的进行时间百分比（基于当前显示的列表）
-      this.coursesList.forEach(course => {
+      // 计算每个类型课程的进行时间百分比（基于所有课程数据）
+      this.allCoursesList.forEach(course => {
         if (course.courseType && course.startTime && course.endTime) {
           const type = course.courseType.toString();
           const now = new Date();
@@ -1138,31 +1125,47 @@ export default {
           console.log(`  课程开始时间: ${course.startTime} -> ${startTime}`);
           console.log(`  课程结束时间: ${course.endTime} -> ${endTime}`);
           console.log(`  当前系统时间: ${now}`);
+          console.log(`  材料提交状态: ${course.status}`);
           
           if (this.courseProgress[type]) {
             // 计算课程进行的时间百分比
             let percentage = 0;
+            let status = '未开始';
             
             if (now < startTime) {
               // 课程还未开始
               percentage = 0;
+              status = '未开始';
               console.log('  结果: 课程还未开始。');
             } else if (now >= endTime) {
-              // 课程已结束
+              // 课程已结束，根据材料提交状态显示不同信息
               percentage = 100;
-              console.log('  结果: 课程已结束。');
+              if (course.status === '未提交') {
+                status = '课程已结束，需要提交材料';
+              } else if (course.status === '未审核') {
+                status = '材料已提交，正在审核中';
+              } else if (course.status === '已通过') {
+                status = '材料已通过，此课程已结束';
+              } else if (course.status === '未通过') {
+                status = '材料未通过，需要重新提交';
+              } else {
+                status = '课程已结束';
+              }
+              console.log(`  结果: 课程已结束，状态: ${status}`);
             } else {
               // 课程进行中，计算百分比
               const totalDuration = endTime.getTime() - startTime.getTime();
               const elapsed = now.getTime() - startTime.getTime();
               percentage = Math.min((elapsed / totalDuration) * 100, 100);
+              status = '进行中';
               console.log(`  结果: 课程进行中。已进行时间: ${elapsed}ms, 总时长: ${totalDuration}ms, 百分比: ${percentage}%`);
             }
             
             // 更新该类型的进度（取最大值，因为可能有多个同类型课程）
             this.courseProgress[type].percentage = Math.max(this.courseProgress[type].percentage, percentage);
             this.courseProgress[type].completed = percentage > 0 ? 1 : 0;
-            console.log(`  更新类型 ${type} 的进度为: ${this.courseProgress[type].percentage}%`);
+            this.courseProgress[type].status = status;
+            console.log(`  更新类型 ${type} 的进度为: ${this.courseProgress[type].percentage}%, 状态: ${status}`);
           }
         } else {
           console.warn(`跳过课程 ${course.courseName} 的进度计算，因为缺少课程类型、开始时间或结束时间。`);
@@ -1215,6 +1218,20 @@ export default {
         '4': 'progress-danger'     // 其他课程 - 红色
       };
       return map[courseType] || 'progress-info';
+    },
+
+    /** 获取进度文本样式类 */
+    getProgressTextClass(status) {
+      const statusClassMap = {
+        '未开始': 'status-not-started',
+        '进行中': 'status-in-progress',
+        '需要提交材料': 'status-need-submit',
+        '材料在审核中': 'status-under-review',
+        '材料已通过': 'status-approved',
+        '材料未通过需要重新提交': 'status-rejected',
+        '课程已结束': 'status-completed'
+      };
+      return statusClassMap[status] || 'status-default';
     },
 
     /** 获取表格行的CSS类名 */
@@ -1788,6 +1805,10 @@ export default {
   border-radius: 6px;
   transition: all 0.6s ease;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .progress-fill::after {
@@ -1799,6 +1820,18 @@ export default {
   bottom: 0;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
   animation: shimmer 2s infinite;
+}
+
+/* 进度条内的状态文本 */
+.progress-status-text {
+  position: relative;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
 }
 
 @keyframes shimmer {
@@ -1893,9 +1926,52 @@ export default {
 .progress-text {
   min-width: 40px;
   font-size: 12px;
-  color: #606266;
   font-weight: 600;
   text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* 进度条内状态文本样式 */
+.status-not-started {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.status-in-progress {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.status-need-submit {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.status-under-review {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.status-approved {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.status-rejected {
+  color: #fff;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.status-completed {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.status-default {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 
@@ -2915,6 +2991,12 @@ export default {
   border-radius: 8px;
   background: #fff;
   margin-top: 15px;
+  transition: all 0.3s ease;
+}
+
+.zip-card:hover {
+  border-color: #409EFF;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
 .zip-left {
