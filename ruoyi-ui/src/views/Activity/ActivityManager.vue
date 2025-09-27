@@ -303,8 +303,6 @@
                     :key="type.value"
                     :label="type.label"
                     :value="type.value">
-                    <span style="float: left">{{ type.label }}</span>
-                    <span style="float: right; color: #8492a6; font-size: 13px">{{ type.value }}</span>
                   </el-option>
                 </el-select>
               </el-form-item>
@@ -474,7 +472,7 @@
       :before-close="handleStudentDialogClose">
 
       <!-- 学生统计信息 -->
-      <div class="student-stats" v-if="selectedStudents.length > 0">
+      <div class="student-stats">
         <div class="stats-card">
           <div class="stat-item">
             <div class="stat-number">{{ selectedStudents.length }}</div>
@@ -578,7 +576,6 @@
             class="export-btn">
             导出名单
           </el-button>
-          <el-button @click="dialogVisibleStudents = false">关闭</el-button>
         </div>
       </div>
     </el-dialog>
@@ -944,15 +941,14 @@ export default {
           activityId: row.activityId // 使用当前行的活动ID，而不是硬编码的6
         });
 
-        if (res.rows && res.rows.length) {
-          this.selectedStudents = res.rows;
-          this.dialogVisibleStudents = true;
-        } else {
-          // 使用正确的消息提示方法
-          this.$message.info("当前活动暂无学生预约");
-        }
+        // 无论是否有学生预约，都显示弹框
+        this.selectedStudents = res.rows || [];
+        this.dialogVisibleStudents = true;
+        
       } catch (e) {
-        // 添加错误提示
+        // 即使出错也显示弹框，但显示错误信息
+        this.selectedStudents = [];
+        this.dialogVisibleStudents = true;
         this.$message.error("获取学生预约活动数据失败，请稍后再试");
       } finally {
         this.studentLoading = false;
@@ -2814,5 +2810,6 @@ export default {
       margin: 0 auto;
     }
   }
+
 }
 </style>
