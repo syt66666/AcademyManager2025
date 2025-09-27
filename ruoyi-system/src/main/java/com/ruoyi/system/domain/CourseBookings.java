@@ -62,6 +62,10 @@ public class CourseBookings extends BaseEntity
     @Excel(name = "组织单位")
     private String organizer;
 
+    /** 成绩值（审核通过时录入） */
+    @Excel(name = "成绩值")
+    private String scoreValue;
+
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
     @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd")
@@ -171,6 +175,15 @@ public class CourseBookings extends BaseEntity
     {
         return organizer;
     }
+    public void setScoreValue(String scoreValue)
+    {
+        this.scoreValue = scoreValue;
+    }
+
+    public String getScoreValue()
+    {
+        return scoreValue;
+    }
     public void setCreatedTime(Date createdTime)
     {
         this.createdTime = createdTime;
@@ -204,6 +217,7 @@ public class CourseBookings extends BaseEntity
                 .append("reviewerComment", getReviewerComment())
                 .append("reviewTime", getReviewTime())
                 .append("organizer", getOrganizer())
+                .append("scoreValue", getScoreValue())
                 .append("createdTime", getCreatedTime())
                 .append("updatedTime", getUpdatedTime())
                 .toString();

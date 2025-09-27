@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CourseBookingsMapper">
+
+    <resultMap type="CourseBookings" id="CourseBookingsResult">
+        <id     property="bookingId"      column="booking_id"      />
+        <result property="studentId"      column="student_id"      />
+        <result property="courseId"       column="course_id"       />
+        <result property="bookAt"         column="book_at"         />
+        <result property="proof"          column="proof"           />
+        <result property="summary"        column="summary"         />
+        <result property="status"         column="status"          />
+        <result property="reviewer"       column="reviewer"       />
+        <result property="reviewerComment" column="reviewer_comment" />
+        <result property="reviewTime"     column="review_time"     />
+        <result property="organizer"     column="organizer"       />
+        <result property="createdTime"   column="created_time"    />
+        <result property="updatedTime"   column="updated_time"     />
+    </resultMap>
+
+    <resultMap type="CourseBookingDTO" id="CourseBookingDTOResult">
+        <id     property="bookingId"      column="booking_id"      />
+        <result property="studentId"      column="student_id"      />
+        <result property="studentName"    column="student_name"    />
+        <result property="academy"        column="academy"         />
+        <result property="major"          column="major"           />
+        <result property="systemMajor"    column="system_major"    />
+        <result property="studentClass"   column="student_class"   />
+        <result property="studentSex"     column="student_sex"     />
+        <result property="courseId"       column="course_id"       />
+        <result property="courseName"     column="course_name"     />
+        <result property="courseType"     column="course_type"      />
+        <result property="courseCategory" column="course_category" />
+        <result property="courseStart"    column="course_start"    />
+        <result property="courseDeadline" column="course_deadline" />
+        <result property="courseLocation" column="course_location" />
+        <result property="startTime"      column="start_time"      />
+        <result property="endTime"        column="end_time"        />
+        <result property="courseDescription" column="course_description" />
+        <result property="pictureUrl"      column="picture_url"     />
+        <result property="notes"          column="notes"           />
+        <result property="courseCredit"   column="course_credit"   />
+        <result property="bookAt"         column="book_at"         />
+        <result property="proof"          column="proof"           />
+        <result property="summary"        column="summary"         />
+        <result property="status"         column="status"          />
+        <result property="reviewer"       column="reviewer"       />
+        <result property="reviewerComment" column="reviewer_comment" />
+        <result property="reviewTime"     column="review_time"     />
+        <result property="organizer"     column="organizer"       />
+        <result property="createdTime"   column="created_time"    />
+        <result property="updatedTime"   column="updated_time"     />
+        <result property="scoreValue"    column="score_value"     />
+        <result property="gpa"           column="gpa"             />
+        <result property="scoreType"     column="score_type"       />
+        <result property="scoreUploadTime" column="score_upload_time" />
+    </resultMap>
+
+    <resultMap type="CourseBookingExportDTO" id="CourseBookingExportDTOResult">
+        <id     property="bookingId"      column="booking_id"      />
+        <result property="studentId"      column="student_id"      />
+        <result property="studentName"    column="student_name"    />
+        <result property="academy"        column="academy"         />
+        <result property="major"          column="major"           />
+        <result property="systemMajor"    column="system_major"    />
+        <result property="studentClass"   column="student_class"   />
+        <result property="studentSex"     column="student_sex"     />
+        <result property="courseId"       column="course_id"       />
+        <result property="courseName"     column="course_name"     />
+        <result property="courseType"     column="course_type"      />
+        <result property="courseCategory" column="course_category" />
+        <result property="courseStart"    column="course_start"    />
+        <result property="courseDeadline" column="course_deadline" />
+        <result property="courseLocation" column="course_location" />
+        <result property="startTime"      column="start_time"      />
+        <result property="endTime"        column="end_time"        />
+        <result property="courseDescription" column="course_description" />
+        <result property="pictureUrl"      column="picture_url"     />
+        <result property="notes"          column="notes"           />
+        <result property="courseCredit"   column="course_credit"   />
+        <result property="bookAt"         column="book_at"         />
+        <result property="proof"          column="proof"           />
+        <result property="summary"        column="summary"         />
+        <result property="status"         column="status"          />
+        <result property="reviewer"       column="reviewer"       />
+        <result property="reviewerComment" column="reviewer_comment" />
+        <result property="reviewTime"     column="review_time"     />
+        <result property="organizer"     column="organizer"       />
+        <result property="createdTime"   column="created_time"    />
+        <result property="updatedTime"   column="updated_time"     />
+    </resultMap>
+
+    <sql id="selectCourseBookingsVo">
+        select booking_id, student_id, course_id, book_at, proof, summary, status, reviewer,
+        reviewer_comment, review_time, organizer, created_time, updated_time
+        from course_bookings
+    </sql>
+
+    <sql id="selectCourseBookingsWithCourseVo">
+        select cb.booking_id, cb.student_id, s.student_name, s.academy, s.major, s.system_major,
+        s.student_class, s.student_sex, cb.course_id, c.course_name, c.course_type, c.course_category,
+        c.course_start, c.course_deadline, c.course_location, c.start_time, c.end_time,
+        c.course_description, c.picture_url, c.notes, c.course_credit,
+        cb.book_at, cb.proof, cb.summary, cb.status, cb.reviewer, cb.reviewer_comment,
+        cb.review_time, cb.organizer, cb.created_time, cb.updated_time
+        from course_bookings cb
+        left join stu_info s on cb.student_id = s.student_id
+        left join courses c on cb.course_id = c.course_id
+    </sql>
+
+    <select id="selectCourseBookingsList" parameterType="CourseBookings" resultMap="CourseBookingsResult">
+        <include refid="selectCourseBookingsVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="courseId != null "> and course_id = #{courseId}</if>
+            <if test="bookAt != null "> and book_at = #{bookAt}</if>
+            <if test="proof != null  and proof != ''"> and proof = #{proof}</if>
+            <if test="summary != null  and summary != ''"> and summary = #{summary}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="reviewer != null  and reviewer != ''"> and reviewer = #{reviewer}</if>
+            <if test="reviewerComment != null  and reviewerComment != ''"> and reviewer_comment = #{reviewerComment}</if>
+            <if test="reviewTime != null "> and review_time = #{reviewTime}</if>
+            <if test="organizer != null  and organizer != ''"> and organizer = #{organizer}</if>
+            <if test="createdTime != null "> and created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="selectCourseBookingsByBookingId" parameterType="Long" resultMap="CourseBookingsResult">
+        <include refid="selectCourseBookingsVo"/>
+        where booking_id = #{bookingId}
+    </select>
+
+    <select id="selectCourseBookingsById" parameterType="Long" resultMap="CourseBookingsResult">
+        <include refid="selectCourseBookingsVo"/>
+        where booking_id = #{bookingId}
+    </select>
+
+    <select id="selectCourseBookingsListWithDetails" parameterType="CourseBookingDTO" resultMap="CourseBookingDTOResult">
+        <include refid="selectCourseBookingsWithCourseVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
+            <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
+            <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
+            <if test="summary != null  and summary != ''"> and cb.summary = #{summary}</if>
+            <if test="status != null  and status != ''"> and cb.status = #{status}</if>
+            <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
+            <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
+            <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
+            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="selectCourseBookingsListSubmitted" parameterType="CourseBookingDTO" resultMap="CourseBookingDTOResult">
+        <include refid="selectCourseBookingsWithCourseVo"/>
+        <where>
+            cb.status = '已提交'
+            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
+            <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
+            <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
+            <if test="summary != null  and summary != ''"> and cb.summary = #{summary}</if>
+            <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
+            <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
+            <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
+            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="selectCourseBookingsListAudit" parameterType="CourseBookingDTO" resultMap="CourseBookingDTOResult">
+        <include refid="selectCourseBookingsWithCourseVo"/>
+        <where>
+            cb.status IN ('待审核', '已通过', '未通过')
+            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
+            <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
+            <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
+            <if test="summary != null  and summary != ''"> and cb.summary = #{summary}</if>
+            <if test="status != null  and status != ''"> and cb.status = #{status}</if>
+            <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
+            <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
+            <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
+            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="selectCourseBookingsByBookingIdWithDetails" parameterType="Long" resultMap="CourseBookingDTOResult">
+        <include refid="selectCourseBookingsWithCourseVo"/>
+        where cb.booking_id = #{bookingId}
+    </select>
+
+    <select id="selectCourseBookingsWithCourseList" parameterType="CourseBookings" resultMap="CourseBookingDTOResult">
+        <include refid="selectCourseBookingsWithCourseVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
+            <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
+            <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
+            <if test="summary != null  and summary != ''"> and cb.summary = #{summary}</if>
+            <if test="status != null  and status != ''"> and cb.status = #{status}</if>
+            <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
+            <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
+            <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
+            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <select id="checkIfBooked" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </select>
+
+    <select id="checkIfCourseBooked" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </select>
+
+    <select id="checkCourseBookingExists" resultType="int">
+        SELECT COUNT(1)
+        FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </select>
+
+    <select id="checkCourseBookingSimple" resultType="Map">
+        SELECT 
+            COUNT(1) > 0 as booked,
+            COALESCE(MAX(booking_id), 0) as bookingId
+        FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </select>
+
+    <select id="countCourseBookingAuditStatus" resultType="Map">
+        SELECT 
+            COUNT(CASE WHEN status = '待审核' THEN 1 END) as pending,
+            COUNT(CASE WHEN status = '已通过' THEN 1 END) as approved,
+            COUNT(CASE WHEN status = '未通过' THEN 1 END) as rejected,
+            COUNT(*) as total
+        FROM course_bookings
+    </select>
+
+    <select id="selectCourseIdsByStudentId" parameterType="String" resultType="Long">
+        SELECT course_id
+        FROM course_bookings
+        WHERE student_id = #{studentId}
+    </select>
+
+    <select id="selectCourseBookingExportList" parameterType="CourseBookingExportDTO" resultMap="CourseBookingExportDTOResult">
+        <include refid="selectCourseBookingsWithCourseVo"/>
+        <where>
+            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
+            <if test="status != null  and status != ''"> and cb.status = #{status}</if>
+            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+        </where>
+    </select>
+
+    <!-- 查询课程选课记录及其成绩信息 -->
+    <select id="selectCourseBookingsWithScore" parameterType="CourseBookings" resultMap="CourseBookingDTOResult">
+        select cb.booking_id, cb.student_id, s.student_name, s.academy, s.major, s.system_major,
+        s.student_class, s.student_sex, cb.course_id, c.course_name, c.course_type, c.course_category,
+        c.course_start, c.course_deadline, c.course_location, c.start_time, c.end_time,
+        c.course_description, c.picture_url, c.notes, c.course_credit,
+        cb.book_at, cb.proof, cb.summary, cb.status, cb.reviewer, cb.reviewer_comment,
+        cb.review_time, cb.organizer, cb.created_time, cb.updated_time,
+        cs.score_value, cs.gpa, cs.score_type, cs.upload_time as score_upload_time
+        from course_bookings cb
+        left join stu_info s on cb.student_id = s.student_id
+        left join courses c on cb.course_id = c.course_id
+        left join course_score cs on cb.student_id = cs.student_id and cb.course_id = cs.course_id
+        <where>
+            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
+            <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
+            <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
+            <if test="summary != null  and summary != ''"> and cb.summary = #{summary}</if>
+            <if test="status != null  and status != ''"> and cb.status = #{status}</if>
+            <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
+            <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
+            <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
+            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
+            <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
+        </where>
+    </select>
+
+    <insert id="insertCourseBookings" parameterType="CourseBookings" useGeneratedKeys="true" keyProperty="bookingId">
+        insert into course_bookings
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="courseId != null">course_id,</if>
+            <if test="bookAt != null">book_at,</if>
+            <if test="proof != null">proof,</if>
+            <if test="summary != null">summary,</if>
+            <if test="status != null">status,</if>
+            <if test="reviewer != null">reviewer,</if>
+            <if test="reviewerComment != null">reviewer_comment,</if>
+            <if test="reviewTime != null">review_time,</if>
+            <if test="organizer != null">organizer,</if>
+            <if test="createdTime != null">created_time,</if>
+            <if test="updatedTime != null">updated_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="courseId != null">#{courseId},</if>
+            <if test="bookAt != null">#{bookAt},</if>
+            <if test="proof != null">#{proof},</if>
+            <if test="summary != null">#{summary},</if>
+            <if test="status != null">#{status},</if>
+            <if test="reviewer != null">#{reviewer},</if>
+            <if test="reviewerComment != null">#{reviewerComment},</if>
+            <if test="reviewTime != null">#{reviewTime},</if>
+            <if test="organizer != null">#{organizer},</if>
+            <if test="createdTime != null">#{createdTime},</if>
+            <if test="updatedTime != null">#{updatedTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCourseBookings" parameterType="CourseBookings">
+        update course_bookings
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="courseId != null">course_id = #{courseId},</if>
+            <if test="bookAt != null">book_at = #{bookAt},</if>
+            <if test="proof != null">proof = #{proof},</if>
+            <if test="summary != null">summary = #{summary},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="reviewer != null">reviewer = #{reviewer},</if>
+            <if test="reviewerComment != null">reviewer_comment = #{reviewerComment},</if>
+            <if test="reviewTime != null">review_time = #{reviewTime},</if>
+            <if test="organizer != null">organizer = #{organizer},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where booking_id = #{bookingId}
+    </update>
+
+    <update id="updateCourseBookingsAudit" parameterType="CourseBookings">
+        update course_bookings
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="reviewer != null">reviewer = #{reviewer},</if>
+            <if test="reviewerComment != null">reviewer_comment = #{reviewerComment},</if>
+            <if test="reviewTime != null">review_time = #{reviewTime},</if>
+            <if test="updatedTime != null">updated_time = #{updatedTime},</if>
+        </trim>
+        where booking_id = #{bookingId}
+    </update>
+
+    <delete id="deleteCourseBookingsByBookingId" parameterType="Long">
+        delete from course_bookings where booking_id = #{bookingId}
+    </delete>
+
+    <delete id="deleteCourseBookingsByBookingIds" parameterType="String">
+        delete from course_bookings where booking_id in
+        <foreach item="bookingId" collection="array" open="(" separator="," close=")">
+            #{bookingId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteCourseBookingsByCourseAndStudent">
+        DELETE FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </delete>
+
+    <delete id="deleteByCourseAndStudent">
+        DELETE FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </delete>
+
+</mapper>

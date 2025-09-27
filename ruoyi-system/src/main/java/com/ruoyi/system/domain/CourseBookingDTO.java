@@ -149,6 +149,24 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "课程学分")
     private java.math.BigDecimal courseCredit;
 
+    // 成绩相关字段
+    /** 成绩值 */
+    @Excel(name = "成绩值")
+    private String scoreValue;
+
+    /** 绩点 */
+    @Excel(name = "绩点")
+    private java.math.BigDecimal gpa;
+
+    /** 成绩类型 */
+    @Excel(name = "成绩类型")
+    private String scoreType;
+
+    /** 成绩上传时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Excel(name = "成绩上传时间", width = 30, dateFormat = "yyyy-MM-dd")
+    private Date scoreUploadTime;
+
 
     // Getters and Setters
     public Long getBookingId() {
@@ -397,6 +415,39 @@ public class CourseBookingDTO extends BaseEntity
 
     public void setCourseCredit(java.math.BigDecimal courseCredit) {
         this.courseCredit = courseCredit;
+    }
+
+    // 成绩相关字段的 getter 和 setter 方法
+    public String getScoreValue() {
+        return scoreValue;
+    }
+
+    public void setScoreValue(String scoreValue) {
+        this.scoreValue = scoreValue;
+    }
+
+    public java.math.BigDecimal getGpa() {
+        return gpa;
+    }
+
+    public void setGpa(java.math.BigDecimal gpa) {
+        this.gpa = gpa;
+    }
+
+    public String getScoreType() {
+        return scoreType;
+    }
+
+    public void setScoreType(String scoreType) {
+        this.scoreType = scoreType;
+    }
+
+    public Date getScoreUploadTime() {
+        return scoreUploadTime;
+    }
+
+    public void setScoreUploadTime(Date scoreUploadTime) {
+        this.scoreUploadTime = scoreUploadTime;
     }
 
     @Override

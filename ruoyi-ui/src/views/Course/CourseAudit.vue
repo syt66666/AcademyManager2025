@@ -678,7 +678,16 @@ export default {
       if (!this.currentBooking) return;
 
       try {
-        await this.$confirm('确认通过该活动的审核吗？', '审核确认', {
+        // 弹出分数输入弹框
+        const { value: scoreValue } = await this.$prompt('请输入学生成绩', '审核通过 - 成绩录入', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          inputPattern: /^[0-9]+(\.[0-9]+)?$|^[A-F]$/,
+          inputErrorMessage: '请输入有效的成绩（数字或A-F等级）',
+          inputPlaceholder: '请输入成绩（如：85 或 A）'
+        });
+
+        await this.$confirm('确认通过该课程的审核并录入成绩吗？', '审核确认', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
@@ -689,12 +698,13 @@ export default {
           status: '已通过',
           reviewComment: '系统审核通过',
           reviewTime: new Date().toISOString(),
-          reviewer: this.$store.state.user.name
+          reviewer: this.$store.state.user.name,
+          scoreValue: scoreValue // 添加分数到审核数据中
         };
 
         this.actionLoading = true;
         await this.$options.methods._updateSingleBooking.call(this, payload);
-        this.$message.success('审核通过');
+        this.$message.success('审核通过，成绩已录入');
         this.auditDialogVisible = false;
         this.getList();
         this.fetchAuditCount();
