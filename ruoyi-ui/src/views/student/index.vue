@@ -126,7 +126,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="学生学号" align="center" prop="studentId" min-width="160">
+        <el-table-column label="学生学号" align="center" prop="studentId" min-width="140">
           <template slot-scope="scope">
             <div class="student-id-container">
               <span class="student-id">{{ scope.row.studentId }}</span>
@@ -138,29 +138,29 @@
             <div class="student-name">{{ scope.row.studentName }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="入学年份" align="center" prop="enrollmentYear" min-width="100">
+        <el-table-column label="入学年份" align="center" prop="enrollmentYear" min-width="80">
           <template slot-scope="scope">
             <el-tag size="small" type="success" effect="plain" class="enrollment-year-tag">
               {{ scope.row.enrollmentYear }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="所属书院" align="center" prop="academy" min-width="120">
+        <el-table-column label="所属书院" align="center" prop="academy" min-width="100">
           <template slot-scope="scope">
             <div class="academy-text">{{ scope.row.academy }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="所属学域" align="center" prop="originalSystemMajor" min-width="200">
+        <el-table-column label="所属学域" align="center" prop="originalSystemMajor" min-width="160">
           <template slot-scope="scope">
             <div class="major-info">{{ scope.row.originalSystemMajor }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="录取专业" align="center" prop="major" min-width="180">
+        <el-table-column label="录取专业" align="center" prop="major" min-width="150">
           <template slot-scope="scope">
             <div class="major-info">{{ scope.row.major }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="行政班" align="center" prop="studentClass" min-width="120">
+        <el-table-column label="行政班" align="center" prop="studentClass" min-width="100">
           <template slot-scope="scope">
             <el-tag size="small" type="primary" effect="plain" class="class-tag">
               {{ scope.row.studentClass }}
@@ -172,7 +172,7 @@
             <div class="divert-form">{{ scope.row.divertForm }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="创新班/拔尖班" align="center" prop="innovationClass" min-width="140">
+        <el-table-column label="创新班/拔尖班" align="center" prop="innovationClass" min-width="100">
           <template slot-scope="scope">
             <el-tag :type="scope.row.innovationClass === 1 ? 'success' : 'info'" effect="dark" class="innovation-tag">
               {{ scope.row.innovationClass === 1 ? '是' : scope.row.innovationClass === 0 ? '否' : '未知' }}
@@ -283,18 +283,27 @@
 
               <el-form-item label="所属书院" prop="academy">
                 <el-input
-                  v-model="form.academy"
-                  placeholder="请输入所属书院"
-                  prefix-icon="el-icon-office-building"
-                  class="form-input">
+                  v-model="currentUserAcademy"
+                  placeholder="自动获取当前用户所属书院"
+                  readonly
+                  class="form-input readonly-field">
                 </el-input>
               </el-form-item>
 
               <el-form-item label="所在学域" prop="originalSystemMajor">
                 <el-input
-                  v-model="form.originalSystemMajor"
-                  placeholder="请输入所在学域"
-                  prefix-icon="el-icon-school"
+                  v-model="currentUserDomain"
+                  placeholder="自动获取当前用户所属学域"
+                  readonly
+                  class="form-input readonly-field">
+                </el-input>
+              </el-form-item>
+
+              <el-form-item label="录取专业" prop="major">
+                <el-input
+                  v-model="form.major"
+                  placeholder="请输入录取专业"
+                  prefix-icon="el-icon-medal"
                   class="form-input">
                 </el-input>
               </el-form-item>
@@ -315,15 +324,20 @@
                   prefix-icon="el-icon-s-grid"
                   class="form-input">
                 </el-input>
+                <div class="form-tip">
+                  <i class="el-icon-info"></i>
+                  请输入行政班，如：求实2501班、大煜2502班
+                </div>
               </el-form-item>
 
               <el-form-item label="分流形式" prop="divertForm">
-                <el-input
-                  v-model="form.divertForm"
-                  placeholder="请输入分流形式"
-                  prefix-icon="el-icon-connection"
-                  class="form-input">
-                </el-input>
+                <el-select v-model="form.divertForm" placeholder="请选择分流形式" clearable class="form-select">
+                  <el-option label="不可变更专业" value="不可变更专业"></el-option>
+                  <el-option label="仅可转专业" value="仅可转专业"></el-option>
+                  <el-option label="可类内任选，并转专业" value="可类内任选，并转专业"></el-option>
+                  <el-option label="可类内任选，不可转专业" value="可类内任选，不可转专业"></el-option>
+                  <el-option label="可域内任选，并转专业" value="可域内任选，并转专业"></el-option>
+                </el-select>
               </el-form-item>
 
               <el-form-item label="创新班/拔尖班" prop="innovationClass">
@@ -438,6 +452,10 @@ export default {
       form: {},
       // 当前筛选状态
       currentFilterParams: null,
+      // 当前用户所属书院
+      currentUserAcademy: null,
+      // 当前用户所属学域
+      currentUserDomain: null,
       // 表单校验
       rules: {
         studentId: [
@@ -446,17 +464,21 @@ export default {
         studentName: [
           { required: true, message: "学生姓名不能为空", trigger: "blur" }
         ],
-        academy: [
-          { required: true, message: "所属书院不能为空", trigger: "blur" }
+        enrollmentYear: [
+          { required: true, message: "入学年份不能为空", trigger: "blur" },
+          { pattern: /^\d{4}$/, message: "请输入4位数字年份", trigger: "blur" }
         ],
-        originalSystemMajor: [
-          { required: true, message: "所属学域不能为空", trigger: "blur" }
+        major: [
+          { required: true, message: "录取专业不能为空", trigger: "blur" }
         ],
         studentClass: [
           { required: true, message: "行政班不能为空", trigger: "blur" }
         ],
         divertForm: [
           { required: true, message: "分流形式不能为空", trigger: "blur" }
+        ],
+        innovationClass: [
+          { required: true, message: "请选择是否创新班或拔尖班", trigger: "change" }
         ],
       },
       // 上传参数
@@ -494,6 +516,10 @@ export default {
     getNickName() {
       getNickName()
         .then(nickName => {
+          // 保存当前用户所属书院
+          this.currentUserAcademy = nickName.msg;
+          // 根据书院获取对应的学域
+          this.currentUserDomain = this.getDomainByAcademy(nickName.msg);
           // 合并查询参数与组织者信息
           const params = { ...this.queryParams, academy: nickName.msg };
           this.currentFilterParams = params; // 保存筛选参数
@@ -508,6 +534,19 @@ export default {
           // 获取入学年份选项
           this.getEnrollmentYearOptions();
         });
+    },
+    /** 根据书院获取对应的学域 */
+    getDomainByAcademy(academy) {
+      const academyDomainMap = {
+        '大煜书院': '物质创造学域',
+        '伯川书院': '智能制造学域',
+        '笃学书院': '理科强基学域',
+        '令希书院': '智能建造学域',
+        '厚德书院': '人文社科学域',
+        '知行书院': '信息技术学域（一）',
+        '求实书院': '信息技术学域（二）'
+      };
+      return academyDomainMap[academy] || '';
     },
     /** 获取入学年份选项 */
     getEnrollmentYearOptions() {
@@ -630,6 +669,9 @@ export default {
     /** 新增按钮操作 */
     handleAdd() {
       this.reset();
+      // 设置所属书院和学域字段
+      this.form.academy = this.currentUserAcademy;
+      this.form.originalSystemMajor = this.currentUserDomain;
       this.open = true;
       this.title = "添加学生信息";
     },
@@ -647,6 +689,11 @@ export default {
     submitForm() {
       this.$refs["form"].validate(valid => {
         if (valid) {
+          // 确保所属书院字段使用当前用户的书院
+          this.form.academy = this.currentUserAcademy;
+          // 确保所在学域字段使用当前用户的学域
+          this.form.originalSystemMajor = this.currentUserDomain;
+          
           if (this.form.id != null) {
             updateStudent(this.form).then(response => {
               this.$modal.msgSuccess("修改成功");
@@ -666,7 +713,8 @@ export default {
     /** 删除按钮操作 */
     handleDelete(row) {
       const ids = row.id || this.ids;
-      this.$modal.confirm('是否确认删除学生信息编号为"' + ids + '"的数据项？').then(function() {
+      const studentName = row.studentName;
+      this.$modal.confirm('是否确认删除学生？').then(function() {
         return delStudent(ids);
       }).then(() => {
         this.getList();
@@ -1235,6 +1283,21 @@ export default {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
     }
+  }
+}
+
+/* 只读字段样式 */
+.readonly-field {
+  .el-input__inner {
+    background-color: #f5f7fa !important;
+    border-color: #e4e7ed !important;
+    color: #606266 !important;
+    cursor: not-allowed;
+  }
+
+  .el-input__inner:focus {
+    border-color: #e4e7ed !important;
+    box-shadow: none !important;
   }
 }
 
