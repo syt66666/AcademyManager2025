@@ -161,4 +161,17 @@
             <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
         </where>
     </select>
+
+    <select id="checkIfBooked" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </select>
+
+    <delete id="deleteByCourseAndStudent">
+        DELETE FROM course_bookings
+        WHERE course_id = #{courseId}
+          AND student_id = #{studentId}
+    </delete>
 </mapper>

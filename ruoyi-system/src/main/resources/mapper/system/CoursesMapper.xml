@@ -138,4 +138,22 @@
             #{courseId}
         </foreach>
     </delete>
+
+    <update id="decreaseCapacity">
+        UPDATE courses 
+        SET course_capacity = course_capacity - 1,
+            version = version + 1
+        WHERE course_id = #{courseId} 
+          AND version = #{version}
+          AND course_capacity &gt; 0
+    </update>
+
+    <update id="increaseCapacity">
+        UPDATE courses 
+        SET course_capacity = course_capacity + 1,
+            version = version + 1
+        WHERE course_id = #{courseId} 
+          AND version = #{version}
+          AND course_capacity &lt; course_total_capacity
+    </update>
 </mapper>

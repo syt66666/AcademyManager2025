@@ -61,3 +61,36 @@ export function exportCourseStudents(courseId) {
     data: { courseId: courseId }
   })
 }
+
+// 选课容量变化
+export function signUpCapacity(courseId, version) {
+  return request({
+    url: '/system/courses/signUpCapacity',
+    method: 'post',
+    data: {
+      courseId: courseId,
+      version: version
+    }
+  })
+}
+
+// 取消选课容量变化
+export function cancelSignUpCapacity(courseId, version) {
+  return request({
+    url: '/system/courses/cancelSignUpCapacity',
+    method: 'post',
+    data: {
+      courseId: courseId,
+      version: version
+    }
+  })
+}
+
+// 检查课程唯一性
+export function checkCourseUnique(params) {
+  return request({
+    url: '/system/courses/checkUnique',
+    method: 'post',
+    data: params
+  })
+}

@@ -1,6 +1,7 @@
 package com.ruoyi.system.mapper;
 
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.ruoyi.system.domain.Courses;
 
 /**
@@ -58,4 +59,22 @@ public interface CoursesMapper
      * @return 结果
      */
     public int deleteCoursesByCourseIds(Long[] courseIds);
+
+    /**
+     * 减少课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 结果
+     */
+    public int decreaseCapacity(@Param("courseId") Long courseId, @Param("version") Integer version);
+
+    /**
+     * 增加课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 结果
+     */
+    public int increaseCapacity(@Param("courseId") Long courseId, @Param("version") Integer version);
 }

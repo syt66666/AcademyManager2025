@@ -90,4 +90,30 @@ public class CoursesServiceImpl implements ICoursesService
     {
         return coursesMapper.deleteCoursesByCourseId(courseId);
     }
+
+    /**
+     * 减少课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 结果
+     */
+    @Override
+    public int decreaseCapacity(Long courseId, Integer version)
+    {
+        return coursesMapper.decreaseCapacity(courseId, version);
+    }
+
+    /**
+     * 增加课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 结果
+     */
+    @Override
+    public int increaseCapacity(Long courseId, Integer version)
+    {
+        return coursesMapper.increaseCapacity(courseId, version);
+    }
 }

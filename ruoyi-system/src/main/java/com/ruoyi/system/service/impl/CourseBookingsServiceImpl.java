@@ -103,4 +103,30 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
     {
         return courseBookingsMapper.selectCourseBookingsWithCourseList(courseBookings);
     }
+
+    /**
+     * 检查学生是否选课了指定课程
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @return 是否已选课
+     */
+    @Override
+    public boolean checkIfBooked(Long courseId, String studentId)
+    {
+        return courseBookingsMapper.checkIfBooked(courseId, studentId);
+    }
+
+    /**
+     * 根据课程ID和学生ID删除选课记录
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @return 结果
+     */
+    @Override
+    public int deleteByCourseAndStudent(Long courseId, String studentId)
+    {
+        return courseBookingsMapper.deleteByCourseAndStudent(courseId, studentId);
+    }
 }

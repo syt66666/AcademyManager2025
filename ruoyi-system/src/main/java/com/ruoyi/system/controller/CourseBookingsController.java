@@ -1,8 +1,8 @@
 package com.ruoyi.system.controller;
 
+import java.util.Collections;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
@@ -106,5 +107,25 @@ public class CourseBookingsController extends BaseController
     public AjaxResult remove(@PathVariable Long[] bookingIds)
     {
         return toAjax(courseBookingsService.deleteCourseBookingsByBookingIds(bookingIds));
+    }
+
+    /**
+     * 检查学生是否选课了指定课程
+     */
+    @GetMapping("/checkBooking")
+    public AjaxResult checkBookingSimple(@RequestParam Long courseId,
+                                         @RequestParam String studentId) {
+        boolean isBooked = courseBookingsService.checkIfBooked(courseId, studentId);
+        return AjaxResult.success(Collections.singletonMap("isBooked", isBooked));
+    }
+
+    /**
+     * 根据课程ID和学生ID删除选课记录
+     */
+    @DeleteMapping("/byCourseAndStudent")
+    public AjaxResult deleteByCourseAndStudent(@RequestParam Long courseId,
+                                               @RequestParam String studentId) {
+        int result = courseBookingsService.deleteByCourseAndStudent(courseId, studentId);
+        return result > 0 ? AjaxResult.success("删除成功") : AjaxResult.error("删除失败");
     }
 }

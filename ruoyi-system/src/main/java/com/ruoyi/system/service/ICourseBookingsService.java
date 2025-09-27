@@ -67,4 +67,22 @@ public interface ICourseBookingsService
      * @return 课程选课记录集合（包含课程信息）
      */
     public List<CourseBookingDTO> selectCourseBookingsWithCourseList(CourseBookings courseBookings);
+
+    /**
+     * 检查学生是否选课了指定课程
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @return 是否已选课
+     */
+    public boolean checkIfBooked(Long courseId, String studentId);
+
+    /**
+     * 根据课程ID和学生ID删除选课记录
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @return 结果
+     */
+    public int deleteByCourseAndStudent(Long courseId, String studentId);
 }

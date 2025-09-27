@@ -1,8 +1,8 @@
 package com.ruoyi.system.controller;
 
 import java.util.List;
+import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -94,5 +94,27 @@ public class CoursesController extends BaseController
     public AjaxResult remove(@PathVariable Long[] courseIds)
     {
         return toAjax(coursesService.deleteCoursesByCourseIds(courseIds));
+    }
+
+    /**
+     * 选课容量变化
+     */
+    @PostMapping("/signUpCapacity")
+    public AjaxResult signUpCapacity(@RequestBody Map<String, Object> params) {
+        Long courseId = Long.valueOf(params.get("courseId").toString());
+        Integer version = Integer.valueOf(params.get("version").toString());
+        int result = coursesService.decreaseCapacity(courseId, version);
+        return result > 0 ? AjaxResult.success("选课成功") : AjaxResult.error("选课失败");
+    }
+
+    /**
+     * 取消选课容量变化
+     */
+    @PostMapping("/cancelSignUpCapacity")
+    public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Object> params) {
+        Long courseId = Long.valueOf(params.get("courseId").toString());
+        Integer version = Integer.valueOf(params.get("version").toString());
+        int result = coursesService.increaseCapacity(courseId, version);
+        return result > 0 ? AjaxResult.success("取消选课成功") : AjaxResult.error("取消选课失败");
     }
 }
