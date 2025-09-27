@@ -91,20 +91,30 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="活动名称" prop="activityName">
+          <el-form-item label="课程名称" prop="courseName">
             <el-input
-              v-model="queryParams.activityName"
-              placeholder="请输入活动名称"
+              v-model="queryParams.courseName"
+              placeholder="请输入课程名称"
               clearable
               prefix-icon="el-icon-search"
               class="search-input"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="活动类型" prop="activityType">
-            <el-select v-model="queryParams.activityType" clearable placeholder="请选择活动类型" class="search-input">
+          <el-form-item label="课程分类" prop="courseCategory">
+            <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程分类" class="search-input">
               <el-option
-                v-for="type in predefinedActivityTypes"
+                v-for="category in predefinedCourseCategories"
+                :key="category.value"
+                :label="category.label"
+                :value="category.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="课程类型" prop="courseType">
+            <el-select v-model="queryParams.courseType" clearable placeholder="请选择课程类型" class="search-input">
+              <el-option
+                v-for="type in predefinedCourseTypes"
                 :key="type.value"
                 :label="type.label"
                 :value="type.value"
@@ -163,8 +173,8 @@
       </div>
       <el-table
         v-loading="loading"
-        :data="activityList"
-        ref="activityTable"
+        :data="courseList"
+        ref="courseTable"
         class="modern-table"
         :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
         :row-class-name="tableRowClassName"
@@ -182,15 +192,22 @@
         </el-table-column>
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
-        <el-table-column label="活动名称" align="center" prop="activityName"/>
-        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
+        <el-table-column label="课程名称" align="center" prop="courseName"/>
+        <el-table-column label="课程分类" align="center" prop="courseCategory" width="120">
           <template slot-scope="scope">
-            <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
-              {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
+            <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="course-category-tag">
+              {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="活动地点" align="center" prop="activityLocation"/>
+        <el-table-column label="课程类型" align="center" prop="courseType" width="200">
+          <template slot-scope="scope">
+            <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
+              {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="课程地点" align="center" prop="courseLocation"/>
         <el-table-column label="组织单位" align="center" prop="organizer"/>
 
         <el-table-column label="审核状态" prop="status" align="center" width="100">
@@ -261,9 +278,11 @@
             <div class="sub-row">
               <span>学号：{{ currentBooking.studentId || '-' }}</span>
               <span class="divider">|</span>
-              <span>活动：{{ currentBooking.activityName || '-' }}</span>
+              <span>课程：{{ currentBooking.courseName || '-' }}</span>
               <span class="divider">|</span>
-              <span>类型：{{ getActivityTypeName(currentBooking.activityType) || '-' }}</span>
+              <span>分类：{{ getCourseCategoryName(currentBooking.courseCategory) || '-' }}</span>
+              <span class="divider">|</span>
+              <span>类型：{{ getCourseTypeName(currentBooking.courseType) || '-' }}</span>
             </div>
           </div>
           <div class="header-right">
@@ -271,67 +290,53 @@
           </div>
         </div>
 
-        <el-skeleton :loading="auditLoading" animated :rows="3">
+        <el-skeleton :loading="auditLoading" animated :rows="2">
           <template slot="template">
             <el-skeleton-item variant="h3" style="width: 30%"></el-skeleton-item>
-            <el-skeleton-item variant="image" style="width: 100%; height: 120px; margin-top: 10px"/>
-            <el-skeleton-item variant="text" style="width: 50%; margin-top: 10px"/>
+            <el-skeleton-item variant="rect" style="width: 100%; height: 80px; margin-top: 10px"/>
           </template>
           <template>
-            <div class="audit-grid">
+            <div class="audit-materials">
               <div class="section">
-                <h3>图片材料</h3>
-                <div v-if="auditImages && auditImages.length" class="proof-grid">
+                <h3>审核材料</h3>
+                <div v-if="auditMaterials && auditMaterials.length" class="materials-list">
+                  <div class="debug-info" style="background: #f0f9ff; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; color: #0369a1;">
+                    <strong>🔍 调试信息:</strong> 检测到 {{ auditMaterials.length }} 个材料文件
+                  </div>
                   <div
-                    v-for="(img, idx) in auditImages"
+                    v-for="(material, idx) in auditMaterials"
                     :key="idx"
-                    class="proof-card"
+                    class="material-item"
                   >
-                    <el-image
-                      :src="img"
-                      :preview-src-list="auditImages"
-                      fit="cover"
-                      class="proof-thumb"
-                    />
-                    <div class="proof-overlay">
+                    <div class="material-info">
+                      <i class="el-icon-folder-opened material-icon"></i>
+                      <div class="material-details">
+                        <div class="material-name" :title="material.name">{{ material.name }}</div>
+                        <div class="material-meta">
+                          <el-tag size="mini" type="info">{{ getFileExtension(material.name).toUpperCase() }}</el-tag>
+                          <span class="material-size">{{ formatFileSize(material.size) }}</span>
+                        </div>
+                        <div class="debug-url" style="font-size: 10px; color: #6b7280; margin-top: 2px; word-break: break-all;">
+                          URL: {{ material.url }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="material-actions">
                       <el-button
-                        size="mini"
-                        circle
-                        icon="el-icon-view"
-                        @click.stop="handleProofPreview([auditImagePaths[idx]])"
-                      />
-                      <el-button
-                        size="mini"
-                        circle
+                        size="small"
                         icon="el-icon-download"
-                        @click.stop="downloadSingleFile(img)"
-                      />
+                        type="primary"
+                        @click="downloadMaterial(material)"
+                      >
+                        下载
+                      </el-button>
                     </div>
                   </div>
-                  <div class="proof-actions">
-                    <el-button size="small" icon="el-icon-view" @click="handleProofPreview(auditImagePaths)">预览全部</el-button>
-                    <el-button size="small" icon="el-icon-download" type="primary" @click="downloadProofFiles(auditImagePaths)">全部下载</el-button>
-                  </div>
                 </div>
-                <div v-else class="empty-tip">暂无图片材料</div>
-              </div>
-
-              <div class="section">
-                <h3>文档材料</h3>
-                <div v-if="auditSummary" class="doc-card">
-                  <div class="doc-left">
-                    <i :class="['file-icon', getDocIconClass(auditSummary)]"></i>
-                    <div class="file-meta">
-                      <div class="file-name" :title="getFileName(auditSummary)">{{ getFileName(auditSummary) }}</div>
-                      <el-tag size="mini" type="info">{{ getFileType(auditSummary).toUpperCase() }}</el-tag>
-                    </div>
-                  </div>
-                  <div class="doc-actions">
-                    <el-button size="mini" icon="el-icon-view" @click="handleSummaryCommand({ action: 'preview', file: auditSummary })">预览</el-button>
-                    <el-button size="mini" icon="el-icon-download" type="primary" @click="downloadSummaryFile(auditSummary)">下载</el-button>
-                  </div>
+                <div v-else class="empty-tip">
+                  <i class="el-icon-folder-opened"></i>
+                  <p>暂无审核材料</p>
                 </div>
-                <div v-else class="empty-tip">暂无文档材料</div>
               </div>
             </div>
           </template>
@@ -461,7 +466,7 @@
 </template>
 
 <script>
-import { listBookingsAudit, updateBooking, auditBooking, getAuditCount, getBooking } from "@/api/system/bookings";
+import { listBookingsAudit, auditBooking, getAuditCount, getBookingsDetails, batchAuditBookings } from "@/api/system/courseBookings";
 import { getToken } from "@/utils/auth";
 import { listAuditHistory } from "@/api/student/audit";
 import {getNickName} from "@/api/system/student";
@@ -469,7 +474,7 @@ import axios from "axios";
 
 
 export default {
-  name: "ActivityAudit",
+  name: "CourseAudit",
   data() {
     return {
       // 数据加载状态
@@ -509,13 +514,20 @@ export default {
       pdfError: '',
 
       // 表格数据
-      activityList: [],
+      courseList: [],
       total: 0,
       selectedRows: [],
-      // 可用的活动类型列表
-      availableActivityTypes: [],
-      // 预定义的活动类型
-      predefinedActivityTypes: [
+      // 可用的课程分类列表
+      availableCourseCategories: [],
+      // 预定义的课程分类
+      predefinedCourseCategories: [
+        { value: '必修', label: '必修课' },
+        { value: '选修', label: '选修课' }
+      ],
+      // 可用的课程类型列表
+      availableCourseTypes: [],
+      // 预定义的课程类型（与活动类型相同）
+      predefinedCourseTypes: [
         { value: '1', label: '人格塑造与价值引领活动类' },
         { value: '2', label: '知识融合与思维进阶活动类' },
         { value: '3', label: '能力锻造与实践创新活动类' },
@@ -526,9 +538,7 @@ export default {
       auditDialogVisible: false,
       auditDialogTitle: '审核材料',
       currentBooking: null,
-      auditImagePaths: [],
-      auditImages: [],
-      auditSummary: null,
+      auditMaterials: [],
       auditLoading: false,
       actionLoading: false,
 
@@ -538,8 +548,9 @@ export default {
         pageSize: 10,
         studentId: null,
         studentName: null,
-        activityName: null,
-        activityType: null,
+        courseName: null,
+        courseCategory: null,
+        courseType: null,
         status: null,
         organizer: null
       }
@@ -554,21 +565,113 @@ export default {
       this.currentBooking = row;
       this.auditDialogTitle = `审核材料`;
       this.auditDialogVisible = true;
-      // 拉取材料详情（与学生端一致接口）
+      // 拉取材料详情
       try {
         this.auditLoading = true;
-        const res = await this.$options.methods._getBookingDetail.call(this, row.bookingId);
+        console.log('🔍 开始获取审核材料详情，bookingId:', row.bookingId);
+        
+        const res = await getBookingsDetails(row.bookingId);
+        console.log('📡 API响应原始数据:', res);
+        
         const data = res && res.data ? res.data : {};
-        this.auditImagePaths = Array.isArray(data.proof) ? data.proof : [];
-        this.auditImages = this.auditImagePaths.map(p => `${process.env.VUE_APP_BASE_API}${p}`);
-        this.auditSummary = data.summary || null;
+        console.log('📋 解析后的数据:', data);
+        console.log('📎 proof字段值:', data.proof);
+        console.log('📎 proof字段类型:', typeof data.proof);
+        console.log('📎 proof是否为数组:', Array.isArray(data.proof));
+        
+        // 处理审核材料（压缩包）- 使用proof字段
+        this.auditMaterials = [];
+        if (data.proof && Array.isArray(data.proof) && data.proof.length > 0) {
+          console.log('✅ 检测到proof为数组，长度:', data.proof.length);
+          this.auditMaterials = data.proof.map((proofPath, index) => {
+            console.log(`📁 处理第${index + 1}个材料:`, proofPath);
+            return {
+              name: `审核材料_${index + 1}.zip`,
+              url: proofPath,
+              size: 0, // 后端可能不提供文件大小
+              type: 'application/zip'
+            };
+          });
+          console.log('📦 最终材料列表:', this.auditMaterials);
+        } else if (data.proof && typeof data.proof === 'string') {
+          console.log('✅ 检测到proof为字符串:', data.proof);
+          // 单个材料文件
+          this.auditMaterials = [{
+            name: '审核材料.zip',
+            url: data.proof,
+            size: 0,
+            type: 'application/zip'
+          }];
+          console.log('📦 单个材料对象:', this.auditMaterials);
+        } else {
+          console.warn('⚠️ proof字段为空或格式不正确:', data.proof);
+          console.log('🔍 完整数据对象:', JSON.stringify(data, null, 2));
+        }
       } catch (e) {
-        this.auditImagePaths = [];
-        this.auditImages = [];
-        this.auditSummary = null;
+        console.error('❌ 获取审核材料失败:', e);
+        console.error('❌ 错误详情:', e.message);
+        this.auditMaterials = [];
       } finally {
         this.auditLoading = false;
       }
+    },
+
+    // 下载审核材料
+    downloadMaterial(material) {
+      console.log('📥 开始下载材料:', material);
+      
+      if (!material.url) {
+        console.error('❌ 材料URL不存在:', material);
+        this.$message.error('文件路径不存在');
+        return;
+      }
+      
+      try {
+        const link = document.createElement('a');
+        // 处理proof字段的路径，确保以正确的API前缀开头
+        let downloadUrl = material.url;
+        console.log('🔗 原始URL:', downloadUrl);
+        console.log('🌐 API基础地址:', process.env.VUE_APP_BASE_API);
+        
+        if (!downloadUrl.startsWith('http')) {
+          // 如果路径不是以http开头，添加API前缀
+          downloadUrl = downloadUrl.startsWith('/') 
+            ? `${process.env.VUE_APP_BASE_API}${downloadUrl}`
+            : `${process.env.VUE_APP_BASE_API}/${downloadUrl}`;
+        }
+        
+        console.log('🔗 最终下载URL:', downloadUrl);
+        console.log('📁 文件名:', material.name);
+        
+        link.href = downloadUrl;
+        link.download = material.name;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log('✅ 下载链接已触发');
+        this.$message.success('开始下载文件');
+      } catch (error) {
+        console.error('❌ 下载失败:', error);
+        console.error('❌ 错误详情:', error.message);
+        this.$message.error('下载失败，请重试');
+      }
+    },
+
+    // 获取文件扩展名
+    getFileExtension(filename) {
+      if (!filename) return 'zip';
+      const parts = filename.split('.');
+      return parts.length > 1 ? parts[parts.length - 1] : 'zip';
+    },
+
+    // 格式化文件大小
+    formatFileSize(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     },
 
     async approveCurrent() {
@@ -633,10 +736,6 @@ export default {
       }
     },
 
-    // 分离出获取详情，便于单测与复用
-    _getBookingDetail(bookingId) {
-      return getBooking(bookingId);
-    },
     onSelectionChange(selection) {
       this.selectedRows = selection || [];
     },
@@ -681,27 +780,28 @@ export default {
         let successCount = 0;
         let failCount = 0;
 
-        for (const row of this.selectedRows) {
-          const payload = {
-            bookingId: row.bookingId,
-            status: statusMapping[actionLabel],
-            reviewComment,
-            reviewTime: new Date().toISOString(),
-            reviewer: this.$store.state.user.name
-          };
-          try {
-            await this.$options.methods._updateSingleBooking.call(this, payload);
-            successCount++;
-          } catch (e) {
-            failCount++;
-          }
+        // 准备批量审核数据
+        const batchData = this.selectedRows.map(row => ({
+          bookingId: row.bookingId,
+          status: statusMapping[actionLabel],
+          reviewerComment: reviewComment,
+          reviewTime: new Date(),
+          reviewer: this.$store.state.user.name
+        }));
+
+        try {
+          await batchAuditBookings(batchData);
+          successCount = this.selectedRows.length;
+        } catch (e) {
+          failCount = this.selectedRows.length;
+          throw e;
         }
 
         loading.close();
         this.$message.success(`批量完成：成功 ${successCount} 条，失败 ${failCount} 条`);
         this.getList();
         this.fetchAuditCount();
-        this.$refs.activityTable && this.$refs.activityTable.clearSelection();
+        this.$refs.courseTable && this.$refs.courseTable.clearSelection();
       } catch (e) {
         if (e !== 'cancel') {
           this.$message.error('批量审核失败');
@@ -723,48 +823,82 @@ export default {
       return statusMap[status] || 'info';
     },
 
-    // 活动类型映射函数：将数字转换为对应的类型名称
-    getActivityTypeName(activityType) {
+    // 课程分类映射函数：将分类值转换为对应的分类名称
+    getCourseCategoryName(courseCategory) {
+      const categoryMap = {
+        '必修': '必修课',
+        '选修': '选修课'
+      };
+      return categoryMap[courseCategory] || courseCategory;
+    },
+
+    getCourseCategoryTagType(courseCategory) {
+      const map = {
+        '必修': 'primary',   // 必修课 - 蓝色
+        '选修': 'success'    // 选修课 - 绿色
+      };
+      return map[courseCategory] || 'info';
+    },
+
+    // 课程类型映射函数：将数字转换为对应的类型名称
+    getCourseTypeName(courseType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
         '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
-      return typeMap[activityType] || activityType;
+      return typeMap[courseType] || courseType;
     },
 
-    getActivityTypeTagType(activityType) {
+    getCourseTypeTagType(courseType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
         '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
         '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
-        '其他': ''        // 默认蓝色
-      }
-      return map[activityType] || 'info';
+        '4': 'info'       // 社会责任与领军意识活动类 - 灰色
+      };
+      return map[courseType] || 'info';
     },
 
-    /** 更新可用的活动类型列表 */
-    updateAvailableActivityTypes() {
-      const types = new Set();
-      this.activityList.forEach(item => {
-        if (item.activityType) {
-          types.add(item.activityType);
+    /** 更新可用的课程分类列表 */
+    updateAvailableCourseCategories() {
+      const categories = new Set();
+      this.courseList.forEach(item => {
+        if (item.courseCategory) {
+          categories.add(item.courseCategory);
         }
       });
 
-      // 如果没有活动类型数据，提供默认选项
+      // 如果没有课程分类数据，提供默认选项
+      if (categories.size === 0) {
+        categories.add('必修');
+        categories.add('选修');
+      }
+
+      // 转换为数组并排序
+      this.availableCourseCategories = Array.from(categories).sort();
+    },
+
+    /** 更新可用的课程类型列表 */
+    updateAvailableCourseTypes() {
+      const types = new Set();
+      this.courseList.forEach(item => {
+        if (item.courseType) {
+          types.add(item.courseType);
+        }
+      });
+
+      // 如果没有课程类型数据，提供默认选项
       if (types.size === 0) {
         types.add('1');
         types.add('2');
         types.add('3');
         types.add('4');
-        types.add('其他');
       }
 
       // 转换为数组并排序
-      this.availableActivityTypes = Array.from(types).sort();
+      this.availableCourseTypes = Array.from(types).sort();
     },
     // 获取活动列表
     getList() {
@@ -774,12 +908,30 @@ export default {
       // 封装获取审核列表的逻辑
       const fetchAuditList = (params) => {
         listBookingsAudit(params).then(response => {
-          console.log("获取审核列表成功:", response);
-          this.activityList = response.rows;
+          console.log("📋 获取审核列表成功:", response);
+          console.log("📊 审核列表数据行数:", response.rows ? response.rows.length : 0);
+          console.log("📊 总记录数:", response.total);
+          
+          // 检查每行数据的proof字段
+          if (response.rows && response.rows.length > 0) {
+            response.rows.forEach((row, index) => {
+              console.log(`📎 第${index + 1}行数据:`, {
+                bookingId: row.bookingId,
+                courseName: row.courseName,
+                studentName: row.studentName,
+                proof: row.proof,
+                proofType: typeof row.proof,
+                isProofArray: Array.isArray(row.proof)
+              });
+            });
+          }
+          
+          this.courseList = response.rows;
           this.total = response.total;
-          this.updateAvailableActivityTypes();
+          this.updateAvailableCourseCategories();
+          this.updateAvailableCourseTypes();
         }).catch(error => {
-          console.error("获取审核列表失败:", error);
+          console.error("❌ 获取审核列表失败:", error);
           this.$message.error("获取审核列表失败");
         }).finally(() => {
           this.loading = false;
@@ -1146,8 +1298,8 @@ export default {
         const auditData = {
           bookingId: row.bookingId,
           status: statusMapping[status],
-          reviewComment: isApproved ? '系统审核通过' : value,
-          reviewTime: new Date().toISOString(),
+          reviewerComment: isApproved ? '系统审核通过' : value,
+          reviewTime: new Date(),
           reviewer: this.$store.state.user.name
         };
 
@@ -1187,9 +1339,9 @@ export default {
 
     // 导出数据
     handleExport() {
-      this.download('system/bookings/export', {
+      this.download('system/courseBookings/exportAudit', {
         ...this.queryParams
-      }, `activity${new Date().getTime()}.xlsx`);
+      }, `courseAudit${new Date().getTime()}.xlsx`);
     },
 
     // 表格行样式
@@ -1630,6 +1782,92 @@ export default {
 .hover-zoom:hover {
   transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* 审核材料样式 */
+.audit-materials {
+  padding: 20px 0;
+}
+
+.materials-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.material-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.material-item:hover {
+  border-color: #409EFF;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
+}
+
+.material-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.material-icon {
+  font-size: 24px;
+  color: #409EFF;
+}
+
+.material-details {
+  flex: 1;
+}
+
+.material-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.material-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.material-size {
+  font-size: 12px;
+  color: #909399;
+}
+
+.material-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.empty-tip {
+  text-align: center;
+  padding: 40px 20px;
+  color: #909399;
+}
+
+.empty-tip i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.empty-tip p {
+  margin: 0;
+  font-size: 14px;
 }
 
 /* 文档卡片样式 */

@@ -24,6 +24,30 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "学生ID")
     private String studentId;
 
+    /** 学生姓名 */
+    @Excel(name = "学生姓名")
+    private String studentName;
+
+    /** 所属书院 */
+    @Excel(name = "所属书院")
+    private String academy;
+
+    /** 录取专业 */
+    @Excel(name = "录取专业")
+    private String major;
+
+    /** 分流后系统内专业 */
+    @Excel(name = "分流后系统内专业")
+    private String systemMajor;
+
+    /** 行政班 */
+    @Excel(name = "行政班")
+    private String studentClass;
+
+    /** 学生性别 */
+    @Excel(name = "学生性别")
+    private String studentSex;
+
     /** 课程ID */
     @Excel(name = "课程ID")
     private Long courseId;
@@ -81,6 +105,20 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "课程类型")
     private Long courseType;
 
+    /** 课程分类 */
+    @Excel(name = "课程分类")
+    private String courseCategory;
+
+    /** 选课开始时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "选课开始时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date courseStart;
+
+    /** 选课截止时间 */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "选课截止时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    private Date courseDeadline;
+
     /** 课程地点 */
     @Excel(name = "课程地点")
     private String courseLocation;
@@ -111,9 +149,6 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "课程学分")
     private java.math.BigDecimal courseCredit;
 
-    /** 课程类别 */
-    @Excel(name = "课程类别")
-    private String courseCategory;
 
     // Getters and Setters
     public Long getBookingId() {
@@ -130,6 +165,54 @@ public class CourseBookingDTO extends BaseEntity
 
     public void setStudentId(String studentId) {
         this.studentId = studentId;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getAcademy() {
+        return academy;
+    }
+
+    public void setAcademy(String academy) {
+        this.academy = academy;
+    }
+
+    public String getMajor() {
+        return major;
+    }
+
+    public void setMajor(String major) {
+        this.major = major;
+    }
+
+    public String getSystemMajor() {
+        return systemMajor;
+    }
+
+    public void setSystemMajor(String systemMajor) {
+        this.systemMajor = systemMajor;
+    }
+
+    public String getStudentClass() {
+        return studentClass;
+    }
+
+    public void setStudentClass(String studentClass) {
+        this.studentClass = studentClass;
+    }
+
+    public String getStudentSex() {
+        return studentSex;
+    }
+
+    public void setStudentSex(String studentSex) {
+        this.studentSex = studentSex;
     }
 
     public Long getCourseId() {
@@ -236,6 +319,30 @@ public class CourseBookingDTO extends BaseEntity
         this.courseType = courseType;
     }
 
+    public String getCourseCategory() {
+        return courseCategory;
+    }
+
+    public void setCourseCategory(String courseCategory) {
+        this.courseCategory = courseCategory;
+    }
+
+    public Date getCourseStart() {
+        return courseStart;
+    }
+
+    public void setCourseStart(Date courseStart) {
+        this.courseStart = courseStart;
+    }
+
+    public Date getCourseDeadline() {
+        return courseDeadline;
+    }
+
+    public void setCourseDeadline(Date courseDeadline) {
+        this.courseDeadline = courseDeadline;
+    }
+
     public String getCourseLocation() {
         return courseLocation;
     }
@@ -290,14 +397,6 @@ public class CourseBookingDTO extends BaseEntity
 
     public void setCourseCredit(java.math.BigDecimal courseCredit) {
         this.courseCredit = courseCredit;
-    }
-
-    public String getCourseCategory() {
-        return courseCategory;
-    }
-
-    public void setCourseCategory(String courseCategory) {
-        this.courseCategory = courseCategory;
     }
 
     @Override

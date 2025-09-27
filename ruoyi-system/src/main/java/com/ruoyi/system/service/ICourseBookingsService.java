@@ -1,6 +1,7 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
+import java.util.Map;
 import com.ruoyi.system.domain.CourseBookings;
 import com.ruoyi.system.domain.CourseBookingDTO;
 
@@ -85,4 +86,43 @@ public interface ICourseBookingsService
      * @return 结果
      */
     public int deleteByCourseAndStudent(Long courseId, String studentId);
+
+    /**
+     * 查询课程选课记录列表（包含详情）
+     *
+     * @param courseBookingDTO 课程选课记录DTO
+     * @return 课程选课记录集合（包含详情）
+     */
+    public List<CourseBookingDTO> selectCourseBookingsListWithDetails(CourseBookingDTO courseBookingDTO);
+
+    /**
+     * 查询课程选课记录列表（审核列表）
+     *
+     * @param courseBookingDTO 课程选课记录DTO
+     * @return 课程选课记录集合（审核列表）
+     */
+    public List<CourseBookingDTO> selectCourseBookingsListAudit(CourseBookingDTO courseBookingDTO);
+
+    /**
+     * 根据ID查询课程选课记录（包含详情）
+     *
+     * @param bookingId 课程选课记录主键
+     * @return 课程选课记录（包含详情）
+     */
+    public CourseBookingDTO selectCourseBookingsByBookingIdWithDetails(Long bookingId);
+
+    /**
+     * 专门的审核更新方法，只更新审核相关字段
+     *
+     * @param courseBookings 课程选课记录
+     * @return 结果
+     */
+    public int updateCourseBookingsAudit(CourseBookings courseBookings);
+
+    /**
+     * 统计审核状态
+     *
+     * @return 审核状态统计
+     */
+    public Map<String, Object> countCourseBookingAuditStatus();
 }

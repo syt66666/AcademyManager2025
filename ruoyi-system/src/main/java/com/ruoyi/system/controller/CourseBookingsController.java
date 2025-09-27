@@ -128,4 +128,82 @@ public class CourseBookingsController extends BaseController
         int result = courseBookingsService.deleteByCourseAndStudent(courseId, studentId);
         return result > 0 ? AjaxResult.success("删除成功") : AjaxResult.error("删除失败");
     }
+
+    /**
+     * 查询课程选课记录审核列表
+     */
+    @GetMapping("/auditList")
+    public TableDataInfo auditList(CourseBookingDTO courseBookingDTO)
+    {
+        startPage();
+        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListAudit(courseBookingDTO);
+        return getDataTable(list);
+    }
+
+    /**
+     * 查询课程选课记录列表（包含详情）
+     */
+    @GetMapping("/listWithDetails")
+    public TableDataInfo listWithDetails(CourseBookingDTO courseBookingDTO)
+    {
+        startPage();
+        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListWithDetails(courseBookingDTO);
+        return getDataTable(list);
+    }
+
+    /**
+     * 获取课程选课记录详细信息（包含课程和学生信息）
+     */
+    @GetMapping(value = "/details/{bookingId}")
+    public AjaxResult getDetails(@PathVariable("bookingId") Long bookingId)
+    {
+        return success(courseBookingsService.selectCourseBookingsByBookingIdWithDetails(bookingId));
+    }
+
+    /**
+     * 审核课程选课记录
+     */
+    @Log(title = "课程选课审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/audit")
+    public AjaxResult audit(@RequestBody CourseBookings courseBookings)
+    {
+        return toAjax(courseBookingsService.updateCourseBookingsAudit(courseBookings));
+    }
+
+    /**
+     * 批量审核课程选课记录
+     */
+    @Log(title = "课程选课批量审核", businessType = BusinessType.UPDATE)
+    @PutMapping("/batchAudit")
+    public AjaxResult batchAudit(@RequestBody List<CourseBookings> courseBookingsList)
+    {
+        int successCount = 0;
+        for (CourseBookings courseBookings : courseBookingsList) {
+            if (courseBookingsService.updateCourseBookingsAudit(courseBookings) > 0) {
+                successCount++;
+            }
+        }
+        return AjaxResult.success("成功审核 " + successCount + " 条记录");
+    }
+
+    /**
+     * 获取审核统计信息
+     */
+    @GetMapping("/auditCount")
+    public AjaxResult getAuditCount()
+    {
+        return success(courseBookingsService.countCourseBookingAuditStatus());
+    }
+
+    /**
+     * 导出课程选课审核列表
+     */
+    @Log(title = "课程选课审核", businessType = BusinessType.EXPORT)
+    @PostMapping("/exportAudit")
+    public void exportAudit(HttpServletResponse response, CourseBookingDTO courseBookingDTO)
+    {
+        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListAudit(courseBookingDTO);
+        ExcelUtil<CourseBookingDTO> util = new ExcelUtil<CourseBookingDTO>(CourseBookingDTO.class);
+        util.exportExcel(response, list, "课程选课审核数据");
+    }
 }

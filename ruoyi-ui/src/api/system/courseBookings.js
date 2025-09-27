@@ -78,3 +78,64 @@ export function addBooking(data) {
     data: data
   })
 }
+
+// 查询课程选课记录审核列表
+export function listBookingsAudit(query) {
+  return request({
+    url: '/system/courseBookings/auditList',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询课程选课记录列表（包含详情）
+export function listBookingsWithDetails(query) {
+  return request({
+    url: '/system/courseBookings/listWithDetails',
+    method: 'get',
+    params: query
+  })
+}
+
+// 获取课程选课记录详细信息（包含课程和学生信息）
+export function getBookingsDetails(bookingId) {
+  return request({
+    url: '/system/courseBookings/details/' + bookingId,
+    method: 'get'
+  })
+}
+
+// 审核课程选课记录
+export function auditBooking(data) {
+  return request({
+    url: '/system/courseBookings/audit',
+    method: 'put',
+    data: data
+  })
+}
+
+// 批量审核课程选课记录
+export function batchAuditBookings(data) {
+  return request({
+    url: '/system/courseBookings/batchAudit',
+    method: 'put',
+    data: data
+  })
+}
+
+// 获取审核统计信息
+export function getAuditCount() {
+  return request({
+    url: '/system/courseBookings/auditCount',
+    method: 'get'
+  })
+}
+
+// 导出课程选课审核列表
+export function exportAuditBookings(query) {
+  return request({
+    url: '/system/courseBookings/exportAudit',
+    method: 'post',
+    params: query
+  })
+}
