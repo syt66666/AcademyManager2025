@@ -1,10 +1,8 @@
 package com.ruoyi.system.controller;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,14 +11,14 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.domain.CourseBookings;
-import com.ruoyi.system.domain.dto.CourseBookingDTO;
-import com.ruoyi.system.domain.dto.CourseBookingExportDTO;
+import com.ruoyi.system.domain.CourseBookingDTO;
 import com.ruoyi.system.service.ICourseBookingsService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -53,43 +51,10 @@ public class CourseBookingsController extends BaseController
      * 查询课程选课记录列表（包含课程信息）
      */
     @GetMapping("/listWithCourse")
-    public TableDataInfo listWithCourse(CourseBookingDTO courseBookingDTO)
+    public TableDataInfo listWithCourse(CourseBookings courseBookings)
     {
         startPage();
-        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListWithDetails(courseBookingDTO);
-        return getDataTable(list);
-    }
-
-    /**
-     * 查询课程选课记录列表（包含详情）
-     */
-    @GetMapping("/listWithDetails")
-    public TableDataInfo listWithDetails(CourseBookingDTO courseBookingDTO)
-    {
-        startPage();
-        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListWithDetails(courseBookingDTO);
-        return getDataTable(list);
-    }
-
-    /**
-     * 查询课程选课记录列表（已提交状态）
-     */
-    @GetMapping("/listSubmitted")
-    public TableDataInfo listSubmitted(CourseBookingDTO courseBookingDTO)
-    {
-        startPage();
-        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListSubmitted(courseBookingDTO);
-        return getDataTable(list);
-    }
-
-    /**
-     * 查询课程选课记录列表（审核列表）
-     */
-    @GetMapping("/listAudit")
-    public TableDataInfo listAudit(CourseBookingDTO courseBookingDTO)
-    {
-        startPage();
-        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListAudit(courseBookingDTO);
+        List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsWithCourseList(courseBookings);
         return getDataTable(list);
     }
 
@@ -106,33 +71,12 @@ public class CourseBookingsController extends BaseController
     }
 
     /**
-     * 导出课程选课学生列表
-     */
-    @Log(title = "课程选课学生", businessType = BusinessType.EXPORT)
-    @PostMapping("/exportStudents")
-    public void exportStudents(HttpServletResponse response, CourseBookingExportDTO courseBookingExportDTO)
-    {
-        List<CourseBookingExportDTO> list = courseBookingsService.selectCourseBookingExportList(courseBookingExportDTO);
-        ExcelUtil<CourseBookingExportDTO> util = new ExcelUtil<CourseBookingExportDTO>(CourseBookingExportDTO.class);
-        util.exportExcel(response, list, "课程选课学生数据");
-    }
-
-    /**
      * 获取课程选课记录详细信息
      */
     @GetMapping(value = "/{bookingId}")
     public AjaxResult getInfo(@PathVariable("bookingId") Long bookingId)
     {
         return success(courseBookingsService.selectCourseBookingsByBookingId(bookingId));
-    }
-
-    /**
-     * 获取课程选课记录详细信息（包含证明材料和总结文档）
-     */
-    @GetMapping(value = "/detail/{bookingId}")
-    public AjaxResult getDetail(@PathVariable("bookingId") Long bookingId)
-    {
-        return success(courseBookingsService.selectCourseBookingsByBookingIdWithDetails(bookingId));
     }
 
     /**
@@ -156,16 +100,6 @@ public class CourseBookingsController extends BaseController
     }
 
     /**
-     * 审核课程选课记录
-     */
-    @Log(title = "课程选课审核", businessType = BusinessType.UPDATE)
-    @PutMapping("/audit")
-    public AjaxResult audit(@RequestBody CourseBookings courseBookings)
-    {
-        return toAjax(courseBookingsService.updateCourseBookingsAudit(courseBookings));
-    }
-
-    /**
      * 删除课程选课记录
      */
     @Log(title = "课程选课记录", businessType = BusinessType.DELETE)
@@ -176,54 +110,22 @@ public class CourseBookingsController extends BaseController
     }
 
     /**
+     * 检查学生是否选课了指定课程
+     */
+    @GetMapping("/checkBooking")
+    public AjaxResult checkBookingSimple(@RequestParam Long courseId,
+                                         @RequestParam String studentId) {
+        boolean isBooked = courseBookingsService.checkIfBooked(courseId, studentId);
+        return AjaxResult.success(Collections.singletonMap("isBooked", isBooked));
+    }
+
+    /**
      * 根据课程ID和学生ID删除选课记录
      */
-    @Log(title = "课程选课记录", businessType = BusinessType.DELETE)
-    @DeleteMapping("/course/{courseId}/student/{studentId}")
-    public AjaxResult removeByCourseAndStudent(@PathVariable Long courseId, @PathVariable String studentId)
-    {
-        return toAjax(courseBookingsService.deleteCourseBookingsByCourseAndStudent(courseId, studentId));
-    }
-
-    /**
-     * 检查课程选课记录是否存在
-     */
-    @GetMapping("/check/{courseId}/{studentId}")
-    public AjaxResult checkExists(@PathVariable Long courseId, @PathVariable String studentId)
-    {
-        Map<String, Object> result = courseBookingsService.checkCourseBookingSimple(courseId, studentId);
-        return success(result);
-    }
-
-    /**
-     * 检查是否已选课
-     */
-    @GetMapping("/checkBooked/{courseId}/{studentId}")
-    public AjaxResult checkBooked(@PathVariable Long courseId, @PathVariable String studentId)
-    {
-        boolean isBooked = courseBookingsService.checkIfCourseBooked(courseId, studentId);
-        Map<String, Object> result = new HashMap<>();
-        result.put("isBooked", isBooked);
-        return success(result);
-    }
-
-    /**
-     * 根据学生ID查询已选课程ID列表
-     */
-    @GetMapping("/courses/{studentId}")
-    public AjaxResult getCoursesByStudent(@PathVariable String studentId)
-    {
-        List<Long> courseIds = courseBookingsService.selectCourseIdsByStudentId(studentId);
-        return success(courseIds);
-    }
-
-    /**
-     * 统计课程选课审核状态
-     */
-    @GetMapping("/auditCount")
-    public AjaxResult getAuditCount()
-    {
-        Map<String, Integer> status = courseBookingsService.countCourseBookingAuditStatus();
-        return success(status);
+    @DeleteMapping("/byCourseAndStudent")
+    public AjaxResult deleteByCourseAndStudent(@RequestParam Long courseId,
+                                               @RequestParam String studentId) {
+        int result = courseBookingsService.deleteByCourseAndStudent(courseId, studentId);
+        return result > 0 ? AjaxResult.success("删除成功") : AjaxResult.error("删除失败");
     }
 }
