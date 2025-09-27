@@ -1,9 +1,6 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
-
-import com.ruoyi.common.exception.ServiceException;
-import com.ruoyi.system.domain.Courses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.CoursesMapper;
@@ -93,39 +90,4 @@ public class CoursesServiceImpl implements ICoursesService
     {
         return coursesMapper.deleteCoursesByCourseId(courseId);
     }
-    /**
-     * 修改活动容量
-     */
-    @Override
-    public int increaseCapacity(Integer courseId,Integer version) {
-        Courses course = coursesMapper.selectCoursesByCourseId((long)courseId);
-        if (course == null) {
-            throw new ServiceException("活动不存在！");
-        }
-        int result = coursesMapper.increaseCapacity(courseId, version);
-        if (result == 0) {
-            throw new ServiceException("数据出现错误，请刷新重试！");
-        }
-        return result;
-    }
-
-    @Override
-    public int decreaseCapacity(Integer courseId,Integer version) {
-        Courses course = coursesMapper.selectCoursesByCourseId((long)courseId);
-        if (course == null) {
-            throw new ServiceException("活动不存在！");
-        }
-        int result = coursesMapper.decreaseCapacity(courseId, version);
-        if (result == 0) {
-            throw new ServiceException("数据出现错误，请刷新重试！");
-        }
-        return result;
-    }
-
-    @Override
-    public boolean checkCourseUnique(String courseName, String organizer, Integer courseId) {
-        int count = coursesMapper.checkCourseUnique(courseName, organizer, courseId);
-        return count == 0;
-    }
-
 }

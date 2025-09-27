@@ -6,6 +6,7 @@
       <div class="card-header">
         <i class="el-icon-search"></i>
         <span>搜索条件</span>
+        <span class="time-range-info">{{ getTimeRangeText() }}</span>
       </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
         <div class="search-row">
@@ -52,7 +53,7 @@
         <span>课程列表</span>
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
-    <!-- 课程表格（核心修改：缩小课程名称列宽度） -->
+      <!-- 课程表格（核心修改：缩小课程名称列宽度） -->
       <el-table
         v-loading="loading"
         :data="coursesList"
@@ -61,50 +62,63 @@
         :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
         :row-class-name="getRowClassName"
       >
-      <!-- 多选框列 -->
-      <el-table-column type="selection" width="55" align="center" />
-      <!-- 序号列 -->
-      <el-table-column label="序号" align="center" width="80">
-        <template slot-scope="scope">
-          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-        </template>
-      </el-table-column>
-      <!-- 课程名称列（核心修改：宽度设为150px，比默认缩小，适配短名称显示） -->
-      <el-table-column label="课程名称" align="center" prop="courseName"  show-overflow-tooltip />
-      <!-- 选课开始时间列 -->
-      <el-table-column label="选课开始时间" align="center" prop="courseStart" >
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <!-- 选课截止时间列 -->
-      <el-table-column label="选课截止时间" align="center" prop="courseDeadline" >
-        <template slot-scope="scope">
-          <span>{{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-        </template>
-      </el-table-column>
-      <!-- 课程状态列 -->
-      <el-table-column label="课程状态" align="center" prop="status" >
-        <template slot-scope="scope">
-          <el-tag :type="getCourseStatusTagType(scope.row)" effect="dark" class="status-tag">
-            {{ getCourseStatusText(scope.row) }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <!-- 选课人数列 -->
-      <el-table-column label="选课人数" align="center" width="120">
-        <template slot-scope="scope">
+        <!-- 多选框列 -->
+        <el-table-column type="selection" width="55" align="center" />
+        <!-- 序号列 -->
+        <el-table-column label="序号" align="center" width="80">
+          <template slot-scope="scope">
+            {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
+        <!-- 课程名称列（核心修改：宽度设为150px，比默认缩小，适配短名称显示） -->
+        <el-table-column label="课程名称" align="center" prop="courseName"  show-overflow-tooltip />
+        <!-- 选课开始时间列 -->
+        <el-table-column label="选课开始时间" align="center" prop="courseStart" >
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:00') }}</span>
+          </template>
+        </el-table-column>
+        <!-- 选课截止时间列 -->
+        <el-table-column label="选课截止时间" align="center" prop="courseDeadline" >
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <!-- 课程状态列 -->
+        <el-table-column label="课程状态" align="center" prop="status" >
+          <template slot-scope="scope">
+            <el-tag :type="getCourseStatusTagType(scope.row)" effect="dark" class="status-tag">
+              {{ getCourseStatusText(scope.row) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <!-- 选课人数列 -->
+        <el-table-column label="选课人数" align="center" width="120">
+          <template slot-scope="scope">
           <span>
             {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}
             /{{ scope.row.courseTotalCapacity }}
           </span>
-        </template>
-      </el-table-column>
-      <!-- 操作列（保留原有功能） -->
+          </template>
+        </el-table-column>
+        <!-- 操作列（保留原有功能） -->
         <el-table-column label="操作" align="center" fixed="right" width="120">
           <template slot-scope="scope">
+            <!-- 添加取消限制检查 -->
+            <el-tooltip
+              v-if="!getCanSignUp(scope.row)"
+              content="本月取消次数已达上限（3次），无法选课"
+              placement="top"
+            >
+              <el-button
+                type="text"
+                size="mini"
+                class="action-button disabled-button"
+                disabled
+              >无法选课</el-button>
+            </el-tooltip>
             <el-button
-              v-if="getSignStatusText(scope.row) === '可选课'"
+              v-else-if="getSignStatusText(scope.row) === '可选课'"
               type="text"
               size="mini"
               class="action-button signup-button"
@@ -133,31 +147,31 @@
             >不可选课</el-button>
           </template>
         </el-table-column>
-    </el-table>
+      </el-table>
 
-    <!-- 分页组件（保留原有） -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="queryParams.pageNum"
-      :limit.sync="queryParams.pageSize"
-      @pagination="getList"
-    />
+      <!-- 分页组件（保留原有） -->
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="queryParams.pageNum"
+        :limit.sync="queryParams.pageSize"
+        @pagination="getList"
+      />
     </div>
 
 
 
-  <!-- 图片预览对话框 -->
-  <el-dialog
-    title="图片预览"
-    :visible.sync="imagePreviewVisible"
-    width="60%"
-    append-to-body
-    class="image-preview-dialog">
-    <div class="preview-container">
-      <img :src="previewImageUrl" class="preview-image" />
-    </div>
-  </el-dialog>
+    <!-- 图片预览对话框 -->
+    <el-dialog
+      title="图片预览"
+      :visible.sync="imagePreviewVisible"
+      width="60%"
+      append-to-body
+      class="image-preview-dialog">
+      <div class="preview-container">
+        <img :src="previewImageUrl" class="preview-image" />
+      </div>
+    </el-dialog>
 
 
     <!-- 课程详情弹窗 -->
@@ -183,115 +197,126 @@
         </div>
         <el-divider></el-divider>
         <div class="detail-grid">
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-location"></i> 上课地点：</div>
-          <div class="detail-value">{{ selectedCourse.courseLocation }}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-office-building"></i> 课程类型：</div>
-          <div class="detail-value">{{ getCourseTypeName(selectedCourse.courseType) }}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
-          <div class="detail-value">{{ selectedCourse.organizer }}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-user"></i> 课程容量：</div>
-          <div class="detail-value">
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-location"></i> 上课地点：</div>
+            <div class="detail-value">{{ selectedCourse.courseLocation }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 课程类型：</div>
+            <div class="detail-value">{{ getCourseTypeName(selectedCourse.courseType) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
+            <div class="detail-value">{{ selectedCourse.organizer }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-user"></i> 课程容量：</div>
+            <div class="detail-value">
             <span :class="getCapacityClass(selectedCourse)">
               {{ selectedCourse.courseTotalCapacity - selectedCourse.courseCapacity }}/{{ selectedCourse.courseTotalCapacity }}人
             </span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.courseStart) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课截止：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.courseDeadline) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 课程开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.startTime) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 课程结束：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.endTime) }}</div>
           </div>
         </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课开始：</div>
-          <div class="detail-value">{{ formatDateTime(selectedCourse.courseStart) }}</div>
+        <el-divider></el-divider>
+        <div class="detail-section-content">
+          <h4 class="section-title"><i class="el-icon-document"></i> 课程描述</h4>
+          <div class="section-content">
+            <!-- 使用 v-html 渲染富文本内容 -->
+            <div class="rich-text-content" v-html="selectedCourse.courseDescription || '暂无描述信息'"></div>
+          </div>
         </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课截止：</div>
-          <div class="detail-value">{{ formatDateTime(selectedCourse.courseDeadline) }}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-time"></i> 课程开始：</div>
-          <div class="detail-value">{{ formatDateTime(selectedCourse.startTime) }}</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label"><i class="el-icon-time"></i> 课程结束：</div>
-          <div class="detail-value">{{ formatDateTime(selectedCourse.endTime) }}</div>
-        </div>
-      </div>
-      <el-divider></el-divider>
-      <div class="detail-section-content">
-        <h4 class="section-title"><i class="el-icon-document"></i> 课程描述</h4>
-        <div class="section-content">
-          <!-- 使用 v-html 渲染富文本内容 -->
-          <div class="rich-text-content" v-html="selectedCourse.courseDescription || '暂无描述信息'"></div>
-        </div>
-      </div>
 
-      <!-- 课程图片展示 -->
-      <div class="detail-section-content" v-if="selectedCourse.pictureUrl">
-        <h4 class="section-title"><i class="el-icon-picture"></i> 课程图片</h4>
-        <div class="section-content">
-          <div class="course-image-container">
-            <el-image
-              :src="getCourseImageUrl(selectedCourse.pictureUrl)"
-              :preview-src-list="[getCourseImageUrl(selectedCourse.pictureUrl)]"
-              fit="cover"
-              class="course-image"
+        <!-- 课程图片展示 -->
+        <div class="detail-section-content" v-if="selectedCourse.pictureUrl">
+          <h4 class="section-title"><i class="el-icon-picture"></i> 课程图片</h4>
+          <div class="section-content">
+            <div class="course-image-container">
+              <el-image
+                :src="getCourseImageUrl(selectedCourse.pictureUrl)"
+                :preview-src-list="[getCourseImageUrl(selectedCourse.pictureUrl)]"
+                fit="cover"
+                class="course-image"
+              />
+            </div>
+          </div>
+        </div>
+        <!-- 选课/取消按钮 -->
+        <div class="signup-status">
+          <!-- 添加取消限制提示 -->
+          <div v-if="exceedCancelLimit && getSignStatusText(selectedCourse) === '可选课'" class="cancel-limit-info">
+            <el-alert
+              title="选课限制"
+              type="warning"
+              :closable="false"
+              description="本月取消次数已达上限（3次），无法选课新课程"
+              show-icon
+              class="signup-alert"
             />
           </div>
+
+          <el-button
+            type="primary"
+            :disabled="!showSignUpButton"
+            @click="handleSignUp(selectedCourse)"
+            v-if="showSignUpButton"
+            class="signup-button"
+          >
+            立即选课
+          </el-button>
+          <el-button
+            type="danger"
+            :disabled="!showCancelButton"
+            @click="handleCancel(selectedCourse)"
+            v-if="showCancelButton"
+            class="cancel-button"
+          >
+            取消选课
+          </el-button>
+
+          <!-- 添加剩余取消次数提示 -->
+          <div v-if="!exceedCancelLimit && remainingCancels < 3" class="limit-tip">
+            <i class="el-icon-info"></i>
+            本月还可取消 {{ remainingCancels }} 次（每月最多3次）
+          </div>
+
+          <el-alert
+            v-if="showFullCapacityAlert"
+            title="选课已满"
+            type="warning"
+            :closable="false"
+            class="signup-alert"
+          >
+            该课程选课人数已满，无法继续选课
+          </el-alert>
+          <el-alert
+            v-if="selectedCourse.isBooked && !showCancelButton"
+            title="您已成功选课该课程"
+            type="success"
+            :closable="false"
+            class="signup-alert"
+          >
+            选课信息已提交，无法取消选课
+          </el-alert>
         </div>
       </div>
-      <!-- 选课/取消按钮 -->
-      <div class="signup-status">
-
-        <el-button
-          type="primary"
-          :disabled="!showSignUpButton"
-          @click="handleSignUp(selectedCourse)"
-          v-if="showSignUpButton"
-          class="signup-button"
-        >
-          立即选课
-        </el-button>
-        <el-button
-          type="danger"
-          :disabled="!showCancelButton"
-          @click="handleCancel(selectedCourse)"
-          v-if="showCancelButton"
-          class="cancel-button"
-        >
-          取消选课
-        </el-button>
-
-        <!-- 添加剩余取消次数提示 -->
-        <div v-if="!exceedCancelLimit && remainingCancels < 3" class="limit-tip">
-          <i class="el-icon-info"></i>
-          本月还可取消 {{ remainingCancels }} 次（每月最多3次）
-        </div>
-
-        <el-alert
-          v-if="showFullCapacityAlert"
-          title="选课已满"
-          type="warning"
-          :closable="false"
-          class="signup-alert"
-        >
-          该课程选课人数已满，无法继续选课
-        </el-alert>
-        <el-alert
-          v-if="selectedCourse.isBooked && !showCancelButton"
-          title="您已成功选课该课程"
-          type="success"
-          :closable="false"
-          class="signup-alert"
-        >
-          选课信息已提交，无法取消选课
-        </el-alert>
-      </div>
-  </div>
-  </el-dialog>
+    </el-dialog>
 
   </div>
 </template>
@@ -300,13 +325,15 @@
 import { listCourses, getCourses, delCourses, addCourses, updateCourses } from "@/api/system/courses";
 import {parseTime} from "@/utils/ruoyi";
 import {signUpCapacity,cancelSignUpCapacity,checkCourseUnique} from "@/api/system/courses";
-import {addCourseBooking, checkCourseBookingSimple, deleteCourseBookingsByCourseAndStudent} from "@/api/system/courseBookings";
+import {addBooking, checkCourseBookingSimple, deleteBookingsByCourseAndStudent} from "@/api/system/courseBookings";
 import {getStudent} from "@/api/system/student";
+import {getCancelCount, recordCancel} from "@/api/system/userLimit";
 
 export default {
   name: "Courses",
   data() {
     return {
+      remainingCancels: 100,
       selectedCourse: null,
       // 详情弹窗相关
       detailDialogVisible: false,
@@ -390,9 +417,20 @@ export default {
     };
   },
   computed: {
+    // 修复计算属性
+    exceedCancelLimit() {
+      // 从数据中获取实际的取消限制状态
+      return this.remainingCancels <= 0;
+    },
+
     // 显示选课按钮的条件
     showSignUpButton() {
       if (!this.selectedCourse) return false;
+
+      // 检查是否超过取消限制
+      if (this.exceedCancelLimit) {
+        return false;
+      }
 
       return this.getCourseStatusText(this.selectedCourse) === "选课进行中" &&
         !this.selectedCourse.isBooked &&
@@ -419,20 +457,172 @@ export default {
     this.getList();
   },
   methods: {
-    // 安全提取courseId的通用方法
-    extractCourseId(course) {
-      if (!course || !course.courseId) {
-        return null;
-      }
+    // 修复：提交取消报名
+    async submitCancelSignUp(course) {
+      try {
+        console.log('开始取消报名流程，活动ID:',course.courseId);
 
-      if (typeof course.courseId === 'object' && course.courseId !== null) {
-        // 如果是对象，尝试从常见属性中提取
-        return course.courseId.id || course.courseId.value || course.courseId.courseId || course.courseId;
-      } else {
-        return course.courseId;
+        // 1. 先检查报名记录是否存在
+        console.log('检查报名记录是否存在...');
+        let bookingExists = false;
+        try {
+          const bookingStatus = await checkCourseBookingSimple(course.courseId, this.$store.state.user.name);
+          console.log('报名状态检查结果:', bookingStatus);
+          bookingExists = bookingStatus.data.isBooked;
+        } catch (checkError) {
+          console.error('检查报名状态失败:', checkError);
+          // 如果检查失败，假设记录不存在
+          bookingExists = false;
+        }
+
+        // 2. 如果报名记录存在，则删除
+        if (bookingExists) {
+          console.log('报名记录存在，执行删除...');
+          try {
+            const deleteResult = await deleteBookingsByCourseAndStudent(
+              course.courseId,
+              this.$store.state.user.name
+            );
+            console.log('删除报名记录结果:', deleteResult);
+
+            // 检查删除是否成功
+            if (!deleteResult || deleteResult.code !== 200) {
+              console.warn('删除报名记录返回非成功状态:', deleteResult);
+              // 不抛出异常，继续执行，但记录警告
+            }
+          } catch (deleteError) {
+            console.error('删除报名记录异常:', deleteError);
+            // 如果删除失败，尝试继续执行，但记录警告
+            console.warn('删除报名记录失败，但继续执行取消流程');
+          }
+        } else {
+          console.log('报名记录不存在，跳过删除步骤');
+        }
+
+        // 3. 恢复活动容量
+        console.log('恢复活动容量...');
+        try {
+          const capacityResult = await cancelSignUpCapacity(course.courseId, course.version);
+          console.log('恢复容量结果:', capacityResult);
+
+          // 检查容量恢复是否成功
+          if (!capacityResult || capacityResult.code !== 200) {
+            console.warn('恢复活动容量返回非成功状态:', capacityResult);
+            // 不抛出异常，继续执行，但记录警告
+          }
+        } catch (capacityError) {
+          console.error('恢复活动容量异常:', capacityError);
+          // 如果容量恢复失败，尝试继续执行，但记录警告
+          console.warn('恢复活动容量失败，但继续执行取消流程');
+        }
+
+        // 4. 记录取消信息到数据库 - 添加重试机制
+        console.log('记录取消信息...');
+        const cancelData = {
+          studentId: this.$store.state.user.name,
+          courseId: course.activityId,
+          cancelTime: new Date().toISOString()
+        };
+        console.log('取消记录数据:', cancelData);
+
+        // 添加重试机制
+        let cancelResult = null;
+        let cancelSuccess = false;
+        let retryCount = 0;
+        const maxRetries = 3;
+
+        while (!cancelSuccess && retryCount < maxRetries) {
+          try {
+            retryCount++;
+            console.log(`发送recordCancel请求，第${retryCount}次尝试...`);
+            cancelResult = await recordCancel(cancelData);
+            console.log(`recordCancel响应，第${retryCount}次尝试:`, cancelResult);
+
+            // 检查取消记录是否成功保存
+            if (cancelResult && cancelResult.code === 200) {
+              cancelSuccess = true;
+              console.log('取消记录成功保存到数据库');
+            } else {
+              console.warn(`取消记录保存失败，第${retryCount}次尝试，响应:`, cancelResult);
+              if (retryCount < maxRetries) {
+                // 等待一段时间后重试
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+            }
+          } catch (recordError) {
+            console.error(`记录取消信息异常，第${retryCount}次尝试:`, recordError);
+            if (retryCount < maxRetries) {
+              // 等待一段时间后重试
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
+
+        // 如果重试后仍然失败，抛出异常
+        if (!cancelSuccess) {
+          throw new Error('取消记录保存失败，已重试' + maxRetries + '次');
+        }
+
+        // 5. 立即查询数据库验证取消记录
+        console.log('验证取消记录是否保存...');
+        const verifyResponse = await getCancelCount(this.$store.state.user.name);
+        console.log('验证取消次数响应:', verifyResponse);
+
+        if (verifyResponse && verifyResponse.code === 200) {
+          const actualCancelCount = verifyResponse.data;
+          console.log(`实际取消次数: ${actualCancelCount}`);
+
+          // 如果实际取消次数没有增加，说明有问题
+          if (actualCancelCount === 0) {
+            console.warn('警告：取消记录可能没有正确保存到数据库');
+            // 不抛出异常，继续执行，但记录警告
+          }
+        }
+
+        // 6. 更新活动状态
+        const updatedCourse = {
+          ...course,
+          courseCapacity: Math.min(course.course.Capacity + 1, course.courseTotalCapacity),
+          version: course.version + 1,
+          isBooked: false
+        };
+
+        // 7. 更新活动列表
+        const index = this.coursesList.findIndex(a => a.courseId === course.courseId);
+        if (index !== -1) {
+          this.$set(this.coursesList, index, updatedCourse);
+        }
+
+        // 8. 重新加载取消限制信息，而不是直接更新
+        console.log('重新加载取消限制信息...');
+        await this.loadCancelLimitInfo();
+        console.log(`重新加载后剩余取消次数: ${this.remainingCancels}`);
+
+        if (this.remainingCancels > 0) {
+          this.$message.success(`取消报名成功！本月还可取消 ${this.remainingCancels} 次`);
+        } else {
+          this.$message.warning('取消报名成功！本月取消次数已用完，将无法报名新活动');
+        }
+
+        this.detailDialogVisible = false;
+        this.selectedActivity = null;
+        await this.checkBookingStatus();
+
+      } catch (error) {
+        console.error("取消报名失败:", error);
+
+        // 更详细的错误信息
+        if (error.response) {
+          console.error('错误响应:', error.response);
+          this.$message.error(`取消报名失败: ${error.response.data?.msg || error.response.statusText}`);
+        } else if (error.request) {
+          console.error('请求错误:', error.request);
+          this.$message.error("取消报名失败: 网络连接错误");
+        } else {
+          this.$message.error("取消报名失败: " + (error.message || "请稍后重试"));
+        }
       }
     },
-
     // 获取当前学生信息
     async getCurrentStudentInfo() {
       try {
@@ -468,178 +658,114 @@ export default {
           return;
         }
 
-        // 安全提取courseId
-        const courseIdValue = Number(this.extractCourseId(course));
-        console.log('提取的courseId:', courseIdValue, '类型:', typeof courseIdValue);
-
-        if (isNaN(courseIdValue)) {
-          this.$message.error('课程ID格式错误，无法选课');
-          return;
-        }
-
-        // 0. 先检查是否已经选过课
-        console.log('检查是否已经选过课...');
+        // 1. 先检查是否已经选过课
         try {
-          const checkResponse = await checkCourseBookingSimple(courseIdValue, this.$store.state.user.name);
-          console.log('选课状态检查结果:', checkResponse);
+          console.log('检查选课状态...');
+          const bookingStatus = awaitcheckCourseBookingSimple({
+            courseId: Number(course.courseId),  // 转换为数字
+            studentId: this.$store.state.user.name
+          });
+          console.log('选课状态检查结果:', bookingStatus);
 
-          if (checkResponse.data && checkResponse.data.isBooked) {
-            this.$message.warning('您已经选过这门课程了！');
+          if (bookingStatus.data && bookingStatus.data.isBooked) {
+            this.$message.warning('您已经选过该课程了！');
             return;
           }
         } catch (checkError) {
-          console.error('检查选课状态失败:', checkError);
-          // 如果检查失败，继续执行选课流程
+          console.warn('检查选课状态失败，继续执行选课流程:', checkError);
         }
 
-        // 1. 更新课程容量
+        // 2. 更新课程容量 - 确保参数类型正确
         console.log('更新课程容量...');
-        const capacityResponse = await signUpCapacity(
-          courseIdValue,
-          Number(course.version) || 0
-        );
+        const capacityResponse = await signUpCapacity({
+          courseId: Number(course.courseId),  // 转换为数字
+          version: Number(course.version) || 0  // 转换为数字
+        });
+        console.log('容量更新响应:', capacityResponse);
 
         if (capacityResponse.code !== 200) {
           throw new Error(capacityResponse.msg || '更新课程容量失败');
         }
 
-        // 2. 发送选课请求
+        // 3. 添加选课记录 - 确保参数类型正确
+        console.log('添加选课记录...');
         const bookingData = {
-          courseId: courseIdValue,
+          courseId: Number(course.courseId),  // 转换为数字
           studentId: this.$store.state.user.name,
-          bookAt: new Date().toISOString().split('T')[0],
-          status: '待审核'
+          bookingTime: new Date().toISOString(),
+          status: '已选课'
         };
 
-        console.log('发送选课数据:', bookingData);
+        console.log('选课记录数据:', bookingData);
+        const bookingResponse = await addBooking(bookingData);
+        console.log('选课记录添加响应:', bookingResponse);
 
-        const response = await addCourseBooking(bookingData);
-        console.log('选课响应:', response);
-
-        if (response.code !== 200) {
-          throw new Error(response.msg || '选课失败');
+        if (bookingResponse.code !== 200) {
+          throw new Error(bookingResponse.msg || '添加选课记录失败');
         }
 
-        // 3. 更新前端状态
+        // 4. 更新前端状态
         const updatedCourse = {
           ...course,
           courseCapacity: Math.max((course.courseCapacity || 0) - 1, 0),
-          version: (Number(course.version) || 0) + 1,
+          version: (Number(course.version) || 0) + 1,  // 转换为数字并递增
           isBooked: true
         };
 
-        // 更新课程列表中的对应课程
-        const index = this.coursesList.findIndex(c => {
-          const cId = Number(this.extractCourseId(c));
-          return cId === courseIdValue;
-        });
-
+        // 5. 更新课程列表
+        const index = this.coursesList.findIndex(c => c.courseId === course.courseId);
         if (index !== -1) {
           this.$set(this.coursesList, index, updatedCourse);
         }
 
-        // 更新详情弹窗中的课程信息
-        if (this.selectedCourse) {
-          const selectedId = Number(this.extractCourseId(this.selectedCourse));
-          if (selectedId === courseIdValue) {
-            this.selectedCourse = { ...updatedCourse };
-          }
+        // 6. 更新详情弹窗中的课程信息
+        if (this.selectedCourse && this.selectedCourse.courseId === course.courseId) {
+          this.selectedCourse = { ...updatedCourse };
         }
 
-        this.$message.success('选课成功！');
+        this.$message.success("选课成功！");
         this.detailDialogVisible = false;
 
+        // 7. 重新检查选课状态
+        await this.checkBookingStatus();
+
       } catch (error) {
-        console.error('选课失败:', error);
-        this.$message.error('选课失败: ' + (error.message || '网络错误'));
+        console.error("选课失败:", error);
+
+        // 更详细的错误信息
+        if (error.response) {
+          console.error('错误响应详情:', error.response);
+          if (error.response.status === 400) {
+            this.$message.error("选课失败: 参数类型错误，请检查数据格式");
+          } else {
+            this.$message.error(`选课失败: ${error.response.data?.msg || error.response.statusText}`);
+          }
+        } else if (error.request) {
+          console.error('请求错误:', error.request);
+          this.$message.error("选课失败: 网络连接错误");
+        } else {
+          this.$message.error("选课失败: " + (error.message || "请稍后重试"));
+        }
       }
     },
 
-    // 简化的取消选课方法
-    async submitCancelSignUp(course) {
-      try {
-        console.log('开始取消选课，课程:', course);
 
-        // 安全提取courseId
-        const courseIdValue = Number(this.extractCourseId(course));
-        console.log('提取的courseId:', courseIdValue);
 
-        if (isNaN(courseIdValue)) {
-          this.$message.error('课程ID格式错误，无法取消选课');
-          return;
-        }
-
-        // 1. 删除选课记录
-        console.log('删除选课记录...');
-        const deleteResult = await deleteCourseBookingsByCourseAndStudent(
-          courseIdValue,
-          this.$store.state.user.name
-        );
-        console.log('删除选课记录结果:', deleteResult);
-
-        if (deleteResult.code !== 200) {
-          throw new Error(deleteResult.msg || '删除选课记录失败');
-        }
-
-        // 2. 恢复课程容量
-        console.log('恢复课程容量...');
-        const capacityResult = await cancelSignUpCapacity(
-          courseIdValue,
-          Number(course.version) || 0
-        );
-        console.log('恢复课程容量结果:', capacityResult);
-
-        if (capacityResult.code !== 200) {
-          throw new Error(capacityResult.msg || '恢复课程容量失败');
-        }
-
-        // 3. 更新前端状态
-        const updatedCourse = {
-          ...course,
-          courseCapacity: Math.min((Number(course.courseCapacity) || 0) + 1, course.courseTotalCapacity || 999),
-          version: (Number(course.version) || 0) + 1,
-          isBooked: false
-        };
-
-        console.log('更新后的课程信息:', updatedCourse);
-
-        // 更新课程列表
-        const index = this.coursesList.findIndex(c => {
-          const cId = Number(this.extractCourseId(c));
-          return cId === courseIdValue;
-        });
-
-        if (index !== -1) {
-          this.$set(this.coursesList, index, updatedCourse);
-          console.log('已更新课程列表中的课程');
-        }
-
-        // 更新详情弹窗中的课程信息
-        if (this.selectedCourse) {
-          const selectedId = Number(this.extractCourseId(this.selectedCourse));
-          if (selectedId === courseIdValue) {
-            this.selectedCourse = { ...updatedCourse };
-            console.log('已更新详情弹窗中的课程信息');
-          }
-        }
-
-        this.$message.success('取消选课成功！');
-        this.detailDialogVisible = false;
-
-      } catch (error) {
-        console.error('取消选课失败:', error);
-        this.$message.error('取消选课失败: ' + (error.message || '网络错误'));
-      }
-    },
-
-// 修复 checkBookingSimple 方法的调用
+// 修复checkCourseBookingSimple 方法的调用
     async checkBookingStatus() {
       if (!this.coursesList || this.coursesList.length === 0) return;
 
       try {
         const checkPromises = this.coursesList.map(course => {
           // 确保参数类型正确
-          return checkCourseBookingSimple(Number(this.extractCourseId(course)), this.$store.state.user.name)
+          const params = {
+            courseId: Number(course.courseId),  // 转换为数字
+            studentId: this.$store.state.user.name
+          };
+
+          console.log('检查选课状态参数:', params);
+
+          return checkCourseBookingSimple(params)
             .then(res => {
               this.$set(course, 'isBooked', res.data.isBooked || false);
             })
@@ -658,27 +784,51 @@ export default {
 
     // 修复：处理取消选课
     async handleCancel(row) {
-      this.$confirm('确定要取消该课程选课吗？', '确认取消', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.submitCancelSignUp(row);
-      }).catch(() => {
-        this.$message.info('已取消取消选课操作');
-      });
+      try {
+        // 先检查取消限制
+        const canCancel = await this.checkCancelLimit();
+        if (!canCancel) {
+          this.$message.warning('本月取消次数已达上限，无法继续取消选课');
+          return;
+        }
+
+        this.$confirm('确定要取消该课程选课吗？', '确认取消', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.submitCancelSignUp(row);
+        }).catch(() => {
+          this.$message.info('已取消取消选课操作');
+        });
+      } catch (error) {
+        console.error('检查取消限制失败:', error);
+        this.$message.error('检查取消限制失败，请稍后重试');
+      }
     },
     // 修复：处理选课
     async handleSignUp(row) {
-      this.$confirm('确定要选课该课程吗？', '选课确认', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.submitSignUp(row);
-      }).catch(() => {
-        this.$message.info('已取消选课');
-      });
+      try {
+        // 先检查取消限制
+        const canSignUp = await this.getCanSignUp(row);
+        if (!canSignUp) {
+          this.$message.warning('本月取消次数已达上限，无法选课新课程');
+          return;
+        }
+
+        this.$confirm('确定要选课该课程吗？', '选课确认', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          this.submitSignUp(row);
+        }).catch(() => {
+          this.$message.info('已取消选课');
+        });
+      } catch (error) {
+        console.error('检查选课限制失败:', error);
+        this.$message.error('检查选课限制失败，请稍后重试');
+      }
     },
     /** 获取课程图片完整URL（仿照审核界面实现） */
     getCourseImageUrl(pictureUrl) {
@@ -743,6 +893,13 @@ export default {
     async handleDetail(row) {
       this.selectedCourse = { ...row };
       this.detailDialogVisible = true;
+
+      // 加载最新的取消限制信息
+      await this.loadCancelLimitInfo();
+
+
+      // 调试当前状态
+      this.debugCancelStatus();
     },
     // 获取选课状态文本
     getSignStatusText(row) {
@@ -760,23 +917,42 @@ export default {
 
       return "不可选课";
     },
+    // 修复：获取是否可以选课
+    async getCanSignUp(row) {
+      // 如果不是可选课状态，直接返回true（不检查限制）
+      if (this.getSignStatusText(row) !== '可选课') {
+        return true;
+      }
 
+      try {
+        const response = await getCancelCount(this.$store.state.user.name);
+        console.log('获取取消次数响应(选课检查):', response);
+
+        // 检查响应数据结构
+        if (response && response.code === 200) {
+          // 后端返回的数据直接在根对象上，不在data属性中
+          if (response.data !== undefined) {
+            const cancelCount = response.data;
+            return cancelCount < 3; // 取消次数小于3次才允许选课
+          } else {
+            console.warn('获取取消次数响应缺少data字段:', response);
+            return true; // 默认允许选课
+          }
+        } else {
+          console.warn('获取取消次数响应格式异常:', response);
+          return true; // 默认允许选课
+        }
+      } catch (error) {
+        console.error('检查取消限制失败:', error);
+        return true; // 默认允许选课，避免影响正常流程
+      }
+    },
     /** 查询课程列表 */
     getList() {
       this.loading = true;
       listCourses(this.queryParams).then(response => {
-        let courses = response.rows || [];
-
-        // 如果勾选了"只显示可选课课程"，则进行过滤
-        if (this.queryParams.availableOnly) {
-          courses = courses.filter(course => {
-            // 使用现有的getSignStatusText方法来判断是否可选课
-            return this.getSignStatusText(course) === "可选课";
-          });
-        }
-
-        this.coursesList = courses;
-        this.total = courses.length; // 使用过滤后的数量
+        this.coursesList = response.rows;
+        this.total = response.total;
         this.loading = false;
       });
     },
@@ -925,9 +1101,15 @@ export default {
 </script>
 
 <style scoped>
-/* 保留原有样式，确保布局正常 */
+/* 整体布局 */
 .coursebooking-container {
   margin-left: 100px;
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+/* 保留原有样式，确保布局正常 */
+.coursebooking-container {
   padding: 16px;
   background: #f5f7fa;  /* 灰色背景作为整体容器背景 */
   min-height: auto;

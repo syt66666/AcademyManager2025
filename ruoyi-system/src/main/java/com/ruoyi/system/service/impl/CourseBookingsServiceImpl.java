@@ -1,14 +1,11 @@
 package com.ruoyi.system.service.impl;
 
 import java.util.List;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.CourseBookingsMapper;
 import com.ruoyi.system.domain.CourseBookings;
-import com.ruoyi.system.domain.dto.CourseBookingDTO;
-import com.ruoyi.system.domain.dto.CourseBookingExportDTO;
+import com.ruoyi.system.domain.CourseBookingDTO;
 import com.ruoyi.system.service.ICourseBookingsService;
 
 /**
@@ -17,7 +14,6 @@ import com.ruoyi.system.service.ICourseBookingsService;
  * @author ruoyi
  * @date 2025-09-25
  */
-
 @Service
 public class CourseBookingsServiceImpl implements ICourseBookingsService
 {
@@ -97,125 +93,14 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
     }
 
     /**
-     * 查询课程选课记录列表（包含详情）
-     *
-     * @param courseBookingDTO 查询条件
-     * @return 课程选课记录集合
-     */
-    @Override
-    public List<CourseBookingDTO> selectCourseBookingsListWithDetails(CourseBookingDTO courseBookingDTO)
-    {
-        return courseBookingsMapper.selectCourseBookingsListWithDetails(courseBookingDTO);
-    }
-
-    /**
-     * 查询课程选课记录列表（已提交状态）
-     *
-     * @param courseBookingDTO 查询条件
-     * @return 课程选课记录集合
-     */
-    @Override
-    public List<CourseBookingDTO> selectCourseBookingsListSubmitted(CourseBookingDTO courseBookingDTO)
-    {
-        return courseBookingsMapper.selectCourseBookingsListSubmitted(courseBookingDTO);
-    }
-
-    /**
-     * 审核更新课程选课记录
+     * 查询课程选课记录列表（包含课程信息）
      *
      * @param courseBookings 课程选课记录
-     * @return 结果
+     * @return 课程选课记录集合（包含课程信息）
      */
     @Override
-    public int updateCourseBookingsAudit(CourseBookings courseBookings)
+    public List<CourseBookingDTO> selectCourseBookingsWithCourseList(CourseBookings courseBookings)
     {
-        return courseBookingsMapper.updateCourseBookingsAudit(courseBookings);
-    }
-
-    /**
-     * 检查课程选课记录是否存在
-     *
-     * @param courseId 课程ID
-     * @param studentId 学生ID
-     * @return 结果
-     */
-    @Override
-    public int checkCourseBookingExists(Long courseId, String studentId)
-    {
-        return courseBookingsMapper.checkCourseBookingExists(courseId, studentId);
-    }
-
-    /**
-     * 根据课程ID和学生ID删除选课记录
-     *
-     * @param courseId 课程ID
-     * @param studentId 学生ID
-     * @return 结果
-     */
-    @Override
-    public int deleteCourseBookingsByCourseAndStudent(Long courseId, String studentId)
-    {
-        return courseBookingsMapper.deleteCourseBookingsByCourseAndStudent(courseId, studentId);
-    }
-
-    /**
-     * 统计课程选课审核状态
-     *
-     * @return 审核状态统计
-     */
-    @Override
-    public Map<String, Integer> countCourseBookingAuditStatus()
-    {
-        return courseBookingsMapper.countCourseBookingAuditStatus();
-    }
-
-    /**
-     * 检查是否已选课
-     *
-     * @param courseId 课程ID
-     * @param studentId 学生ID
-     * @return 是否已选课
-     */
-    @Override
-    public boolean checkIfCourseBooked(Long courseId, String studentId)
-    {
-        return courseBookingsMapper.checkIfCourseBooked(courseId, studentId);
-    }
-
-    /**
-     * 根据学生ID查询已选课程ID列表
-     *
-     * @param studentId 学生ID
-     * @return 课程ID列表
-     */
-    @Override
-    public List<Long> selectCourseIdsByStudentId(String studentId)
-    {
-        return courseBookingsMapper.selectCourseIdsByStudentId(studentId);
-    }
-
-    /**
-     * 查询课程选课学生导出数据
-     *
-     * @param courseBookingExportDTO 查询条件
-     * @return 导出数据列表
-     */
-    @Override
-    public List<CourseBookingExportDTO> selectCourseBookingExportList(CourseBookingExportDTO courseBookingExportDTO)
-    {
-        return courseBookingsMapper.selectCourseBookingExportList(courseBookingExportDTO);
-    }
-
-    /**
-     * 检查课程选课记录是否存在（简单版本）
-     *
-     * @param courseId 课程ID
-     * @param studentId 学生ID
-     * @return 检查结果
-     */
-    @Override
-    public Map<String, Object> checkCourseBookingSimple(Long courseId, String studentId)
-    {
-        return courseBookingsMapper.checkCourseBookingSimple(courseId, studentId);
+        return courseBookingsMapper.selectCourseBookingsWithCourseList(courseBookings);
     }
 }
