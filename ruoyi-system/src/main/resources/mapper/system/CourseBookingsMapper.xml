@@ -56,6 +56,9 @@
         <result property="gpa"           column="gpa"             />
         <result property="scoreType"     column="score_type"       />
         <result property="scoreUploadTime" column="score_upload_time" />
+        <!-- 学生信息字段 -->
+        <result property="studentName"    column="student_name"    />
+        <result property="college"    column="academy"    />
     </resultMap>
 
     <resultMap type="CourseBookingExportDTO" id="CourseBookingExportDTOResult">
@@ -99,12 +102,40 @@
     </sql>
 
     <sql id="selectCourseBookingsWithCourseVo">
-        select cb.booking_id, cb.student_id, s.student_name, s.academy, s.major, s.system_major,
-        s.student_class, s.student_sex, cb.course_id, c.course_name, c.course_type, c.course_category,
-        c.course_start, c.course_deadline, c.course_location, c.start_time, c.end_time,
-        c.course_description, c.picture_url, c.notes, c.course_credit,
-        cb.book_at, cb.proof, cb.summary, cb.status, cb.reviewer, cb.reviewer_comment,
-        cb.review_time, cb.organizer, cb.created_time, cb.updated_time
+SELECT 
+    -- 预约表（cb）字段
+    cb.booking_id, cb.student_id, cb.course_id, cb.book_at, cb.proof,
+    cb.summary,
+    cb.status,
+    cb.reviewer,
+    cb.reviewer_comment,
+    cb.review_time,
+    cb.created_time,
+    cb.updated_time,
+    cb.organizer,  
+    
+    -- 学生表（s）字段（合并并扩展）
+    s.student_name,
+    s.academy,
+    s.major,        -- 第二段新增
+    s.system_major, -- 第二段新增
+    s.student_class,-- 第二段新增
+    s.student_sex,  -- 第二段新增
+    
+    -- 课程表（c）字段（合并并扩展）
+    c.course_name,
+    c.course_type,
+    c.course_category,
+    c.course_location,
+    c.start_time,
+    c.end_time,
+    c.course_description,
+    c.picture_url,
+    c.notes,
+    c.course_credit,
+    c.organizer,    -- 保留第一段中的课程表组织者信息
+    c.course_start, -- 第二段新增
+    c.course_deadline -- 第二段新增
         from course_bookings cb
         left join stu_info s on cb.student_id = s.student_id
         left join courses c on cb.course_id = c.course_id
