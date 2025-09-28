@@ -180,6 +180,7 @@
             version = version +1
         WHERE activity_id = #{activityId}
           and version = #{version}
+          AND activity_capacity < activity_total_capacity
     </update>
 
     <update id="decreaseCapacity" parameterType="Integer">

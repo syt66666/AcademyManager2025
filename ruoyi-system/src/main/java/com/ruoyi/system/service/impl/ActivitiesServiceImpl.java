@@ -226,7 +226,8 @@ public class ActivitiesServiceImpl implements IActivitiesService {
         }
         int result = activitiesMapper.increaseCapacity(activityId, version);
         if (result == 0) {
-            throw new ServiceException("数据出现错误，请刷新重试！");
+            // 不抛出异常，返回0表示操作失败，让调用方处理
+            return 0;
         }
         return result;
     }
@@ -239,7 +240,8 @@ public class ActivitiesServiceImpl implements IActivitiesService {
         }
         int result = activitiesMapper.decreaseCapacity(activityId, version);
         if (result == 0) {
-            throw new ServiceException("数据出现错误，请刷新重试！");
+            // 不抛出异常，返回0表示操作失败，让调用方处理
+            return 0;
         }
         return result;
     }
