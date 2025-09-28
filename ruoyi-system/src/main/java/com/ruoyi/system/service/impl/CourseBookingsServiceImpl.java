@@ -284,12 +284,13 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
     /**
      * 统计审核状态
      *
+     * @param organizer 组织者
      * @return 审核状态统计
      */
     @Override
-    public Map<String, Object> countCourseBookingAuditStatus()
+    public Map<String, Object> countCourseBookingAuditStatus(String organizer)
     {
-        return courseBookingsMapper.countCourseBookingAuditStatus();
+        return courseBookingsMapper.countCourseBookingAuditStatus(organizer);
     }
 
     /**

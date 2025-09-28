@@ -122,7 +122,8 @@ public interface ICourseBookingsService
     /**
      * 统计审核状态
      *
+     * @param organizer 组织者
      * @return 审核状态统计
      */
-    public Map<String, Object> countCourseBookingAuditStatus();
+    public Map<String, Object> countCourseBookingAuditStatus(String organizer);
 }

@@ -190,9 +190,9 @@ public class CourseBookingsController extends BaseController
      * 获取审核统计信息
      */
     @GetMapping("/auditCount")
-    public AjaxResult getAuditCount()
+    public AjaxResult getAuditCount(@RequestParam(required = false) String organizer)
     {
-        return success(courseBookingsService.countCourseBookingAuditStatus());
+        return success(courseBookingsService.countCourseBookingAuditStatus(organizer));
     }
 
     /**
