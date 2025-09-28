@@ -926,6 +926,15 @@ export default {
       try {
         console.log('开始取消报名流程，活动ID:', this.selectedActivity.activityId);
 
+        // 0. 先刷新活动数据以确保使用最新版本号
+        await this.fetchActivities();
+        const latestActivity = this.activityList.find(a => a.activityId === this.selectedActivity.activityId);
+        if (latestActivity) {
+          this.selectedActivity.version = latestActivity.version;
+          this.selectedActivity.activityCapacity = latestActivity.activityCapacity;
+          console.log('更新为最新版本号和容量:', this.selectedActivity.version, this.selectedActivity.activityCapacity);
+        }
+
         // 1. 先检查报名记录是否存在
         console.log('检查报名记录是否存在...');
         let bookingExists = false;
@@ -963,24 +972,60 @@ export default {
           console.log('报名记录不存在，跳过删除步骤');
         }
 
-        // 3. 恢复活动容量
+        // 3. 恢复活动容量 - 添加重试机制
         console.log('恢复活动容量...');
-        try {
-          const capacityResult = await cancelSignUpCapacity(
-            this.selectedActivity.activityId,
-            this.selectedActivity.version
-          );
-          console.log('恢复容量结果:', capacityResult);
+        let capacitySuccess = false;
+        let capacityRetryCount = 0;
+        const maxCapacityRetries = 3;
+        
+        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
+          try {
+            capacityRetryCount++;
+            console.log(`恢复活动容量，第${capacityRetryCount}次尝试...`);
+            const capacityResult = await cancelSignUpCapacity(
+              this.selectedActivity.activityId,
+              this.selectedActivity.version
+            );
+            console.log('恢复容量结果:', capacityResult);
 
-          // 检查容量恢复是否成功
-          if (!capacityResult || capacityResult.code !== 200) {
-            console.warn('恢复活动容量返回非成功状态:', capacityResult);
-            // 不抛出异常，继续执行，但记录警告
+            // 检查容量恢复是否成功
+            if (capacityResult && capacityResult.code === 200) {
+              capacitySuccess = true;
+              console.log('活动容量恢复成功');
+            } else {
+              if (capacityRetryCount < maxCapacityRetries) {
+                console.warn(`恢复活动容量失败，第${capacityRetryCount}次尝试，准备重试...`);
+                // 等待一段时间后重试
+                await new Promise(resolve => setTimeout(resolve, 500));
+                // 重新获取最新的活动信息以获取正确的版本号
+                const latestActivity = this.activityList.find(a => a.activityId === this.selectedActivity.activityId);
+                if (latestActivity) {
+                  this.selectedActivity.version = latestActivity.version;
+                  this.selectedActivity.activityCapacity = latestActivity.activityCapacity;
+                  console.log('更新版本号和容量:', this.selectedActivity.version, this.selectedActivity.activityCapacity);
+                }
+              }
+            }
+          } catch (capacityError) {
+            console.error('恢复活动容量异常:', capacityError);
+            if (capacityRetryCount < maxCapacityRetries) {
+              console.warn(`恢复活动容量异常，第${capacityRetryCount}次尝试，准备重试...`);
+              // 等待一段时间后重试
+              await new Promise(resolve => setTimeout(resolve, 500));
+              // 重新获取最新的活动信息以获取正确的版本号
+              const latestActivity = this.activityList.find(a => a.activityId === this.selectedActivity.activityId);
+              if (latestActivity) {
+                this.selectedActivity.version = latestActivity.version;
+                this.selectedActivity.activityCapacity = latestActivity.activityCapacity;
+                console.log('更新版本号和容量:', this.selectedActivity.version, this.selectedActivity.activityCapacity);
+              }
+            }
           }
-        } catch (capacityError) {
-          console.error('恢复活动容量异常:', capacityError);
-          // 如果容量恢复失败，尝试继续执行，但记录警告
-          console.warn('恢复活动容量失败，但继续执行取消流程');
+        }
+
+        // 如果容量恢复失败，抛出异常
+        if (!capacitySuccess) {
+          throw new Error('恢复活动容量失败，已重试' + maxCapacityRetries + '次');
         }
 
         // 4. 记录取消信息到数据库 - 添加重试机制
@@ -1080,6 +1125,9 @@ export default {
         if (this.activeView === 'booking' && this.$refs.activityBooking) {
           this.$refs.activityBooking.getList();
         }
+        
+        // 重新获取活动列表以同步最新数据（包括版本号）
+        await this.fetchActivities();
 
       } catch (error) {
         console.error("取消活动失败:", error);

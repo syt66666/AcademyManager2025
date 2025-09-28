@@ -865,6 +865,14 @@ export default {
     // 修复：提交取消报名
     async submitCancelSignUp(activity) {
       try {
+        // 0. 先刷新活动数据以确保使用最新版本号
+        await this.getList();
+        const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
+        if (latestActivity) {
+          activity.version = latestActivity.version;
+          activity.activityCapacity = latestActivity.activityCapacity;
+        }
+        
         // 1. 先检查报名记录是否存在
         let bookingExists = false;
         try {
@@ -892,16 +900,48 @@ export default {
           }
         }
 
-        // 3. 恢复活动容量
-        try {
-          const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
+        // 3. 恢复活动容量 - 添加重试机制
+        let capacitySuccess = false;
+        let capacityRetryCount = 0;
+        const maxCapacityRetries = 3;
+        
+        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
+          try {
+            capacityRetryCount++;
+            const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
 
-          // 检查容量恢复是否成功
-          if (!capacityResult || capacityResult.code !== 200) {
-            // 不抛出异常，继续执行，但记录警告
+            // 检查容量恢复是否成功
+            if (capacityResult && capacityResult.code === 200) {
+              capacitySuccess = true;
+            } else {
+              if (capacityRetryCount < maxCapacityRetries) {
+                // 等待一段时间后重试
+                await new Promise(resolve => setTimeout(resolve, 500));
+                // 重新获取最新的活动信息以获取正确的版本号
+                const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
+                if (latestActivity) {
+                  activity.version = latestActivity.version;
+                  activity.activityCapacity = latestActivity.activityCapacity;
+                }
+              }
+            }
+          } catch (capacityError) {
+            if (capacityRetryCount < maxCapacityRetries) {
+              // 等待一段时间后重试
+              await new Promise(resolve => setTimeout(resolve, 500));
+              // 重新获取最新的活动信息以获取正确的版本号
+              const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
+              if (latestActivity) {
+                activity.version = latestActivity.version;
+                activity.activityCapacity = latestActivity.activityCapacity;
+              }
+            }
           }
-        } catch (capacityError) {
-          // 如果容量恢复失败，尝试继续执行，但记录警告
+        }
+
+        // 如果容量恢复失败，抛出异常
+        if (!capacitySuccess) {
+          throw new Error('恢复活动容量失败，已重试' + maxCapacityRetries + '次');
         }
 
         // 4. 记录取消信息到数据库 - 添加重试机制
@@ -982,6 +1022,9 @@ export default {
         this.detailDialogVisible = false;
         this.selectedActivity = null;
         await this.checkBookingStatus();
+        
+        // 重新获取活动列表以同步最新数据（包括版本号）
+        await this.getList();
 
       } catch (error) {
         // 更详细的错误信息
