@@ -110,16 +110,28 @@
         <el-table-column label="上课地点" align="center" prop="courseLocation" show-overflow-tooltip />
         <!-- 组织单位列 -->
 
-        <!-- 课程开始时间列 -->
-        <el-table-column label="课程开始时间" align="center" prop="startTime" width="180">
+        <!-- 时间安排列 -->
+        <el-table-column label="时间安排" align="center" min-width="320">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-          </template>
-        </el-table-column>
-        <!-- 课程结束时间列 -->
-        <el-table-column label="课程结束时间" align="center" prop="endTime" width="180">
-          <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+            <div class="time-schedule-inline">
+              <!-- 选课时间 -->
+              <div class="time-inline-item signup-time">
+                <i class="el-icon-user"></i>
+                <span class="time-inline-label">选课时间</span>
+                <span class="time-inline-content">
+                  {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+
+              <!-- 课程时间 -->
+              <div class="time-inline-item activity-time">
+                <i class="el-icon-date"></i>
+                <span class="time-inline-label">课程时间</span>
+                <span class="time-inline-content">
+                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+            </div>
           </template>
         </el-table-column>
 
@@ -531,7 +543,7 @@ export default {
         let capacitySuccess = false;
         let capacityRetryCount = 0;
         const maxCapacityRetries = 3;
-        
+
         while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
           try {
             capacityRetryCount++;
@@ -600,7 +612,7 @@ export default {
         this.detailDialogVisible = false;
         this.selectedCourse = null;
         await this.checkBookingStatus();
-        
+
         // 重新获取课程列表以同步最新数据（包括版本号）
         await this.getList();
 
@@ -690,7 +702,7 @@ export default {
         let capacitySuccess = false;
         let capacityRetryCount = 0;
         const maxCapacityRetries = 3;
-        
+
         while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
           try {
             capacityRetryCount++;
@@ -781,7 +793,7 @@ export default {
 
         // 7. 重新检查选课状态
         await this.checkBookingStatus();
-        
+
         // 8. 重新获取课程列表以同步最新数据（包括版本号）
         await this.getList();
 
@@ -1699,5 +1711,54 @@ export default {
   border-radius: 0 0 16px 16px;
   min-height: 60px;
   width: 100%;
+}
+
+/* 时间安排样式 */
+.time-schedule-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.time-inline-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.time-inline-item.signup-time {
+  background: rgba(64, 158, 255, 0.08);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  color: #409EFF;
+}
+
+.time-inline-item.activity-time {
+  background: rgba(103, 194, 58, 0.08);
+  border: 1px solid rgba(103, 194, 58, 0.2);
+  color: #67C23A;
+}
+
+.time-inline-item i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.time-inline-label {
+  font-weight: 600;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.time-inline-content {
+  flex: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

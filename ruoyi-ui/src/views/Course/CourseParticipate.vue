@@ -114,8 +114,8 @@
           </template>
         </el-table-column>
         <el-table-column label="课程名称" align="center" prop="courseName" />
-                <!-- 类型列 -->
-                <el-table-column label="课程性质" align="center" width="120">
+        <!-- 类型列 -->
+        <el-table-column label="课程性质" align="center" width="120">
           <template slot-scope="scope">
             <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
               {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
@@ -129,22 +129,36 @@
             </el-tag>
           </template>
         </el-table-column>
-                <!-- 学分列 -->
-                <el-table-column label="学分" align="center" width="80">
+        <!-- 学分列 -->
+        <el-table-column label="学分" align="center" width="80">
           <template slot-scope="scope">
             <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
           </template>
         </el-table-column>
         <el-table-column label="课程地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
-        <el-table-column label="课程开始时间" align="center" prop="startTime" >
+
+        <!-- 时间安排列 -->
+        <el-table-column label="时间安排" align="center" min-width="320">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="课程结束时间" align="center" prop="endTime">
-          <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+            <div class="time-schedule-inline">
+              <!-- 选课时间 -->
+              <div class="time-inline-item signup-time">
+                <i class="el-icon-time"></i>
+                <span class="time-label">选课时间：</span>
+                <span class="time-content">
+                  {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+              <!-- 课程时间 -->
+              <div class="time-inline-item activity-time">
+                <i class="el-icon-date"></i>
+                <span class="time-label">课程时间：</span>
+                <span class="time-content">
+                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+            </div>
           </template>
         </el-table-column>
 
@@ -941,9 +955,9 @@ export default {
       });
 
       const isZip = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'].includes(file.type) ||
-                   file.name.toLowerCase().endsWith('.zip') ||
-                   file.name.toLowerCase().endsWith('.rar') ||
-                   file.name.toLowerCase().endsWith('.7z');
+        file.name.toLowerCase().endsWith('.zip') ||
+        file.name.toLowerCase().endsWith('.rar') ||
+        file.name.toLowerCase().endsWith('.7z');
       const isLt50M = file.size / 1024 / 1024 < 50;
 
       console.log('文件验证结果:', { isZip, isLt50M, sizeMB: (file.size / 1024 / 1024).toFixed(2) });
@@ -2756,6 +2770,53 @@ export default {
 
 .custom-file-item .file-name {
   font-size: 13px;
+}
+
+/* 时间安排样式 */
+.time-schedule-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.time-inline-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.time-inline-item.signup-time {
+  background: rgba(64, 158, 255, 0.08);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  color: #409EFF;
+}
+
+.time-inline-item.activity-time {
+  background: rgba(103, 194, 58, 0.08);
+  border: 1px solid rgba(103, 194, 58, 0.2);
+  color: #67C23A;
+}
+
+.time-inline-item i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.time-label {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.time-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 </style>

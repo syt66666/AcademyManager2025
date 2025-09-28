@@ -6,14 +6,14 @@
         <i class="el-icon-data-analysis"></i>
         <span>活动统计</span>
       </div>
-      
+
       <div class="stats-content">
         <!-- 左侧状态统计 -->
         <div class="status-stats">
           <h3>活动状态筛选</h3>
           <div class="status-items">
-            <div 
-              class="status-item" 
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未提交' }"
               @click="filterByStatus('未提交')"
             >
@@ -25,9 +25,9 @@
                 <div class="status-label">未提交</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未通过' }"
               @click="filterByStatus('未通过')"
             >
@@ -39,9 +39,9 @@
                 <div class="status-label">未通过</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未审核' }"
               @click="filterByStatus('未审核')"
             >
@@ -53,9 +53,9 @@
                 <div class="status-label">未审核</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -67,9 +67,9 @@
                 <div class="status-label">已通过</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item clear-filter" 
+
+            <div
+              class="status-item clear-filter"
               :class="{ active: selectedStatus === null }"
               @click="clearStatusFilter"
             >
@@ -83,13 +83,13 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 右侧进度条 -->
         <div class="progress-stats">
           <h3>活动完成进度</h3>
           <div class="progress-items">
-            <div 
-              v-for="(progress, type) in activityProgress" 
+            <div
+              v-for="(progress, type) in activityProgress"
               :key="type"
               class="progress-item"
               :class="{ active: selectedActivityType === type }"
@@ -98,8 +98,8 @@
               <div class="progress-label">{{ getActivityTypeName(type) }}</div>
               <div class="progress-bar-container">
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
+                  <div
+                    class="progress-fill"
                     :style="{ width: progress.percentage + '%' }"
                     :class="getProgressBarClass(progress.percentage, type)"
                   ></div>
@@ -130,8 +130,8 @@
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
-            <span 
-              class="index-badge" 
+            <span
+              class="index-badge"
               :class="{ 'rejected-badge': scope.row.status === '未通过' }"
             >
               {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
@@ -154,14 +154,28 @@
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
-        <el-table-column label="活动开始时间" align="center" prop="startTime" >
+
+        <!-- 时间安排列 -->
+        <el-table-column label="时间安排" align="center" min-width="320">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="活动结束时间" align="center" prop="endTime">
-          <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+            <div class="time-schedule-inline">
+              <!-- 报名时间 -->
+              <div class="time-inline-item signup-time">
+                <i class="el-icon-time"></i>
+                <span class="time-label">报名时间：</span>
+                <span class="time-content">
+                  {{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+              <!-- 活动时间 -->
+              <div class="time-inline-item activity-time">
+                <i class="el-icon-date"></i>
+                <span class="time-label">活动时间：</span>
+                <span class="time-content">
+                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+            </div>
           </template>
         </el-table-column>
 
@@ -228,14 +242,14 @@
               <div class="expand-row" v-if="props.row.pictureUrl">
                 <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
                 <div class="expand-content">
-        <div class="activity-image-container">
-          <el-image
-            :src="getActivityImageUrl(props.row.pictureUrl)"
-            :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
-            fit="cover"
-            class="activity-image"
-          />
-        </div>
+                  <div class="activity-image-container">
+                    <el-image
+                      :src="getActivityImageUrl(props.row.pictureUrl)"
+                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
+                      fit="cover"
+                      class="activity-image"
+                    />
+                  </div>
                 </div>
               </div>
               <!-- <div class="expand-row">
@@ -304,26 +318,26 @@
       <div v-if="!isViewOnly" class="section">
         <h3>上传图片证明材料</h3>
         <div class="image-upload-container">
-        <el-upload
-          :action="uploadUrl"
-          list-type="picture-card"
-          :file-list="imageFiles"
-          :on-preview="handlePicturePreview"
-          :on-remove="handleRemoveImage"
-          :on-success="handleImageSuccess"
-          :limit="5"
-          multiple
-          accept=".jpg,.jpeg,.png,.gif"
-          :before-upload="beforeImageUpload"
-          :headers="headers"
+          <el-upload
+            :action="uploadUrl"
+            list-type="picture-card"
+            :file-list="imageFiles"
+            :on-preview="handlePicturePreview"
+            :on-remove="handleRemoveImage"
+            :on-success="handleImageSuccess"
+            :limit="5"
+            multiple
+            accept=".jpg,.jpeg,.png,.gif"
+            :before-upload="beforeImageUpload"
+            :headers="headers"
             :auto-upload="true"
             class="image-upload"
-        >
+          >
             <div class="upload-add-card">
               <i class="el-icon-plus upload-add-icon"></i>
               <div class="upload-add-text">添加图片</div>
             </div>
-        </el-upload>
+          </el-upload>
           <div class="upload-tip">
             <i class="el-icon-info"></i>
             最多可上传5张图片，每张大小不超过2MB，支持JPG、PNG、GIF格式
@@ -375,16 +389,16 @@
       <div v-if="!isViewOnly" class="section">
         <h3>上传文档材料</h3>
         <div class="upload-container">
-        <el-upload
-          :action="uploadUrl"
-          :file-list="docFiles"
-          :on-remove="handleRemoveDoc"
-          :on-success="handleDocSuccess"
-          :limit="1"
-          accept=".pdf"
-          :before-upload="beforeDocUpload"
-          :headers="headers"
-          :data="{ filePath: 'bookingImages' }"
+          <el-upload
+            :action="uploadUrl"
+            :file-list="docFiles"
+            :on-remove="handleRemoveDoc"
+            :on-success="handleDocSuccess"
+            :limit="1"
+            accept=".pdf"
+            :before-upload="beforeDocUpload"
+            :headers="headers"
+            :data="{ filePath: 'bookingImages' }"
             :auto-upload="true"
             drag
             class="document-upload"
@@ -399,18 +413,18 @@
             </div>
             <div slot="tip" class="upload-tip">
               <i class="el-icon-info"></i>
-            仅支持上传1个PDF格式文档，大小不超过10MB
-          </div>
-        </el-upload>
-          
+              仅支持上传1个PDF格式文档，大小不超过10MB
+            </div>
+          </el-upload>
+
           <!-- 自定义文件列表显示 -->
           <div v-if="docFiles && docFiles.length > 0" class="custom-file-list">
             <div v-for="(file, index) in docFiles" :key="index" class="custom-file-item">
               <i class="el-icon-document file-icon"></i>
               <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
-              <el-button 
-                type="text" 
-                icon="el-icon-delete" 
+              <el-button
+                type="text"
+                icon="el-icon-delete"
                 class="remove-btn"
                 @click="handleRemoveDoc(file)"
               ></el-button>
@@ -440,11 +454,11 @@
 
 
       <!-- 图片预览对话框 -->
-      <el-dialog 
-        :visible.sync="previewVisible" 
-        title="图片预览" 
-        width="70%" 
-        top="5vh" 
+      <el-dialog
+        :visible.sync="previewVisible"
+        title="图片预览"
+        width="70%"
+        top="5vh"
         class="preview-dialog"
         :modal="true"
         :close-on-click-modal="true"
@@ -592,7 +606,7 @@ export default {
         pageSize: 10,
         studentId: this.$store.state.user.name
       },
-      
+
       // 统计相关数据
       selectedStatus: null, // 当前选中的状态筛选
       allActivitiesList: [], // 所有活动数据，用于统计计算
@@ -608,8 +622,8 @@ export default {
         '3': { completed: 0, percentage: 0 }, // 能力锻造与实践创新活动类
         '4': { completed: 0, percentage: 0 }  // 社会责任与领军意识活动类
       },
-          // 进度条筛选：当前选中的活动类型
-          selectedActivityType: null,
+      // 进度条筛选：当前选中的活动类型
+      selectedActivityType: null,
       isViewOnly: false, // 是否为只查看模式
       showFooterButtons: false, // 是否显示底部按钮
 
@@ -644,7 +658,7 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
@@ -658,7 +672,7 @@ export default {
       const activityEndTime = new Date(endTime);
       return now > activityEndTime;
     },
-    
+
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -740,12 +754,12 @@ export default {
         data.proof.forEach(fileName => {
           if (fileName) {
             const fullUrl = this.getFileFullUrl(fileName);
-          this.imageFiles.push({
-            name: this.extractFileName(fileName),
+            this.imageFiles.push({
+              name: this.extractFileName(fileName),
               url: fullUrl,
               isOld: true,
               downloading: false // 添加下载状态
-          });
+            });
           }
         });
       }
@@ -835,7 +849,7 @@ export default {
 
 
       this.previewVisible = true;
-      
+
     },
 
     // 更新当前预览图片
@@ -895,7 +909,7 @@ export default {
         this.$message.warning('没有可下载的图片');
         return;
       }
-      
+
       this.imageFiles.forEach(file => {
         this.downloadFileReliably(file);
       });
@@ -904,7 +918,7 @@ export default {
     // 获取文件名（不包含路径）
     getFileNameOnly(fileName) {
       if (!fileName) return '未知文件';
-      
+
       // 如果包含路径分隔符，取最后一部分
       const parts = fileName.split('/');
       return parts[parts.length - 1];
@@ -1127,7 +1141,7 @@ export default {
         pageSize: 1000, // 获取足够多的数据
         studentId: this.$store.state.user.name
       };
-      
+
       listBookingsWithActivity(statsParams).then(response => {
         this.allActivitiesList = response.rows || [];
         // 更新统计数据
@@ -1193,12 +1207,12 @@ export default {
         // 获取状态优先级
         const priorityA = statusPriority[a.status] || 999;
         const priorityB = statusPriority[b.status] || 999;
-        
+
         // 如果优先级相同，按活动开始时间排序（最新的在前）
         if (priorityA === priorityB) {
           return new Date(b.startTime) - new Date(a.startTime);
         }
-        
+
         // 按优先级排序
         return priorityA - priorityB;
       });
@@ -1266,14 +1280,14 @@ export default {
     filterByStatus(status) {
       this.selectedStatus = status;
       this.queryParams.pageNum = 1;
-      
+
       // 添加状态筛选参数
       if (status) {
         this.queryParams.status = status;
       } else {
         delete this.queryParams.status;
       }
-      
+
       this.getList();
     },
 
@@ -1626,17 +1640,17 @@ export default {
     /** 获取活动图片完整URL（仿照审核界面实现） */
     getActivityImageUrl(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
       if (pictureUrl.startsWith('/profile/')) {
         return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
       }
-      
+
       return pictureUrl;
     },
 
@@ -2168,22 +2182,22 @@ export default {
     flex-direction: column;
     gap: 30px;
   }
-  
+
   .status-items {
     justify-content: center;
   }
-  
+
   .progress-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .progress-label {
     min-width: auto;
     width: 100%;
   }
-  
+
   .progress-bar-container {
     width: 100%;
   }
@@ -2194,18 +2208,18 @@ export default {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .status-item {
     min-width: auto;
     justify-content: center;
   }
-  
+
   .card-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .record-count {
     margin-left: 0;
   }
@@ -2995,6 +3009,53 @@ export default {
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
+}
+
+/* 时间安排样式 */
+.time-schedule-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.time-inline-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.time-inline-item.signup-time {
+  background: rgba(64, 158, 255, 0.08);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  color: #409EFF;
+}
+
+.time-inline-item.activity-time {
+  background: rgba(103, 194, 58, 0.08);
+  border: 1px solid rgba(103, 194, 58, 0.2);
+  color: #67C23A;
+}
+
+.time-inline-item i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.time-label {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.time-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 图片预览对话框样式 */

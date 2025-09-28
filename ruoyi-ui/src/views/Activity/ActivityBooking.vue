@@ -92,14 +92,29 @@
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer"  width="90"/>
-        <el-table-column label="活动开始时间" align="center" prop="startTime">
+
+        <!-- 时间安排列 -->
+        <el-table-column label="时间安排" align="center" min-width="320">
           <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="活动结束时间" align="center" prop="endTime">
-          <template slot-scope="scope">
-            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+            <div class="time-schedule-inline">
+              <!-- 报名时间 -->
+              <div class="time-inline-item signup-time">
+                <i class="el-icon-user"></i>
+                <span class="time-inline-label">报名时间</span>
+                <span class="time-inline-content">
+                  {{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+
+              <!-- 活动时间 -->
+              <div class="time-inline-item activity-time">
+                <i class="el-icon-date"></i>
+                <span class="time-inline-label">活动时间</span>
+                <span class="time-inline-content">
+                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
+                </span>
+              </div>
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="活动状态" align="center" width="90">
@@ -872,7 +887,7 @@ export default {
           activity.version = latestActivity.version;
           activity.activityCapacity = latestActivity.activityCapacity;
         }
-        
+
         // 1. 先检查报名记录是否存在
         let bookingExists = false;
         try {
@@ -904,7 +919,7 @@ export default {
         let capacitySuccess = false;
         let capacityRetryCount = 0;
         const maxCapacityRetries = 3;
-        
+
         while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
           try {
             capacityRetryCount++;
@@ -1022,7 +1037,7 @@ export default {
         this.detailDialogVisible = false;
         this.selectedActivity = null;
         await this.checkBookingStatus();
-        
+
         // 重新获取活动列表以同步最新数据（包括版本号）
         await this.getList();
 
@@ -1722,6 +1737,55 @@ export default {
   color: #c0c4cc !important;
   cursor: not-allowed !important;
   background-color: #f5f7fa !important;
+}
+
+/* 时间安排样式 */
+.time-schedule-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.time-inline-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.time-inline-item.signup-time {
+  background: rgba(64, 158, 255, 0.08);
+  border: 1px solid rgba(64, 158, 255, 0.2);
+  color: #409EFF;
+}
+
+.time-inline-item.activity-time {
+  background: rgba(103, 194, 58, 0.08);
+  border: 1px solid rgba(103, 194, 58, 0.2);
+  color: #67C23A;
+}
+
+.time-inline-item i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.time-inline-label {
+  font-weight: 600;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.time-inline-content {
+  flex: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 </style>

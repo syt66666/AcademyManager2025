@@ -30,6 +30,8 @@
         <result property="activityName"   column="activity_name"   />
         <result property="activityLocation" column="activity_location" />
         <result property="activityType"   column="activity_type"   />
+        <result property="activityStart"  column="activity_start"  />
+        <result property="activityDeadline" column="activity_deadline" />
         <result property="startTime"      column="start_time"       />
         <result property="endTime"       column="end_time"       />
         <result property="activityDescription" column="activity_description" />
@@ -63,6 +65,8 @@
         a.activity_name,
         a.activity_location,
         a.activity_type,
+        a.activity_start,
+        a.activity_deadline,
         a.start_time,
         a.end_time,
         a.activity_description,
