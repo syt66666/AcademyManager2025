@@ -104,7 +104,7 @@
         c.course_start, c.course_deadline, c.course_location, c.start_time, c.end_time,
         c.course_description, c.picture_url, c.notes, c.course_credit,
         cb.book_at, cb.proof, cb.summary, cb.status, cb.reviewer, cb.reviewer_comment,
-        cb.review_time, cb.organizer, cb.created_time, cb.updated_time
+        cb.review_time, c.organizer, cb.created_time, cb.updated_time
         from course_bookings cb
         left join stu_info s on cb.student_id = s.student_id
         left join courses c on cb.course_id = c.course_id
@@ -210,7 +210,7 @@
             <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
             <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
             <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="organizer != null  and organizer != ''"> and c.organizer = #{organizer}</if>
             <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
             <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
         </where>

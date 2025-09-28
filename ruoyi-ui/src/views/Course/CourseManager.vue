@@ -206,16 +206,16 @@
               <el-button
                 size="mini"
                 type="text"
-                @click="handleUpdate(scope.row)"
-                class="action-button edit-button">
-                修改
+                @click="handleViewStudents(scope.row)"
+                class="action-button view-button">
+                已选学生
               </el-button>
               <el-button
                 size="mini"
                 type="text"
-                @click="handleViewStudents(scope.row)"
-                class="action-button view-button">
-                查看学生
+                @click="handleUpdate(scope.row)"
+                class="action-button edit-button">
+                修改信息
               </el-button>
             </div>
           </template>
@@ -482,12 +482,12 @@
                 <el-form-item prop="organizer">
                   <template slot="label">
                     <span class="required-label">
-                      组织者
+                      组织单位
                     </span>
                   </template>
                   <el-input
                     v-model="form.organizer"
-                    placeholder="组织者"
+                    placeholder="组织单位"
                     prefix-icon="el-icon-user"
                     class="form-input"
                     readonly
@@ -729,7 +729,7 @@ export default {
           { required: true, message: "课程容量不能为空", trigger: "blur" }
         ],
         organizer: [
-          { required: true, message: "组织者不能为空", trigger: "blur" }
+          { required: true, message: "组织单位不能为空", trigger: "blur" }
         ],
       }
     };
@@ -746,14 +746,14 @@ export default {
     indexMethod(index) {
       return (this.queryParams.pageNum - 1) * this.queryParams.pageSize + index + 1;
     },
-    // 验证课程名称唯一性（同一组织者的同一活动只能有一个）
+    // 验证课程名称唯一性（同一组织单位的同一活动只能有一个）
     validateCourseUniqueness(rule, value, callback) {
       if (!value || !this.form.organizer) {
         callback();
         return;
       }
 
-      // 检查是否存在相同的组织者+课程名称组合
+      // 检查是否存在相同的组织单位+课程名称组合
       const existingCourse = this.coursesList.find(course =>
         course.courseName === value &&
         course.organizer === this.form.organizer &&
@@ -763,13 +763,13 @@ export default {
       if (existingCourse) {
         // 使用红色悬浮窗提示
         this.$message({
-          message: `⚠️ 课程重复！该组织者已存在名为"${value}"的课程，请使用不同的课程名称`,
+          message: `⚠️ 课程重复！该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`,
           type: 'error',
           duration: 5000,
           showClose: true,
           customClass: 'course-duplicate-error'
         });
-        callback(new Error(`该组织者已存在名为"${value}"的课程，请使用不同的课程名称`));
+        callback(new Error(`该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`));
       } else {
         callback();
       }
@@ -896,7 +896,7 @@ export default {
         hasError = true;
       }
 
-      // 验证组织者
+      // 验证组织单位
       if (!organizer || organizer.trim() === '') {
         this.setFieldError('organizer');
         hasError = true;
@@ -1219,7 +1219,7 @@ export default {
           this.form.courseType = String(this.form.courseType);
         }
         
-        // 设置组织者为当前用户昵称（不可修改）
+        // 设置组织单位为当前用户昵称（不可修改）
         this.form.organizer = this.getCurrentUserNickName();
         
         // 保持原有的已报名人数，不重置剩余容量
@@ -3160,7 +3160,7 @@ export default {
   margin-right: 4px;
 }
 
-/* 只读组织者字段样式 */
+/* 只读组织单位字段样式 */
 .form-input[readonly] {
   background-color: #f5f7fa;
   color: #606266;

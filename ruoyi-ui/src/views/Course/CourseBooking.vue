@@ -150,7 +150,7 @@
               @click="handleDetail(scope.row)"
             >选课</el-button>
             <el-button
-              v-else-if="getSignStatusText(scope.row) === '已选课'"
+              v-else-if="getSignStatusText(scope.row) === '未提交'"
               type="text"
               size="mini"
               class="action-button cancel-button"
@@ -216,9 +216,7 @@
             <el-tag :type="getCourseStatusTagType(selectedCourse)" size="medium" class="status-tag">
               {{ getCourseStatusText(selectedCourse) }}
             </el-tag>
-            <el-tag :type="getSignStatusTag(selectedCourse)" size="medium" effect="light" class="sign-tag">
-              {{ getSignStatusText(selectedCourse) }}
-            </el-tag>
+
           </div>
         </div>
         <el-divider></el-divider>
@@ -641,7 +639,7 @@ export default {
           courseId: Number(course.courseId),  // 转换为数字
           studentId: this.$store.state.user.name,
           bookingTime: new Date().toISOString(),
-          status: '已选课'
+          status: '未提交'
         };
 
         console.log('选课记录数据:', bookingData);
@@ -834,7 +832,7 @@ export default {
       const status = this.getSignStatusText(course);
       switch (status) {
         case "可选课": return "success";
-        case "已选课": return "warning";
+        case "未提交": return "warning";
         case "不可选课": return "danger";
         default: return "info";
       }
@@ -861,7 +859,7 @@ export default {
     getSignStatusText(row) {
       // 简化逻辑，只检查是否已选课
       if (row.isBooked) {
-        return "已选课";
+        return "未提交";
       }
 
       const status = this.getCourseStatusText(row);

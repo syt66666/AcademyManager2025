@@ -150,7 +150,7 @@
             <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="上课地点" align="center" prop="courseLocation" />
+        <el-table-column label="课程地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
         <el-table-column label="课程开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
@@ -222,7 +222,7 @@
             <div class="expand-card">
               <div class="expand-row">
                 <div class="expand-label"><i class="el-icon-document"></i> 课程描述:</div>
-                <div class="expand-content">{{ props.row.notes || '暂无描述' }}</div>
+                <div class="expand-content">{{ props.row.courseDescription || '暂无描述' }}</div>
               </div>
               <div class="expand-row">
                 <div class="expand-label"><i class="el-icon-coin"></i> 课程学分:</div>
@@ -370,9 +370,6 @@
       </div>
 
 
-
-
-
       <!-- 图片预览对话框 -->
       <el-dialog
         :visible.sync="previewVisible"
@@ -490,8 +487,7 @@
 
 
 <script>
-import { listBookings, listBookingsWithCourse, updateBookings, getBookings } from "@/api/system/courseBookings";
-import { listCourse } from "@/api/system/course";
+import { listBookingsWithCourse, updateBookings, getBookings } from "@/api/system/courseBookings";
 import { getToken } from "@/utils/auth";
 
 export default {
