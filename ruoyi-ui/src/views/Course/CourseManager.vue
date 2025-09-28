@@ -556,10 +556,68 @@
         </div>
       </div>
 
+      <!-- 学生筛选区域 -->
+      <div class="student-filter-container">
+        <el-form :model="studentFilterParams" ref="studentFilterForm" size="small" :inline="true">
+          <el-form-item label="学号" prop="studentId">
+            <el-input
+              v-model="studentFilterParams.studentId"
+              placeholder="请输入学号"
+              clearable
+              prefix-icon="el-icon-search"
+              class="filter-input"
+              @keyup.enter.native="handleStudentFilter"
+            />
+          </el-form-item>
+          <el-form-item label="姓名" prop="studentName">
+            <el-input
+              v-model="studentFilterParams.studentName"
+              placeholder="请输入姓名"
+              clearable
+              prefix-icon="el-icon-search"
+              class="filter-input"
+              @keyup.enter.native="handleStudentFilter"
+            />
+          </el-form-item>
+          <el-form-item label="所属书院" prop="college">
+            <el-input
+              v-model="studentFilterParams.college"
+              placeholder="请输入所属书院"
+              clearable
+              prefix-icon="el-icon-search"
+              class="filter-input"
+              @keyup.enter.native="handleStudentFilter"
+            />
+          </el-form-item>
+          <el-form-item label="审核状态" prop="status">
+            <el-select v-model="studentFilterParams.status" clearable placeholder="请选择审核状态" class="filter-input">
+              <el-option label="已通过" value="approved"></el-option>
+              <el-option label="待审核" value="pending"></el-option>
+              <el-option label="未通过" value="rejected"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button-group>
+              <el-button
+                type="primary"
+                icon="el-icon-search"
+                @click="handleStudentFilter"
+                class="filter-button"
+              >筛选</el-button>
+              <el-button
+                icon="el-icon-refresh"
+                @click="resetStudentFilter"
+                class="reset-button"
+              >重置</el-button>
+            </el-button-group>
+          </el-form-item>
+        </el-form>
+      </div>
+
       <!-- 学生列表表格 -->
       <div class="student-table-container">
         <el-table
-          :data="studentList"
+          :data="filteredStudentList"
           class="enhanced-student-table full-width-table"
           :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
           style="width: 100%">
@@ -616,7 +674,7 @@
       <!-- 对话框底部 -->
       <div slot="footer" class="dialog-footer">
         <div class="footer-left">
-          <div class="total-info">共{{ studentList.length }}名学生</div>
+          <div class="total-info">共{{ filteredStudentList.length }}名学生</div>
         </div>
         <div class="footer-right">
           <el-button
@@ -704,6 +762,13 @@ export default {
       // 学生列表对话框
       studentDialogVisible: false,
       studentList: [],
+      filteredStudentList: [],
+      studentFilterParams: {
+        studentId: '',
+        studentName: '',
+        college: '',
+        status: ''
+      },
       studentStats: {
         total: 0,
         approved: 0,
@@ -932,11 +997,13 @@ export default {
     loadStudentList(courseId) {
       this.getCourseBookings(courseId).then(response => {
         this.studentList = response.rows || [];
+        this.filteredStudentList = [...this.studentList];
         this.calculateStudentStats();
       }).catch(error => {
         console.error('获取学生列表失败:', error);
         this.$message.error('获取学生列表失败');
         this.studentList = [];
+        this.filteredStudentList = [];
         this.calculateStudentStats();
       });
     },
@@ -950,6 +1017,31 @@ export default {
       this.studentStats.approved = this.studentList.filter(s => s.status === 'approved' || s.status === '已通过').length;
       this.studentStats.pending = this.studentList.filter(s => s.status === 'pending' || s.status === '待审核' || s.status === '未审核').length;
       this.studentStats.rejected = this.studentList.filter(s => s.status === 'rejected' || s.status === '未通过').length;
+    },
+    // 学生筛选
+    handleStudentFilter() {
+      this.filteredStudentList = this.studentList.filter(student => {
+        const matchStudentId = !this.studentFilterParams.studentId || 
+          student.studentId.toLowerCase().includes(this.studentFilterParams.studentId.toLowerCase());
+        const matchStudentName = !this.studentFilterParams.studentName || 
+          (student.studentName && student.studentName.toLowerCase().includes(this.studentFilterParams.studentName.toLowerCase()));
+        const matchCollege = !this.studentFilterParams.college || 
+          (student.college && student.college.toLowerCase().includes(this.studentFilterParams.college.toLowerCase()));
+        const matchStatus = !this.studentFilterParams.status || 
+          this.getStudentStatusText(student.status) === this.getStudentStatusText(this.studentFilterParams.status);
+        
+        return matchStudentId && matchStudentName && matchCollege && matchStatus;
+      });
+    },
+    // 重置学生筛选
+    resetStudentFilter() {
+      this.studentFilterParams = {
+        studentId: '',
+        studentName: '',
+        college: '',
+        status: ''
+      };
+      this.filteredStudentList = [...this.studentList];
     },
     // 获取学生状态标签类型
     getStudentStatusTagType(status) {
@@ -992,18 +1084,56 @@ export default {
         return;
       }
 
-      exportCourseStudents(this.currentCourse.courseId).then(response => {
-        const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `课程学生名单_${this.currentCourse.courseName}_${new Date().getTime()}.xlsx`;
-        link.click();
-        window.URL.revokeObjectURL(url);
+      if (this.filteredStudentList.length === 0) {
+        this.$message.warning('没有可导出的学生数据');
+        return;
+      }
+
+      // 创建Excel数据
+      const excelData = this.filteredStudentList.map((student, index) => ({
+        '序号': index + 1,
+        '学号': student.studentId,
+        '姓名': student.studentName || '未知',
+        '所属书院': student.college || '未知',
+        '预约时间': this.parseTime(student.bookAt, '{y}-{m}-{d} {h}:{i}'),
+        '审核状态': this.getStudentStatusText(student.status),
+        '审核人': student.reviewer || '',
+        '审核意见': student.reviewerComment || '',
+        '审核时间': student.reviewTime ? this.parseTime(student.reviewTime, '{y}-{m}-{d} {h}:{i}') : '',
+        '学习总结': student.summary || ''
+      }));
+
+      // 使用XLSX库导出
+      this.exportToExcel(excelData, `课程学生名单_${this.currentCourse.courseName}_${new Date().getTime()}.xlsx`);
+    },
+    // 导出到Excel
+    exportToExcel(data, filename) {
+      // 动态导入XLSX库
+      import('xlsx').then(XLSX => {
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '学生名单');
+        
+        // 设置列宽
+        const colWidths = [
+          { wch: 8 },   // 序号
+          { wch: 15 },  // 学号
+          { wch: 12 },  // 姓名
+          { wch: 15 },  // 所属书院
+          { wch: 20 },  // 预约时间
+          { wch: 12 },  // 审核状态
+          { wch: 12 },  // 审核人
+          { wch: 20 },  // 审核意见
+          { wch: 20 },  // 审核时间
+          { wch: 30 }   // 学习总结
+        ];
+        ws['!cols'] = colWidths;
+        
+        XLSX.writeFile(wb, filename);
         this.$message.success('导出成功');
       }).catch(error => {
         console.error('导出失败:', error);
-        this.$message.error('导出失败');
+        this.$message.error('导出失败，请检查是否安装了xlsx库');
       });
     },
     /** 查询书院选课列表 */
@@ -2431,6 +2561,55 @@ export default {
         font-weight: 500;
       }
     }
+  }
+}
+
+/* 学生筛选区域 */
+.student-filter-container {
+  margin: 20px 24px;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+
+  .filter-input {
+    min-width: 180px;
+    transition: all 0.3s ease;
+  }
+
+  .filter-input:hover {
+    box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+  }
+
+  .filter-button {
+    background: linear-gradient(135deg, #409EFF, #64b5ff);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .filter-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.4);
+  }
+
+  .reset-button {
+    background: #f0f2f5;
+    border: none;
+    padding: 8px 16px;
+    color: #606266;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s;
+  }
+
+  .reset-button:hover {
+    background: #e4e7ed;
+    color: #333;
+    transform: translateY(-1px);
   }
 }
 
