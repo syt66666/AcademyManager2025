@@ -1,11 +1,13 @@
 package com.ruoyi.system.service.impl;
 
+import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.ruoyi.system.mapper.CoursesMapper;
 import com.ruoyi.system.domain.Courses;
 import com.ruoyi.system.service.ICoursesService;
+import com.ruoyi.common.exception.ServiceException;
 
 /**
  * 【请填写功能名称】Service业务层处理
@@ -76,6 +78,15 @@ public class CoursesServiceImpl implements ICoursesService
     @Override
     public int deleteCoursesByCourseIds(Long[] courseIds)
     {
+        // 检查是否有课程已开始选课
+        for (Long courseId : courseIds) {
+            if (isCourseSignUpStarted(courseId)) {
+                Courses course = coursesMapper.selectCoursesByCourseId(courseId);
+                String courseName = course != null ? course.getCourseName() : "未知课程";
+                throw new ServiceException("课程【" + courseName + "】已开始选课，无法删除！");
+            }
+        }
+        
         return coursesMapper.deleteCoursesByCourseIds(courseIds);
     }
 
@@ -88,6 +99,13 @@ public class CoursesServiceImpl implements ICoursesService
     @Override
     public int deleteCoursesByCourseId(Long courseId)
     {
+        // 检查课程是否已开始选课
+        if (isCourseSignUpStarted(courseId)) {
+            Courses course = coursesMapper.selectCoursesByCourseId(courseId);
+            String courseName = course != null ? course.getCourseName() : "未知课程";
+            throw new ServiceException("课程【" + courseName + "】已开始选课，无法删除！");
+        }
+        
         return coursesMapper.deleteCoursesByCourseId(courseId);
     }
 
@@ -115,5 +133,23 @@ public class CoursesServiceImpl implements ICoursesService
     public int increaseCapacity(Long courseId, Integer version)
     {
         return coursesMapper.increaseCapacity(courseId, version);
+    }
+
+    /**
+     * 检查课程是否已开始选课
+     *
+     * @param courseId 课程ID
+     * @return 是否已开始选课
+     */
+    @Override
+    public boolean isCourseSignUpStarted(Long courseId)
+    {
+        Courses course = coursesMapper.selectCoursesByCourseId(courseId);
+        if (course == null || course.getCourseStart() == null) {
+            return false;
+        }
+        
+        Date now = new Date();
+        return now.after(course.getCourseStart()) || now.equals(course.getCourseStart());
     }
 }

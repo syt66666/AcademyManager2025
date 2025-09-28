@@ -15,6 +15,7 @@ import com.ruoyi.common.core.domain.BaseEntity;
  */
 public class CourseBookingDTO extends BaseEntity
 {
+
     private static final long serialVersionUID = 1L;
 
     /** 选课记录ID */
