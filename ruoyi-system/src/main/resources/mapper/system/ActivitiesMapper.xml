@@ -180,18 +180,19 @@
             version = version +1
         WHERE activity_id = #{activityId}
           and version = #{version}
+          AND activity_capacity &lt; activity_total_capacity
     </update>
 
     <update id="decreaseCapacity" parameterType="Integer">
         UPDATE activities
         SET activity_capacity = CASE
-                                    WHEN activity_capacity > 0 THEN activity_capacity - 1
+                                    WHEN activity_capacity &gt; 0 THEN activity_capacity - 1
                                     ELSE 0
             END,
             version = version +1
         WHERE activity_id = #{activityId}
           and version = #{version}
-          AND activity_capacity > 0
+          AND activity_capacity &gt; 0
     </update>
 
 
