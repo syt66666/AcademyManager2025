@@ -265,21 +265,21 @@
           </div>
           <!-- 课程时间 -->
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-time"></i> 课程开始：</div>
-            <div class="detail-value">{{ formatDateTime(selectedCourse.startTime) }}</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-time"></i> 课程结束：</div>
-            <div class="detail-value">{{ formatDateTime(selectedCourse.endTime) }}</div>
-          </div>
-          <!-- 选课时间 -->
-          <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课开始：</div>
+            <div class="detail-label"><i class="el-icon-time"></i> 选课开始：</div>
             <div class="detail-value">{{ formatDateTime(selectedCourse.courseStart) }}</div>
           </div>
           <div class="detail-item">
-            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 选课截止：</div>
+            <div class="detail-label"><i class="el-icon-time"></i> 选课结束：</div>
             <div class="detail-value">{{ formatDateTime(selectedCourse.courseDeadline) }}</div>
+          </div>
+          <!-- 选课时间 -->
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 课程开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.startTime) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 课程结束：</div>
+            <div class="detail-value">{{ formatDateTime(selectedCourse.endTime) }}</div>
           </div>
         </div>
         <el-divider></el-divider>

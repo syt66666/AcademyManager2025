@@ -42,6 +42,20 @@
             
             <div 
               class="status-item" 
+              :class="{ active: selectedStatus === '未审核' }"
+              @click="filterByStatus('未审核')"
+            >
+              <div class="status-icon pending">
+                <i class="el-icon-time"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.pending }}</div>
+                <div class="status-label">未审核</div>
+              </div>
+            </div>
+            
+            <div 
+              class="status-item" 
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -584,7 +598,8 @@ export default {
       allActivitiesList: [], // 所有活动数据，用于统计计算
       statusCounts: {
         unsubmitted: 0,  // 未提交
-        rejected: 0,     // 已拒绝
+        rejected: 0,     // 未通过
+        pending: 0,      // 未审核
         approved: 0      // 已通过
       },
       activityProgress: {
@@ -1200,6 +1215,7 @@ export default {
       this.statusCounts = {
         unsubmitted: 0,
         rejected: 0,
+        pending: 0,
         approved: 0
       };
 
@@ -1211,6 +1227,9 @@ export default {
             break;
           case '未通过':
             this.statusCounts.rejected++;
+            break;
+          case '未审核':
+            this.statusCounts.pending++;
             break;
           case '已通过':
             this.statusCounts.approved++;
@@ -1765,6 +1784,11 @@ export default {
 
 .status-icon.rejected {
   background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.status-icon.pending {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
   color: white;
 }
 

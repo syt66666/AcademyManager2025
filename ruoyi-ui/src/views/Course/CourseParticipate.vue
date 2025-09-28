@@ -209,27 +209,6 @@
                 <div class="expand-label"><i class="el-icon-document"></i> 课程描述:</div>
                 <div class="expand-content">{{ props.row.courseDescription || '暂无描述' }}</div>
               </div>
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-coin"></i> 课程学分:</div>
-                <div class="expand-content">{{ props.row.courseCredit }} 学分</div>
-              </div>
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-collection-tag"></i> 课程类别:</div>
-                <div class="expand-content">{{ props.row.courseCategory }}</div>
-              </div>
-              <div class="expand-row" v-if="props.row.pictureUrl">
-                <div class="expand-label"><i class="el-icon-picture"></i> 课程图片:</div>
-                <div class="expand-content">
-                  <div class="course-image-container">
-                    <el-image
-                      :src="getCourseImageUrl(props.row.pictureUrl)"
-                      :preview-src-list="[getCourseImageUrl(props.row.pictureUrl)]"
-                      fit="cover"
-                      class="course-image"
-                    />
-                  </div>
-                </div>
-              </div>
               <div class="expand-row" v-if="!isCourseEnded(props.row.endTime)">
                 <div class="expand-label"><i class="el-icon-time"></i> 材料提交提示:</div>
                 <div class="expand-content upload-tip">
