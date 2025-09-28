@@ -167,6 +167,15 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "成绩上传时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date scoreUploadTime;
 
+        // 学生信息字段
+    /** 学生姓名 */
+    @Excel(name = "学生姓名")
+    private String studentName;
+
+    /** 所属书院 */
+    @Excel(name = "所属书院")
+    private String college;
+
 
     // Getters and Setters
     public Long getBookingId() {
@@ -449,6 +458,22 @@ public class CourseBookingDTO extends BaseEntity
     public void setScoreUploadTime(Date scoreUploadTime) {
         this.scoreUploadTime = scoreUploadTime;
     }
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
+    }
+
+    public String getCollege() {
+        return college;
+    }
+
+    public void setCollege(String college) {
+        this.college = college;
+    }
+
 
     @Override
     public String toString() {
@@ -477,6 +502,8 @@ public class CourseBookingDTO extends BaseEntity
                 .append("notes", getNotes())
                 .append("courseCredit", getCourseCredit())
                 .append("courseCategory", getCourseCategory())
+                .append("studentName", getStudentName())
+                .append("college", getCollege())
                 .toString();
     }
 }
