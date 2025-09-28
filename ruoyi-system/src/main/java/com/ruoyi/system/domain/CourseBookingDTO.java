@@ -30,7 +30,7 @@ public class CourseBookingDTO extends BaseEntity
 
     /** 所属书院 */
     @Excel(name = "所属书院")
-    private String academy;
+    private String college;
 
     /** 录取专业 */
     @Excel(name = "录取专业")
@@ -167,14 +167,7 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "成绩上传时间", width = 30, dateFormat = "yyyy-MM-dd")
     private Date scoreUploadTime;
 
-        // 学生信息字段
-    /** 学生姓名 */
-    @Excel(name = "学生姓名")
-    private String studentName;
-
-    /** 所属书院 */
-    @Excel(name = "所属书院")
-    private String college;
+    // 学生信息字段
 
 
     // Getters and Setters
@@ -202,12 +195,12 @@ public class CourseBookingDTO extends BaseEntity
         this.studentName = studentName;
     }
 
-    public String getAcademy() {
-        return academy;
+    public String getCollege() {
+        return college;
     }
 
-    public void setAcademy(String academy) {
-        this.academy = academy;
+    public void setCollege(String college) {
+        this.college = college;
     }
 
     public String getMajor() {
@@ -458,21 +451,6 @@ public class CourseBookingDTO extends BaseEntity
     public void setScoreUploadTime(Date scoreUploadTime) {
         this.scoreUploadTime = scoreUploadTime;
     }
-    public String getStudentName() {
-        return studentName;
-    }
-
-    public void setStudentName(String studentName) {
-        this.studentName = studentName;
-    }
-
-    public String getCollege() {
-        return college;
-    }
-
-    public void setCollege(String college) {
-        this.college = college;
-    }
 
 
     @Override
@@ -498,12 +476,21 @@ public class CourseBookingDTO extends BaseEntity
                 .append("endTime", getEndTime())
                 .append("courseDescription", getCourseDescription())
                 .append("pictureUrl", getPictureUrl())
-                .append("organizer", getOrganizer())
                 .append("notes", getNotes())
                 .append("courseCredit", getCourseCredit())
                 .append("courseCategory", getCourseCategory())
                 .append("studentName", getStudentName())
                 .append("college", getCollege())
+                .append("major", getMajor())
+                .append("systemMajor", getSystemMajor())
+                .append("studentClass", getStudentClass())
+                .append("studentSex", getStudentSex())
+                .append("courseStart", getCourseStart())
+                .append("courseDeadline", getCourseDeadline())
+                .append("scoreValue", getScoreValue())
+                .append("gpa", getGpa())
+                .append("scoreType", getScoreType())
+                .append("scoreUploadTime", getScoreUploadTime())
                 .toString();
     }
 }
