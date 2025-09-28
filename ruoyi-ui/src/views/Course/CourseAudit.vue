@@ -185,9 +185,9 @@
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
-              <span class="index-badge">
-                {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
-              </span>
+	        <span class="index-badge">
+	          {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
+	        </span>
           </template>
         </el-table-column>
         <el-table-column label="学生学号" align="center" prop="studentId"/>
@@ -209,7 +209,21 @@
         </el-table-column>
         <el-table-column label="课程地点" align="center" prop="courseLocation"/>
         <el-table-column label="组织单位" align="center" prop="organizer"/>
-
+        <!-- 新增：成绩列 -->
+        <el-table-column label="成绩" align="center" prop="scoreValue" width="100">
+          <template slot-scope="scope">
+	      <span v-if="scope.row.scoreValue">
+	        <el-tag
+            :type="getScoreTagType(scope.row.scoreValue)"
+            effect="plain"
+            class="score-tag"
+          >
+	          {{ scope.row.scoreValue }}
+	        </el-tag>
+	      </span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
         <el-table-column label="审核状态" prop="status" align="center" width="100">
           <template slot-scope="scope">
             <el-tag
@@ -229,7 +243,6 @@
             >未通过</el-tag>
           </template>
         </el-table-column>
-
         <el-table-column label="操作" align="center" width="150">
           <template slot-scope="scope">
             <div class="action-buttons">
@@ -240,13 +253,6 @@
                 class="action-button audit-button">
                 审核
               </el-button>
-<!--              <el-button-->
-<!--                size="mini"-->
-<!--                type="text"-->
-<!--                @click="showAuditHistory(scope.row)"-->
-<!--                class="action-button history-button">-->
-<!--                历史-->
-<!--              </el-button>-->
             </div>
           </template>
         </el-table-column>
@@ -573,6 +579,31 @@ export default {
     this.fetchAuditCount();
   },
   methods: {
+    // 成绩标签类型判断
+    getScoreTagType(score) {
+      if (!score) return 'info';
+      // 数字类型成绩
+      if (/^\d+(\.\d+)?$/.test(score)) {
+        const numScore = parseFloat(score);
+        if (numScore >= 90) return 'success';     // 优秀-绿色
+        if (numScore >= 80) return 'primary';     // 良好-蓝色
+        if (numScore >= 60) return 'warning';     // 及格-橙色
+        return 'danger';                          // 不及格-红色
+      }
+      // 字母类型成绩
+      if (/^[A-F]$/.test(score.toUpperCase())) {
+        const grade = score.toUpperCase();
+        switch (grade) {
+          case 'A': return 'success';    // 优秀
+          case 'B': return 'primary';    // 良好
+          case 'C': return 'warning';    // 中等
+          case 'D': return 'info';       // 及格
+          case 'F': return 'danger';     // 不及格
+          default: return 'info';
+        }
+      }
+      return 'info';  // 其他情况
+    },
     async openAuditDialog(row) {
       this.currentBooking = row;
       this.auditDialogTitle = `审核材料`;
