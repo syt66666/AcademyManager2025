@@ -6,7 +6,7 @@
       <div class="card-header">
         <i class="el-icon-search"></i>
         <span>搜索条件</span>
-      
+
       </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
         <div class="search-row">
@@ -94,7 +94,7 @@
               {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
             </el-tag>
           </template>
-        </el-table-column> 
+        </el-table-column>
         <!-- 课程类型列 -->
         <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
@@ -137,7 +137,7 @@
           </span>
           </template>
         </el-table-column>
-       
+
 
         <!-- 操作列（保留原有功能） -->
         <el-table-column label="操作" align="center" fixed="right" width="120">
@@ -173,23 +173,6 @@
           </template>
         </el-table-column>
       </el-table>
-
-      <!-- 空数据状态 -->
-      <div v-if="!loading && coursesList.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <i class="el-icon-document-remove"></i>
-        </div>
-        <div class="empty-text">
-          <h3>暂无课程数据</h3>
-          <p>当前没有可选的课程记录</p>
-        </div>
-        <div class="empty-actions">
-          <el-button type="primary" @click="getList">
-            <i class="el-icon-refresh"></i>
-            刷新数据
-          </el-button>
-        </div>
-      </div>
 
       <!-- 分页组件（保留原有） -->
       <pagination
@@ -369,7 +352,7 @@
 import { listCourses, getCourses, delCourses, addCourses, updateCourses, signUpCapacity, cancelSignUpCapacity, checkCourseUnique } from "@/api/system/courses";
 import {parseTime} from "@/utils/ruoyi";
 import {addBooking, checkCourseBookingSimple, deleteBookingsByCourseAndStudent} from "@/api/system/courseBookings";
-import {getStudent, getNickName} from "@/api/system/student";
+import {getStudent} from "@/api/system/student";
 
 export default {
   name: "Courses",
@@ -891,75 +874,38 @@ export default {
     /** 查询课程列表 */
     getList() {
       this.loading = true;
-      console.log("🔍 开始获取课程列表，查询参数:", this.queryParams);
-      
-      // 先获取组织者名称，作为默认筛选条件
-      getNickName()
-        .then(nickName => {
-          console.log("获取到组织者名称:", nickName.msg);
-          // 合并查询参数与组织者信息
-          const params = { ...this.queryParams, organizer: nickName.msg };
-          this.fetchCourseList(params);
-        })
-        .catch(error => {
-          console.error("获取组织者名称失败:", error);
-          // 失败时使用原始查询参数
-          this.fetchCourseList(this.queryParams);
-        });
-    },
+      listCourses(this.queryParams).then(async response => {
+        let courses = response.rows;
 
-    // 封装获取课程列表的逻辑
-    fetchCourseList(params) {
-      listCourses(params).then(async response => {
-        console.log("📋 课程列表API响应:", response);
-        console.log("📊 响应数据行数:", response.rows ? response.rows.length : 0);
-        console.log("📊 总记录数:", response.total);
-        
-        let courses = response.rows || [];
-        
         // 如果选择了"只显示可选课课程"，则进行前端过滤
         if (this.queryParams.availableOnly) {
-          console.log("🔍 应用可选课过滤条件");
           courses = courses.filter(course => {
             // 检查课程状态是否为"选课进行中"
             const status = this.getCourseStatusText(course);
             if (status !== "选课进行中") {
               return false;
             }
-            
+
             // 检查是否有剩余容量
             if (course.courseCapacity <= 0) {
               return false;
             }
-            
+
             // 检查是否已经选过课
             if (course.isBooked) {
               return false;
             }
-            
+
             return true;
           });
-          console.log("📊 过滤后课程数量:", courses.length);
         }
-        
+
         this.coursesList = courses;
         this.total = courses.length;
         this.loading = false;
-        
-        console.log("✅ 课程列表更新完成，最终数据:", {
-          coursesList: this.coursesList,
-          total: this.total
-        });
-        
+
         // 获取课程列表后检查选课状态
         await this.checkBookingStatus();
-      }).catch(error => {
-        console.error("❌ 获取课程列表失败:", error);
-        console.error("❌ 错误详情:", error.message);
-        this.$message.error("获取课程列表失败: " + (error.message || "请稍后重试"));
-        this.coursesList = [];
-        this.total = 0;
-        this.loading = false;
       });
     },
     // 获取表格行样式类名
@@ -1614,39 +1560,5 @@ export default {
   border-radius: 0 0 16px 16px;
   min-height: 60px;
   width: 100%;
-}
-
-/* 空数据状态样式 */
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  background: #fff;
-  border-radius: 8px;
-  margin: 20px 0;
-}
-
-.empty-icon {
-  font-size: 64px;
-  color: #c0c4cc;
-  margin-bottom: 20px;
-}
-
-.empty-text h3 {
-  color: #606266;
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-.empty-text p {
-  color: #909399;
-  margin: 0 0 30px 0;
-  font-size: 14px;
-}
-
-.empty-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
 }
 </style>
