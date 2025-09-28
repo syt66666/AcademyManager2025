@@ -107,11 +107,12 @@
         c.course_start, c.course_deadline, c.course_location, c.start_time, c.end_time,
         c.course_description, c.picture_url, c.notes, c.course_credit,
         cb.book_at, cb.proof, cb.summary, cb.status, cb.reviewer, cb.reviewer_comment,
-        cb.review_time, c.organizer, cb.created_time, cb.updated_time,cs.score_value
+        cb.review_time, c.organizer, cb.created_time, cb.updated_time,
+        cs.score_value, cs.score_type
         from course_bookings cb
         left join stu_info s on cb.student_id = s.student_id
         left join courses c on cb.course_id = c.course_id
-        left join course_score cs on cb.course_id = cs.course_id
+        left join course_score cs on cb.course_id = cs.course_id and cs.student_id = cb.student_id
     </sql>
 
     <select id="selectCourseBookingsList" parameterType="CourseBookings" resultMap="CourseBookingsResult">
