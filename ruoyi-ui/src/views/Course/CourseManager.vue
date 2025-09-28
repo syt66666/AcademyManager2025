@@ -740,9 +740,9 @@ export default {
       },
       // 课程状态选项
       courseStatusOptions: [
-        { value: '未开始', label: '未开始' },
-        { value: '选课中', label: '选课中' },
-        { value: '已截止', label: '已截止' }
+        { value: '选课未开始', label: '选课未开始' },
+        { value: '选课进行中', label: '选课进行中' },
+        { value: '选课已截止', label: '选课已截止' }
       ],
       // 课程类型选项
       courseTypeOptions: [
@@ -804,6 +804,8 @@ export default {
   },
   created() {
     this.getCurrentUserAcademy();
+    // 测试状态计算逻辑
+    this.testStatusComputation();
   },
   methods: {
     // 获取当前用户所属书院
@@ -815,8 +817,10 @@ export default {
             console.log('当前用户所属书院:', this.currentUserAcademy);
             // 设置查询参数中的organizer字段
             this.queryParams.organizer = this.currentUserAcademy;
-            // 获取课程列表
-            this.getList();
+            // 强制刷新课程列表
+            this.$nextTick(() => {
+              this.getList();
+            });
           } else {
             console.error('获取用户书院信息失败:', response);
             this.currentUserAcademy = '';
@@ -828,6 +832,17 @@ export default {
           this.currentUserAcademy = '';
           this.getList();
         });
+    },
+    // 测试状态计算逻辑
+    testStatusComputation() {
+      const testData = {
+        courseName: '测试课程',
+        courseStart: '2025-09-27 00:00:00',
+        courseDeadline: '2025-09-28 11:15:00'
+      };
+      const status = this.computeCourseStatus(testData);
+      console.log('测试状态计算:', status);
+      return status;
     },
     // 获取当前用户昵称
     getCurrentUserNickName() {
@@ -1167,15 +1182,24 @@ export default {
       listCourses(this.queryParams).then(response => {
         console.log('课程列表查询响应:', response);
         const rows = response.rows || [];
+        console.log('原始课程数据:', rows);
         // 若后端未按状态过滤，则在前端按需过滤
         const selectedStatus = (this.queryParams.status || '').trim();
         const selectedType = (this.queryParams.courseType || '').trim();
         const selectedCategory = (this.queryParams.courseCategory || '').trim();
 
-        const withStatus = rows.map(item => ({
-          ...item,
-          status: item.status || this.computeCourseStatus(item)
-        }));
+        const withStatus = rows.map(item => {
+          const computedStatus = this.computeCourseStatus(item);
+          console.log('处理课程状态:', {
+            courseName: item.courseName,
+            originalStatus: item.status,
+            computedStatus: computedStatus
+          });
+          return {
+            ...item,
+            status: computedStatus // 强制使用计算的状态
+          };
+        });
 
         // 按状态过滤
         let filteredList = selectedStatus ? withStatus.filter(r => r.status === selectedStatus) : withStatus;
@@ -1199,6 +1223,9 @@ export default {
 
         this.total = response.total;
         this.loading = false;
+        
+        // 强制更新视图
+        this.$forceUpdate();
       });
     },
     // 兜底：根据时间推导课程状态
@@ -1206,10 +1233,35 @@ export default {
       const now = new Date();
       const start = item.courseStart ? new Date(item.courseStart) : null;
       const deadline = item.courseDeadline ? new Date(item.courseDeadline) : null;
-      if (start && now < start) return '未开始';
-      if (start && deadline && now >= start && now <= deadline) return '选课中';
-      if (deadline && now > deadline) return '已截止';
-      return item.status || '未开始';
+      
+      console.log('计算课程状态:', {
+        courseName: item.courseName,
+        now: now.toISOString(),
+        start: start ? start.toISOString() : null,
+        deadline: deadline ? deadline.toISOString() : null
+      });
+      
+      // 如果当前时间在选课开始时间之前，显示"选课未开始"
+      if (start && now < start) {
+        console.log('状态判断: 选课未开始');
+        return '选课未开始';
+      }
+      
+      // 如果当前时间在选课开始时间和截止时间之间，显示"选课进行中"
+      if (start && deadline && now >= start && now <= deadline) {
+        console.log('状态判断: 选课进行中');
+        return '选课进行中';
+      }
+      
+      // 如果当前时间超过选课截止时间，显示"选课已截止"
+      if (deadline && now > deadline) {
+        console.log('状态判断: 选课已截止');
+        return '选课已截止';
+      }
+      
+      // 默认状态
+      console.log('状态判断: 默认状态');
+      return item.status || '选课未开始';
     },
     // 取消按钮
     cancel() {
@@ -1245,11 +1297,11 @@ export default {
     // 状态与标签类型的映射：返回el-tag支持的type值
     getStatusTagType(status) {
       switch (status) {
-        case '未开始':
+        case '选课未开始':
           return 'info'; // 蓝色标签
-        case '选课中':
+        case '选课进行中':
           return 'success'; // 绿色标签
-        case '已截止':
+        case '选课已截止':
           return 'danger'; // 红色标签
         default:
           return 'info'; // 蓝色标签（默认）
@@ -3404,17 +3456,17 @@ export default {
 
 /* 不同状态的颜色优化 */
 .status-tag.el-tag--info {
-  background: #909399; /* 灰色 - 未开始 */
+  background: #909399; /* 灰色 - 选课未开始 */
   border-radius: 4px;
 }
 
 .status-tag.el-tag--success {
-  background: #67C23A; /* 绿色 - 选课中 */
+  background: #67C23A; /* 绿色 - 选课进行中 */
   border-radius: 4px;
 }
 
 .status-tag.el-tag--danger {
-  background: #F56C6C; /* 红色 - 已截止 */
+  background: #F56C6C; /* 红色 - 选课已截止 */
   border-radius: 4px;
 }
 
