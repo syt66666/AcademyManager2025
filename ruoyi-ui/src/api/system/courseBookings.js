@@ -124,10 +124,11 @@ export function batchAuditBookings(data) {
 }
 
 // 获取审核统计信息
-export function getAuditCount() {
+export function getAuditCount(organizer) {
   return request({
     url: '/system/courseBookings/auditCount',
-    method: 'get'
+    method: 'get',
+    params: organizer ? { organizer } : {}
   })
 }
 

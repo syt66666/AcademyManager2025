@@ -968,12 +968,27 @@ export default {
     // 获取审核统计
     async fetchAuditCount() {
       try {
-        const {code, data} = await getAuditCount();
+        // 先获取组织者名称
+        const nickNameResponse = await getNickName();
+        const organizer = nickNameResponse.msg;
+        
+        console.log("🔍 获取审核统计，组织者:", organizer);
+        const {code, data} = await getAuditCount(organizer);
         if (code === 200) {
           this.auditStats = data;
+          console.log("📊 审核统计数据:", data);
         }
       } catch (error) {
         console.error("获取统计数据失败:", error);
+        // 如果获取组织者失败，尝试不传参数
+        try {
+          const {code, data} = await getAuditCount();
+          if (code === 200) {
+            this.auditStats = data;
+          }
+        } catch (fallbackError) {
+          console.error("获取统计数据失败（回退方案）:", fallbackError);
+        }
       }
     },
 

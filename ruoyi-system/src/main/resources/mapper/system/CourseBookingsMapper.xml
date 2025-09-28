@@ -151,7 +151,7 @@
             <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
             <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
             <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="organizer != null  and organizer != ''"> and c.organizer = #{organizer}</if>
             <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
             <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
         </where>
@@ -169,7 +169,7 @@
             <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
             <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
             <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="organizer != null  and organizer != ''"> and c.organizer = #{organizer}</if>
             <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
             <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
         </where>
@@ -178,7 +178,7 @@
     <select id="selectCourseBookingsListAudit" parameterType="CourseBookingDTO" resultMap="CourseBookingDTOResult">
         <include refid="selectCourseBookingsWithCourseVo"/>
         <where>
-            cb.status IN ('待审核', '已通过', '未通过')
+            cb.status IN ('未审核', '已通过', '未通过')
             <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
             <if test="courseId != null "> and cb.course_id = #{courseId}</if>
             <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
@@ -188,7 +188,7 @@
             <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
             <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
             <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="organizer != null  and organizer != ''"> and c.organizer = #{organizer}</if>
             <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
             <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
         </where>
@@ -247,13 +247,19 @@
           AND student_id = #{studentId}
     </select>
 
-    <select id="countCourseBookingAuditStatus" resultType="Map">
+    <select id="countCourseBookingAuditStatus" parameterType="String" resultType="Map">
         SELECT 
-            COUNT(CASE WHEN status = '待审核' THEN 1 END) as pending,
-            COUNT(CASE WHEN status = '已通过' THEN 1 END) as approved,
-            COUNT(CASE WHEN status = '未通过' THEN 1 END) as rejected,
+            COUNT(CASE WHEN cb.status = '未审核' THEN 1 END) as pending,
+            COUNT(CASE WHEN cb.status = '已通过' THEN 1 END) as approved,
+            COUNT(CASE WHEN cb.status = '未通过' THEN 1 END) as rejected,
             COUNT(*) as total
-        FROM course_bookings
+        FROM course_bookings cb
+        LEFT JOIN courses c ON cb.course_id = c.course_id
+        <where>
+            <if test="organizer != null and organizer != ''">
+                AND c.organizer = #{organizer}
+            </if>
+        </where>
     </select>
 
     <select id="selectCourseIdsByStudentId" parameterType="String" resultType="Long">
@@ -268,7 +274,7 @@
             <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
             <if test="courseId != null "> and cb.course_id = #{courseId}</if>
             <if test="status != null  and status != ''"> and cb.status = #{status}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="organizer != null  and organizer != ''"> and c.organizer = #{organizer}</if>
         </where>
     </select>
 
@@ -279,7 +285,7 @@
         c.course_start, c.course_deadline, c.course_location, c.start_time, c.end_time,
         c.course_description, c.picture_url, c.notes, c.course_credit,
         cb.book_at, cb.proof, cb.summary, cb.status, cb.reviewer, cb.reviewer_comment,
-        cb.review_time, cb.organizer, cb.created_time, cb.updated_time,
+        cb.review_time, c.organizer, cb.created_time, cb.updated_time,
         cs.score_value, cs.gpa, cs.score_type, cs.upload_time as score_upload_time
         from course_bookings cb
         left join stu_info s on cb.student_id = s.student_id
@@ -295,7 +301,7 @@
             <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
             <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
             <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
+            <if test="organizer != null  and organizer != ''"> and c.organizer = #{organizer}</if>
             <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
             <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
         </where>
