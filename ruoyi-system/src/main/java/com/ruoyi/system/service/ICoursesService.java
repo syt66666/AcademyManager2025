@@ -76,4 +76,12 @@ public interface ICoursesService
      * @return 结果
      */
     public int increaseCapacity(Long courseId, Integer version);
+
+    /**
+     * 检查课程是否已开始选课
+     *
+     * @param courseId 课程ID
+     * @return 是否已开始选课
+     */
+    public boolean isCourseSignUpStarted(Long courseId);
 }
