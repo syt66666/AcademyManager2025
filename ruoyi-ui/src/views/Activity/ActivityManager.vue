@@ -397,6 +397,8 @@
                   :rows="6"
                   placeholder="请输入活动描述"
                   class="form-textarea"
+                  maxlength="100"
+                  show-word-limit
                 />
               </el-form-item>
 
@@ -721,6 +723,18 @@ export default {
                 } else {
                   callback();
                 }
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
+        ],
+        activityDescription: [
+          {
+            validator: (rule, value, callback) => {
+              if (value && value.length > 100) {
+                callback(new Error("活动描述不能超过100字"));
               } else {
                 callback();
               }

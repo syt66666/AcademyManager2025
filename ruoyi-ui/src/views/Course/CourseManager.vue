@@ -479,6 +479,8 @@
                   :rows="4"
                   placeholder="请输入课程描述"
                   class="form-textarea"
+                  maxlength="100"
+                  show-word-limit
                 />
               </el-form-item>
 
@@ -801,6 +803,18 @@ export default {
         ],
         organizer: [
           { required: true, message: "组织单位不能为空", trigger: "blur" }
+        ],
+        courseDescription: [
+          {
+            validator: (rule, value, callback) => {
+              if (value && value.length > 100) {
+                callback(new Error("课程描述不能超过100字"));
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
         ],
       }
     };

@@ -1112,7 +1112,7 @@ export default {
           organizer: this.currentAcademy // 只获取学生所在书院的活动
         };
 
-        const response = await getActivities(allParams);
+        const response = await listActivities(allParams);
         let activities = response.rows || [];
 
         // 如果选择了"只显示可报名活动"，则进行前端过滤

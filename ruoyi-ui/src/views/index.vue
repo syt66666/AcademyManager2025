@@ -365,7 +365,7 @@ export default {
       const userName = this.$store.state.user.name;
       return userName && userName >= '10000' && userName <= '10007';
     },
-    
+
     // 动态页面标题
     pageTitle() {
       return this.isAdmin ? '活动管理' : '活动预约';
@@ -422,7 +422,7 @@ export default {
     this.hideTodayButton();
   },
   watch: {
-    
+
     calendarDate() {
       this.$nextTick(() => {
         this.hideEmptyCalendarRows();
@@ -863,7 +863,7 @@ export default {
         if (this.activeView === 'booking' && this.$refs.activityBooking) {
           this.$refs.activityBooking.getList();
         }
-        
+
         // 额外同步一次数据，确保其他用户能看到最新状态
         await this.syncActivityData();
 
@@ -1023,7 +1023,7 @@ export default {
 
         // 6. 重新获取活动列表以同步最新数据（包括版本号和容量）
         await this.fetchActivities();
-        
+
         // 7. 重新加载取消限制信息
         console.log('重新加载取消限制信息...');
         await this.loadCancelLimitInfo();
@@ -1042,7 +1042,7 @@ export default {
         if (this.activeView === 'booking' && this.$refs.activityBooking) {
           this.$refs.activityBooking.getList();
         }
-        
+
         // 额外同步一次数据，确保其他用户能看到最新状态
         await this.syncActivityData();
 
@@ -1176,9 +1176,9 @@ export default {
       try {
         this.isSyncing = true;
         console.log('同步活动数据...');
-        
+
         // 静默获取最新数据，不显示loading状态
-        const response = await getActivities(this.queryParams);
+        const response = await listActivities(this.queryParams);
         if (response && response.rows) {
           const now = new Date();
           this.activityList = response.rows.map(activity => {
@@ -1198,7 +1198,7 @@ export default {
             })
           );
           await Promise.all(checkPromises);
-          
+
           console.log('活动数据已同步，当前活动数量:', this.activityList.length);
         }
       } catch (error) {
