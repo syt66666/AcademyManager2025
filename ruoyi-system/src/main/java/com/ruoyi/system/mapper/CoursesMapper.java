@@ -3,6 +3,7 @@ package com.ruoyi.system.mapper;
 import java.util.List;
 import org.apache.ibatis.annotations.Param;
 import com.ruoyi.system.domain.Courses;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 【请填写功能名称】Mapper接口
@@ -10,6 +11,7 @@ import com.ruoyi.system.domain.Courses;
  * @author ruoyi
  * @date 2025-09-25
  */
+@Mapper
 public interface CoursesMapper
 {
     /**

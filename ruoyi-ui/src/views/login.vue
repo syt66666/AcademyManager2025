@@ -174,9 +174,7 @@ export default {
   align-items: center;
   position: relative;
   min-height: 100vh;
-  background: url("../assets/images/login-background.jpg") center/cover;
-  background-blend-mode: multiply;
-  background-color: rgba(255,255,255,0.92);
+  background: #f0f8ff;
 
   &::before {
     content: '';
@@ -185,7 +183,7 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(227, 242, 253, 0.04) 100%);
+    background: transparent;
     z-index: 0;
   }
 }

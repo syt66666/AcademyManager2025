@@ -87,6 +87,16 @@ export function deleteBookingsByActivityAndStudent(activityId, studentId) {
     params: { activityId, studentId }
   })
 }
+
+/**
+ * 根据活动ID删除所有相关的预约记录
+ */
+export function deleteBookingsByActivityId(activityId) {
+  return request({
+    url: '/system/bookings/byActivityId/' + activityId,
+    method: 'delete'
+  })
+}
 //查询不同审核状态数量
 export function getAuditCount(query) {
   return request({
