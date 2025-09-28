@@ -352,6 +352,8 @@ export default {
       },
       // 当前学生书院信息
       currentAcademy: '',
+      // 实时同步相关
+      isSyncing: false, // 是否正在同步数据
 
       // 取消限制相关
       remainingCancels: 3, // 剩余可取消次数
@@ -861,6 +863,9 @@ export default {
         if (this.activeView === 'booking' && this.$refs.activityBooking) {
           this.$refs.activityBooking.getList();
         }
+        
+        // 额外同步一次数据，确保其他用户能看到最新状态
+        await this.syncActivityData();
 
       } catch (error) {
         console.error("报名失败:", error);
@@ -1016,23 +1021,10 @@ export default {
           }
         }
 
-        // 6. 更新活动状态
-        const updatedActivity = {
-          ...this.selectedActivity,
-          activityCapacity: Math.min(this.selectedActivity.activityCapacity + 1, this.selectedActivity.activityTotalCapacity),
-          version: this.selectedActivity.version + 1,
-          isBooked: false
-        };
-
-        this.selectedActivity = updatedActivity;
-
-        // 7. 更新活动列表
-        const index = this.activityList.findIndex(a => a.activityId === this.selectedActivity.activityId);
-        if (index !== -1) {
-          this.activityList.splice(index, 1, updatedActivity);
-        }
-
-        // 8. 重新加载取消限制信息，而不是直接更新
+        // 6. 重新获取活动列表以同步最新数据（包括版本号和容量）
+        await this.fetchActivities();
+        
+        // 7. 重新加载取消限制信息
         console.log('重新加载取消限制信息...');
         await this.loadCancelLimitInfo();
         console.log(`重新加载后剩余取消次数: ${this.remainingCancels}`);
@@ -1051,8 +1043,8 @@ export default {
           this.$refs.activityBooking.getList();
         }
         
-        // 重新获取活动列表以同步最新数据（包括版本号）
-        await this.fetchActivities();
+        // 额外同步一次数据，确保其他用户能看到最新状态
+        await this.syncActivityData();
 
       } catch (error) {
         console.error("取消活动失败:", error);
@@ -1172,6 +1164,49 @@ export default {
       }
 
       return pictureUrl;
+    },
+
+    // 同步活动数据（在报名操作后调用）
+    async syncActivityData() {
+      if (this.isSyncing) {
+        console.log('正在同步中，跳过本次同步');
+        return;
+      }
+
+      try {
+        this.isSyncing = true;
+        console.log('同步活动数据...');
+        
+        // 静默获取最新数据，不显示loading状态
+        const response = await getActivities(this.queryParams);
+        if (response && response.rows) {
+          const now = new Date();
+          this.activityList = response.rows.map(activity => {
+            return {
+              ...activity,
+              status: this.calculateStatus(activity, now),
+              isBooked: false // 初始化为未报名状态
+            };
+          });
+
+          // 检查报名状态
+          const checkPromises = this.activityList.map(activity =>
+            checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
+              activity.isBooked = res.data.isBooked;
+            }).catch(() => {
+              // 如果检查失败，保持默认状态
+            })
+          );
+          await Promise.all(checkPromises);
+          
+          console.log('活动数据已同步，当前活动数量:', this.activityList.length);
+        }
+      } catch (error) {
+        console.error('同步活动数据失败:', error);
+        // 同步失败，不显示错误信息给用户
+      } finally {
+        this.isSyncing = false;
+      }
     }
   }
 };
