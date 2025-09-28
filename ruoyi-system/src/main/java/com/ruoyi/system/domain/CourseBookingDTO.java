@@ -70,8 +70,8 @@ public class CourseBookingDTO extends BaseEntity
     @Excel(name = "学习总结")
     private String summary;
 
-    /** 状态：待审核、已通过、未通过 */
-    @Excel(name = "状态：未审核、已通过、未通过")
+    /** 状态：未考核、已通过、未通过 */
+    @Excel(name = "状态：未考核、已通过、未通过")
     private String status;
 
     /** 审核人 */

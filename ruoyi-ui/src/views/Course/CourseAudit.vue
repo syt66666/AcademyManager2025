@@ -13,7 +13,7 @@
               <i class="el-icon-warning-outline"></i>
             </div>
             <div class="card-info">
-              <div class="title">未审核</div>
+              <div class="title">未考核</div>
               <div class="count">{{ auditStats.pending }}</div>
             </div>
           </div>
@@ -227,10 +227,10 @@
         <el-table-column label="审核状态" prop="status" align="center" width="100">
           <template slot-scope="scope">
             <el-tag
-              v-if="scope.row.status === '未审核'"
+              v-if="scope.row.status === '未考核'"
               type="warning"
               effect="dark"
-            >未审核</el-tag>
+            >未考核</el-tag>
             <el-tag
               v-else-if="scope.row.status === '已通过'"
               type="success"
@@ -246,14 +246,14 @@
         <el-table-column label="操作" align="center" width="150">
           <template slot-scope="scope">
             <div class="action-buttons">
-              <!-- 只有未审核状态才显示审核按钮 -->
+              <!-- 只有未考核状态才显示审核按钮 -->
               <el-button
-                v-if="scope.row.status === '未审核'"
+                v-if="scope.row.status === '未考核'"
                 size="mini"
                 type="text"
                 @click="openAuditDialog(scope.row)"
                 class="action-button audit-button"
-                :disabled="scope.row.status !== '未审核'">
+                :disabled="scope.row.status !== '未考核'">
                 审核
               </el-button>
               <!-- 已审核或未通过状态显示灰色文字 -->
@@ -878,7 +878,7 @@ export default {
       const statusMap = {
         '已通过': 'success',
         '未通过': 'danger',
-        '未审核': 'warning'
+        '未考核': 'warning'
       };
       return statusMap[status] || 'info';
     },
@@ -1029,7 +1029,7 @@ export default {
     // 点击状态卡片进行筛选
     handleStatusClick(type) {
       const statusMap = {
-        pending: '未审核',
+        pending: '未考核',
         approved: '已通过',
         rejected: '未通过'
       };
