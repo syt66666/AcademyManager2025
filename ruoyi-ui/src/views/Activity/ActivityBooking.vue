@@ -369,6 +369,8 @@ export default {
         activityType: null,
         availableOnly: false, // 只显示可报名活动
       },
+      // 实时同步相关
+      isSyncing: false, // 是否正在同步数据
     };
   },
   computed: {
@@ -857,6 +859,9 @@ export default {
 
         // 重新检查报名状态以确保数据同步
         await this.checkBookingStatus();
+        
+        // 额外同步一次数据，确保其他用户能看到最新状态
+        await this.syncActivityData();
       } catch (error) {
         this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
       }
@@ -932,21 +937,10 @@ export default {
           }
         }
 
-        // 6. 更新活动状态
-        const updatedActivity = {
-          ...activity,
-          activityCapacity: Math.min(activity.activityCapacity + 1, activity.activityTotalCapacity),
-          version: activity.version + 1,
-          isBooked: false
-        };
-
-        // 7. 更新活动列表
-        const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
-        if (index !== -1) {
-          this.$set(this.activitiesList, index, updatedActivity);
-        }
-
-        // 8. 重新加载取消限制信息，而不是直接更新
+        // 6. 重新获取活动列表以同步最新数据（包括版本号和容量）
+        await this.getList();
+        
+        // 7. 重新加载取消限制信息
         await this.loadCancelLimitInfo();
 
         if (this.remainingCancels > 0) {
@@ -959,8 +953,8 @@ export default {
         this.selectedActivity = null;
         await this.checkBookingStatus();
         
-        // 重新获取活动列表以同步最新数据（包括版本号）
-        await this.getList();
+        // 额外同步一次数据，确保其他用户能看到最新状态
+        await this.syncActivityData();
 
       } catch (error) {
         // 更详细的错误信息
@@ -1006,6 +1000,53 @@ export default {
       if (!text) return '';
       if (text.length <= maxLength) return text;
       return text.substring(0, maxLength) + '...';
+    },
+
+    // 同步活动数据（在报名操作后调用）
+    async syncActivityData() {
+      if (this.isSyncing) {
+        console.log('正在同步中，跳过本次同步');
+        return;
+      }
+
+      try {
+        this.isSyncing = true;
+        console.log('同步活动数据...');
+        
+        // 静默获取最新数据，不显示loading状态
+        const allParams = {
+          ...this.queryParams,
+          organizer: this.currentAcademy // 只获取学生所在书院的活动
+        };
+        
+        const response = await getActivities(allParams);
+        let activities = response.rows || [];
+
+        // 如果选择了"只显示可报名活动"，则进行前端过滤
+        if (this.queryParams.availableOnly) {
+          activities = activities.filter(activity => {
+            const status = this.getActivityStatusText(activity);
+            if (status !== "报名进行中") {
+              return false;
+            }
+            if (activity.activityCapacity <= 0) {
+              return false;
+            }
+            return !activity.isBooked;
+          });
+        }
+
+        // 更新活动列表数据
+        this.activitiesList = activities;
+        this.total = response.total;
+        
+        console.log('活动数据已同步，当前活动数量:', activities.length);
+      } catch (error) {
+        console.error('同步活动数据失败:', error);
+        // 同步失败，不显示错误信息给用户
+      } finally {
+        this.isSyncing = false;
+      }
     }
   }
 };

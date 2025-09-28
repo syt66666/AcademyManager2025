@@ -441,7 +441,12 @@ export default {
         organizer: [
           { required: true, message: "组织者不能为空", trigger: "blur" }
         ],
-      }
+      },
+      // 当前学生书院
+      currentAcademy: null,
+      // 预览图片相关
+      previewImageUrl: '',
+      imagePreviewVisible: false
     };
   },
   computed: {
@@ -538,28 +543,17 @@ export default {
         // 4. 课程选课不需要记录到user_limite表，跳过取消记录步骤
         console.log('课程选课取消，无需记录到user_limite表');
 
-        // 5. 更新课程状态
-        const updatedCourse = {
-          ...course,
-          courseCapacity: Math.min(course.courseCapacity + 1, course.courseTotalCapacity),
-          version: course.version + 1,
-          isBooked: false
-        };
-
-        // 6. 更新课程列表
-        const index = this.coursesList.findIndex(a => a.courseId === course.courseId);
-        if (index !== -1) {
-          this.$set(this.coursesList, index, updatedCourse);
-        }
-
+        // 5. 重新获取课程列表以同步最新数据（包括版本号和容量）
+        await this.getList();
+        
         this.$message.success("取消选课成功！");
 
         this.detailDialogVisible = false;
         this.selectedCourse = null;
         await this.checkBookingStatus();
         
-        // 重新获取课程列表以同步最新数据（包括版本号）
-        await this.getList();
+        // 6. 额外同步一次数据，确保其他用户能看到最新状态
+        await this.syncCourseData();
 
       } catch (error) {
         console.error("取消选课失败:", error);
@@ -671,33 +665,17 @@ export default {
           throw new Error(bookingResponse.msg || '添加选课记录失败');
         }
 
-        // 4. 更新前端状态
-        const updatedCourse = {
-          ...course,
-          courseCapacity: Math.max((course.courseCapacity || 0) - 1, 0),
-          version: (Number(course.version) || 0) + 1,  // 转换为数字并递增
-          isBooked: true
-        };
-
-        // 5. 更新课程列表
-        const index = this.coursesList.findIndex(c => c.courseId === course.courseId);
-        if (index !== -1) {
-          this.$set(this.coursesList, index, updatedCourse);
-        }
-
-        // 6. 更新详情弹窗中的课程信息
-        if (this.selectedCourse && this.selectedCourse.courseId === course.courseId) {
-          this.selectedCourse = { ...updatedCourse };
-        }
-
+        // 4. 重新获取课程列表以同步最新数据（包括版本号和容量）
+        await this.getList();
+        
         this.$message.success("选课成功！");
         this.detailDialogVisible = false;
 
-        // 7. 重新检查选课状态
+        // 5. 重新检查选课状态
         await this.checkBookingStatus();
         
-        // 8. 重新获取课程列表以同步最新数据（包括版本号）
-        await this.getList();
+        // 6. 额外同步一次数据，确保其他用户能看到最新状态
+        await this.syncCourseData();
 
       } catch (error) {
         console.error("选课失败:", error);
@@ -1064,6 +1042,46 @@ export default {
         case "选课进行中": return "success";
         case "选课已截止": return "danger";
         default: return "danger";
+      }
+    },
+
+    // 同步课程数据（在选课操作后调用）
+    async syncCourseData() {
+      try {
+        console.log('同步课程数据...');
+        // 静默获取最新数据，不显示loading状态
+        const response = await listCourses(this.queryParams);
+        let courses = response.rows;
+
+        // 按书院过滤课程（如果设置了书院参数）
+        if (this.queryParams.academy && this.queryParams.academy !== '未知') {
+          courses = courses.filter(course => {
+            return course.organizer && course.organizer.includes(this.queryParams.academy);
+          });
+        }
+
+        // 如果选择了"只显示可选课课程"，则进行前端过滤
+        if (this.queryParams.availableOnly) {
+          courses = courses.filter(course => {
+            const status = this.getCourseStatusText(course);
+            if (status !== "选课进行中") {
+              return false;
+            }
+            if (course.courseCapacity <= 0) {
+              return false;
+            }
+            return !course.isBooked;
+          });
+        }
+
+        // 更新课程列表数据
+        this.coursesList = courses;
+        this.total = response.total;
+        
+        console.log('课程数据已同步，当前课程数量:', courses.length);
+      } catch (error) {
+        console.error('同步课程数据失败:', error);
+        // 同步失败，不显示错误信息给用户
       }
     }
   }
