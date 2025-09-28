@@ -31,7 +31,11 @@ public class CourseBookingDTO extends BaseEntity
     /** 所属书院 */
     @Excel(name = "所属书院")
     private String college;
-
+    
+    /** 所属书院(兼容字段) */
+    @Excel(name = "所属书院")
+    private String academy;
+    
     /** 录取专业 */
     @Excel(name = "录取专业")
     private String major;
@@ -203,6 +207,14 @@ public class CourseBookingDTO extends BaseEntity
         this.college = college;
     }
 
+     public String getAcademy() {
+        return academy;
+    }
+
+    public void setAcademy(String academy) {
+        this.academy = academy;
+    }
+    
     public String getMajor() {
         return major;
     }
@@ -494,3 +506,4 @@ public class CourseBookingDTO extends BaseEntity
                 .toString();
     }
 }
+
