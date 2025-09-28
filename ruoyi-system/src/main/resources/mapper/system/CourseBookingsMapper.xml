@@ -111,7 +111,7 @@
         from course_bookings cb
         left join stu_info s on cb.student_id = s.student_id
         left join courses c on cb.course_id = c.course_id
-        left join course_score cs on cb.student_id = cs.student_id
+        left join course_score cs on cb.course_id = cs.course_id
     </sql>
 
     <select id="selectCourseBookingsList" parameterType="CourseBookings" resultMap="CourseBookingsResult">
