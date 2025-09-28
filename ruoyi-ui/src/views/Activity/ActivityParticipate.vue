@@ -176,6 +176,7 @@
                 effect="light"
                 class="status-tag clickable-tag"
                 @click="openUploadDialog(scope.row)"
+                :title="scope.row.reviewComment || '点击查看审核意见'"
               >
                 重新提交
               </el-tag>
