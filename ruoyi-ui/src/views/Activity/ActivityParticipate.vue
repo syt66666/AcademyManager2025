@@ -176,6 +176,7 @@
                 effect="light"
                 class="status-tag clickable-tag"
                 @click="openUploadDialog(scope.row)"
+                :title="scope.row.reviewComment || '点击查看审核意见'"
               >
                 重新提交
               </el-tag>
@@ -384,7 +385,7 @@
             </div>
             <div slot="tip" class="upload-tip">
               <i class="el-icon-info"></i>
-            仅支持上传PDF格式文档，大小不超过10MB
+            仅支持上传1个PDF格式文档，大小不超过10MB
           </div>
         </el-upload>
           
