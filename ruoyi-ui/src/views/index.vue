@@ -972,63 +972,19 @@ export default {
           console.log('报名记录不存在，跳过删除步骤');
         }
 
-        // 3. 恢复活动容量 - 添加重试机制
+        // 3. 恢复活动容量
         console.log('恢复活动容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-        
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`恢复活动容量，第${capacityRetryCount}次尝试...`);
-            const capacityResult = await cancelSignUpCapacity(
-              this.selectedActivity.activityId,
-              this.selectedActivity.version
-            );
-            console.log('恢复容量结果:', capacityResult);
+        const capacityResult = await cancelSignUpCapacity(
+          this.selectedActivity.activityId,
+          this.selectedActivity.version
+        );
+        console.log('恢复容量结果:', capacityResult);
 
-            // 检查容量恢复是否成功
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-              console.log('活动容量恢复成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`恢复活动容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的活动信息以获取正确的版本号
-                const latestActivity = this.activityList.find(a => a.activityId === this.selectedActivity.activityId);
-                if (latestActivity) {
-                  this.selectedActivity.version = latestActivity.version;
-                  this.selectedActivity.activityCapacity = latestActivity.activityCapacity;
-                  console.log('更新版本号和容量:', this.selectedActivity.version, this.selectedActivity.activityCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('恢复活动容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`恢复活动容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的活动信息以获取正确的版本号
-              const latestActivity = this.activityList.find(a => a.activityId === this.selectedActivity.activityId);
-              if (latestActivity) {
-                this.selectedActivity.version = latestActivity.version;
-                this.selectedActivity.activityCapacity = latestActivity.activityCapacity;
-                console.log('更新版本号和容量:', this.selectedActivity.version, this.selectedActivity.activityCapacity);
-              }
-            }
-          }
+        if (capacityResult && capacityResult.code !== 200) {
+          throw new Error(capacityResult.msg || '恢复活动容量失败');
         }
 
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复活动容量失败，已重试' + maxCapacityRetries + '次');
-        }
-
-        // 4. 记录取消信息到数据库 - 添加重试机制
+        // 4. 记录取消信息到数据库
         console.log('记录取消信息...');
         const cancelData = {
           studentId: this.$store.state.user.name,
@@ -1037,42 +993,11 @@ export default {
         };
         console.log('取消记录数据:', cancelData);
 
-        // 添加重试机制
-        let cancelResult = null;
-        let cancelSuccess = false;
-        let retryCount = 0;
-        const maxRetries = 3;
+        const cancelResult = await recordCancel(cancelData);
+        console.log('recordCancel响应:', cancelResult);
 
-        while (!cancelSuccess && retryCount < maxRetries) {
-          try {
-            retryCount++;
-            console.log(`发送recordCancel请求，第${retryCount}次尝试...`);
-            cancelResult = await recordCancel(cancelData);
-            console.log(`recordCancel响应，第${retryCount}次尝试:`, cancelResult);
-
-            // 检查取消记录是否成功保存
-            if (cancelResult && cancelResult.code === 200) {
-              cancelSuccess = true;
-              console.log('取消记录成功保存到数据库');
-            } else {
-              console.warn(`取消记录保存失败，第${retryCount}次尝试，响应:`, cancelResult);
-              if (retryCount < maxRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
-            }
-          } catch (recordError) {
-            console.error(`记录取消信息异常，第${retryCount}次尝试:`, recordError);
-            if (retryCount < maxRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-        }
-
-        // 如果重试后仍然失败，抛出异常
-        if (!cancelSuccess) {
-          throw new Error('取消记录保存失败，已重试' + maxRetries + '次');
+        if (cancelResult && cancelResult.code !== 200) {
+          throw new Error(cancelResult.msg || '取消记录保存失败');
         }
 
         // 5. 立即查询数据库验证取消记录

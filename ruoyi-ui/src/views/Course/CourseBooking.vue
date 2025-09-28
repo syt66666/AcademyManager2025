@@ -526,56 +526,13 @@ export default {
           console.log('选课记录不存在，跳过删除步骤');
         }
 
-        // 3. 恢复课程容量 - 添加重试机制
+        // 3. 恢复课程容量
         console.log('恢复课程容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-        
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`恢复课程容量，第${capacityRetryCount}次尝试...`);
-            const capacityResult = await cancelSignUpCapacity(course.courseId, course.version);
-            console.log('恢复容量结果:', capacityResult);
+        const capacityResult = await cancelSignUpCapacity(course.courseId, course.version);
+        console.log('恢复容量结果:', capacityResult);
 
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-              console.log('课程容量恢复成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`恢复课程容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的课程信息以获取正确的版本号
-                const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-                if (latestCourse) {
-                  course.version = latestCourse.version;
-                  course.courseCapacity = latestCourse.courseCapacity;
-                  console.log('更新版本号和容量:', course.version, course.courseCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('恢复课程容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`恢复课程容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的课程信息以获取正确的版本号
-              const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-              if (latestCourse) {
-                course.version = latestCourse.version;
-                course.courseCapacity = latestCourse.courseCapacity;
-                console.log('更新版本号和容量:', course.version, course.courseCapacity);
-              }
-            }
-          }
-        }
-
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复课程容量失败，已重试' + maxCapacityRetries + '次');
+        if (capacityResult && capacityResult.code !== 200) {
+          throw new Error(capacityResult.msg || '恢复课程容量失败');
         }
 
         // 4. 课程选课不需要记录到user_limite表，跳过取消记录步骤
@@ -685,59 +642,16 @@ export default {
           console.warn('检查选课状态失败，继续执行选课流程:', checkError);
         }
 
-        // 2. 更新课程容量 - 添加重试机制
+        // 2. 更新课程容量
         console.log('更新课程容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-        
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`更新课程容量，第${capacityRetryCount}次尝试...`);
-            const capacityResponse = await signUpCapacity(
-              Number(course.courseId),  // 转换为数字
-              Number(course.version) || 0  // 转换为数字
-            );
-            console.log('容量更新响应:', capacityResponse);
+        const capacityResponse = await signUpCapacity(
+          Number(course.courseId),  // 转换为数字
+          Number(course.version) || 0  // 转换为数字
+        );
+        console.log('容量更新响应:', capacityResponse);
 
-            if (capacityResponse.code === 200) {
-              capacitySuccess = true;
-              console.log('课程容量更新成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`更新课程容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的课程信息以获取正确的版本号
-                const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-                if (latestCourse) {
-                  course.version = latestCourse.version;
-                  course.courseCapacity = latestCourse.courseCapacity;
-                  console.log('更新版本号和容量:', course.version, course.courseCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('更新课程容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`更新课程容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的课程信息以获取正确的版本号
-              const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-              if (latestCourse) {
-                course.version = latestCourse.version;
-                course.courseCapacity = latestCourse.courseCapacity;
-                console.log('更新版本号和容量:', course.version, course.courseCapacity);
-              }
-            }
-          }
-        }
-
-        // 如果容量更新失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('更新课程容量失败，已重试' + maxCapacityRetries + '次');
+        if (capacityResponse.code !== 200) {
+          throw new Error(capacityResponse.msg || '更新课程容量失败');
         }
 
         // 3. 添加选课记录 - 确保参数类型正确

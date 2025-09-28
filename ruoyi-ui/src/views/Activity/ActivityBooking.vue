@@ -900,88 +900,24 @@ export default {
           }
         }
 
-        // 3. 恢复活动容量 - 添加重试机制
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-        
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
+        // 3. 恢复活动容量
+        const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
 
-            // 检查容量恢复是否成功
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的活动信息以获取正确的版本号
-                const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-                if (latestActivity) {
-                  activity.version = latestActivity.version;
-                  activity.activityCapacity = latestActivity.activityCapacity;
-                }
-              }
-            }
-          } catch (capacityError) {
-            if (capacityRetryCount < maxCapacityRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的活动信息以获取正确的版本号
-              const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-              if (latestActivity) {
-                activity.version = latestActivity.version;
-                activity.activityCapacity = latestActivity.activityCapacity;
-              }
-            }
-          }
+        if (capacityResult && capacityResult.code !== 200) {
+          throw new Error(capacityResult.msg || '恢复活动容量失败');
         }
 
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复活动容量失败，已重试' + maxCapacityRetries + '次');
-        }
-
-        // 4. 记录取消信息到数据库 - 添加重试机制
+        // 4. 记录取消信息到数据库
         const cancelData = {
           studentId: this.$store.state.user.name,
           activityId: activity.activityId,
           cancelTime: new Date().toISOString()
         };
 
-        // 添加重试机制
-        let cancelResult = null;
-        let cancelSuccess = false;
-        let retryCount = 0;
-        const maxRetries = 3;
+        const cancelResult = await recordCancel(cancelData);
 
-        while (!cancelSuccess && retryCount < maxRetries) {
-          try {
-            retryCount++;
-            cancelResult = await recordCancel(cancelData);
-
-            // 检查取消记录是否成功保存
-            if (cancelResult && cancelResult.code === 200) {
-              cancelSuccess = true;
-            } else {
-              if (retryCount < maxRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
-            }
-          } catch (recordError) {
-            if (retryCount < maxRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-        }
-
-        // 如果重试后仍然失败，抛出异常
-        if (!cancelSuccess) {
-          throw new Error('取消记录保存失败，已重试' + maxRetries + '次');
+        if (cancelResult && cancelResult.code !== 200) {
+          throw new Error(cancelResult.msg || '取消记录保存失败');
         }
 
         // 5. 立即查询数据库验证取消记录
@@ -1038,24 +974,9 @@ export default {
       }
     },
 
-    // 添加重试机制
-    async retryOperation(operation, maxRetries = 3, delay = 1000) {
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          return await operation();
-        } catch (error) {
-          if (i === maxRetries - 1) {
-            throw error;
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    },
-    // 使用重试机制删除报名记录
+    // 删除报名记录
     async safeDeleteBooking(activityId, studentId) {
-      return await this.retryOperation(async () => {
-        return await deleteBookingsByActivityAndStudent(activityId, studentId);
-      });
+      return await deleteBookingsByActivityAndStudent(activityId, studentId);
     },
     /** 预览活动图片 */
     previewActivityImage(imageUrl) {
