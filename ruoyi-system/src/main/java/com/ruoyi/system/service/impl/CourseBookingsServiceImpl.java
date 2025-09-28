@@ -15,6 +15,7 @@ import com.ruoyi.system.service.ICourseBookingsService;
 import com.ruoyi.system.service.IAuditHistoryService;
 import com.ruoyi.system.domain.CourseScore;
 import com.ruoyi.system.service.ICourseScoreService;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 课程选课记录Service业务层处理
@@ -162,9 +163,11 @@ public class CourseBookingsServiceImpl implements ICourseBookingsService
      * @param courseBookingDTO 课程选课记录DTO
      * @return 课程选课记录集合（审核列表）
      */
+    @Transactional(readOnly = true)
     @Override
     public List<CourseBookingDTO> selectCourseBookingsListAudit(CourseBookingDTO courseBookingDTO)
     {
+
         return courseBookingsMapper.selectCourseBookingsListAudit(courseBookingDTO);
     }
 

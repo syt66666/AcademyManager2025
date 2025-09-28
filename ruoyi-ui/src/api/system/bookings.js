@@ -17,9 +17,10 @@ export function listBookingsWithActivity(query) {
     params: query
   })
 }
+// 查询课程选课记录列表（审核列表）
 export function listBookingsAudit(query) {
   return request({
-    url: '/system/bookings/list3',
+    url: '/system/courseBookings/audit/list',
     method: 'get',
     params: query
   })

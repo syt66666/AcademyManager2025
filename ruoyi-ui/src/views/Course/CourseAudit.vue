@@ -476,6 +476,7 @@ import axios from "axios";
 export default {
   name: "CourseAudit",
   data() {
+
     return {
       // 数据加载状态
       loading: true,
@@ -555,6 +556,17 @@ export default {
         organizer: null
       }
     };
+  },
+  watch: {
+    queryParams: {
+      handler(newVal, oldVal) {
+        console.log('🔄 queryParams变化:', {
+          from: oldVal,
+          to: newVal
+        });
+      },
+      deep: true
+    }
   },
   created() {
     this.getList();
@@ -910,32 +922,15 @@ export default {
       // 转换为数组并排序
       this.availableCourseTypes = Array.from(types).sort();
     },
-    // 获取活动列表
     getList() {
       this.loading = true;
       console.log("开始获取审核列表，queryParams:", this.queryParams);
-
-      // 封装获取审核列表的逻辑
       const fetchAuditList = (params) => {
+        console.log("🔍 最终传递给API的参数:", JSON.stringify(params, null, 2));
         listBookingsAudit(params).then(response => {
           console.log("📋 获取审核列表成功:", response);
           console.log("📊 审核列表数据行数:", response.rows ? response.rows.length : 0);
           console.log("📊 总记录数:", response.total);
-
-          // 检查每行数据的proof字段
-          if (response.rows && response.rows.length > 0) {
-            response.rows.forEach((row, index) => {
-              console.log(`📎 第${index + 1}行数据:`, {
-                bookingId: row.bookingId,
-                courseName: row.courseName,
-                studentName: row.studentName,
-                proof: row.proof,
-                proofType: typeof row.proof,
-                isProofArray: Array.isArray(row.proof)
-              });
-            });
-          }
-
           this.courseList = response.rows;
           this.total = response.total;
           this.updateAvailableCourseCategories();
@@ -947,18 +942,19 @@ export default {
           this.loading = false;
         });
       };
-
-      // 先获取组织者名称，作为默认筛选条件
       getNickName()
         .then(nickName => {
           console.log("获取到组织者名称:", nickName.msg);
-          // 合并查询参数与组织者信息
-          const params = { ...this.queryParams, organizer: nickName.msg };
+          // 明确构建查询参数
+          const params = {
+            ...this.queryParams,
+            organizer: nickName.msg
+          };
+          console.log("📝 构建的查询参数:", params);
           fetchAuditList(params);
         })
         .catch(error => {
           console.error("获取组织者名称失败:", error);
-          // 失败时使用原始查询参数
           fetchAuditList(this.queryParams);
         });
     },
@@ -1347,17 +1343,17 @@ export default {
       this.getList();
     },
 
-    // 重置查询条件
     resetQuery() {
       this.queryParams = {
         pageNum: 1,
         pageSize: 10,
         studentId: null,
         studentName: null,
-        activityName: null,
-        activityType: null,
+        courseName: null,
+        courseCategory: null,
+        courseType: null,
         status: null,
-        organizer: null
+        organizer: null  // 先重置为null
       };
       this.getList();
     },

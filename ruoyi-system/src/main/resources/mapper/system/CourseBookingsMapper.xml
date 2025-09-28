@@ -180,6 +180,10 @@
         <where>
             cb.status IN ('未审核', '已通过', '未通过')
             <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
+            <if test="studentName != null  and studentName != ''"> and s.student_name = #{studentName}</if>
+            <if test="courseName != null  and courseName != ''"> and c.course_name like concat('%', #{courseName}, '%')</if>
+            <if test="courseCategory != null  and courseCategory != ''"> and c.course_category = #{courseCategory}</if>
+            <if test="courseType != null  and courseType != ''"> and c.course_type = #{courseType}</if>
             <if test="courseId != null "> and cb.course_id = #{courseId}</if>
             <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
             <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
