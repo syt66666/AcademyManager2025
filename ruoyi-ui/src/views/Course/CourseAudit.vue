@@ -192,13 +192,7 @@
         </el-table-column>
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
-        <el-table-column label="课程名称" align="center" prop="courseName" width="180">
-          <template slot-scope="scope">
-            <div class="course-name" :title="scope.row.courseName">
-              {{ truncateText(scope.row.courseName, 7) }}
-            </div>
-          </template>
-        </el-table-column>
+        <el-table-column label="课程名称" align="center" prop="courseName"/>
         <el-table-column label="课程种类" align="center" prop="courseCategory" width="120">
           <template slot-scope="scope">
             <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="course-category-tag">
@@ -230,7 +224,7 @@
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
-        <el-table-column label="审核状态" prop="status" align="center" width="100">
+        <el-table-column label="考核状态" prop="status" align="center" width="100">
           <template slot-scope="scope">
             <el-tag
               v-if="scope.row.status === '未考核'"
@@ -260,7 +254,7 @@
                 @click="openAuditDialog(scope.row)"
                 class="action-button audit-button"
                 :disabled="scope.row.status !== '未考核'">
-                审核
+                考核
               </el-button>
               <!-- 已审核或未通过状态显示灰色文字 -->
               <span v-else class="text-muted">
@@ -1413,13 +1407,6 @@ export default {
     tableRowClassName({rowIndex}) {
       return rowIndex % 2 === 0 ? 'striped-row' : '';
     },
-
-    /** 截断文本显示 */
-    truncateText(text, maxLength) {
-      if (!text) return '';
-      if (text.length <= maxLength) return text;
-      return text.substring(0, maxLength) + '...';
-    }
 
   }
 };

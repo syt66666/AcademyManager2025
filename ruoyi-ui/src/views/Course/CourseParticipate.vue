@@ -113,13 +113,7 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="课程名称" align="center" prop="courseName" width="180">
-          <template slot-scope="scope">
-            <div class="course-name" :title="scope.row.courseName">
-              {{ truncateText(scope.row.courseName, 7) }}
-            </div>
-          </template>
-        </el-table-column>
+        <el-table-column label="课程名称" align="center" prop="courseName" />
         <!-- 类型列 -->
         <el-table-column label="课程性质" align="center" width="120">
           <template slot-scope="scope">
@@ -143,6 +137,20 @@
         </el-table-column>
         <el-table-column label="课程地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
+        <!-- 成绩来源于列 -->
+        <el-table-column label="成绩来源于" align="center" width="120">
+          <template slot-scope="scope">
+            <el-tag 
+              v-if="scope.row.scoreType" 
+              :type="getScoreTypeTagType(scope.row.scoreType)" 
+              effect="plain" 
+              class="score-type-tag"
+            >
+              {{ scope.row.scoreType }}
+            </el-tag>
+            <span v-else class="no-score-type">暂无成绩</span>
+          </template>
+        </el-table-column>
         <el-table-column label="课程开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -338,6 +346,9 @@
         </div>
         <div v-else class="empty-tip">暂无压缩包材料</div>
       </div>
+
+
+
 
 
       <!-- 图片预览对话框 -->
@@ -582,6 +593,18 @@ export default {
         '其他': 'info'       // 其他 - 蓝色
       }
       return map[courseCategory] || 'info';
+    },
+
+    // 获取成绩来源标签颜色
+    getScoreTypeTagType(scoreType) {
+      const map = {
+        '正考': 'success',     // 正考 - 绿色
+        '补考': 'warning',     // 补考 - 橙色
+        '重修': 'danger',      // 重修 - 红色
+        '免修': 'info',        // 免修 - 蓝色
+        '缓考': 'primary'      // 缓考 - 紫色
+      }
+      return map[scoreType] || 'info';
     },
     // 获取文件的完整URL（用于显示）
     getFileFullUrl(fileName) {
@@ -1466,13 +1489,6 @@ export default {
       }
 
       return pictureUrl;
-    },
-
-    /** 截断文本显示 */
-    truncateText(text, maxLength) {
-      if (!text) return '';
-      if (text.length <= maxLength) return text;
-      return text.substring(0, maxLength) + '...';
     }
 
   }
@@ -2766,6 +2782,20 @@ export default {
 
 .custom-file-item .file-name {
   font-size: 13px;
+}
+
+/* 成绩来源于列样式 */
+.score-type-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.no-score-type {
+  color: #909399;
+  font-size: 12px;
+  font-style: italic;
 }
 
 </style>
