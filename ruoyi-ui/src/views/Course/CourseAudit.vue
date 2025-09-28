@@ -166,7 +166,7 @@
 
     <!-- 表格区域 -->
     <div class="table-card">
-      <div class="card-header">8
+      <div class="card-header">
         <i class="el-icon-s-grid"></i>
         <span>考核列表</span>
         <span class="record-count">共 {{ total }} 条记录</span>
@@ -246,13 +246,20 @@
         <el-table-column label="操作" align="center" width="150">
           <template slot-scope="scope">
             <div class="action-buttons">
+              <!-- 只有未审核状态才显示审核按钮 -->
               <el-button
+                v-if="scope.row.status === '未审核'"
                 size="mini"
                 type="text"
                 @click="openAuditDialog(scope.row)"
-                class="action-button audit-button">
+                class="action-button audit-button"
+                :disabled="scope.row.status !== '未审核'">
                 审核
               </el-button>
+              <!-- 已审核或未通过状态显示灰色文字 -->
+              <span v-else class="text-muted">
+	        {{ scope.row.status === '已通过' ? '已通过' : '未通过' }}
+	      </span>
             </div>
           </template>
         </el-table-column>
