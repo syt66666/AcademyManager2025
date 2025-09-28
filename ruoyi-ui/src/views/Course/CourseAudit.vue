@@ -101,8 +101,8 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="课程分类" prop="courseCategory">
-            <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程分类" class="search-input">
+          <el-form-item label="课程种类" prop="courseCategory">
+            <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程种类" class="search-input">
               <el-option
                 v-for="category in predefinedCourseCategories"
                 :key="category.value"
@@ -142,20 +142,20 @@
 
     <!-- 操作栏 -->
     <div class="button-bar">
-      <el-button
-        type="primary"
-        icon="el-icon-check"
-        class="action-btn"
-        :disabled="selectedRows.length === 0"
-        @click="handleBatchAudit('通过')"
-      >批量通过</el-button>
-      <el-button
-        type="danger"
-        icon="el-icon-close"
-        class="action-btn"
-        :disabled="selectedRows.length === 0"
-        @click="handleBatchAudit('未通过')"
-      >批量未通过</el-button>
+<!--      <el-button-->
+<!--        type="primary"-->
+<!--        icon="el-icon-check"-->
+<!--        class="action-btn"-->
+<!--        :disabled="selectedRows.length === 0"-->
+<!--        @click="handleBatchAudit('通过')"-->
+<!--      >批量通过</el-button>-->
+<!--      <el-button-->
+<!--        type="danger"-->
+<!--        icon="el-icon-close"-->
+<!--        class="action-btn"-->
+<!--        :disabled="selectedRows.length === 0"-->
+<!--        @click="handleBatchAudit('未通过')"-->
+<!--      >批量未通过</el-button>-->
       <el-button
         type="success"
         icon="el-icon-download"
@@ -166,9 +166,9 @@
 
     <!-- 表格区域 -->
     <div class="table-card">
-      <div class="card-header">
+      <div class="card-header">8
         <i class="el-icon-s-grid"></i>
-        <span>审核列表</span>
+        <span>考核列表</span>
         <span class="record-count">共 {{ total }} 条记录</span>
       </div>
       <el-table
@@ -193,7 +193,7 @@
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
         <el-table-column label="课程名称" align="center" prop="courseName"/>
-        <el-table-column label="课程分类" align="center" prop="courseCategory" width="120">
+        <el-table-column label="课程种类" align="center" prop="courseCategory" width="120">
           <template slot-scope="scope">
             <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="course-category-tag">
               {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
@@ -240,13 +240,13 @@
                 class="action-button audit-button">
                 审核
               </el-button>
-              <el-button
-                size="mini"
-                type="text"
-                @click="showAuditHistory(scope.row)"
-                class="action-button history-button">
-                历史
-              </el-button>
+<!--              <el-button-->
+<!--                size="mini"-->
+<!--                type="text"-->
+<!--                @click="showAuditHistory(scope.row)"-->
+<!--                class="action-button history-button">-->
+<!--                历史-->
+<!--              </el-button>-->
             </div>
           </template>
         </el-table-column>
@@ -286,7 +286,7 @@
             </div>
           </div>
           <div class="header-right">
-            <el-button size="mini" @click="showAuditHistory(currentBooking)"><i class="el-icon-notebook-2"></i> 审核历史</el-button>
+<!--            <el-button size="mini" @click="showAuditHistory(currentBooking)"><i class="el-icon-notebook-2"></i> 审核历史</el-button>-->
           </div>
         </div>
 
@@ -569,16 +569,16 @@ export default {
       try {
         this.auditLoading = true;
         console.log('🔍 开始获取审核材料详情，bookingId:', row.bookingId);
-        
+
         const res = await getBookingsDetails(row.bookingId);
         console.log('📡 API响应原始数据:', res);
-        
+
         const data = res && res.data ? res.data : {};
         console.log('📋 解析后的数据:', data);
         console.log('📎 proof字段值:', data.proof);
         console.log('📎 proof字段类型:', typeof data.proof);
         console.log('📎 proof是否为数组:', Array.isArray(data.proof));
-        
+
         // 处理审核材料（压缩包）- 使用proof字段
         this.auditMaterials = [];
         if (data.proof && Array.isArray(data.proof) && data.proof.length > 0) {
@@ -619,30 +619,30 @@ export default {
     // 下载审核材料
     downloadMaterial(material) {
       console.log('📥 开始下载材料:', material);
-      
+
       if (!material.url) {
         console.error('❌ 材料URL不存在:', material);
         this.$message.error('文件路径不存在');
         return;
       }
-      
+
       try {
         const link = document.createElement('a');
         // 处理proof字段的路径，确保以正确的API前缀开头
         let downloadUrl = material.url;
         console.log('🔗 原始URL:', downloadUrl);
         console.log('🌐 API基础地址:', process.env.VUE_APP_BASE_API);
-        
+
         if (!downloadUrl.startsWith('http')) {
           // 如果路径不是以http开头，添加API前缀
-          downloadUrl = downloadUrl.startsWith('/') 
+          downloadUrl = downloadUrl.startsWith('/')
             ? `${process.env.VUE_APP_BASE_API}${downloadUrl}`
             : `${process.env.VUE_APP_BASE_API}/${downloadUrl}`;
         }
-        
+
         console.log('🔗 最终下载URL:', downloadUrl);
         console.log('📁 文件名:', material.name);
-        
+
         link.href = downloadUrl;
         link.download = material.name;
         link.target = '_blank';
@@ -750,76 +750,76 @@ export default {
       this.selectedRows = selection || [];
     },
 
-    async handleBatchAudit(actionLabel) {
-      const isApproved = actionLabel === '通过';
-      const statusMapping = {
-        '通过': '已通过',
-        '未通过': '未通过'
-      };
-
-      if (!this.selectedRows || this.selectedRows.length === 0) {
-        this.$message.warning('请先选择需要审核的记录');
-        return;
-      }
-
-      try {
-        const promptOptions = {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消'
-        };
-        if (!isApproved) {
-          promptOptions.inputPattern = /.+/;
-          promptOptions.inputErrorMessage = '未通过原因不能为空';
-          promptOptions.inputPlaceholder = '请输入未通过原因';
-        }
-
-        const result = await this.$prompt(
-          isApproved ? '确认批量通过审核吗？' : '请输入未通过原因（将应用于所有选中记录）',
-          '批量审核确认',
-          promptOptions
-        );
-
-        const reviewComment = isApproved ? '系统批量审核通过' : result.value;
-
-        const loading = this.$loading({
-          lock: true,
-          text: '正在批量处理...',
-          spinner: 'el-icon-loading'
-        });
-
-        let successCount = 0;
-        let failCount = 0;
-
-        // 准备批量审核数据
-        const batchData = this.selectedRows.map(row => ({
-          bookingId: row.bookingId,
-          status: statusMapping[actionLabel],
-          reviewerComment: reviewComment,
-          reviewTime: new Date(),
-          reviewer: this.$store.state.user.name
-        }));
-
-        try {
-          await batchAuditBookings(batchData);
-          successCount = this.selectedRows.length;
-        } catch (e) {
-          failCount = this.selectedRows.length;
-          throw e;
-        }
-
-        loading.close();
-        this.$message.success(`批量完成：成功 ${successCount} 条，失败 ${failCount} 条`);
-        this.getList();
-        this.fetchAuditCount();
-        this.$refs.courseTable && this.$refs.courseTable.clearSelection();
-      } catch (e) {
-        if (e !== 'cancel') {
-          this.$message.error('批量审核失败');
-        } else {
-          this.$message.info('已取消操作');
-        }
-      }
-    },
+    // async handleBatchAudit(actionLabel) {
+    //   const isApproved = actionLabel === '通过';
+    //   const statusMapping = {
+    //     '通过': '已通过',
+    //     '未通过': '未通过'
+    //   };
+    //
+    //   if (!this.selectedRows || this.selectedRows.length === 0) {
+    //     this.$message.warning('请先选择需要审核的记录');
+    //     return;
+    //   }
+    //
+    //   try {
+    //     const promptOptions = {
+    //       confirmButtonText: '确定',
+    //       cancelButtonText: '取消'
+    //     };
+    //     if (!isApproved) {
+    //       promptOptions.inputPattern = /.+/;
+    //       promptOptions.inputErrorMessage = '未通过原因不能为空';
+    //       promptOptions.inputPlaceholder = '请输入未通过原因';
+    //     }
+    //
+    //     // const result = await this.$prompt(
+    //     //   isApproved ? '确认批量通过审核吗？' : '请输入未通过原因（将应用于所有选中记录）',
+    //     //   '批量审核确认',
+    //     //   promptOptions
+    //     // );
+    //     //
+    //     // const reviewComment = isApproved ? '系统批量审核通过' : result.value;
+    //     //
+    //     // const loading = this.$loading({
+    //     //   lock: true,
+    //     //   text: '正在批量处理...',
+    //     //   spinner: 'el-icon-loading'
+    //     // });
+    //
+    //     let successCount = 0;
+    //     let failCount = 0;
+    //
+    //     // // 准备批量审核数据
+    //     // const batchData = this.selectedRows.map(row => ({
+    //     //   bookingId: row.bookingId,
+    //     //   status: statusMapping[actionLabel],
+    //     //   reviewerComment: reviewComment,
+    //     //   reviewTime: new Date(),
+    //     //   reviewer: this.$store.state.user.name
+    //     // }));
+    //
+    //     try {
+    //       await batchAuditBookings(batchData);
+    //       successCount = this.selectedRows.length;
+    //     } catch (e) {
+    //       failCount = this.selectedRows.length;
+    //       throw e;
+    //     }
+    //
+    //     loading.close();
+    //     this.$message.success(`批量完成：成功 ${successCount} 条，失败 ${failCount} 条`);
+    //     this.getList();
+    //     this.fetchAuditCount();
+    //     this.$refs.courseTable && this.$refs.courseTable.clearSelection();
+    //   } catch (e) {
+    //     if (e !== 'cancel') {
+    //       this.$message.error('批量审核失败');
+    //     } else {
+    //       this.$message.info('已取消操作');
+    //     }
+    //   }
+    // },
 
     async _updateSingleBooking(payload) {
       return auditBooking(payload);
@@ -921,7 +921,7 @@ export default {
           console.log("📋 获取审核列表成功:", response);
           console.log("📊 审核列表数据行数:", response.rows ? response.rows.length : 0);
           console.log("📊 总记录数:", response.total);
-          
+
           // 检查每行数据的proof字段
           if (response.rows && response.rows.length > 0) {
             response.rows.forEach((row, index) => {
@@ -935,7 +935,7 @@ export default {
               });
             });
           }
-          
+
           this.courseList = response.rows;
           this.total = response.total;
           this.updateAvailableCourseCategories();
@@ -971,7 +971,7 @@ export default {
         // 先获取组织者名称
         const nickNameResponse = await getNickName();
         const organizer = nickNameResponse.msg;
-        
+
         console.log("🔍 获取审核统计，组织者:", organizer);
         const {code, data} = await getAuditCount(organizer);
         if (code === 200) {
@@ -1282,12 +1282,12 @@ export default {
       }
     },
 
-    // 显示审核历史
-    async showAuditHistory(row) {
-      this.historyQueryParams.moduleId = row.bookingId;
-      this.historyVisible = true;
-      await this.getAuditHistory();
-    },
+    // // 显示审核历史
+    // async showAuditHistory(row) {
+    //   this.historyQueryParams.moduleId = row.bookingId;
+    //   this.historyVisible = true;
+    //   await this.getAuditHistory();
+    // },
 
     // 获取审核历史记录
     async getAuditHistory() {
