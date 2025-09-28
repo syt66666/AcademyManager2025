@@ -198,4 +198,5 @@ public interface CourseBookingsMapper
      * @return 包含是否已选课和记录ID的Map
      */
     public Map<String, Object> checkCourseBookingSimple(@Param("courseId") Long courseId, @Param("studentId") String studentId);
+
 }
