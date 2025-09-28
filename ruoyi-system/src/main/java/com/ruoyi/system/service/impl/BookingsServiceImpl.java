@@ -234,6 +234,20 @@ public class BookingsServiceImpl implements IBookingsService {
         }
     }
 
+    @Override
+    public int deleteBookingsByActivityId(Long activityId) {
+        try {
+            System.out.println("删除活动相关的所有预约记录: activityId=" + activityId);
+            int result = bookingsMapper.deleteBookingsByActivityId(activityId);
+            System.out.println("删除结果: " + result + " 条记录被删除");
+            return result;
+        } catch (Exception e) {
+            System.err.println("删除活动相关预约记录异常: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("删除活动相关预约记录失败", e);
+        }
+    }
+
     public Map<String, Integer> countAuditStatus() {
         try {
             return bookingsMapper.countAuditStatus();

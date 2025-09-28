@@ -6,8 +6,9 @@ import java.util.Map;
 import com.ruoyi.system.domain.StuActivityRecord;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.Mapper;
 
-
+@Mapper
 public interface StuActivityRecordMapper
 {
     /**

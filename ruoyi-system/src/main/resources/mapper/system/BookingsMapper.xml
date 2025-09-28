@@ -259,4 +259,10 @@
         WHERE activity_id = #{activityId}
           AND student_id = #{studentId}
     </select>
+
+    <!-- 根据活动ID删除所有相关的预约记录 -->
+    <delete id="deleteBookingsByActivityId">
+        DELETE FROM bookings
+        WHERE activity_id = #{activityId}
+    </delete>
 </mapper>

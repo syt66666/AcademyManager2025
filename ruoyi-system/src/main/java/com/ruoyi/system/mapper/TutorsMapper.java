@@ -2,6 +2,7 @@ package com.ruoyi.system.mapper;
 
 import java.util.List;
 import com.ruoyi.system.domain.Tutors;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 导师信息Mapper接口
@@ -9,6 +10,7 @@ import com.ruoyi.system.domain.Tutors;
  * @author ruoyi
  * @date 2025-03-22
  */
+@Mapper
 public interface TutorsMapper
 {
     /**
