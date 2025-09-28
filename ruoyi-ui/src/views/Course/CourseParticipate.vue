@@ -113,7 +113,13 @@
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="课程名称" align="center" prop="courseName" />
+        <el-table-column label="课程名称" align="center" prop="courseName" width="180">
+          <template slot-scope="scope">
+            <div class="course-name" :title="scope.row.courseName">
+              {{ truncateText(scope.row.courseName, 7) }}
+            </div>
+          </template>
+        </el-table-column>
         <!-- 类型列 -->
         <el-table-column label="课程性质" align="center" width="120">
           <template slot-scope="scope">
@@ -1460,6 +1466,13 @@ export default {
       }
 
       return pictureUrl;
+    },
+
+    /** 截断文本显示 */
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
     }
 
   }

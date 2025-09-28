@@ -597,17 +597,12 @@ export default {
         // 4. 课程选课不需要记录到user_limite表，跳过取消记录步骤
         console.log('课程选课取消，无需记录到user_limite表');
 
-        // 5. 重新获取课程列表以同步最新数据（包括版本号和容量）
-        await this.getList();
-
         this.$message.success("取消选课成功！");
-
         this.detailDialogVisible = false;
         this.selectedCourse = null;
-        await this.checkBookingStatus();
 
-        // 6. 额外同步一次数据，确保其他用户能看到最新状态
-        await this.syncCourseData();
+        // 5. 直接重新获取课程列表以立即更新状态
+        await this.getList();
 
       } catch (error) {
         console.error("取消选课失败:", error);
@@ -762,17 +757,11 @@ export default {
           throw new Error(bookingResponse.msg || '添加选课记录失败');
         }
 
-        // 4. 重新获取课程列表以同步最新数据（包括版本号和容量）
-        await this.getList();
-
         this.$message.success("选课成功！");
         this.detailDialogVisible = false;
 
-        // 5. 重新检查选课状态
-        await this.checkBookingStatus();
-
-        // 6. 额外同步一次数据，确保其他用户能看到最新状态
-        await this.syncCourseData();
+        // 4. 直接重新获取课程列表以立即更新状态
+        await this.getList();
 
       } catch (error) {
         console.error("选课失败:", error);

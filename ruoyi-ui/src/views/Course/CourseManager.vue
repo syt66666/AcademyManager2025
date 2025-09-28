@@ -126,7 +126,9 @@
         </el-table-column>
         <el-table-column label="课程名称" align="center" prop="courseName" width="180">
           <template slot-scope="scope">
-            <div class="course-name">{{ scope.row.courseName }}</div>
+            <div class="course-name" :title="scope.row.courseName">
+              {{ truncateText(scope.row.courseName, 7) }}
+            </div>
           </template>
         </el-table-column>
         <el-table-column label="课程种类" align="center" prop="courseType" width="200">
@@ -1409,6 +1411,13 @@ export default {
         '选修': '选修'
       };
       return categoryMap[category] || category;
+    },
+
+    /** 截断文本显示 */
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
     },
 
     getCourseTypeTagType(coursetype) {

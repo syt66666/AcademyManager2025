@@ -192,7 +192,13 @@
         </el-table-column>
         <el-table-column label="学生学号" align="center" prop="studentId"/>
         <el-table-column label="学生姓名" align="center" prop="studentName"/>
-        <el-table-column label="课程名称" align="center" prop="courseName"/>
+        <el-table-column label="课程名称" align="center" prop="courseName" width="180">
+          <template slot-scope="scope">
+            <div class="course-name" :title="scope.row.courseName">
+              {{ truncateText(scope.row.courseName, 7) }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="课程种类" align="center" prop="courseCategory" width="120">
           <template slot-scope="scope">
             <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="course-category-tag">
@@ -1407,6 +1413,13 @@ export default {
     tableRowClassName({rowIndex}) {
       return rowIndex % 2 === 0 ? 'striped-row' : '';
     },
+
+    /** 截断文本显示 */
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      if (text.length <= maxLength) return text;
+      return text.substring(0, maxLength) + '...';
+    }
 
   }
 };
