@@ -42,6 +42,20 @@
 
             <div
               class="status-item"
+              :class="{ active: selectedStatus === '未审核' }"
+              @click="filterByStatus('未审核')"
+            >
+              <div class="status-icon pending">
+                <i class="el-icon-time"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.pending }}</div>
+                <div class="status-label">未审核</div>
+              </div>
+            </div>
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -70,35 +84,6 @@
           </div>
         </div>
 
-        <!-- 右侧进度条 -->
-        <div class="progress-stats">
-          <h3>课程完成进度</h3>
-          <div class="progress-items">
-            <div
-              v-for="(progress, type) in courseProgress"
-              :key="type"
-              class="progress-item"
-              :class="{ active: selectedCourseType === type }"
-              @click="filterByCourseType(type)"
-            >
-              <div class="progress-label">{{ getCourseTypeName(type) }}</div>
-              <div class="progress-bar-container">
-                <div class="progress-bar">
-                  <div
-                    class="progress-fill"
-                    :style="{ width: progress.percentage + '%' }"
-                    :class="getProgressBarClass(progress.percentage, type)"
-                  >
-                    <div class="progress-status-text" :class="getProgressTextClass(progress.status)">
-                      {{ progress.status }}
-                    </div>
-                  </div>
-                </div>
-                <div class="progress-text">{{ Math.round(progress.percentage) }}%</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -525,16 +510,9 @@ export default {
       statusCounts: {
         unsubmitted: 0,  // 未提交
         rejected: 0,     // 未通过
+        pending: 0,      // 未审核
         approved: 0      // 已通过
       },
-      courseProgress: {
-        '1': { completed: 0, percentage: 0 }, // 必修课程
-        '2': { completed: 0, percentage: 0 }, // 选修课程
-        '3': { completed: 0, percentage: 0 }, // 实践课程
-        '4': { completed: 0, percentage: 0 }  // 其他课程
-      },
-      // 进度条筛选：当前选中的课程类型
-      selectedCourseType: null,
       isViewOnly: false, // 是否为只查看模式
       showFooterButtons: false, // 是否显示底部按钮
 
@@ -1047,10 +1025,6 @@ export default {
         console.log('查询响应:', response);
         let rows = response.rows || [];
 
-        // 本地筛选：如果选择了进度条类型，则只显示该类型的记录
-        if (this.selectedCourseType) {
-          rows = rows.filter(item => String(item.courseType) === String(this.selectedCourseType));
-        }
 
         // 对选课列表按照材料提交状态进行排序（同优先级下按开始时间由晚到早）
         const sortedRows = this.sortCoursesByStatus(rows);
@@ -1068,19 +1042,6 @@ export default {
       });
     },
 
-    /** 通过进度条筛选：点击某类型，筛选出该类型的课程；再次点击同类型则清除筛选 */
-    filterByCourseType(type) {
-      // 切换选中状态
-      if (this.selectedCourseType === type) {
-        this.selectedCourseType = null;
-      } else {
-        this.selectedCourseType = type;
-        this.queryParams.pageNum = 1;
-      }
-
-      // 重新拉取数据并应用本地筛选
-      this.getList();
-    },
 
     /** 按照材料提交状态排序选课列表 */
     sortCoursesByStatus(courses) {
@@ -1110,7 +1071,6 @@ export default {
     /** 更新统计数据 */
     updateStatistics() {
       this.calculateStatusCounts();
-      this.calculateCourseProgress();
     },
 
     /** 计算状态统计 */
@@ -1118,6 +1078,7 @@ export default {
       this.statusCounts = {
         unsubmitted: 0,
         rejected: 0,
+        pending: 0,
         approved: 0
       };
 
@@ -1130,6 +1091,9 @@ export default {
           case '未通过':
             this.statusCounts.rejected++;
             break;
+          case '未审核':
+            this.statusCounts.pending++;
+            break;
           case '已通过':
             this.statusCounts.approved++;
             break;
@@ -1137,78 +1101,6 @@ export default {
       });
     },
 
-    /** 计算课程类型进度 */
-    calculateCourseProgress() {
-      console.log('开始计算课程完成进度...');
-      console.log('所有课程数据:', this.allCoursesList);
-      
-      // 重置进度
-      Object.keys(this.courseProgress).forEach(type => {
-        this.courseProgress[type] = { completed: 0, percentage: 0, status: '未开始' };
-      });
-
-      // 计算每个类型课程的进行时间百分比（基于所有课程数据）
-      this.allCoursesList.forEach(course => {
-        if (course.courseType && course.startTime && course.endTime) {
-          const type = course.courseType.toString();
-          const now = new Date();
-          const startTime = new Date(course.startTime);
-          const endTime = new Date(course.endTime);
-          
-          console.log(`--- 正在计算课程: ${course.courseName} (类型: ${type}) ---`);
-          console.log(`  课程开始时间: ${course.startTime} -> ${startTime}`);
-          console.log(`  课程结束时间: ${course.endTime} -> ${endTime}`);
-          console.log(`  当前系统时间: ${now}`);
-          console.log(`  材料提交状态: ${course.status}`);
-          
-          if (this.courseProgress[type]) {
-            // 计算课程进行的时间百分比
-            let percentage = 0;
-            let status = '未开始';
-            
-            if (now < startTime) {
-              // 课程还未开始
-              percentage = 0;
-              status = '未开始';
-              console.log('  结果: 课程还未开始。');
-            } else if (now >= endTime) {
-              // 课程已结束，根据材料提交状态显示不同信息
-              percentage = 100;
-              if (course.status === '未提交') {
-                status = '课程已结束，需要提交材料';
-              } else if (course.status === '未审核') {
-                status = '材料已提交，正在审核中';
-              } else if (course.status === '已通过') {
-                status = '材料已通过，此课程已结束';
-              } else if (course.status === '未通过') {
-                status = '材料未通过，需要重新提交';
-              } else {
-                status = '课程已结束';
-              }
-              console.log(`  结果: 课程已结束，状态: ${status}`);
-            } else {
-              // 课程进行中，计算百分比
-              const totalDuration = endTime.getTime() - startTime.getTime();
-              const elapsed = now.getTime() - startTime.getTime();
-              percentage = Math.min((elapsed / totalDuration) * 100, 100);
-              status = '进行中';
-              console.log(`  结果: 课程进行中。已进行时间: ${elapsed}ms, 总时长: ${totalDuration}ms, 百分比: ${percentage}%`);
-            }
-            
-            // 更新该类型的进度（取最大值，因为可能有多个同类型课程）
-            this.courseProgress[type].percentage = Math.max(this.courseProgress[type].percentage, percentage);
-            this.courseProgress[type].completed = percentage > 0 ? 1 : 0;
-            this.courseProgress[type].status = status;
-            console.log(`  更新类型 ${type} 的进度为: ${this.courseProgress[type].percentage}%, 状态: ${status}`);
-          }
-        } else {
-          console.warn(`跳过课程 ${course.courseName} 的进度计算，因为缺少课程类型、开始时间或结束时间。`);
-        }
-      });
-      
-      console.log('--- 课程完成进度计算结束 ---');
-      console.log('最终 courseProgress 对象:', this.courseProgress);
-    },
 
     /** 根据状态筛选 */
     filterByStatus(status) {
@@ -1233,40 +1125,6 @@ export default {
       this.getList();
     },
 
-    /** 获取进度条样式类 */
-    getProgressBarClass(percentage, courseType) {
-      const baseClass = this.getCourseTypeBaseClass(courseType);
-      if (percentage >= 100) return `${baseClass}-full`;
-      if (percentage >= 75) return `${baseClass}-high`;
-      if (percentage >= 50) return `${baseClass}-medium`;
-      if (percentage >= 25) return `${baseClass}-low`;
-      return `${baseClass}-empty`;
-    },
-
-    /** 获取课程类型对应的基础样式类 */
-    getCourseTypeBaseClass(courseType) {
-      const map = {
-        '1': 'progress-primary',   // 必修课程 - 蓝色
-        '2': 'progress-success',   // 选修课程 - 绿色
-        '3': 'progress-warning',   // 实践课程 - 橙色
-        '4': 'progress-danger'     // 其他课程 - 红色
-      };
-      return map[courseType] || 'progress-info';
-    },
-
-    /** 获取进度文本样式类 */
-    getProgressTextClass(status) {
-      const statusClassMap = {
-        '未开始': 'status-not-started',
-        '进行中': 'status-in-progress',
-        '需要提交材料': 'status-need-submit',
-        '材料在审核中': 'status-under-review',
-        '材料已通过': 'status-approved',
-        '材料未通过需要重新提交': 'status-rejected',
-        '课程已结束': 'status-completed'
-      };
-      return statusClassMap[status] || 'status-default';
-    },
 
     /** 获取表格行的CSS类名 */
     getRowClassName({ row, rowIndex }) {
@@ -1680,18 +1538,14 @@ export default {
 
 /* 统计大盒子样式 */
 .stats-content {
-  display: flex;
-  gap: 40px;
   margin-top: 20px;
 }
 
-.status-stats,
-.progress-stats {
-  flex: 1;
+.status-stats {
+  width: 100%;
 }
 
-.status-stats h3,
-.progress-stats h3 {
+.status-stats h3 {
   margin: 0 0 20px 0;
   font-size: 16px;
   font-weight: 600;
@@ -1705,6 +1559,7 @@ export default {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .status-item {
@@ -1759,6 +1614,11 @@ export default {
   color: white;
 }
 
+.status-icon.pending {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+}
+
 .status-icon.approved {
   background: linear-gradient(135deg, #27ae60, #2ecc71);
   color: white;
@@ -1787,226 +1647,6 @@ export default {
   margin-top: 4px;
 }
 
-/* 进度条样式 */
-.progress-items {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.progress-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.progress-label {
-  min-width: 200px;
-  font-size: 14px;
-  color: #606266;
-  font-weight: 500;
-}
-
-.progress-item.active .progress-label {
-  color: #303133;
-  font-weight: 700;
-}
-
-.progress-item:hover {
-  transform: translateY(-1px);
-}
-
-.progress-bar-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 12px;
-  background: #f0f2f5;
-  border-radius: 6px;
-  overflow: hidden;
-  position: relative;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: all 0.6s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 2s infinite;
-}
-
-/* 进度条内的状态文本 */
-.progress-status-text {
-  position: relative;
-  z-index: 2;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* 必修课程 - 蓝色系 */
-.progress-primary-empty {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-}
-
-.progress-primary-low {
-  background: linear-gradient(135deg, #90caf9, #64b5f6);
-}
-
-.progress-primary-medium {
-  background: linear-gradient(135deg, #42a5f5, #2196f3);
-}
-
-.progress-primary-high {
-  background: linear-gradient(135deg, #1e88e5, #1976d2);
-}
-
-.progress-primary-full {
-  background: linear-gradient(135deg, #1565c0, #0d47a1);
-}
-
-/* 选修课程 - 绿色系 */
-.progress-success-empty {
-  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
-}
-
-.progress-success-low {
-  background: linear-gradient(135deg, #a5d6a7, #81c784);
-}
-
-.progress-success-medium {
-  background: linear-gradient(135deg, #66bb6a, #4caf50);
-}
-
-.progress-success-high {
-  background: linear-gradient(135deg, #43a047, #388e3c);
-}
-
-.progress-success-full {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
-}
-
-/* 实践课程 - 橙色系 */
-.progress-warning-empty {
-  background: linear-gradient(135deg, #fff3e0, #ffcc80);
-}
-
-.progress-warning-low {
-  background: linear-gradient(135deg, #ffb74d, #ffa726);
-}
-
-.progress-warning-medium {
-  background: linear-gradient(135deg, #ff9800, #fb8c00);
-}
-
-.progress-warning-high {
-  background: linear-gradient(135deg, #f57c00, #ef6c00);
-}
-
-.progress-warning-full {
-  background: linear-gradient(135deg, #e65100, #d84315);
-}
-
-/* 其他课程 - 红色系 */
-.progress-danger-empty {
-  background: linear-gradient(135deg, #ffebee, #ffcdd2);
-}
-
-.progress-danger-low {
-  background: linear-gradient(135deg, #ef9a9a, #e57373);
-}
-
-.progress-danger-medium {
-  background: linear-gradient(135deg, #f44336, #e53935);
-}
-
-.progress-danger-high {
-  background: linear-gradient(135deg, #d32f2f, #c62828);
-}
-
-.progress-danger-full {
-  background: linear-gradient(135deg, #b71c1c, #8d1a1a);
-}
-
-.progress-text {
-  min-width: 40px;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-/* 进度条内状态文本样式 */
-.status-not-started {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.status-in-progress {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.status-need-submit {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-under-review {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-approved {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-rejected {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-completed {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.status-default {
-  color: rgba(255, 255, 255, 0.8);
-}
 
 
 /* 现代化表格 */
@@ -2195,28 +1835,8 @@ export default {
 
 /* 响应式设计 */
 @media (max-width: 1200px) {
-  .stats-content {
-    flex-direction: column;
-    gap: 30px;
-  }
-
   .status-items {
     justify-content: center;
-  }
-
-  .progress-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .progress-label {
-    min-width: auto;
-    width: 100%;
-  }
-
-  .progress-bar-container {
-    width: 100%;
   }
 }
 
