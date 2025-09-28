@@ -154,28 +154,14 @@
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
-
-        <!-- 时间安排列 -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="活动开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
-            <div class="time-schedule-inline">
-              <!-- 报名时间 -->
-              <div class="time-inline-item signup-time">
-                <i class="el-icon-time"></i>
-                <span class="time-label">报名时间：</span>
-                <span class="time-content">
-                  {{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}') }}
-                </span>
-              </div>
-              <!-- 活动时间 -->
-              <div class="time-inline-item activity-time">
-                <i class="el-icon-date"></i>
-                <span class="time-label">活动时间：</span>
-                <span class="time-content">
-                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
-                </span>
-              </div>
-            </div>
+            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动结束时间" align="center" prop="endTime">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
 
@@ -3009,53 +2995,6 @@ export default {
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   }
-}
-
-/* 时间安排样式 */
-.time-schedule-inline {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-}
-
-.time-inline-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.time-inline-item.signup-time {
-  background: rgba(64, 158, 255, 0.08);
-  border: 1px solid rgba(64, 158, 255, 0.2);
-  color: #409EFF;
-}
-
-.time-inline-item.activity-time {
-  background: rgba(103, 194, 58, 0.08);
-  border: 1px solid rgba(103, 194, 58, 0.2);
-  color: #67C23A;
-}
-
-.time-inline-item i {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.time-label {
-  font-weight: 500;
-  flex-shrink: 0;
-}
-
-.time-content {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* 图片预览对话框样式 */
