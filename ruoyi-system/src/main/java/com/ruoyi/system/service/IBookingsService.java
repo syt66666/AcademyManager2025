@@ -74,4 +74,11 @@ public interface IBookingsService {
      * @return 导出数据列表
      */
     List<BookingExportDTO> selectBookingExportList(BookingExportDTO bookingExportDTO);
+
+    /**
+     * 根据活动ID删除所有相关的预约记录
+     * @param activityId 活动ID
+     * @return 删除结果（影响的行数）
+     */
+    int deleteBookingsByActivityId(Long activityId);
 }

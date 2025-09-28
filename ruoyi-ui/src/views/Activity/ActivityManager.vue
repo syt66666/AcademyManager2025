@@ -95,6 +95,9 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
+        <el-tooltip v-if="hasEndedActivities" content="选中的活动中包含已结束的活动，点击删除时会提示无法删除" placement="top">
+          <i class="el-icon-warning" style="color: #E6A23C; margin-left: 8px; font-size: 16px;"></i>
+        </el-tooltip>
       </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </div>
@@ -108,7 +111,7 @@
       </div>
 
       <!-- 表格美化 -->
-      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
+      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}" :row-class-name="getRowClassName">
         <el-table-column type="selection" width="45" align="center"/>
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
@@ -773,6 +776,16 @@ export default {
     // 学生列表（直接显示所有学生，不进行过滤）
     filteredStudents() {
       return this.selectedStudents;
+    },
+    
+    // 检查选中的活动中是否有已结束的活动
+    hasEndedActivities() {
+      if (!this.ids || this.ids.length === 0) {
+        return false;
+      }
+      return this.activitiesList.some(activity => 
+        this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
+      );
     }
   },
   created() {
@@ -829,6 +842,15 @@ export default {
       const now = new Date();
       const end = new Date(row.endTime);
       return now > end;
+    },
+
+
+    /** 获取表格行的样式类名 */
+    getRowClassName({row}) {
+      if (this.isActivityEnded(row)) {
+        return 'ended-activity-row';
+      }
+      return '';
     },
 
     /** 计算容量百分比 */
@@ -1224,12 +1246,46 @@ export default {
     handleDelete(row) {
       const activityIds = row.activityId || this.ids;
       const activityNames = row.activityName || this.names;
-      this.$modal.confirm('是否确认删除活动名称为"' + activityNames + '"的数据项？').then(function () {
+      
+      // 检查是否有已结束的活动
+      let endedActivities = [];
+      if (row && this.isActivityEnded(row)) {
+        endedActivities.push(row.activityName);
+      } else if (this.ids && this.ids.length > 0) {
+        // 批量删除时，找出所有已结束的活动
+        endedActivities = this.activitiesList
+          .filter(activity => 
+            this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
+          )
+          .map(activity => activity.activityName);
+      }
+      
+      // 如果有已结束的活动，显示详细的提示信息
+      if (endedActivities.length > 0) {
+        let message = "以下活动已结束，无法删除：\n";
+        endedActivities.forEach(name => {
+          message += "• " + name + "\n";
+        });
+        message += "\n请取消选择已结束的活动后重试。";
+        this.$message.warning(message);
+        return;
+      }
+      
+      // 构建更详细的确认信息
+      let confirmMessage = '是否确认删除活动名称为"' + activityNames + '"的数据项？\n\n';
+      confirmMessage += '⚠️ 注意：删除活动将同时删除该活动的所有学生报名记录！\n';
+      confirmMessage += '此操作不可撤销，请谨慎操作。';
+      
+      this.$modal.confirm(confirmMessage).then(function () {
         return delActivities(activityIds);
       }).then(() => {
         this.getList();
-        this.$message.success("删除成功");
-      }).catch(() => {
+        this.$message.success("删除成功，相关学生报名记录已一并删除");
+      }).catch((error) => {
+        // 处理后端返回的错误信息
+        if (error && error.message && error.message.includes("已结束")) {
+          this.$message.error(error.message);
+        }
       });
     },
 
@@ -2596,6 +2652,31 @@ export default {
       justify-content: center;
     }
   }
+}
+
+/* 已结束活动行样式 */
+.ended-activity-row {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  opacity: 0.6;
+}
+
+.ended-activity-row:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.ended-activity-row td {
+  color: #999 !important;
+}
+
+/* 已结束活动的选择框样式 - 保持正常可点击状态 */
+.ended-activity-row .el-checkbox {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.ended-activity-row .el-checkbox__input {
+  cursor: pointer;
 }
 
 /* 响应式调整 */

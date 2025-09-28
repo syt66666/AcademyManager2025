@@ -71,4 +71,12 @@ public interface IActivitiesService {
      * @return 是否唯一
      */
     boolean checkActivityUnique(String activityName, String organizer, Integer activityId);
+
+    /**
+     * 检查活动是否已结束
+     *
+     * @param activityId 活动ID
+     * @return 是否已结束
+     */
+    boolean isActivityEnded(Integer activityId);
 }

@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import com.ruoyi.system.domain.CourseBookings;
 import com.ruoyi.system.domain.CourseBookingDTO;
 import com.ruoyi.system.domain.dto.CourseBookingExportDTO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 课程选课记录Mapper接口
@@ -13,6 +14,7 @@ import com.ruoyi.system.domain.dto.CourseBookingExportDTO;
  * @author ruoyi
  * @date 2025-09-25
  */
+@Mapper
 public interface CourseBookingsMapper
 {
     /**
