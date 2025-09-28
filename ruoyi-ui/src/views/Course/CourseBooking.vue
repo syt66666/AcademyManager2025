@@ -6,7 +6,7 @@
       <div class="card-header">
         <i class="el-icon-search"></i>
         <span>搜索条件</span>
-      
+
       </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
         <div class="search-row">
@@ -94,7 +94,7 @@
               {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
             </el-tag>
           </template>
-        </el-table-column> 
+        </el-table-column>
         <!-- 课程类型列 -->
         <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
@@ -137,7 +137,7 @@
           </span>
           </template>
         </el-table-column>
-       
+
 
         <!-- 操作列（保留原有功能） -->
         <el-table-column label="操作" align="center" fixed="right" width="120">
@@ -773,7 +773,7 @@ export default {
         this.$message.info('已取消选课');
       });
     },
-    /** 获取课程图片完整URL（仿照审核界面实现） */
+    /** 获取课程图片完整URL（仿照考核界面实现） */
     getCourseImageUrl(pictureUrl) {
       if (!pictureUrl) return '';
 
@@ -782,7 +782,7 @@ export default {
         return pictureUrl;
       }
 
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照考核界面）
       if (pictureUrl.startsWith('/profile/')) {
         return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
       }
@@ -892,7 +892,7 @@ export default {
     getList() {
       this.loading = true;
       console.log("🔍 开始获取课程列表，查询参数:", this.queryParams);
-      
+
       // 先获取组织者名称，作为默认筛选条件
       getNickName()
         .then(nickName => {
@@ -914,9 +914,9 @@ export default {
         console.log("📋 课程列表API响应:", response);
         console.log("📊 响应数据行数:", response.rows ? response.rows.length : 0);
         console.log("📊 总记录数:", response.total);
-        
+
         let courses = response.rows || [];
-        
+
         // 如果选择了"只显示可选课课程"，则进行前端过滤
         if (this.queryParams.availableOnly) {
           console.log("🔍 应用可选课过滤条件");
@@ -926,31 +926,31 @@ export default {
             if (status !== "选课进行中") {
               return false;
             }
-            
+
             // 检查是否有剩余容量
             if (course.courseCapacity <= 0) {
               return false;
             }
-            
+
             // 检查是否已经选过课
             if (course.isBooked) {
               return false;
             }
-            
+
             return true;
           });
           console.log("📊 过滤后课程数量:", courses.length);
         }
-        
+
         this.coursesList = courses;
         this.total = courses.length;
         this.loading = false;
-        
+
         console.log("✅ 课程列表更新完成，最终数据:", {
           coursesList: this.coursesList,
           total: this.total
         });
-        
+
         // 获取课程列表后检查选课状态
         await this.checkBookingStatus();
       }).catch(error => {

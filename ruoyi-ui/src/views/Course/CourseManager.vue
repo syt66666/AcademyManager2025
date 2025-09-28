@@ -28,11 +28,11 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="课程类型" prop="courseType">
+          <el-form-item label="课程种类" prop="courseType">
             <el-select
               v-model="queryParams.courseType"
               clearable
-              placeholder="请选择课程类型"
+              placeholder="请选择课程种类"
               class="search-input"
               @change="handleQuery"
               filterable>
@@ -45,8 +45,8 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="课程种类" prop="courseCategory">
-            <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程种类" class="search-input" @change="handleQuery">
+          <el-form-item label="课程类型" prop="courseCategory">
+            <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程类型" class="search-input" @change="handleQuery">
               <el-option
                 v-for="category in courseCategoryOptions"
                 :key="category.value"
@@ -126,7 +126,7 @@
             <div class="course-name">{{ scope.row.courseName }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="课程类型" align="center" prop="courseType" width="200">
+        <el-table-column label="课程种类" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
               {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
@@ -138,7 +138,7 @@
             <span class="credit-text">{{ (scope.row.courseCredit || 0).toFixed(1) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="课程种类" align="center" prop="courseCategory" width="100">
+        <el-table-column label="课程类型" align="center" prop="courseCategory" width="100">
           <template slot-scope="scope">
             <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
               {{ getCourseCategoryName(scope.row.courseCategory) || '未设置' }}
@@ -287,12 +287,12 @@
                 <el-form-item prop="courseType">
                   <template slot="label">
                     <span class="required-label">
-                      <span class="required-asterisk">*</span>课程类型
+                      <span class="required-asterisk">*</span>课程种类
                     </span>
                   </template>
                   <el-select
                     v-model="form.courseType"
-                    placeholder="请选择课程类型"
+                    placeholder="请选择课程种类"
                     class="form-select"
                     clearable
                     filterable>
@@ -309,10 +309,10 @@
                 <el-form-item prop="courseCategory">
                   <template slot="label">
                     <span class="required-label">
-                      <span class="required-asterisk">*</span>课程种类
+                      <span class="required-asterisk">*</span>课程类型
                     </span>
                   </template>
-                  <el-select v-model="form.courseCategory" placeholder="请选择课程种类" class="form-select">
+                  <el-select v-model="form.courseCategory" placeholder="请选择课程类型" class="form-select">
                     <el-option
                       v-for="category in courseCategoryOptions"
                       :key="category.value"
@@ -547,7 +547,7 @@
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ studentStats.pending }}</div>
-            <div class="stat-label">待审核</div>
+            <div class="stat-label">未考核</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ studentStats.rejected }}</div>
@@ -589,10 +589,10 @@
               @keyup.enter.native="handleStudentFilter"
             />
           </el-form-item>
-          <el-form-item label="审核状态" prop="status">
-            <el-select v-model="studentFilterParams.status" clearable placeholder="请选择审核状态" class="filter-input">
+          <el-form-item label="考核状态" prop="status">
+            <el-select v-model="studentFilterParams.status" clearable placeholder="请选择考核状态" class="filter-input">
               <el-option label="已通过" value="approved"></el-option>
-              <el-option label="待审核" value="pending"></el-option>
+              <el-option label="未考核" value="pending"></el-option>
               <el-option label="未通过" value="rejected"></el-option>
             </el-select>
           </el-form-item>
@@ -658,7 +658,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="审核状态" prop="status" min-width="120" align="center">
+          <el-table-column label="考核状态" prop="status" min-width="120" align="center">
             <template slot-scope="scope">
               <el-tag
                 :type="getStudentStatusTagType(scope.row.status)"
@@ -1015,21 +1015,21 @@ export default {
     calculateStudentStats() {
       this.studentStats.total = this.studentList.length;
       this.studentStats.approved = this.studentList.filter(s => s.status === 'approved' || s.status === '已通过').length;
-      this.studentStats.pending = this.studentList.filter(s => s.status === 'pending' || s.status === '待审核' || s.status === '未审核').length;
+      this.studentStats.pending = this.studentList.filter(s => s.status === 'pending' || s.status === '未考核' || s.status === '未考核').length;
       this.studentStats.rejected = this.studentList.filter(s => s.status === 'rejected' || s.status === '未通过').length;
     },
     // 学生筛选
     handleStudentFilter() {
       this.filteredStudentList = this.studentList.filter(student => {
-        const matchStudentId = !this.studentFilterParams.studentId || 
+        const matchStudentId = !this.studentFilterParams.studentId ||
           student.studentId.toLowerCase().includes(this.studentFilterParams.studentId.toLowerCase());
-        const matchStudentName = !this.studentFilterParams.studentName || 
+        const matchStudentName = !this.studentFilterParams.studentName ||
           (student.studentName && student.studentName.toLowerCase().includes(this.studentFilterParams.studentName.toLowerCase()));
-        const matchCollege = !this.studentFilterParams.college || 
+        const matchCollege = !this.studentFilterParams.college ||
           (student.college && student.college.toLowerCase().includes(this.studentFilterParams.college.toLowerCase()));
-        const matchStatus = !this.studentFilterParams.status || 
+        const matchStatus = !this.studentFilterParams.status ||
           this.getStudentStatusText(student.status) === this.getStudentStatusText(this.studentFilterParams.status);
-        
+
         return matchStudentId && matchStudentName && matchCollege && matchStatus;
       });
     },
@@ -1050,8 +1050,7 @@ export default {
         'pending': 'warning',
         'rejected': 'danger',
         '已通过': 'success',
-        '待审核': 'warning',
-        '未审核': 'warning',
+        '未考核': 'warning',
         '未通过': 'danger'
       };
       return statusMap[status] || 'info';
@@ -1060,11 +1059,10 @@ export default {
     getStudentStatusText(status) {
       const statusMap = {
         'approved': '已通过',
-        'pending': '待审核',
+        'pending': '未考核',
         'rejected': '未通过',
         '已通过': '已通过',
-        '待审核': '待审核',
-        '未审核': '未审核',
+        '未考核': '未考核',
         '未通过': '未通过'
       };
       return statusMap[status] || '未知';
@@ -1096,10 +1094,10 @@ export default {
         '姓名': student.studentName || '未知',
         '所属书院': student.college || '未知',
         '预约时间': this.parseTime(student.bookAt, '{y}-{m}-{d} {h}:{i}'),
-        '审核状态': this.getStudentStatusText(student.status),
-        '审核人': student.reviewer || '',
-        '审核意见': student.reviewerComment || '',
-        '审核时间': student.reviewTime ? this.parseTime(student.reviewTime, '{y}-{m}-{d} {h}:{i}') : '',
+        '考核状态': this.getStudentStatusText(student.status),
+        '考核人': student.reviewer || '',
+        '考核意见': student.reviewerComment || '',
+        '考核时间': student.reviewTime ? this.parseTime(student.reviewTime, '{y}-{m}-{d} {h}:{i}') : '',
         '学习总结': student.summary || ''
       }));
 
@@ -1113,7 +1111,7 @@ export default {
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, '学生名单');
-        
+
         // 设置列宽
         const colWidths = [
           { wch: 8 },   // 序号
@@ -1121,14 +1119,14 @@ export default {
           { wch: 12 },  // 姓名
           { wch: 15 },  // 所属书院
           { wch: 20 },  // 预约时间
-          { wch: 12 },  // 审核状态
-          { wch: 12 },  // 审核人
-          { wch: 20 },  // 审核意见
-          { wch: 20 },  // 审核时间
+          { wch: 12 },  // 考核状态
+          { wch: 12 },  // 考核人
+          { wch: 20 },  // 考核意见
+          { wch: 20 },  // 考核时间
           { wch: 30 }   // 学习总结
         ];
         ws['!cols'] = colWidths;
-        
+
         XLSX.writeFile(wb, filename);
         this.$message.success('导出成功');
       }).catch(error => {
@@ -1343,15 +1341,15 @@ export default {
       const courseId = row.courseId || this.ids
       getCourses(courseId).then(response => {
         this.form = response.data;
-        
+
         // 确保课程类型是字符串格式，以匹配选项值
         if (this.form.courseType) {
           this.form.courseType = String(this.form.courseType);
         }
-        
+
         // 设置组织单位为当前用户昵称（不可修改）
         this.form.organizer = this.getCurrentUserNickName();
-        
+
         // 保持原有的已报名人数，不重置剩余容量
         // 如果剩余容量为空或无效，则根据已报名人数计算
         if (!this.form.courseCapacity || this.form.courseCapacity < 0) {
