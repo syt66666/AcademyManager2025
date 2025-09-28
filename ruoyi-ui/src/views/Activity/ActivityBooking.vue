@@ -92,29 +92,14 @@
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer"  width="90"/>
-
-        <!-- 时间安排列 -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="活动开始时间" align="center" prop="startTime">
           <template slot-scope="scope">
-            <div class="time-schedule-inline">
-              <!-- 报名时间 -->
-              <div class="time-inline-item signup-time">
-                <i class="el-icon-user"></i>
-                <span class="time-inline-label">报名时间</span>
-                <span class="time-inline-content">
-                  {{ parseTime(scope.row.activityStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.activityDeadline, '{y}-{m}-{d} {h}:{i}') }}
-                </span>
-              </div>
-
-              <!-- 活动时间 -->
-              <div class="time-inline-item activity-time">
-                <i class="el-icon-date"></i>
-                <span class="time-inline-label">活动时间</span>
-                <span class="time-inline-content">
-                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
-                </span>
-              </div>
-            </div>
+            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="活动结束时间" align="center" prop="endTime">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
         <el-table-column label="活动状态" align="center" width="90">
@@ -887,7 +872,7 @@ export default {
           activity.version = latestActivity.version;
           activity.activityCapacity = latestActivity.activityCapacity;
         }
-
+        
         // 1. 先检查报名记录是否存在
         let bookingExists = false;
         try {
@@ -915,88 +900,24 @@ export default {
           }
         }
 
-        // 3. 恢复活动容量 - 添加重试机制
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
+        // 3. 恢复活动容量
+        const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
 
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
-
-            // 检查容量恢复是否成功
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的活动信息以获取正确的版本号
-                const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-                if (latestActivity) {
-                  activity.version = latestActivity.version;
-                  activity.activityCapacity = latestActivity.activityCapacity;
-                }
-              }
-            }
-          } catch (capacityError) {
-            if (capacityRetryCount < maxCapacityRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的活动信息以获取正确的版本号
-              const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-              if (latestActivity) {
-                activity.version = latestActivity.version;
-                activity.activityCapacity = latestActivity.activityCapacity;
-              }
-            }
-          }
+        if (capacityResult && capacityResult.code !== 200) {
+          throw new Error(capacityResult.msg || '恢复活动容量失败');
         }
 
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复活动容量失败，已重试' + maxCapacityRetries + '次');
-        }
-
-        // 4. 记录取消信息到数据库 - 添加重试机制
+        // 4. 记录取消信息到数据库
         const cancelData = {
           studentId: this.$store.state.user.name,
           activityId: activity.activityId,
           cancelTime: new Date().toISOString()
         };
 
-        // 添加重试机制
-        let cancelResult = null;
-        let cancelSuccess = false;
-        let retryCount = 0;
-        const maxRetries = 3;
+        const cancelResult = await recordCancel(cancelData);
 
-        while (!cancelSuccess && retryCount < maxRetries) {
-          try {
-            retryCount++;
-            cancelResult = await recordCancel(cancelData);
-
-            // 检查取消记录是否成功保存
-            if (cancelResult && cancelResult.code === 200) {
-              cancelSuccess = true;
-            } else {
-              if (retryCount < maxRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
-            }
-          } catch (recordError) {
-            if (retryCount < maxRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-        }
-
-        // 如果重试后仍然失败，抛出异常
-        if (!cancelSuccess) {
-          throw new Error('取消记录保存失败，已重试' + maxRetries + '次');
+        if (cancelResult && cancelResult.code !== 200) {
+          throw new Error(cancelResult.msg || '取消记录保存失败');
         }
 
         // 5. 立即查询数据库验证取消记录
@@ -1037,7 +958,7 @@ export default {
         this.detailDialogVisible = false;
         this.selectedActivity = null;
         await this.checkBookingStatus();
-
+        
         // 重新获取活动列表以同步最新数据（包括版本号）
         await this.getList();
 
@@ -1053,24 +974,9 @@ export default {
       }
     },
 
-    // 添加重试机制
-    async retryOperation(operation, maxRetries = 3, delay = 1000) {
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          return await operation();
-        } catch (error) {
-          if (i === maxRetries - 1) {
-            throw error;
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    },
-    // 使用重试机制删除报名记录
+    // 删除报名记录
     async safeDeleteBooking(activityId, studentId) {
-      return await this.retryOperation(async () => {
-        return await deleteBookingsByActivityAndStudent(activityId, studentId);
-      });
+      return await deleteBookingsByActivityAndStudent(activityId, studentId);
     },
     /** 预览活动图片 */
     previewActivityImage(imageUrl) {
@@ -1737,55 +1643,6 @@ export default {
   color: #c0c4cc !important;
   cursor: not-allowed !important;
   background-color: #f5f7fa !important;
-}
-
-/* 时间安排样式 */
-.time-schedule-inline {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-}
-
-.time-inline-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.time-inline-item.signup-time {
-  background: rgba(64, 158, 255, 0.08);
-  border: 1px solid rgba(64, 158, 255, 0.2);
-  color: #409EFF;
-}
-
-.time-inline-item.activity-time {
-  background: rgba(103, 194, 58, 0.08);
-  border: 1px solid rgba(103, 194, 58, 0.2);
-  color: #67C23A;
-}
-
-.time-inline-item i {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.time-inline-label {
-  font-weight: 600;
-  min-width: 60px;
-  flex-shrink: 0;
-}
-
-.time-inline-content {
-  flex: 1;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 </style>

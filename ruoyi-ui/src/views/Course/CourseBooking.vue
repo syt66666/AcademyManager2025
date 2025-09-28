@@ -110,28 +110,16 @@
         <el-table-column label="上课地点" align="center" prop="courseLocation" show-overflow-tooltip />
         <!-- 组织单位列 -->
 
-        <!-- 时间安排列 -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <!-- 课程开始时间列 -->
+        <el-table-column label="课程开始时间" align="center" prop="startTime" width="180">
           <template slot-scope="scope">
-            <div class="time-schedule-inline">
-              <!-- 选课时间 -->
-              <div class="time-inline-item signup-time">
-                <i class="el-icon-user"></i>
-                <span class="time-inline-label">选课时间</span>
-                <span class="time-inline-content">
-                  {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
-                </span>
-              </div>
-
-              <!-- 课程时间 -->
-              <div class="time-inline-item activity-time">
-                <i class="el-icon-date"></i>
-                <span class="time-inline-label">课程时间</span>
-                <span class="time-inline-content">
-                  {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
-                </span>
-              </div>
-            </div>
+            <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
+          </template>
+        </el-table-column>
+        <!-- 课程结束时间列 -->
+        <el-table-column label="课程结束时间" align="center" prop="endTime" width="180">
+          <template slot-scope="scope">
+            <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
 
@@ -538,56 +526,13 @@ export default {
           console.log('选课记录不存在，跳过删除步骤');
         }
 
-        // 3. 恢复课程容量 - 添加重试机制
+        // 3. 恢复课程容量
         console.log('恢复课程容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
+        const capacityResult = await cancelSignUpCapacity(course.courseId, course.version);
+        console.log('恢复容量结果:', capacityResult);
 
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`恢复课程容量，第${capacityRetryCount}次尝试...`);
-            const capacityResult = await cancelSignUpCapacity(course.courseId, course.version);
-            console.log('恢复容量结果:', capacityResult);
-
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-              console.log('课程容量恢复成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`恢复课程容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的课程信息以获取正确的版本号
-                const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-                if (latestCourse) {
-                  course.version = latestCourse.version;
-                  course.courseCapacity = latestCourse.courseCapacity;
-                  console.log('更新版本号和容量:', course.version, course.courseCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('恢复课程容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`恢复课程容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的课程信息以获取正确的版本号
-              const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-              if (latestCourse) {
-                course.version = latestCourse.version;
-                course.courseCapacity = latestCourse.courseCapacity;
-                console.log('更新版本号和容量:', course.version, course.courseCapacity);
-              }
-            }
-          }
-        }
-
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复课程容量失败，已重试' + maxCapacityRetries + '次');
+        if (capacityResult && capacityResult.code !== 200) {
+          throw new Error(capacityResult.msg || '恢复课程容量失败');
         }
 
         // 4. 课程选课不需要记录到user_limite表，跳过取消记录步骤
@@ -612,7 +557,7 @@ export default {
         this.detailDialogVisible = false;
         this.selectedCourse = null;
         await this.checkBookingStatus();
-
+        
         // 重新获取课程列表以同步最新数据（包括版本号）
         await this.getList();
 
@@ -697,59 +642,16 @@ export default {
           console.warn('检查选课状态失败，继续执行选课流程:', checkError);
         }
 
-        // 2. 更新课程容量 - 添加重试机制
+        // 2. 更新课程容量
         console.log('更新课程容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
+        const capacityResponse = await signUpCapacity(
+          Number(course.courseId),  // 转换为数字
+          Number(course.version) || 0  // 转换为数字
+        );
+        console.log('容量更新响应:', capacityResponse);
 
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`更新课程容量，第${capacityRetryCount}次尝试...`);
-            const capacityResponse = await signUpCapacity(
-              Number(course.courseId),  // 转换为数字
-              Number(course.version) || 0  // 转换为数字
-            );
-            console.log('容量更新响应:', capacityResponse);
-
-            if (capacityResponse.code === 200) {
-              capacitySuccess = true;
-              console.log('课程容量更新成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`更新课程容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的课程信息以获取正确的版本号
-                const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-                if (latestCourse) {
-                  course.version = latestCourse.version;
-                  course.courseCapacity = latestCourse.courseCapacity;
-                  console.log('更新版本号和容量:', course.version, course.courseCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('更新课程容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`更新课程容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的课程信息以获取正确的版本号
-              const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-              if (latestCourse) {
-                course.version = latestCourse.version;
-                course.courseCapacity = latestCourse.courseCapacity;
-                console.log('更新版本号和容量:', course.version, course.courseCapacity);
-              }
-            }
-          }
-        }
-
-        // 如果容量更新失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('更新课程容量失败，已重试' + maxCapacityRetries + '次');
+        if (capacityResponse.code !== 200) {
+          throw new Error(capacityResponse.msg || '更新课程容量失败');
         }
 
         // 3. 添加选课记录 - 确保参数类型正确
@@ -793,7 +695,7 @@ export default {
 
         // 7. 重新检查选课状态
         await this.checkBookingStatus();
-
+        
         // 8. 重新获取课程列表以同步最新数据（包括版本号）
         await this.getList();
 
@@ -1711,54 +1613,5 @@ export default {
   border-radius: 0 0 16px 16px;
   min-height: 60px;
   width: 100%;
-}
-
-/* 时间安排样式 */
-.time-schedule-inline {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-}
-
-.time-inline-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.time-inline-item.signup-time {
-  background: rgba(64, 158, 255, 0.08);
-  border: 1px solid rgba(64, 158, 255, 0.2);
-  color: #409EFF;
-}
-
-.time-inline-item.activity-time {
-  background: rgba(103, 194, 58, 0.08);
-  border: 1px solid rgba(103, 194, 58, 0.2);
-  color: #67C23A;
-}
-
-.time-inline-item i {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.time-inline-label {
-  font-weight: 600;
-  min-width: 60px;
-  flex-shrink: 0;
-}
-
-.time-inline-content {
-  flex: 1;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 </style>
