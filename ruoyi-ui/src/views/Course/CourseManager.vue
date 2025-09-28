@@ -695,6 +695,7 @@
 
 <script>
 import { listCourses, getCourses, delCourses, addCourses, updateCourses, getCourseBookings, exportCourseStudents } from "@/api/system/courses";
+import { getNickName } from "@/api/system/student";
 import RightToolbar from '@/components/RightToolbar';
 import Pagination from '@/components/Pagination';
 
@@ -718,6 +719,8 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
+      // 当前用户所属书院
+      currentUserAcademy: '',
       // 书院选课表格数据
       coursesList: [],
       // 弹出层标题
@@ -800,9 +803,32 @@ export default {
     };
   },
   created() {
-    this.getList();
+    this.getCurrentUserAcademy();
   },
   methods: {
+    // 获取当前用户所属书院
+    getCurrentUserAcademy() {
+      getNickName()
+        .then(response => {
+          if (response && response.msg) {
+            this.currentUserAcademy = response.msg;
+            console.log('当前用户所属书院:', this.currentUserAcademy);
+            // 设置查询参数中的organizer字段
+            this.queryParams.organizer = this.currentUserAcademy;
+            // 获取课程列表
+            this.getList();
+          } else {
+            console.error('获取用户书院信息失败:', response);
+            this.currentUserAcademy = '';
+            this.getList();
+          }
+        })
+        .catch(error => {
+          console.error('获取用户书院信息异常:', error);
+          this.currentUserAcademy = '';
+          this.getList();
+        });
+    },
     // 获取当前用户昵称
     getCurrentUserNickName() {
       return this.$store.state.user.nickName || this.$store.state.user.name || '当前用户';
@@ -1137,7 +1163,9 @@ export default {
     /** 查询书院选课列表 */
     getList() {
       this.loading = true;
+      console.log('查询课程列表参数:', this.queryParams);
       listCourses(this.queryParams).then(response => {
+        console.log('课程列表查询响应:', response);
         const rows = response.rows || [];
         // 若后端未按状态过滤，则在前端按需过滤
         const selectedStatus = (this.queryParams.status || '').trim();
