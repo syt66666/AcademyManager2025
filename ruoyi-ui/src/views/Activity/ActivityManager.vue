@@ -424,7 +424,7 @@
                     <div v-else class="upload-placeholder">
                       <i class="el-icon-plus"></i>
                       <div class="upload-text">点击上传图片</div>
-                      <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 2MB</div>
+                      <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 5MB</div>
                     </div>
                   </el-upload>
                 </div>
@@ -1293,14 +1293,14 @@ export default {
     /** 图片上传前验证 */
     beforeImageUpload(file) {
       const isImage = file.type.startsWith('image/');
-      const isLt2M = file.size / 1024 / 1024 < 2;
+      const isLt5M = file.size / 1024 / 1024 < 5;
 
       if (!isImage) {
         this.$message.error('只能上传图片文件!');
         return false;
       }
-      if (!isLt2M) {
-        this.$message.error('上传图片大小不能超过 2MB!');
+      if (!isLt5M) {
+        this.$message.error('上传图片大小不能超过 5MB!');
         return false;
       }
       return true;
