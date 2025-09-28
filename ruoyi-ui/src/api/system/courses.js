@@ -46,7 +46,7 @@ export function delCourses(courseId) {
 // 获取课程预约学生列表
 export function getCourseBookings(courseId) {
   return request({
-    url: '/system/courseBookings/list',
+    url: '/system/courseBookings/listWithCourse',
     method: 'get',
     params: { courseId: courseId }
   })
