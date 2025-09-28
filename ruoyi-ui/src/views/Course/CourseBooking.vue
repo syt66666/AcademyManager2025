@@ -6,7 +6,10 @@
       <div class="card-header">
         <i class="el-icon-search"></i>
         <span>搜索条件</span>
-
+        <div class="academy-info" v-if="currentAcademy && currentAcademy !== '未知'">
+          <i class="el-icon-school"></i>
+          <span>当前书院：{{ currentAcademy }}</span>
+        </div>
       </div>
       <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch">
         <div class="search-row">
@@ -390,6 +393,7 @@ export default {
         organizer: null,
         courseType: null,
         availableOnly: false, // 只显示可选课课程
+        academy: null, // 书院过滤
       },
       // 表单参数
       form: {
@@ -578,17 +582,21 @@ export default {
         if (response && response.studentInfo) {
           this.currentAcademy = response.studentInfo.academy;
           console.log('当前学生书院:', this.currentAcademy);
+          // 设置书院过滤参数
+          this.queryParams.academy = this.currentAcademy;
           // 获取学生信息后，根据书院获取课程
           this.getList();
         } else {
           console.error('获取学生信息失败，响应中没有studentInfo:', response);
           this.currentAcademy = '未知';
+          this.queryParams.academy = null; // 如果获取失败，不进行书院过滤
           // 即使获取失败，也尝试获取课程
           this.getList();
         }
       } catch (error) {
         console.error('获取学生信息异常:', error);
         this.currentAcademy = '未知';
+        this.queryParams.academy = null; // 如果获取失败，不进行书院过滤
         // 即使获取失败，也尝试获取课程
         this.getList();
       }
@@ -877,6 +885,15 @@ export default {
       listCourses(this.queryParams).then(async response => {
         let courses = response.rows;
 
+        // 按书院过滤课程（如果设置了书院参数）
+        if (this.queryParams.academy && this.queryParams.academy !== '未知') {
+          courses = courses.filter(course => {
+            // 检查课程的组织者是否包含学生的书院
+            return course.organizer && course.organizer.includes(this.queryParams.academy);
+          });
+          console.log(`按书院 ${this.queryParams.academy} 过滤后，剩余课程数量:`, courses.length);
+        }
+
         // 如果选择了"只显示可选课课程"，则进行前端过滤
         if (this.queryParams.availableOnly) {
           courses = courses.filter(course => {
@@ -1120,6 +1137,26 @@ export default {
 
 .search-actions {
   margin-left: auto;
+}
+
+.academy-info {
+  margin-left: auto;
+  margin-right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #409EFF;
+  font-weight: 500;
+  background: rgba(64, 158, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(64, 158, 255, 0.2);
+}
+
+.academy-info i {
+  color: #409EFF;
+  font-size: 16px;
 }
 
 /* 可报名活动单选框样式 */
