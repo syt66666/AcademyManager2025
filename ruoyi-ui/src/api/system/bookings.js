@@ -17,14 +17,14 @@ export function listBookingsWithActivity(query) {
     params: query
   })
 }
-// 查询课程选课记录列表（审核列表）
 export function listBookingsAudit(query) {
   return request({
-    url: '/system/courseBookings/audit/list',
+    url: '/system/bookings/list3',
     method: 'get',
     params: query
   })
 }
+
 /**
  * 查询预约详细
  */
@@ -86,16 +86,6 @@ export function deleteBookingsByActivityAndStudent(activityId, studentId) {
     url: '/system/bookings/byActivityAndStudent',
     method: 'delete',
     params: { activityId, studentId }
-  })
-}
-
-/**
- * 根据活动ID删除所有相关的预约记录
- */
-export function deleteBookingsByActivityId(activityId) {
-  return request({
-    url: '/system/bookings/byActivityId/' + activityId,
-    method: 'delete'
   })
 }
 //查询不同审核状态数量
