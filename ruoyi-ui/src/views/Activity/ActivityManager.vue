@@ -617,6 +617,7 @@ import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
+import { getServerTime } from "@/api/common/time";
 
 export default {
   name: "Activities",
@@ -650,6 +651,8 @@ export default {
         submitted: 0,
         rejected: 0
       },
+      // 服务器时间
+      serverTime: null,
       // 图片上传相关
       imagePreviewVisible: false,
       previewImageUrl: '',
@@ -829,9 +832,26 @@ export default {
     }
   },
   created() {
+    this.getServerTime();
     this.getList();
   },
   methods: {
+    /** 获取服务器时间 */
+    async getServerTime() {
+      try {
+        const response = await getServerTime();
+        if (response.code === 200) {
+          this.serverTime = new Date(response.data);
+        } else {
+          // 如果获取服务器时间失败，使用本地时间作为备用
+          this.serverTime = new Date();
+        }
+      } catch (error) {
+        // 如果获取服务器时间失败，使用本地时间作为备用
+        this.serverTime = new Date();
+      }
+    },
+
     statusTagType(status) {
       const map = {
         '未开始': '',         // 默认蓝色（适合未开始状态）
@@ -850,7 +870,8 @@ export default {
 
     /** 获取活动状态文本 */
     getActivityStatusText(row) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const start = new Date(row.startTime);
       const end = new Date(row.endTime);
       const deadline = new Date(row.activityDeadline);
@@ -879,7 +900,8 @@ export default {
 
     /** 判断活动是否已结束 */
     isActivityEnded(row) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const end = new Date(row.endTime);
       return now > end;
     },
@@ -1039,8 +1061,8 @@ export default {
     },
     /** 计算活动状态 */
     calculateStatus() {
-      // 获取当前时间（使用服务器时间更准确，这里先用客户端时间）
-      const now = new Date().getTime();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = (this.serverTime || new Date()).getTime();
       const startSign = new Date(this.form.activityStart).getTime();
       const deadline = new Date(this.form.activityDeadline).getTime();
       const startActivity = new Date(this.form.startTime).getTime();

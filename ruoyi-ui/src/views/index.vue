@@ -296,6 +296,7 @@ import { getStudent } from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
 import ActivityBooking from "./Activity/ActivityBooking.vue";
 import { recordCancel, checkCancelLimit, getCancelCount } from "@/api/system/userLimit";
+import { getServerTime } from "@/api/common/time";
 
 export default {
   name: "ActivityDashboard",
@@ -357,6 +358,8 @@ export default {
 
       // 取消限制相关
       remainingCancels: 3, // 剩余可取消次数
+      // 服务器时间
+      serverTime: null,
     };
   },
   computed: {
@@ -412,6 +415,7 @@ export default {
     },
   },
   created() {
+    this.getServerTime();
     this.getCurrentStudentInfo();
     // 初始加载取消限制信息
     this.loadCancelLimitInfo();
@@ -444,6 +448,22 @@ export default {
     }
   },
   methods: {
+    /** 获取服务器时间 */
+    async getServerTime() {
+      try {
+        const response = await getServerTime();
+        if (response.code === 200) {
+          this.serverTime = new Date(response.data);
+        } else {
+          // 如果获取服务器时间失败，使用本地时间作为备用
+          this.serverTime = new Date();
+        }
+      } catch (error) {
+        // 如果获取服务器时间失败，使用本地时间作为备用
+        this.serverTime = new Date();
+      }
+    },
+
     // 加载取消限制信息
     async loadCancelLimitInfo() {
       try {
@@ -597,7 +617,8 @@ export default {
           this.activityList = response.rows;
 
           // 计算活动状态并初始化isBooked属性
-          const now = new Date();
+          // 使用服务器时间，如果服务器时间不可用则使用本地时间
+          const now = this.serverTime || new Date();
           this.activityList = this.activityList.map(activity => {
             return {
               ...activity,
@@ -626,13 +647,15 @@ export default {
 
     // 计算活动状态
     calculateStatus(activity, now) {
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const currentTime = this.serverTime || now;
       const startTime = new Date(activity.startTime);
       const endTime = new Date(activity.endTime);
       const deadline = activity.activityDeadline ? new Date(activity.activityDeadline) : null;
 
-      if (now > endTime) return '已结束';
-      if (now >= startTime && now <= endTime) return '进行中';
-      if (deadline && now > deadline) return '已截止';
+      if (currentTime > endTime) return '已结束';
+      if (currentTime >= startTime && currentTime <= endTime) return '进行中';
+      if (deadline && currentTime > deadline) return '已截止';
       return activity.status || '未开始';
     },
 
@@ -697,7 +720,8 @@ export default {
 
     // 获取活动状态文本
     getActivityStatusText(activity) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const start = new Date(activity.startTime);
       const end = new Date(activity.endTime);
       const deadline = new Date(activity.activityDeadline);
@@ -741,7 +765,8 @@ export default {
 
     // 获取活动状态类型（用于颜色判断）
     getActivityStatusType(activity) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const deadline = new Date(activity.activityDeadline);
       const activityStart = new Date(activity.activityStart);
 
@@ -1180,7 +1205,8 @@ export default {
         // 静默获取最新数据，不显示loading状态
         const response = await listActivities(this.queryParams);
         if (response && response.rows) {
-          const now = new Date();
+          // 使用服务器时间，如果服务器时间不可用则使用本地时间
+          const now = this.serverTime || new Date();
           this.activityList = response.rows.map(activity => {
             return {
               ...activity,

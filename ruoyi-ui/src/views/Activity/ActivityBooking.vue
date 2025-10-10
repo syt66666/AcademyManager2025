@@ -349,6 +349,7 @@ import { parseTime } from "@/utils/ruoyi";
 import { checkBookingSimple } from "@/api/system/bookings";
 import { getStudent } from "@/api/system/student";
 import { recordCancel, checkCancelLimit, getCancelCount } from "@/api/system/userLimit";
+import { getServerTime } from "@/api/common/time";
 
 export default {
   name: "ActivitiesSignUp",
@@ -357,6 +358,8 @@ export default {
       remainingCancels: 3,
       loading: true,
       showSearch: true,
+      // 服务器时间
+      serverTime: null,
       total: 0,
       activitiesList: [],
       // 详情弹窗相关
@@ -426,6 +429,8 @@ export default {
     },
   },
   async created() {
+    // 获取服务器时间
+    await this.getServerTime();
     // 先获取学生信息
     await this.getCurrentStudentInfo();
     // 初始加载取消限制信息
@@ -437,6 +442,22 @@ export default {
     await this.checkBookingStatus();
   },
   methods: {
+    /** 获取服务器时间 */
+    async getServerTime() {
+      try {
+        const response = await getServerTime();
+        if (response.code === 200) {
+          this.serverTime = new Date(response.data);
+        } else {
+          // 如果获取服务器时间失败，使用本地时间作为备用
+          this.serverTime = new Date();
+        }
+      } catch (error) {
+        // 如果获取服务器时间失败，使用本地时间作为备用
+        this.serverTime = new Date();
+      }
+    },
+
     // 加载取消限制信息
     // 修复loadCancelLimitInfo方法
     // 修复：加载取消限制信息
@@ -635,7 +656,8 @@ export default {
 
     // 获取活动状态文本
     getActivityStatusText(activity) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const start = new Date(activity.startTime);
       const end = new Date(activity.endTime);
       const deadline = new Date(activity.activityDeadline);
