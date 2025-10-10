@@ -120,7 +120,7 @@
           </span>
           </template>
         </el-table-column>
-        <el-table-column label="活动名称" align="center" prop="activityName" width="180">
+        <el-table-column label="活动名称" align="center" prop="activityName" width="300">
           <template slot-scope="scope">
             <div class="activity-name" :title="scope.row.activityName">
               {{ truncateText(scope.row.activityName, 12) }}
@@ -135,7 +135,7 @@
           </template>
         </el-table-column>
         <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="时间安排" align="center" min-width="250">
           <template slot-scope="scope">
             <div class="time-schedule-inline">
               <!-- 报名时间 -->
@@ -160,7 +160,7 @@
         </el-table-column>
 
         <!-- 活动状态列 -->
-        <el-table-column label="活动状态" align="center" width="100">
+        <el-table-column label="活动状态" align="center" width="150">
           <template slot-scope="scope">
             <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
               {{ getActivityStatusText(scope.row) }}
@@ -168,7 +168,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="报名人数" align="center" width="100">
+        <el-table-column label="报名人数" align="center" width="120">
           <template #default="scope">
             <div class="participants">
               <el-progress
@@ -187,7 +187,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="200">
           <template slot-scope="scope">
             <div class="action-buttons">
               <el-button

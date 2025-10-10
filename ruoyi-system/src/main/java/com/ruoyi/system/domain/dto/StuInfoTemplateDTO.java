@@ -17,7 +17,7 @@ public class StuInfoTemplateDTO {
     private String studentId;
 
     /** 学生姓名 - 必填，2-10个字符 */
-    @Excel(name = "学生姓名", prompt = "必填，2-10个字符，如：张三")
+    @Excel(name = "学生姓名", prompt = "必填，2-10个字符，支持中文、英文、数字及特殊字符（如·、-等），如：张三、迪雅尔·毛吾兰")
     private String studentName;
 
     /** 所属书院 - 必填，从下拉列表选择 */
