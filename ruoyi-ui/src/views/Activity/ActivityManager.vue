@@ -471,7 +471,7 @@
     <el-dialog
       title="预约活动学生列表"
       :visible.sync="dialogVisibleStudents"
-      width="60%"
+      width="50%"
       append-to-body
       class="student-dialog"
       :before-close="handleStudentDialogClose">
@@ -480,19 +480,19 @@
       <div class="student-stats">
         <div class="stats-card">
           <div class="stat-item">
-            <div class="stat-number">{{ selectedStudents.length }}</div>
+            <div class="stat-number">{{ studentStats.total }}</div>
             <div class="stat-label">总报名人数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('approved') }}</div>
+            <div class="stat-number">{{ studentStats.submitted }}</div>
+            <div class="stat-label">未审核</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.approved }}</div>
             <div class="stat-label">已通过</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('submitted') }}</div>
-            <div class="stat-label">待审核</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('rejected') }}</div>
+            <div class="stat-number">{{ studentStats.rejected }}</div>
             <div class="stat-label">未通过</div>
           </div>
         </div>
@@ -512,9 +512,10 @@
             'font-weight': '600',
             'border-bottom': '2px solid #e2e8f0'
           }"
-          :row-class-name="getStudentRowClassName">
+          :row-class-name="getStudentRowClassName"
+          @sort-change="handleSortChange">
 
-          <el-table-column label="序号" width="70" align="center">
+          <el-table-column label="序号" width="60" align="center">
             <template v-slot="scope">
               <span class="index-badge">
                 {{ scope.$index + 1 }}
@@ -522,7 +523,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="studentId" label="学号" min-width="140" sortable>
+          <el-table-column prop="studentId" label="学号" align="center" min-width="140" sortable>
             <template slot-scope="{row}">
               <div class="student-id-container">
                 <span class="student-id">{{ row.studentId }}</span>
@@ -538,7 +539,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="studentName" label="姓名" min-width="100" sortable>
+          <el-table-column prop="studentName" label="姓名" align="center" min-width="100" sortable>
             <template slot-scope="{row}">
               <div class="student-name-container">
                 <span class="student-name">{{ row.studentName }}</span>
@@ -547,14 +548,21 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="academy" label="所属书院" min-width="120" sortable>
+          <el-table-column prop="studentClass" label="学生班级" align="center" min-width="120" sortable>
+            <template slot-scope="{row}">
+              <el-tag size="small" type="primary" effect="plain">
+                {{ row.studentClass || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="academy" label="所属书院" align="center" min-width="120" >
             <template slot-scope="{row}">
               <el-tag size="small" :type="getAcademyTagType(row.academy)" effect="plain">
                 {{ row.academy || '未知' }}
               </el-tag>
             </template>
           </el-table-column>
-
 
           <el-table-column prop="status" label="审核状态" min-width="110" align="center">
             <template slot-scope="{row}">
@@ -568,20 +576,23 @@
         </el-table>
       </div>
 
-
-      <div slot="footer" class="dialog-footer">
-        <div class="footer-left">
-          <span class="total-info">共 {{ filteredStudents.length }} 名学生</span>
-        </div>
-        <div class="footer-right">
-          <el-button
-            type="primary"
-            icon="el-icon-download"
-            @click="handleExportStudents"
-            class="export-btn">
-            导出名单
-          </el-button>
-        </div>
+      <!-- 学生列表分页及导出按钮 -->
+      <div class="student-pagination">
+        <el-button
+          type="primary"
+          icon="el-icon-download"
+          @click="handleExportStudents"
+          class="export-btn">
+          导出名单
+        </el-button>
+        <pagination
+          v-show="studentTotal > 0"
+          :total="studentTotal"
+          :page.sync="studentQueryParams.pageNum"
+          :limit.sync="studentQueryParams.pageSize"
+          @pagination="handleStudentPagination"
+          class="custom-pagination"
+        />
       </div>
     </el-dialog>
 
@@ -623,7 +634,22 @@ export default {
       // 新增状态
       dialogVisibleStudents: false,
       selectedStudents: [],
+      allStudents: [], // 所有学生数据（用于排序）
       studentLoading: false,
+      studentTotal: 0,
+      currentActivityId: null,
+      studentQueryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        activityId: null
+      },
+      // 学生统计数据
+      studentStats: {
+        total: 0,
+        approved: 0,
+        submitted: 0,
+        rejected: 0
+      },
       // 图片上传相关
       imagePreviewVisible: false,
       previewImageUrl: '',
@@ -787,7 +813,7 @@ export default {
     };
   },
   computed: {
-    // 学生列表（直接显示所有学生，不进行过滤）
+    // 学生列表（直接显示当前页的学生）
     filteredStudents() {
       return this.selectedStudents;
     },
@@ -972,18 +998,39 @@ export default {
     // 查看选课学生
     async handleViewStudents(row) {
       this.studentLoading = true;
+      this.currentActivityId = row.activityId; // 保存当前活动ID
+      this.studentQueryParams = {
+        pageNum: 1,
+        pageSize: 10,
+        activityId: row.activityId
+      };
+      
       try {
-        const res = await listBookingsWithActivity({
-          activityId: row.activityId // 使用当前行的活动ID，而不是硬编码的6
+        // 获取所有学生数据（用于排序和统计）
+        const allStudentsRes = await listBookingsWithActivity({
+          activityId: row.activityId,
+          pageNum: 1,
+          pageSize: 1000 // 获取所有学生数据
         });
-
-        // 无论是否有学生预约，都显示弹框
-        this.selectedStudents = res.rows || [];
+        
+        // 保存所有学生数据
+        this.allStudents = allStudentsRes.rows || [];
+        this.studentTotal = allStudentsRes.total || 0;
+        
+        // 计算统计数据
+        this.calculateStudentStats(this.allStudents);
+        
+        // 获取当前页数据
+        this.getCurrentPageStudents();
+        
         this.dialogVisibleStudents = true;
         
       } catch (e) {
         // 即使出错也显示弹框，但显示错误信息
         this.selectedStudents = [];
+        this.allStudents = [];
+        this.studentTotal = 0;
+        this.resetStudentStats();
         this.dialogVisibleStudents = true;
         this.$message.error("获取学生预约活动数据失败，请稍后再试");
       } finally {
@@ -1318,11 +1365,6 @@ export default {
 
     // ========== 学生列表相关方法 ==========
 
-    /** 获取状态统计数量 */
-    getStatusCount(status) {
-      return this.selectedStudents.filter(student => student.status === status).length;
-    },
-
     /** 获取书院标签类型 */
     getAcademyTagType(academy) {
       const academyColors = {
@@ -1356,6 +1398,129 @@ export default {
     /** 学生对话框关闭处理 */
     handleStudentDialogClose(done) {
       done();
+    },
+
+    /** 获取学生列表（分页） */
+    async getStudentList() {
+      if (!this.currentActivityId) return;
+      
+      this.studentLoading = true;
+      try {
+        const res = await listBookingsWithActivity(this.studentQueryParams);
+        this.selectedStudents = res.rows || [];
+        this.studentTotal = res.total || 0;
+      } catch (e) {
+        this.selectedStudents = [];
+        this.studentTotal = 0;
+        this.$message.error("获取学生列表失败");
+      } finally {
+        this.studentLoading = false;
+      }
+    },
+
+    /** 获取当前页学生数据（从所有学生数据中分页） */
+    getCurrentPageStudents() {
+      if (!this.allStudents || this.allStudents.length === 0) {
+        this.selectedStudents = [];
+        return;
+      }
+      
+      const startIndex = (this.studentQueryParams.pageNum - 1) * this.studentQueryParams.pageSize;
+      const endIndex = startIndex + this.studentQueryParams.pageSize;
+      this.selectedStudents = this.allStudents.slice(startIndex, endIndex);
+    },
+
+    /** 学生列表分页处理 */
+    handleStudentPagination(pagination) {
+      this.studentQueryParams.pageNum = pagination.page;
+      this.studentQueryParams.pageSize = pagination.limit;
+      this.getCurrentPageStudents();
+    },
+
+    /** 计算学生统计数据 */
+    calculateStudentStats(allStudents) {
+      this.studentStats.total = allStudents.length;
+      this.studentStats.approved = allStudents.filter(student => 
+        student.status === 'approved' || student.status === '已通过'
+      ).length;
+      this.studentStats.submitted = allStudents.filter(student => 
+        student.status === 'submitted' || student.status === '未审核'
+      ).length;
+      this.studentStats.rejected = allStudents.filter(student => 
+        student.status === 'rejected' || student.status === '未通过'
+      ).length;
+    },
+
+    /** 重置学生统计数据 */
+    resetStudentStats() {
+      this.studentStats = {
+        total: 0,
+        approved: 0,
+        submitted: 0,
+        rejected: 0
+      };
+    },
+
+
+    /** 处理表格排序变化 */
+    handleSortChange({ column, prop, order }) {
+      if (!this.allStudents || this.allStudents.length === 0) return;
+      
+      // 根据排序字段和顺序对所有数据进行排序
+      let sortedStudents = [...this.allStudents];
+      
+      if (order === 'ascending') {
+        // 升序排序
+        if (prop === 'studentId') {
+          sortedStudents.sort((a, b) => {
+            const idA = parseInt(a.studentId) || 0;
+            const idB = parseInt(b.studentId) || 0;
+            return idA - idB;
+          });
+        } else if (prop === 'studentName') {
+          sortedStudents.sort((a, b) => {
+            const nameA = a.studentName || '';
+            const nameB = b.studentName || '';
+            return nameA.localeCompare(nameB, 'zh-CN');
+          });
+        } else if (prop === 'studentClass') {
+          sortedStudents.sort((a, b) => {
+            const classA = a.studentClass || '未知';
+            const classB = b.studentClass || '未知';
+            return classA.localeCompare(classB, 'zh-CN');
+          });
+        }
+      } else if (order === 'descending') {
+        // 降序排序
+        if (prop === 'studentId') {
+          sortedStudents.sort((a, b) => {
+            const idA = parseInt(a.studentId) || 0;
+            const idB = parseInt(b.studentId) || 0;
+            return idB - idA;
+          });
+        } else if (prop === 'studentName') {
+          sortedStudents.sort((a, b) => {
+            const nameA = a.studentName || '';
+            const nameB = b.studentName || '';
+            return nameB.localeCompare(nameA, 'zh-CN');
+          });
+        } else if (prop === 'studentClass') {
+          sortedStudents.sort((a, b) => {
+            const classA = a.studentClass || '未知';
+            const classB = b.studentClass || '未知';
+            return classB.localeCompare(classA, 'zh-CN');
+          });
+        }
+      }
+      
+      // 更新所有学生数据
+      this.allStudents = sortedStudents;
+      
+      // 重置到第一页
+      this.studentQueryParams.pageNum = 1;
+      
+      // 获取当前页数据
+      this.getCurrentPageStudents();
     },
 
     // ========== 图片上传相关方法 ==========
@@ -1793,16 +1958,16 @@ export default {
 
 .index-badge {
   display: inline-block;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
   text-align: center;
   border-radius: 50%;
   background: linear-gradient(135deg, #409EFF, #64b5ff);
   color: white;
   font-weight: 600;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(64, 158, 255, 0.3);
 }
 
 
@@ -2083,30 +2248,30 @@ export default {
 
 /* 学生统计信息 */
 .student-stats {
-  padding: 20px 24px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px 12px 0 0;
+  border-radius: 8px 8px 0 0;
 
   .stats-card {
     display: flex;
     justify-content: space-around;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     .stat-item {
       text-align: center;
 
       .stat-number {
-        font-size: 28px;
+        font-size: 20px;
         font-weight: 700;
         color: #409EFF;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
 
       .stat-label {
-        font-size: 14px;
+        font-size: 12px;
         color: #606266;
         font-weight: 500;
       }
@@ -2117,24 +2282,39 @@ export default {
 
 /* 学生表格容器 */
 .student-table-container {
-  margin: 20px 24px;
+  margin: 8px 12px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
   overflow: hidden;
 }
 
 /* 增强的学生表格 */
 .enhanced-student-table {
+  width: 100% !important;
+  
+  .el-table {
+    width: 100% !important;
+  }
+  
+  .el-table td {
+    padding: 8px 12px !important;
+  }
+  
+  .el-table th {
+    padding: 8px 12px !important;
+  }
+
   .student-id-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 6px;
 
     .student-id {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 13px;
+      font-size: 14px;
       color: #409EFF;
       font-weight: 500;
     }
@@ -2153,11 +2333,13 @@ export default {
   .student-name-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 6px;
 
     .student-name {
       font-weight: 600;
       color: #303133;
+      font-size: 13px;
     }
   }
 
@@ -2693,11 +2875,29 @@ export default {
   cursor: pointer;
 }
 
+/* 学生分页样式 */
+.student-pagination {
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-top: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-pagination .custom-pagination {
+  margin: 0;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
   .custom-pagination {
     padding: 8px;
     justify-content: center;
+  }
+  
+  .student-pagination {
+    padding: 12px 16px;
   }
 }
 

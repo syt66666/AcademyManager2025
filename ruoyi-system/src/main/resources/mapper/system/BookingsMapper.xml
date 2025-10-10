@@ -246,6 +246,7 @@
         b.student_id as studentId,
         s.student_name as studentName,
         s.academy,
+        s.student_class as studentClass,
         b.status
         FROM bookings b
         LEFT JOIN stu_info s ON b.student_id = s.student_id

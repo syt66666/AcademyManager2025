@@ -290,6 +290,7 @@
             :file-list="zipFiles"
             :on-remove="handleRemoveZip"
             :on-success="handleZipSuccess"
+            :on-progress="handleZipProgress"
             :limit="1"
             accept=".zip,.rar,.7z"
             :before-upload="beforeZipUpload"
@@ -318,11 +319,20 @@
             <div v-for="(file, index) in zipFiles" :key="index" class="custom-file-item">
               <i class="el-icon-folder file-icon"></i>
               <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
+              <div class="file-progress" v-if="file.uploading">
+                <el-progress 
+                  :percentage="file.progress" 
+                  :status="file.progress === 100 ? 'success' : ''"
+                  :stroke-width="6"
+                  :show-text="true"
+                ></el-progress>
+              </div>
               <el-button
                 type="text"
                 icon="el-icon-delete"
                 class="remove-btn"
                 @click="handleRemoveZip(file)"
+                :disabled="file.uploading"
               ></el-button>
             </div>
           </div>
@@ -615,13 +625,20 @@ export default {
         return fileName;
       }
 
+      const baseUrl = process.env.VUE_APP_BASE_API || '';
+      
+      // 检查文件名是否已经包含了baseUrl前缀
+      if (fileName.startsWith(baseUrl)) {
+        // 如果已经包含了baseUrl，直接返回
+        return fileName;
+      }
+      
       // 确保路径格式正确
       let normalizedPath = fileName;
       if (!normalizedPath.startsWith('/')) {
         normalizedPath = '/' + normalizedPath;
       }
 
-      const baseUrl = process.env.VUE_APP_BASE_API || '';
       return `${baseUrl}${normalizedPath}`;
     },
 
@@ -678,12 +695,25 @@ export default {
           name: this.extractFileName(data.proof),
           url: fullUrl,
           isOld: true,
-          downloading: false // 添加下载状态
+          downloading: false, // 添加下载状态
+          uploading: false,
+          progress: 100
         });
       }
       console.log('初始化文件列表完成:', {
         zipFiles: this.zipFiles
       });
+    },
+
+    // 压缩包上传进度处理
+    handleZipProgress(event, file, fileList) {
+      console.log('压缩包上传进度:', event.percent);
+      // 更新文件的上传进度
+      const targetFile = this.zipFiles.find(f => f.uid === file.uid);
+      if (targetFile) {
+        this.$set(targetFile, 'progress', Math.round(event.percent));
+        this.$set(targetFile, 'uploading', true);
+      }
     },
 
     // 修复压缩包上传成功处理
@@ -697,12 +727,16 @@ export default {
               name: fileName,
               url: this.getFileFullUrl(fileName),
               isOld: false,
-              downloading: false // 添加下载状态
+              downloading: false, // 添加下载状态
+              uploading: false,
+              progress: 100
             };
           }
           return {
             ...f,
-            downloading: f.downloading || false // 确保有下载状态
+            downloading: f.downloading || false, // 确保有下载状态
+            uploading: false,
+            progress: 100
           };
         });
         this.$message.success('压缩包上传成功');
@@ -2782,6 +2816,38 @@ export default {
 
 .custom-file-item .file-name {
   font-size: 13px;
+}
+
+/* 文件上传进度样式 */
+.file-progress {
+  flex: 1;
+  margin: 8px 0;
+  padding: 0 8px;
+}
+
+.file-progress .el-progress {
+  margin: 0;
+}
+
+.file-progress .el-progress__text {
+  font-size: 12px;
+  color: #409EFF;
+  font-weight: 500;
+}
+
+/* 上传中状态的文件项样式 */
+.custom-file-item:has(.file-progress) {
+  background: #f0f9ff;
+  border-color: #b3d8ff;
+}
+
+.custom-file-item:has(.file-progress) .file-icon {
+  color: #409EFF;
+}
+
+.custom-file-item:has(.file-progress) .file-name {
+  color: #409EFF;
+  font-weight: 500;
 }
 
 /* 成绩来源于列样式 */

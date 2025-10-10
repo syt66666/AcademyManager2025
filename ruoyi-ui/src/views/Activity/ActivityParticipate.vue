@@ -439,6 +439,7 @@
       </div>
 
 
+
       <!-- 图片预览对话框 -->
       <el-dialog
         :visible.sync="previewVisible"
@@ -580,6 +581,7 @@ export default {
       // 文档上传
       docFiles: [],
 
+
       // 已有文件
       existingFiles: [],
 
@@ -678,14 +680,31 @@ export default {
         return fileName;
       }
 
+      const baseUrl = process.env.VUE_APP_BASE_API || '';
+      
+      // 检查文件名是否已经包含了baseUrl前缀
+      if (fileName.startsWith(baseUrl)) {
+        // 如果已经包含了baseUrl，直接返回
+        return fileName;
+      }
+      
       // 确保路径格式正确
       let normalizedPath = fileName;
       if (!normalizedPath.startsWith('/')) {
         normalizedPath = '/' + normalizedPath;
       }
 
-      const baseUrl = process.env.VUE_APP_BASE_API || '';
-      return `${baseUrl}${normalizedPath}`;
+      const fullUrl = `${baseUrl}${normalizedPath}`;
+      
+      // 添加调试信息
+      console.log('构建文件URL:', {
+        fileName: fileName,
+        normalizedPath: normalizedPath,
+        baseUrl: baseUrl,
+        fullUrl: fullUrl
+      });
+      
+      return fullUrl;
     },
 
     // 获取预览图片URL
@@ -699,12 +718,16 @@ export default {
 
       // 服务器返回的文件
       if (file.url) {
-        return this.getFileFullUrl(file.url);
+        const fullUrl = this.getFileFullUrl(file.url);
+        console.log('预览图片URL:', fullUrl);
+        return fullUrl;
       }
 
       // response中的文件
       if (file.response && file.response.fileName) {
-        return this.getFileFullUrl(file.response.fileName);
+        const fullUrl = this.getFileFullUrl(file.response.fileName);
+        console.log('预览图片URL (response):', fullUrl);
+        return fullUrl;
       }
 
       return '';
@@ -735,6 +758,7 @@ export default {
     initFileLists(data) {
       this.imageFiles = [];
       this.docFiles = [];
+      
       // 初始化图片文件
       if (data.proof && Array.isArray(data.proof)) {
         data.proof.forEach(fileName => {
@@ -749,6 +773,7 @@ export default {
           }
         });
       }
+      
       // 初始化文档文件
       if (data.summary) {
         const fullUrl = this.getFileFullUrl(data.summary);
@@ -1030,6 +1055,7 @@ export default {
           }
         }
 
+
         // 提交到后端
         const res = await updateBooking({
           bookingId: this.currentBooking.bookingId,
@@ -1089,6 +1115,7 @@ export default {
       }
       return true;
     },
+
 
     // 移除图片
     handleRemoveImage(file, fileList) {
@@ -1438,6 +1465,24 @@ export default {
       }
     },
 
+    // 测试文件访问
+    async testFileAccess(url) {
+      try {
+        console.log('测试文件访问:', url);
+        const response = await fetch(url, { method: 'HEAD' });
+        console.log('文件访问测试结果:', {
+          url: url,
+          status: response.status,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        return response.ok;
+      } catch (error) {
+        console.error('文件访问测试失败:', error);
+        return false;
+      }
+    },
+
     // 可靠的下载方法
     async downloadFileReliably(file) {
       try {
@@ -1461,6 +1506,12 @@ export default {
           throw new Error('无法获取文件下载地址');
         }
 
+        // 测试文件访问
+        const isAccessible = await this.testFileAccess(downloadUrl);
+        if (!isAccessible) {
+          this.$message.error('文件无法访问，请检查文件路径或服务器配置');
+          return;
+        }
 
         // 方法1: 使用fetch API下载
         try {
@@ -1486,6 +1537,7 @@ export default {
           this.$message.success('文件下载成功');
           return;
         } catch (fetchError) {
+          console.error('Fetch下载失败:', fetchError);
         }
 
         // 方法2: 直接创建链接下载（备用）
