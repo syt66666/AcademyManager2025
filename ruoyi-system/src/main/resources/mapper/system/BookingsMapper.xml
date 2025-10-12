@@ -257,6 +257,20 @@
         </where>
         ORDER BY b.booked_at DESC
     </select>
+
+    <!-- 统计总参与人数 -->
+    <select id="countTotalParticipants" resultType="int">
+        SELECT COUNT(DISTINCT student_id) FROM bookings
+    </select>
+
+    <!-- 根据组织单位统计参与人数 -->
+    <select id="countParticipantsByOrganizer" resultType="int">
+        SELECT COUNT(DISTINCT b.student_id)
+        FROM bookings b
+        LEFT JOIN activities a ON b.activity_id = a.activity_id
+        WHERE a.organizer = #{organizer}
+    </select>
+
     <!-- 检查报名记录是否存在 -->
     <select id="checkBookingExists" resultType="int">
         SELECT COUNT(1)

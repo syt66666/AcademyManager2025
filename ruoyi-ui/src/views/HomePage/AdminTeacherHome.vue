@@ -119,6 +119,13 @@
                     <div class="college-header">
                       <i :class="college.icon" class="college-stat-icon"></i>
                       <span class="college-name">{{ college.name }}</span>
+                      <button 
+                        class="view-detail-btn"
+                        @click.stop="viewCollegeActivities(college.key, college.name)"
+                        title="已选学生"
+                      >
+                        <i class="el-icon-view"></i>
+                      </button>
                     </div>
                     <div class="college-numbers">
                       <div class="stat-item">
@@ -523,10 +530,248 @@
         </div>
       </div>
     </div>
+
+    <!-- 书院活动详情弹窗 -->
+    <el-dialog
+      :title="collegeNameForDetail + ' - 活动详情'"
+      :visible.sync="dialogVisible"
+      width="80%"
+      :before-close="handleClose"
+      class="college-activities-dialog"
+    >
+      <div class="dialog-content">
+        <!-- 活动统计概览 -->
+        <div class="dialog-stats">
+          <div class="stat-item">
+            <span class="stat-label">活动总数</span>
+            <span class="stat-value">{{ collegeActivities.length }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">进行中</span>
+            <span class="stat-value ongoing">{{ getOngoingCount() }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">已完成</span>
+            <span class="stat-value completed">{{ getCompletedCount() }}</span>
+          </div>
+        </div>
+
+        <!-- 活动列表 -->
+        <div class="activities-table">
+          <el-table
+            :data="paginatedActivities"
+            v-loading="loading"
+            style="width: 100%"
+            :header-cell-style="{ background: '#f5f7fa', color: '#606266' }"
+          >
+            <el-table-column label="序号" width="80" align="center">
+              <template slot-scope="scope">
+                {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="name" label="活动名称" min-width="200" show-overflow-tooltip />
+            <el-table-column prop="type" label="活动类型" min-width="180" show-overflow-tooltip />
+            <el-table-column prop="startTime" label="开始时间" min-width="160">
+              <template slot-scope="scope">
+                {{ formatDateTime(scope.row.startTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="endTime" label="结束时间" min-width="160">
+              <template slot-scope="scope">
+                {{ formatDateTime(scope.row.endTime) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="location" label="活动地点" min-width="150" show-overflow-tooltip />
+            <el-table-column label="参与情况" min-width="120">
+              <template slot-scope="scope">
+                <span>{{ scope.row.participants }}/{{ scope.row.capacity }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" min-width="100">
+              <template slot-scope="scope">
+                <el-tag
+                  :type="getStatusTagType(scope.row.status)"
+                  size="small"
+                >
+                  {{ getStatusText(scope.row.status) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" min-width="120" fixed="right">
+              <template slot-scope="scope">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="viewActivityDetail(scope.row)"
+                >
+                  查看详情
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          
+          <!-- 分页组件 -->
+          <div class="pagination-container">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[10, 20, 50, 100]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalActivities"
+            >
+            </el-pagination>
+          </div>
+        </div>
+      </div>
+
+    </el-dialog>
+
+    <!-- 学生列表弹窗 -->
+    <el-dialog
+      :title="'已选学生 - ' + currentActivityName"
+      :visible.sync="studentDialogVisible"
+      width="80%"
+      :before-close="handleStudentDialogClose"
+      class="student-dialog"
+    >
+      <!-- 学生统计信息 -->
+      <div class="student-stats">
+        <div class="stats-card">
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.total }}</div>
+            <div class="stat-label">总报名人数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.submitted }}</div>
+            <div class="stat-label">已提交</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.pending }}</div>
+            <div class="stat-label">未审核</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.approved }}</div>
+            <div class="stat-label">已通过</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.rejected }}</div>
+            <div class="stat-label">未通过</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学生表格 -->
+      <div class="student-table-container">
+        <el-table
+          :data="selectedStudents"
+          border
+          v-loading="studentLoading"
+          class="enhanced-student-table"
+          :header-cell-style="{
+            'background': '#f8fafc',
+            'color': '#2d3540',
+            'font-weight': '600',
+            'border-bottom': '2px solid #e2e8f0'
+          }"
+          :row-class-name="getStudentRowClassName"
+        >
+          <el-table-column label="序号" width="60" align="center">
+            <template v-slot="scope">
+              <span class="index-badge">
+                {{ (studentQueryParams.pageNum - 1) * studentQueryParams.pageSize + scope.$index + 1 }}
+              </span>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="studentId" label="学号" align="center" min-width="140">
+            <template slot-scope="{row}">
+              <div class="student-id-container">
+                <span class="student-id">{{ row.studentId }}</span>
+                <el-button
+                  v-if="row.studentId"
+                  type="text"
+                  size="mini"
+                  icon="el-icon-copy-document"
+                  @click="copyToClipboard(row.studentId)"
+                  class="copy-btn">
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="studentName" label="姓名" align="center" min-width="100">
+            <template slot-scope="{row}">
+              <div class="student-name-container">
+                <span class="student-name">{{ row.studentName }}</span>
+                <el-tag v-if="row.isBooked" type="success" size="mini" effect="plain">已报名</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="studentClass" label="学生班级" align="center" min-width="120">
+            <template slot-scope="{row}">
+              <el-tag size="small" type="primary" effect="plain">
+                {{ row.studentClass || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="academy" label="所属书院" align="center" min-width="120">
+            <template slot-scope="{row}">
+              <el-tag size="small" :type="getAcademyTagType(row.academy)" effect="plain">
+                {{ row.academy || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="status" label="审核状态" min-width="110" align="center">
+            <template slot-scope="{row}">
+              <el-tag :type="getBookingStatusTag(row.status)" size="small" effect="dark">
+                {{ getBookingStatusText(row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <!-- 学生列表分页及导出按钮 -->
+      <div class="student-pagination">
+        <el-button
+          type="primary"
+          icon="el-icon-download"
+          @click="handleExportStudents"
+          class="export-btn">
+          导出名单
+        </el-button>
+        <el-pagination
+          v-show="studentTotal > 0"
+          @size-change="handleStudentSizeChange"
+          @current-change="handleStudentCurrentChange"
+          :current-page="studentQueryParams.pageNum"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="studentQueryParams.pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="studentTotal"
+          class="custom-pagination"
+        />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import { 
+  getActivityOverview, 
+  getCollegeActivityStats, 
+  getActivityTypeDistribution, 
+  getRecentActivities,
+  getActivityStatsByCollege,
+  getCollegeActivities 
+} from '@/api/system/activityStatistics'
+import { listBookingsWithActivity } from '@/api/system/bookings'
+
 export default {
   name: 'AdminTeacherHome',
   data() {
@@ -647,7 +892,46 @@ export default {
       // 热门转出书院
       popularOutgoingColleges: [],
       // 最近分流记录
-      recentTransfers: []
+      recentTransfers: [],
+      // 弹窗相关数据
+      dialogVisible: false,
+      selectedCollegeForDetail: '',
+      collegeNameForDetail: '',
+      collegeActivities: [],
+      loading: false,
+      // 分页相关数据
+      currentPage: 1,
+      pageSize: 10,
+      totalActivities: 0,
+      // 学生列表相关数据
+      studentDialogVisible: false,
+      selectedStudents: [],
+      allStudents: [],
+      studentLoading: false,
+      studentTotal: 0,
+      currentActivityId: null,
+      currentActivityName: '',
+      studentQueryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        activityId: null
+      },
+      // 学生统计数据
+      studentStats: {
+        total: 0,
+        submitted: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0
+      }
+    }
+  },
+  computed: {
+    // 分页后的活动列表
+    paginatedActivities() {
+      const start = (this.currentPage - 1) * this.pageSize
+      const end = start + this.pageSize
+      return this.collegeActivities.slice(start, end)
     }
   },
   methods: {
@@ -666,9 +950,12 @@ export default {
         this.loadMajorStats()
       }
     },
-    handleCollegeFilter(collegeKey) {
+    async handleCollegeFilter(collegeKey) {
       this.selectedCollege = collegeKey
-      // 这里可以添加筛选逻辑，比如重新加载数据
+      // 根据选中的书院重新加载数据
+      if (this.activeMenu === 'activity') {
+        await this.loadActivityStatsByCollege(collegeKey)
+      }
       console.log('筛选书院:', collegeKey)
     },
     getCollegeName(collegeKey) {
@@ -752,61 +1039,370 @@ export default {
       return statusMap[status] || status
     },
     // 加载活动统计数据
-    loadActivityStats() {
-      // 模拟数据，实际应该调用API
-      this.activityStats = {
-        totalActivities: 156,
-        ongoingActivities: 23,
-        completedActivities: 128,
-        totalParticipants: 2847
-      }
-      
-      // 模拟各书院数据
-      this.collegeActivityData = {
-        dayu: { totalActivities: 22, ongoingActivities: 3, participants: 456 },
-        bochuan: { totalActivities: 18, ongoingActivities: 2, participants: 389 },
-        lingxi: { totalActivities: 25, ongoingActivities: 4, participants: 567 },
-        houde: { totalActivities: 20, ongoingActivities: 3, participants: 423 },
-        zhixing: { totalActivities: 24, ongoingActivities: 5, participants: 512 },
-        duxue: { totalActivities: 19, ongoingActivities: 2, participants: 378 },
-        qiushi: { totalActivities: 28, ongoingActivities: 4, participants: 522 }
-      }
-      
-      // 模拟活动类型分布
-      this.activityTypes = [
-        { key: '1', name: '人格塑造与价值引领活动类', count: 45, percentage: 29 },
-        { key: '2', name: '知识融合与思维进阶活动类', count: 38, percentage: 24 },
-        { key: '3', name: '能力锻造与实践创新活动类', count: 42, percentage: 27 },
-        { key: '4', name: '社会责任与领军意识活动类', count: 31, percentage: 20 }
-      ]
-      
-      // 模拟最近活动
-      this.recentActivities = [
-        {
-          id: 1,
-          name: '科技创新大赛',
-          college: '大煜书院',
-          type: '能力锻造与实践创新活动类',
-          date: '2024-01-15',
-          status: 'ongoing'
-        },
-        {
-          id: 2,
-          name: '志愿服务项目',
-          college: '知行书院',
-          type: '社会责任与领军意识活动类',
-          date: '2024-01-12',
-          status: 'completed'
-        },
-        {
-          id: 3,
-          name: '学术讲座',
-          college: '令希书院',
-          type: '知识融合与思维进阶活动类',
-          date: '2024-01-10',
-          status: 'ongoing'
+    async loadActivityStats() {
+      try {
+        // 获取活动统计概览
+        const overviewResponse = await getActivityOverview()
+        if (overviewResponse.code === 200) {
+          this.activityStats = overviewResponse.data
         }
-      ]
+
+        // 获取各书院活动统计
+        const collegeStatsResponse = await getCollegeActivityStats()
+        if (collegeStatsResponse.code === 200) {
+          // 将后端返回的书院名称映射到前端的书院key
+          const backendCollegeData = collegeStatsResponse.data.collegeData
+          this.collegeActivityData = {}
+          
+          // 书院名称到key的映射
+          const collegeNameToKey = {
+            '大煜书院': 'dayu',
+            '伯川书院': 'bochuan', 
+            '令希书院': 'lingxi',
+            '厚德书院': 'houde',
+            '知行书院': 'zhixing',
+            '笃学书院': 'duxue',
+            '求实书院': 'qiushi'
+          }
+          
+          // 转换数据格式
+          for (const [collegeName, stats] of Object.entries(backendCollegeData)) {
+            const collegeKey = collegeNameToKey[collegeName]
+            if (collegeKey) {
+              this.collegeActivityData[collegeKey] = stats
+            }
+          }
+        }
+
+        // 获取活动类型分布
+        const typeDistributionResponse = await getActivityTypeDistribution()
+        if (typeDistributionResponse.code === 200) {
+          this.activityTypes = typeDistributionResponse.data.typeDistribution
+        }
+
+        // 获取最近活动列表
+        const recentActivitiesResponse = await getRecentActivities(10)
+        if (recentActivitiesResponse.code === 200) {
+          // 过滤出进行中和已结束的活动，按开始时间降序排序，最多显示3条
+          const allActivities = recentActivitiesResponse.data.recentActivities || []
+          this.recentActivities = allActivities
+            .filter(activity => activity.status === 'ongoing' || activity.status === 'completed')
+            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+            .slice(0, 3)
+        }
+      } catch (error) {
+        console.error('加载活动统计数据失败:', error)
+        this.$message.error('加载活动统计数据失败')
+      }
+    },
+    // 根据书院筛选活动统计数据
+    async loadActivityStatsByCollege(collegeKey) {
+      try {
+        if (collegeKey === 'all') {
+          // 如果选择全部书院，重新加载完整数据
+          await this.loadActivityStats()
+          return
+        }
+
+        // 获取书院名称
+        const collegeName = this.getCollegeName(collegeKey)
+        
+        // 根据书院筛选活动统计
+        const response = await getActivityStatsByCollege(collegeName)
+        if (response.code === 200) {
+          // 更新活动统计概览
+          this.activityStats = response.data
+          
+          // 保持各书院数据不变，不更新 collegeActivityData
+          // 这样各书院活动统计始终显示所有书院的数据
+          
+          // 更新活动类型分布（根据选中书院筛选）
+          if (response.data.typeDistribution) {
+            this.activityTypes = response.data.typeDistribution
+          }
+          
+          // 更新最近活动列表（根据选中书院筛选）
+          if (response.data.recentActivities) {
+            // 过滤出进行中和已结束的活动，按开始时间降序排序，最多显示3条
+            const allActivities = response.data.recentActivities || []
+            this.recentActivities = allActivities
+              .filter(activity => activity.status === 'ongoing' || activity.status === 'completed')
+              .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+              .slice(0, 3)
+          }
+        }
+      } catch (error) {
+        console.error('加载书院活动统计数据失败:', error)
+        this.$message.error('加载书院活动统计数据失败')
+      }
+    },
+    // 查看书院活动详情
+    viewCollegeActivities(collegeKey, collegeName) {
+      this.selectedCollegeForDetail = collegeKey
+      this.collegeNameForDetail = collegeName
+      this.dialogVisible = true
+      this.loadCollegeActivities(collegeName)
+    },
+    // 加载书院活动列表
+    async loadCollegeActivities(collegeName) {
+      try {
+        this.loading = true
+        const response = await getCollegeActivities(collegeName)
+        if (response.code === 200) {
+          this.collegeActivities = response.data.activities || []
+          this.totalActivities = this.collegeActivities.length
+          // 重置分页
+          this.currentPage = 1
+        } else {
+          this.$message.error('获取活动列表失败')
+          this.collegeActivities = []
+          this.totalActivities = 0
+        }
+      } catch (error) {
+        console.error('加载书院活动列表失败:', error)
+        this.$message.error('加载书院活动列表失败')
+        this.collegeActivities = []
+        this.totalActivities = 0
+      } finally {
+        this.loading = false
+      }
+    },
+    // 获取进行中活动数量
+    getOngoingCount() {
+      return this.collegeActivities.filter(activity => activity.status === 'ongoing').length
+    },
+    // 获取已完成活动数量
+    getCompletedCount() {
+      return this.collegeActivities.filter(activity => activity.status === 'completed').length
+    },
+    // 获取状态标签类型
+    getStatusTagType(status) {
+      const typeMap = {
+        'ongoing': 'warning',
+        'completed': 'success',
+        'not-started': 'info'
+      }
+      return typeMap[status] || 'info'
+    },
+    // 查看活动详情
+    viewActivityDetail(activity) {
+      this.currentActivityId = activity.id
+      this.currentActivityName = activity.name
+      this.handleViewStudents(activity)
+    },
+    // 跳转到活动管理页面
+    goToActivityManager() {
+      this.$router.push({
+        path: '/activity/manager',
+        query: {
+          organizer: this.collegeNameForDetail
+        }
+      })
+      this.dialogVisible = false
+    },
+    // 关闭弹窗
+    handleClose(done) {
+      this.dialogVisible = false
+      done()
+    },
+    // 格式化日期时间
+    formatDateTime(dateTime) {
+      if (!dateTime) return '-'
+      const date = new Date(dateTime)
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+    },
+    // 分页大小改变
+    handleSizeChange(val) {
+      this.pageSize = val
+      this.currentPage = 1
+    },
+    // 当前页改变
+    handleCurrentChange(val) {
+      this.currentPage = val
+    },
+    // 查看已选学生
+    async handleViewStudents(activity) {
+      this.studentLoading = true
+      this.currentActivityId = activity.id
+      this.currentActivityName = activity.name
+      this.studentQueryParams = {
+        pageNum: 1,
+        pageSize: 10,
+        activityId: activity.id
+      }
+      
+      try {
+        // 获取所有学生数据（用于排序和统计）
+        const allStudentsRes = await listBookingsWithActivity({
+          activityId: activity.id,
+          pageNum: 1,
+          pageSize: 1000 // 获取所有学生数据
+        })
+        
+        // 保存所有学生数据
+        this.allStudents = allStudentsRes.rows || []
+        this.studentTotal = allStudentsRes.total || 0
+        
+        // 计算统计数据
+        this.calculateStudentStats(this.allStudents)
+        
+        // 获取当前页数据
+        this.getCurrentPageStudents()
+        
+        this.studentDialogVisible = true
+        
+      } catch (e) {
+        // 即使出错也显示弹框，但显示错误信息
+        this.selectedStudents = []
+        this.allStudents = []
+        this.studentTotal = 0
+        this.resetStudentStats()
+        this.studentDialogVisible = true
+        this.$message.error('获取学生预约活动数据失败，请稍后再试')
+      } finally {
+        this.studentLoading = false
+      }
+    },
+    // 计算学生统计数据
+    calculateStudentStats(allStudents) {
+      this.studentStats.total = allStudents.length
+      this.studentStats.submitted = allStudents.filter(s => s.status === 'submitted').length
+      this.studentStats.pending = allStudents.filter(s => s.status === 'pending').length
+      this.studentStats.approved = allStudents.filter(s => s.status === 'approved').length
+      this.studentStats.rejected = allStudents.filter(s => s.status === 'rejected').length
+    },
+    // 重置学生统计数据
+    resetStudentStats() {
+      this.studentStats = {
+        total: 0,
+        submitted: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0
+      }
+    },
+    // 获取当前页学生数据（从所有学生数据中分页）
+    getCurrentPageStudents() {
+      if (!this.allStudents || this.allStudents.length === 0) {
+        this.selectedStudents = []
+        return
+      }
+      
+      const startIndex = (this.studentQueryParams.pageNum - 1) * this.studentQueryParams.pageSize
+      const endIndex = startIndex + this.studentQueryParams.pageSize
+      this.selectedStudents = this.allStudents.slice(startIndex, endIndex)
+    },
+    // 学生列表分页大小改变
+    handleStudentSizeChange(val) {
+      this.studentQueryParams.pageSize = val
+      this.studentQueryParams.pageNum = 1
+      this.getCurrentPageStudents()
+    },
+    // 学生列表当前页改变
+    handleStudentCurrentChange(val) {
+      this.studentQueryParams.pageNum = val
+      this.getCurrentPageStudents()
+    },
+    // 关闭学生弹窗
+    handleStudentDialogClose(done) {
+      this.studentDialogVisible = false
+      done()
+    },
+    // 复制到剪贴板
+    copyToClipboard(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.$message.success('已复制到剪贴板')
+        }).catch(() => {
+          this.$message.error('复制失败')
+        })
+      } else {
+        // 兼容旧浏览器
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        document.body.appendChild(textArea)
+        textArea.select()
+        try {
+          document.execCommand('copy')
+          this.$message.success('已复制到剪贴板')
+        } catch (err) {
+          this.$message.error('复制失败')
+        }
+        document.body.removeChild(textArea)
+      }
+    },
+    // 获取书院标签类型
+    getAcademyTagType(academy) {
+      const typeMap = {
+        '大煜书院': 'success',
+        '伯川书院': 'primary',
+        '令希书院': 'warning',
+        '厚德书院': 'info',
+        '知行书院': 'danger',
+        '笃学书院': 'success',
+        '求实书院': 'primary'
+      }
+      return typeMap[academy] || 'info'
+    },
+    // 获取预约状态标签类型
+    getBookingStatusTag(status) {
+      const typeMap = {
+        'pending': 'warning',
+        'approved': 'success',
+        'rejected': 'danger',
+        'submitted': 'info'
+      }
+      return typeMap[status] || 'info'
+    },
+    // 获取预约状态文本
+    getBookingStatusText(status) {
+      const statusMap = {
+        'pending': '待审核',
+        'approved': '已通过',
+        'rejected': '未通过',
+        'submitted': '已提交'
+      }
+      return statusMap[status] || status
+    },
+    // 获取学生行样式
+    getStudentRowClassName({ row, rowIndex }) {
+      if (row.status === 'approved') {
+        return 'success-row'
+      } else if (row.status === 'rejected') {
+        return 'danger-row'
+      } else if (row.status === 'pending') {
+        return 'warning-row'
+      }
+      return ''
+    },
+    // 导出学生名单
+    handleExportStudents() {
+      if (!this.selectedStudents || this.selectedStudents.length === 0) {
+        this.$message.warning('没有可导出的数据')
+        return
+      }
+
+      const activityId = this.selectedStudents[0]?.activityId
+      const activityName = this.selectedStudents[0]?.activityName
+
+      if (!activityId) {
+        this.$message.error('缺少活动ID参数')
+        return
+      }
+
+      // 使用系统下载方法
+      this.download('/system/bookings/exportStudents', {
+        activityId: activityId
+      }, `预约学生名单_${activityName}_${this.parseTime(new Date(), '{y}{m}{d}')}.xlsx`)
+
+      this.studentDialogVisible = false // 导出后自动关闭对话框
     },
     // 加载课程统计数据
     loadCourseStats() {
@@ -971,7 +1567,6 @@ export default {
 /* 主布局 */
 .main-layout {
   display: flex;
-  height: 100vh;
   gap: 0;
 }
 
@@ -1125,7 +1720,6 @@ export default {
 /* 内容区域 */
 .content-area {
   flex: 1;
-  overflow-y: auto;
   background: #f8fafc;
 }
 
@@ -1296,6 +1890,7 @@ export default {
   display: flex;
   align-items: center;
   margin-bottom: 16px;
+  position: relative;
 }
 
 .college-stat-icon {
@@ -1308,6 +1903,37 @@ export default {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
+  flex: 1;
+}
+
+.view-detail-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  z-index: 10;
+}
+
+.view-detail-btn:hover {
+  background: #1d4ed8;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.view-detail-btn:active {
+  transform: scale(0.95);
 }
 
 .college-numbers {
@@ -1876,6 +2502,238 @@ export default {
 
 .stat-value.outgoing {
   color: #ef4444;
+}
+
+/* 弹窗样式 */
+.college-activities-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.college-activities-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.college-activities-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.college-activities-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.college-activities-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+.dialog-content {
+  padding: 0;
+}
+
+.dialog-stats {
+  display: flex;
+  gap: 24px;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dialog-stats .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 100px;
+}
+
+.dialog-stats .stat-label {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.dialog-stats .stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.dialog-stats .stat-value.ongoing {
+  color: #f59e0b;
+}
+
+.dialog-stats .stat-value.completed {
+  color: #10b981;
+}
+
+.activities-table {
+  padding: 24px;
+}
+
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+}
+
+.dialog-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+  text-align: right;
+}
+
+.dialog-footer .el-button {
+  margin-left: 12px;
+}
+
+/* 学生弹窗样式 */
+.student-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.student-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.student-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.student-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.student-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+.student-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+}
+
+.stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.student-table-container {
+  padding: 24px;
+}
+
+.enhanced-student-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.student-id-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.student-id {
+  font-weight: 500;
+  color: #374151;
+}
+
+.copy-btn {
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.student-name-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.student-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+}
+
+.export-btn {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.export-btn:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.custom-pagination {
+  margin: 0;
+}
+
+/* 学生表格行样式 */
+.success-row {
+  background-color: #f0f9ff;
+}
+
+.danger-row {
+  background-color: #fef2f2;
+}
+
+.warning-row {
+  background-color: #fffbeb;
 }
 
 /* 响应式设计 */

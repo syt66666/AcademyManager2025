@@ -4,7 +4,6 @@ import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.domain.dto.BookingExportDTO;
 import org.apache.ibatis.annotations.Mapper;
-import org.springframework.stereotype.Component;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -107,4 +106,18 @@ public interface BookingsMapper {
      * @return 删除结果（影响的行数）
      */
     int deleteBookingsByActivityId(@Param("activityId") Long activityId);
+
+    /**
+     * 统计总参与人数
+     * @return 总参与人数
+     */
+    int countTotalParticipants();
+
+    /**
+     * 根据组织单位统计参与人数
+     * @param organizer 组织单位
+     * @return 参与人数
+     */
+    int countParticipantsByOrganizer(@Param("organizer") String organizer);
+
 }
