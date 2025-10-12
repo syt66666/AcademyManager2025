@@ -27,15 +27,32 @@ export default {
     };
   },
   computed: {
-    // 判断是否为管理员
-    isAdmin() {
+    // 判断用户角色
+    userRole() {
       const userName = this.$store.state.user.name;
-      return userName && userName >= '10000' && userName <= '10007';
+      if (userName === 'admin') return 'system-admin';
+      if (userName === '10000') return 'super-admin';
+      if (userName >= '10001' && userName <= '10007') return 'academy-admin';
+      return 'student';
+    },
+
+    // 判断是否为管理员（包括所有管理员类型）
+    isAdmin() {
+      return ['system-admin', 'super-admin', 'academy-admin'].includes(this.userRole);
     },
 
     // 欢迎信息
     welcomeMessage() {
-      return this.isAdmin ? '你好，书院教务员' : '你好，学生';
+      switch (this.userRole) {
+        case 'system-admin':
+          return '你好，系统管理员';
+        case 'super-admin':
+          return '你好，总管理员';
+        case 'academy-admin':
+          return '你好，书院教务员';
+        default:
+          return '你好，学生';
+      }
     },
   },
   created() {

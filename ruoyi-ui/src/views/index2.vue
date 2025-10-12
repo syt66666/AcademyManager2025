@@ -279,16 +279,31 @@ export default {
     };
   },
   computed: {
+    // 判断用户角色
+    userRole() {
+      const userName = this.$store.state.user.name;
+      if (userName === 'admin') return 'system-admin';
+      if (userName === '10000') return 'super-admin';
+      if (userName >= '10001' && userName <= '10007') return 'academy-admin';
+      return 'student';
+    },
     isAdmin() {
-      return this.userName === '10001'|| this.userName === '10002'|| this.userName === '10003'|| this.userName === '10004'|| this.userName === '10005'|| this.userName === '10006'|| this.userName === '10007'||  this.userName === 'admin';
+      return ['system-admin', 'super-admin', 'academy-admin'].includes(this.userRole);
     },
     userName() {
       return this.$store.state.user.name;
     },
     greetingText() {
-      if (this.userName === 'admin') return '您好，管理员';
-      if (this.isSpecialAdmin) return `您好，${this.studentName}管理员`;
-      return `欢迎回来，同学`;
+      switch (this.userRole) {
+        case 'system-admin':
+          return '您好，系统管理员';
+        case 'super-admin':
+          return '您好，总管理员';
+        case 'academy-admin':
+          return '您好，书院教务员';
+        default:
+          return '您好，学生';
+      }
     },
     admissionYear() {
       return this.userName?.substring(0, 4) || new Date().getFullYear()
