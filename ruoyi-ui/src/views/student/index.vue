@@ -145,16 +145,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="所属书院" align="center" prop="academy" min-width="100">
-          <template slot-scope="scope">
-            <div class="academy-text">{{ scope.row.academy }}</div>
-          </template>
-        </el-table-column>
-        <el-table-column label="所属学域" align="center" prop="originalSystemMajor" min-width="160">
-          <template slot-scope="scope">
-            <div class="major-info">{{ scope.row.originalSystemMajor }}</div>
-          </template>
-        </el-table-column>
+
         <el-table-column label="录取专业" align="center" prop="major" min-width="150">
           <template slot-scope="scope">
             <div class="major-info">{{ scope.row.major }}</div>
@@ -861,17 +852,6 @@ export default {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    },
-    // 获取书院标签类型
-    getAcademyTagType(academy) {
-      const academyColors = {
-        '知行书院': 'primary',
-        '明德书院': 'success',
-        '博雅书院': 'warning',
-        '至善书院': 'info',
-        '未知': ''
-      };
-      return academyColors[academy] || 'info';
     },
     // 对话框关闭处理
     handleDialogClose(done) {

@@ -303,7 +303,8 @@ export default {
           return '您好，书院教务员';
         default:
           return '您好，学生';
-      }
+
+        }
     },
     admissionYear() {
       return this.userName?.substring(0, 4) || new Date().getFullYear()

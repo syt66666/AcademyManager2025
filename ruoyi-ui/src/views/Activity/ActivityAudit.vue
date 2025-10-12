@@ -180,16 +180,16 @@
               </span>
           </template>
         </el-table-column>
-        <el-table-column label="学生学号" align="center" prop="studentId"/>
-        <el-table-column label="学生姓名" align="center" prop="studentName"/>
-        <el-table-column label="活动名称" align="center" prop="activityName" width="200">
+        <el-table-column label="学生学号" align="center" prop="studentId" min-width="100"/>
+        <el-table-column label="学生姓名" align="center" prop="studentName" min-width="100"/>
+        <el-table-column label="活动名称" align="center" prop="activityName" min-width="250">
           <template slot-scope="scope">
             <div class="activity-name" :title="scope.row.activityName">
-              {{ truncateText(scope.row.activityName, 15) }}
+              <span :title="scope.row.activityName">{{ truncateText(scope.row.activityName, 18) }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="活动类型" align="center" prop="activityType" width="200">
+        <el-table-column label="活动类型" align="center" prop="activityType" min-width="200">
           <template slot-scope="scope">
             <el-tag :type="getActivityTypeTagType(scope.row.activityType)" effect="plain" class="activity-type-tag">
               {{ getActivityTypeName(scope.row.activityType) || '未分类' }}
@@ -197,9 +197,8 @@
           </template>
         </el-table-column>
         <el-table-column label="活动地点" align="center" prop="activityLocation"/>
-        <el-table-column label="组织单位" align="center" prop="organizer"/>
 
-        <el-table-column label="审核状态" prop="status" align="center" width="100">
+        <el-table-column label="审核状态" prop="status" align="center" width="120">
           <template slot-scope="scope">
             <el-tag
               v-if="scope.row.status === '未审核'"

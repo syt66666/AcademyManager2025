@@ -123,7 +123,7 @@
         <el-table-column label="活动名称" align="center" prop="activityName" width="300">
           <template slot-scope="scope">
             <div class="activity-name" :title="scope.row.activityName">
-              {{ truncateText(scope.row.activityName, 12) }}
+              <span :title="scope.row.activityName">{{ truncateText(scope.row.activityName, 18) }}</span>
             </div>
           </template>
         </el-table-column>
@@ -485,6 +485,10 @@
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ studentStats.submitted }}</div>
+            <div class="stat-label">已提交</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.pending }}</div>
             <div class="stat-label">未审核</div>
           </div>
           <div class="stat-item">
@@ -647,8 +651,9 @@ export default {
       // 学生统计数据
       studentStats: {
         total: 0,
-        approved: 0,
         submitted: 0,
+        pending: 0,
+        approved: 0,
         rejected: 0
       },
       // 服务器时间
@@ -1462,23 +1467,29 @@ export default {
     /** 计算学生统计数据 */
     calculateStudentStats(allStudents) {
       this.studentStats.total = allStudents.length;
+      
+      // 计算各状态人数
+      this.studentStats.pending = allStudents.filter(student => 
+        student.status === 'pending' || student.status === '未审核'
+      ).length;
       this.studentStats.approved = allStudents.filter(student => 
         student.status === 'approved' || student.status === '已通过'
-      ).length;
-      this.studentStats.submitted = allStudents.filter(student => 
-        student.status === 'submitted' || student.status === '未审核'
       ).length;
       this.studentStats.rejected = allStudents.filter(student => 
         student.status === 'rejected' || student.status === '未通过'
       ).length;
+      
+      // 已提交 = 未审核 + 已通过 + 未通过
+      this.studentStats.submitted = this.studentStats.pending + this.studentStats.approved + this.studentStats.rejected;
     },
 
     /** 重置学生统计数据 */
     resetStudentStats() {
       this.studentStats = {
         total: 0,
-        approved: 0,
         submitted: 0,
+        pending: 0,
+        approved: 0,
         rejected: 0
       };
     },

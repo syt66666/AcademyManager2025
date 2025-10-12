@@ -40,7 +40,7 @@
                   @click="handleEventClick(event)"
                 >
                   <div class="event-summary">
-                    <span class="event-name">{{ truncate(event.activityName, 10) }}</span>
+                    <span class="event-name" :title="event.activityName">{{ truncate(event.activityName, 18) }}</span>
                     <span class="event-org">({{ truncate(event.organizer, 5) }})</span>
                     <el-button
                       v-if="getActivityStatusType(event) === 'signup-active'"
@@ -186,7 +186,7 @@
         <el-table-column label="活动名称" align="center" prop="activityName" width="300">
           <template slot-scope="scope">
             <div class="activity-name" :title="scope.row.activityName">
-              {{ truncateText(scope.row.activityName, 15) }}
+              <span :title="scope.row.activityName">{{ truncateText(scope.row.activityName, 18) }}</span>
             </div>
           </template>
         </el-table-column>
