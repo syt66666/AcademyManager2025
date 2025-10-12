@@ -58,12 +58,9 @@ export default {
     // 获取动态标题
     getDynamicTitle(meta) {
       if (meta && meta.dynamicTitle) {
-        // 判断用户角色
-        const userName = this.$store.state.user.name;
-        const isAdmin = userName && userName >= '10000' && userName <= '10007';
-        
+        // 首页始终显示为"首页"，不再根据用户角色动态变化
         if (meta.title === '首页') {
-          return isAdmin ? '活动管理' : '活动预约';
+          return '首页';
         }
       }
       return meta ? meta.title : '';
