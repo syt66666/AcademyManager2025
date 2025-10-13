@@ -250,6 +250,13 @@
                     <div class="college-header">
                       <i :class="college.icon" class="college-stat-icon"></i>
                       <span class="college-name">{{ college.name }}</span>
+                      <button 
+                        class="detail-button"
+                        @click.stop="handleCourseDetail(college.key)"
+                        title="查看详细"
+                      >
+                        <i class="el-icon-view"></i>
+                      </button>
                     </div>
                     <div class="college-numbers">
                       <div class="stat-item">
@@ -758,6 +765,234 @@
         />
       </div>
     </el-dialog>
+
+    <!-- 书院课程详情弹窗 -->
+    <el-dialog
+      :title="collegeNameForCourseDetail + ' - 课程详情'"
+      :visible.sync="courseDialogVisible"
+      width="80%"
+      :before-close="handleCourseClose"
+      class="college-courses-dialog"
+    >
+      <div class="dialog-content">
+        <el-table
+          :data="courseList"
+          v-loading="courseLoading"
+          element-loading-text="加载中..."
+          class="course-table"
+          stripe
+        >
+          <el-table-column
+            type="index"
+            label="序号"
+            width="60"
+            align="center"
+          />
+          <el-table-column
+            prop="courseName"
+            label="课程名称"
+            min-width="200"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            prop="courseCategory"
+            label="课程分类"
+            min-width="250"
+            align="center"
+          >
+            <template slot-scope="scope">
+              <el-tag :type="getCourseCategoryTagType(scope.row.courseType)">
+                {{ getCourseCategoryName(scope.row.courseType) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="courseLocation"
+            label="课程地点"
+            width="180"
+            show-overflow-tooltip
+          />
+          <el-table-column
+            label="选课人数"
+            width="100"
+            align="center"
+          >
+            <template slot-scope="scope">
+              {{ scope.row.courseCapacity - scope.row.courseTotalCapacity }}/{{ scope.row.courseCapacity }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="课程状态"
+            width="150"
+            align="center"
+          >
+            <template slot-scope="scope">
+              <el-tag :type="getCourseStatusTagType(computeCourseStatus(scope.row))">
+                {{ computeCourseStatus(scope.row) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="startTime"
+            label="开始时间"
+            width="150"
+            align="center"
+          >
+            <template slot-scope="scope">
+              {{ formatDate(scope.row.startTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="endTime"
+            label="结束时间"
+            width="150"
+            align="center"
+          >
+            <template slot-scope="scope">
+              {{ formatDate(scope.row.endTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            label="操作"
+            width="120"
+            align="center"
+          >
+            <template slot-scope="scope">
+              <el-button
+                size="mini"
+                type="text"
+                @click="handleViewCourseStudents(scope.row)"
+                class="action-button view-button">
+                已选学生
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 分页组件 -->
+        <el-pagination
+          @size-change="handleCourseSizeChange"
+          @current-change="handleCourseCurrentChange"
+          :current-page="courseQueryParams.pageNum"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="courseQueryParams.pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="courseTotal"
+          class="custom-pagination"
+        />
+      </div>
+    </el-dialog>
+
+    <!-- 课程学生列表弹窗 -->
+    <el-dialog
+      :title="'已选学生 - ' + (selectedCourseForStudents && selectedCourseForStudents.courseName) || '课程名称'"
+      :visible.sync="courseStudentDialogVisible"
+      width="80%"
+      :before-close="handleCourseStudentDialogClose"
+      class="course-student-dialog">
+      
+      <!-- 课程学生统计信息 -->
+      <div class="course-student-stats">
+        <div class="course-student-stats-card">
+          <div class="stat-item">
+            <div class="stat-number">{{ courseStudentTotal }}</div>
+            <div class="stat-label">总选课人数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ courseStudentList.length }}</div>
+            <div class="stat-label">当前页显示</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ selectedCourseForStudents && selectedCourseForStudents.courseCapacity || 0 }}</div>
+            <div class="stat-label">课程容量</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ selectedCourseForStudents && selectedCourseForStudents.courseLocation || '未知' }}</div>
+            <div class="stat-label">课程地点</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 学生表格 -->
+      <div class="course-student-table-container">
+        <el-table
+          :data="courseStudentList"
+          border
+          v-loading="false"
+          class="enhanced-student-table"
+          :header-cell-style="{
+            'background': '#f8fafc',
+            'color': '#2d3540',
+            'font-weight': '600',
+            'border-bottom': '2px solid #e2e8f0'
+          }"
+        >
+          <el-table-column label="序号" width="60" align="center">
+            <template v-slot="scope">
+              <span class="index-badge">
+                {{ (courseStudentQueryParams.pageNum - 1) * courseStudentQueryParams.pageSize + scope.$index + 1 }}
+              </span>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="studentId" label="学号" align="center" min-width="140">
+            <template slot-scope="{row}">
+              <div class="student-id-container">
+                <span class="student-id">{{ row.studentId }}</span>
+                <el-button
+                  v-if="row.studentId"
+                  type="text"
+                  size="mini"
+                  icon="el-icon-copy-document"
+                  @click="copyToClipboard(row.studentId)"
+                  class="copy-btn">
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="studentName" label="姓名" align="center" min-width="100">
+            <template slot-scope="{row}">
+              <div class="student-name-container">
+                <span class="student-name">{{ row.studentName || '未知' }}</span>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="college" label="所属书院" align="center" min-width="120">
+            <template slot-scope="{row}">
+              <el-tag size="small" :type="getAcademyTagType(row.college)" effect="plain">
+                {{ row.college || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="bookAt" label="选课时间" min-width="160" align="center">
+            <template slot-scope="{row}">
+              <div class="booked_at">
+                <i class="el-icon-time"></i>
+                <span class="time-text">{{ formatDate(row.bookAt) }}</span>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <!-- 分页组件 -->
+      <div class="course-student-pagination">
+        <el-pagination
+          v-show="courseStudentTotal > 0"
+          @size-change="handleCourseStudentSizeChange"
+          @current-change="handleCourseStudentCurrentChange"
+          :current-page="courseStudentQueryParams.pageNum"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="courseStudentQueryParams.pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="courseStudentTotal"
+          class="custom-pagination"
+        />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -768,8 +1003,17 @@ import {
   getActivityTypeDistribution, 
   getRecentActivities,
   getActivityStatsByCollege,
-  getCollegeActivities 
+  getCollegeActivities
 } from '@/api/system/activityStatistics'
+import { 
+  getCourseOverview, 
+  getCollegeCourseStats, 
+  getCourseTypeDistribution, 
+  getRecentCourses,
+  getCourseStatsByCollege,
+  getCollegeCourses
+} from '@/api/system/courseStatistics'
+import { listCourses, getCourseBookings } from '@/api/system/courses'
 import { listBookingsWithActivity } from '@/api/system/bookings'
 
 export default {
@@ -899,6 +1143,28 @@ export default {
       collegeNameForDetail: '',
       collegeActivities: [],
       loading: false,
+      // 课程详情弹窗相关数据
+      courseDialogVisible: false,
+      selectedCollegeForCourseDetail: '',
+      collegeNameForCourseDetail: '',
+      courseList: [],
+      courseLoading: false,
+      courseTotal: 0,
+        courseQueryParams: {
+          pageNum: 1,
+          pageSize: 10,
+          organizer: ''
+        },
+        // 课程学生列表弹窗
+        courseStudentDialogVisible: false,
+        selectedCourseForStudents: null,
+        courseStudentList: [],
+        courseStudentTotal: 0,
+        courseStudentQueryParams: {
+          pageNum: 1,
+          pageSize: 10,
+          courseId: null
+        },
       // 分页相关数据
       currentPage: 1,
       pageSize: 10,
@@ -955,6 +1221,8 @@ export default {
       // 根据选中的书院重新加载数据
       if (this.activeMenu === 'activity') {
         await this.loadActivityStatsByCollege(collegeKey)
+      } else if (this.activeMenu === 'course') {
+        await this.loadCourseStatsByCollege(collegeKey)
       }
       console.log('筛选书院:', collegeKey)
     },
@@ -1205,6 +1473,49 @@ export default {
       this.dialogVisible = false
       done()
     },
+    // 处理课程详情
+    handleCourseDetail(collegeKey) {
+      const collegeName = this.getCollegeName(collegeKey)
+      this.selectedCollegeForCourseDetail = collegeKey
+      this.collegeNameForCourseDetail = collegeName
+      this.courseDialogVisible = true
+      this.loadCollegeCourses(collegeName)
+    },
+    // 加载书院课程列表
+    async loadCollegeCourses(collegeName) {
+      try {
+        this.courseLoading = true
+        this.courseQueryParams.organizer = collegeName
+        
+        const response = await listCourses(this.courseQueryParams)
+        if (response.code === 200) {
+          this.courseList = response.rows || []
+          this.courseTotal = response.total || 0
+          
+        }
+      } catch (error) {
+        console.error('加载书院课程列表失败:', error)
+        this.$message.error('加载书院课程列表失败')
+      } finally {
+        this.courseLoading = false
+      }
+    },
+    // 课程分页大小改变
+    handleCourseSizeChange(val) {
+      this.courseQueryParams.pageSize = val
+      this.courseQueryParams.pageNum = 1
+      this.loadCollegeCourses(this.courseQueryParams.organizer)
+    },
+    // 课程当前页改变
+    handleCourseCurrentChange(val) {
+      this.courseQueryParams.pageNum = val
+      this.loadCollegeCourses(this.courseQueryParams.organizer)
+    },
+    // 关闭课程弹窗
+    handleCourseClose(done) {
+      this.courseDialogVisible = false
+      done()
+    },
     // 格式化日期时间
     formatDateTime(dateTime) {
       if (!dateTime) return '-'
@@ -1217,6 +1528,132 @@ export default {
         minute: '2-digit',
         second: '2-digit'
       })
+    },
+    // 格式化日期
+    formatDate(dateTime) {
+      if (!dateTime) return '-'
+      const date = new Date(dateTime)
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+    },
+    // 获取课程分类名称
+    getCourseCategoryName(category) {
+      // 处理数字类型和字符串类型
+      const categoryValue = String(category)
+      const categoryMap = {
+        '1': '人格塑造与价值引领课程类',
+        '2': '知识融合与思维进阶课程类',
+        '3': '能力锻造与实践创新课程类',
+        '4': '社会责任与领军意识课程类'
+      }
+      return categoryMap[categoryValue] || '其他'
+    },
+    // 获取课程分类标签类型
+    getCourseCategoryTagType(category) {
+      // 处理数字类型和字符串类型
+      const categoryValue = String(category)
+      const typeMap = {
+        '1': 'success',
+        '2': 'primary',
+        '3': 'warning',
+        '4': 'danger'
+      }
+      return typeMap[categoryValue] || 'info'
+    },
+    // 获取课程状态名称
+    getCourseStatusName(status) {
+      const statusMap = {
+        'not-started': '未开始',
+        'enrolling': '选课中',
+        'enrollment-ended': '选课已结束',
+        'ongoing': '进行中',
+        'completed': '已结束'
+      }
+      return statusMap[status] || '未知'
+    },
+    // 计算课程状态（基于时间）
+    computeCourseStatus(course) {
+      const now = new Date()
+      const start = course.courseStart ? new Date(course.courseStart) : null
+      const deadline = course.courseDeadline ? new Date(course.courseDeadline) : null
+
+      // 如果当前时间在选课开始时间之前，显示"选课未开始"
+      if (start && now < start) {
+        return '选课未开始'
+      }
+
+      // 如果当前时间在选课开始时间和截止时间之间，显示"选课进行中"
+      if (start && deadline && now >= start && now <= deadline) {
+        return '选课进行中'
+      }
+
+      // 如果当前时间超过选课截止时间，显示"选课已截止"
+      if (deadline && now > deadline) {
+        return '选课已截止'
+      }
+
+      // 默认状态
+      return '选课未开始'
+    },
+    // 获取课程状态标签类型
+    getCourseStatusTagType(status) {
+      const typeMap = {
+        '选课未开始': 'info',
+        '选课进行中': 'success',
+        '选课已截止': 'danger',
+        'not-started': 'info',
+        'enrolling': 'success',
+        'enrollment-ended': 'warning',
+        'ongoing': 'primary',
+        'completed': 'danger'
+      }
+      return typeMap[status] || 'info'
+    },
+    // 查看课程学生列表
+    handleViewCourseStudents(course) {
+      this.selectedCourseForStudents = course
+      this.courseStudentDialogVisible = true
+      this.courseStudentQueryParams.courseId = course.courseId
+      this.courseStudentQueryParams.pageNum = 1
+      this.courseStudentQueryParams.pageSize = 10
+      this.loadCourseStudentList()
+    },
+    // 加载课程学生列表
+    async loadCourseStudentList() {
+      try {
+        const response = await getCourseBookings(this.courseStudentQueryParams.courseId)
+        if (response.code === 200) {
+          const allStudents = response.rows || []
+          this.courseStudentTotal = allStudents.length
+          
+          // 前端分页处理
+          const startIndex = (this.courseStudentQueryParams.pageNum - 1) * this.courseStudentQueryParams.pageSize
+          const endIndex = startIndex + this.courseStudentQueryParams.pageSize
+          this.courseStudentList = allStudents.slice(startIndex, endIndex)
+        }
+      } catch (error) {
+        console.error('加载课程学生列表失败:', error)
+        this.$message.error('加载课程学生列表失败')
+      }
+    },
+    // 课程学生分页大小改变
+    handleCourseStudentSizeChange(val) {
+      this.courseStudentQueryParams.pageSize = val
+      this.courseStudentQueryParams.pageNum = 1
+      this.loadCourseStudentList()
+    },
+    // 课程学生当前页改变
+    handleCourseStudentCurrentChange(val) {
+      this.courseStudentQueryParams.pageNum = val
+      this.loadCourseStudentList()
+    },
+    // 关闭课程学生弹窗
+    handleCourseStudentDialogClose(done) {
+      this.courseStudentDialogVisible = false
+      done()
     },
     // 分页大小改变
     handleSizeChange(val) {
@@ -1405,66 +1842,115 @@ export default {
       this.studentDialogVisible = false // 导出后自动关闭对话框
     },
     // 加载课程统计数据
-    loadCourseStats() {
-      // 模拟数据，实际应该调用API
-      this.courseStats = {
-        totalCourses: 89,
-        notStartedCourses: 12,
-        enrollingCourses: 18,
-        enrollmentEndedCourses: 45,
-        completedCourses: 14,
-        totalEnrollments: 3247
-      }
-      
-      // 模拟各书院课程数据
-      this.collegeCourseData = {
-        dayu: { totalCourses: 13, enrollingCourses: 3, enrollments: 456 },
-        bochuan: { totalCourses: 11, enrollingCourses: 2, enrollments: 389 },
-        lingxi: { totalCourses: 15, enrollingCourses: 4, enrollments: 567 },
-        houde: { totalCourses: 12, enrollingCourses: 3, enrollments: 423 },
-        zhixing: { totalCourses: 14, enrollingCourses: 5, enrollments: 512 },
-        duxue: { totalCourses: 10, enrollingCourses: 2, enrollments: 378 },
-        qiushi: { totalCourses: 14, enrollingCourses: 4, enrollments: 522 }
-      }
-      
-      // 模拟课程类型分布
-      this.courseTypes = [
-        { key: '1', name: '人格塑造与价值引领课程类', count: 28, percentage: 31 },
-        { key: '2', name: '知识融合与思维进阶课程类', count: 22, percentage: 25 },
-        { key: '3', name: '能力锻造与实践创新课程类', count: 25, percentage: 28 },
-        { key: '4', name: '社会责任与领军意识课程类', count: 14, percentage: 16 }
-      ]
-      
-      // 模拟最近课程
-      this.recentCourses = [
-        {
-          id: 1,
-          name: '创新创业实践课程',
-          college: '大煜书院',
-          type: '能力锻造与实践创新课程类',
-          date: '2024-01-15',
-          enrollments: 156,
-          status: 'enrolling'
-        },
-        {
-          id: 2,
-          name: '领导力培养课程',
-          college: '知行书院',
-          type: '社会责任与领军意识课程类',
-          date: '2024-01-12',
-          enrollments: 89,
-          status: 'enrollment-ended'
-        },
-        {
-          id: 3,
-          name: '学术研究方法论',
-          college: '令希书院',
-          type: '知识融合与思维进阶课程类',
-          date: '2024-01-10',
-          enrollments: 234,
-          status: 'enrolling'
+    async loadCourseStats() {
+      try {
+        // 获取课程统计概览
+        const overviewResponse = await getCourseOverview()
+        if (overviewResponse.code === 200) {
+          this.courseStats = overviewResponse.data
         }
-      ]
+
+        // 获取各书院课程统计
+        const collegeStatsResponse = await getCollegeCourseStats()
+        if (collegeStatsResponse.code === 200) {
+          // 将后端返回的书院名称映射到前端的书院key
+          const backendCollegeData = collegeStatsResponse.data.collegeData
+          this.collegeCourseData = {}
+          
+          // 书院名称到key的映射
+          const collegeNameToKey = {
+            '大煜书院': 'dayu',
+            '伯川书院': 'bochuan', 
+            '令希书院': 'lingxi',
+            '厚德书院': 'houde',
+            '知行书院': 'zhixing',
+            '笃学书院': 'duxue',
+            '求实书院': 'qiushi'
+          }
+          
+          for (const [collegeName, stats] of Object.entries(backendCollegeData)) {
+            const collegeKey = collegeNameToKey[collegeName]
+            if (collegeKey) {
+              this.collegeCourseData[collegeKey] = stats
+            }
+          }
+        }
+
+        // 获取课程类型分布
+        const typeDistributionResponse = await getCourseTypeDistribution()
+        if (typeDistributionResponse.code === 200) {
+          const typeDistribution = typeDistributionResponse.data.typeDistribution
+          this.courseTypes = [
+            { key: '1', name: '人格塑造与价值引领课程类', count: typeDistribution['人格塑造与价值引领课程类'] || 0, percentage: 0 },
+            { key: '2', name: '知识融合与思维进阶课程类', count: typeDistribution['知识融合与思维进阶课程类'] || 0, percentage: 0 },
+            { key: '3', name: '能力锻造与实践创新课程类', count: typeDistribution['能力锻造与实践创新课程类'] || 0, percentage: 0 },
+            { key: '4', name: '社会责任与领军意识课程类', count: typeDistribution['社会责任与领军意识课程类'] || 0, percentage: 0 }
+          ]
+          
+          // 计算百分比
+          const total = this.courseTypes.reduce((sum, type) => sum + type.count, 0)
+          this.courseTypes.forEach(type => {
+            type.percentage = total > 0 ? Math.round((type.count / total) * 100 * 10) / 10 : 0
+          })
+        }
+
+        // 获取最近课程
+        const recentCoursesResponse = await getRecentCourses()
+        if (recentCoursesResponse.code === 200) {
+          this.recentCourses = recentCoursesResponse.data.recentCourses || []
+        }
+      } catch (error) {
+        console.error('加载课程统计数据失败:', error)
+        this.$message.error('加载课程统计数据失败')
+      }
+    },
+    // 根据书院筛选课程统计数据
+    async loadCourseStatsByCollege(collegeKey) {
+      try {
+        if (collegeKey === 'all') {
+          // 如果选择全部书院，重新加载完整数据
+          await this.loadCourseStats()
+          return
+        }
+
+        // 获取书院名称
+        const collegeName = this.getCollegeName(collegeKey)
+        
+        // 根据书院筛选课程统计
+        const response = await getCourseStatsByCollege(collegeName)
+        if (response.code === 200) {
+          // 更新课程统计概览
+          this.courseStats = response.data
+          
+          // 保持各书院数据不变，不更新 collegeCourseData
+          // 这样各书院课程统计始终显示所有书院的数据
+          
+          // 更新课程类型分布（根据选中书院筛选）
+          if (response.data.typeDistribution) {
+            const typeDistribution = response.data.typeDistribution
+            this.courseTypes = [
+              { key: '1', name: '人格塑造与价值引领课程类', count: typeDistribution['人格塑造与价值引领课程类'] || 0, percentage: 0 },
+              { key: '2', name: '知识融合与思维进阶课程类', count: typeDistribution['知识融合与思维进阶课程类'] || 0, percentage: 0 },
+              { key: '3', name: '能力锻造与实践创新课程类', count: typeDistribution['能力锻造与实践创新课程类'] || 0, percentage: 0 },
+              { key: '4', name: '社会责任与领军意识课程类', count: typeDistribution['社会责任与领军意识课程类'] || 0, percentage: 0 }
+            ]
+            
+            // 计算百分比
+            const total = this.courseTypes.reduce((sum, type) => sum + type.count, 0)
+            this.courseTypes.forEach(type => {
+              type.percentage = total > 0 ? Math.round((type.count / total) * 100 * 10) / 10 : 0
+            })
+          }
+          
+          // 更新最近课程列表（根据选中书院筛选）
+          if (response.data.recentCourses) {
+            this.recentCourses = response.data.recentCourses || []
+          }
+        }
+      } catch (error) {
+        console.error('加载书院课程统计数据失败:', error)
+        this.$message.error('加载书院课程统计数据失败')
+      }
     },
     // 加载专业分流统计数据
     loadMajorStats() {
@@ -1904,6 +2390,35 @@ export default {
   font-weight: 600;
   color: #111827;
   flex: 1;
+}
+
+.detail-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.detail-button:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.detail-button:active {
+  transform: scale(0.95);
 }
 
 .view-detail-btn {
@@ -2596,6 +3111,155 @@ export default {
 
 .dialog-footer .el-button {
   margin-left: 12px;
+}
+
+/* 课程学生列表弹窗样式 */
+.course-student-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.course-student-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.course-student-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.course-student-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.course-student-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+.course-student-dialog .el-dialog__body {
+  padding: 0;
+  background: #f8fafc;
+}
+
+/* 课程学生统计信息 */
+.course-student-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.course-student-stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.course-student-stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+}
+
+.course-student-stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.course-student-stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* 课程学生表格容器 */
+.course-student-table-container {
+  padding: 24px;
+}
+
+.course-student-table-container .enhanced-student-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 课程学生分页样式 */
+.course-student-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+}
+
+.course-student-pagination .custom-pagination {
+  margin: 0;
+}
+
+/* 课程学生表格相关样式 */
+.course-student-table-container .student-id-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.course-student-table-container .student-id {
+  font-weight: 500;
+  color: #374151;
+}
+
+.course-student-table-container .copy-btn {
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
+.course-student-table-container .student-name-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-student-table-container .student-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.course-student-table-container .booked_at {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.course-student-table-container .time-text {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.course-student-table-container .index-badge {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* 学生弹窗样式 */
