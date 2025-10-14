@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.NotificationsMapper">
+    
+    <resultMap type="Notifications" id="NotificationsResult">
+        <result property="notiId"    column="noti_id"    />
+        <result property="notiTitle"    column="noti_title"    />
+        <result property="notiContent"    column="noti_content"    />
+        <result property="notiType"    column="noti_type"    />
+        <!-- 核心修改：指定您刚刚创建的 TypeHandler 的完整类路径 -->
+        <result property="fileAttachments"    column="file_attachments"
+                typeHandler="com.ruoyi.common.mybatis.JsonStringListTypeHandler"/>
+        <result property="pictureAttachments"    column="picture_attachments"
+                typeHandler="com.ruoyi.common.mybatis.JsonStringListTypeHandler"/>
+        <result property="creatorId"    column="creator_id"    />
+        <result property="createdAt"    column="created_at"    />
+    </resultMap>
+
+    <sql id="selectNotificationsVo">
+        select noti_id, noti_title, noti_content, noti_type, file_attachments, picture_attachments, creator_id, created_at from notifications
+    </sql>
+
+    <select id="selectNotificationsList" parameterType="Notifications" resultMap="NotificationsResult">
+        <include refid="selectNotificationsVo"/>
+        <where>  
+            <if test="notiTitle != null  and notiTitle != ''"> and noti_title = #{notiTitle}</if>
+            <if test="notiContent != null  and notiContent != ''"> and noti_content = #{notiContent}</if>
+            <if test="notiType != null  and notiType != ''"> and noti_type = #{notiType}</if>
+            <if test="searchFile != null and searchFile != ''">
+                and JSON_CONTAINS(file_attachments, JSON_QUOTE(#{searchFile}))
+            </if>
+
+            <!-- 核心修改：检查是否包含某个特定的图片附件 -->
+            <if test="searchPicture != null and searchPicture != ''">
+                and JSON_CONTAINS(picture_attachments, JSON_QUOTE(#{searchPicture}))
+            </if>
+            <if test="creatorId != null "> and creator_id = #{creatorId}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+        </where>
+    </select>
+    
+    <select id="selectNotificationsByNotiId" parameterType="Long" resultMap="NotificationsResult">
+        <include refid="selectNotificationsVo"/>
+        where noti_id = #{notiId}
+    </select>
+
+    <insert id="insertNotifications" parameterType="Notifications" useGeneratedKeys="true" keyProperty="notiId">
+        insert into notifications
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="notiTitle != null and notiTitle != ''">noti_title,</if>
+            <if test="notiContent != null and notiContent != ''">noti_content,</if>
+            <if test="notiType != null and notiType != ''">noti_type,</if>
+            <if test="fileAttachments != null">file_attachments,</if>
+            <if test="pictureAttachments != null">picture_attachments,</if>
+            <if test="creatorId != null">creator_id,</if>
+            <if test="createdAt != null">created_at,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="notiTitle != null and notiTitle != ''">#{notiTitle},</if>
+            <if test="notiContent != null and notiContent != ''">#{notiContent},</if>
+            <if test="notiType != null and notiType != ''">#{notiType},</if>
+            <if test="fileAttachments != null">#{fileAttachments},</if>
+            <if test="pictureAttachments != null">#{pictureAttachments},</if>
+            <if test="creatorId != null">#{creatorId},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+         </trim>
+    </insert>
+
+    <update id="updateNotifications" parameterType="Notifications">
+        update notifications
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="notiTitle != null and notiTitle != ''">noti_title = #{notiTitle},</if>
+            <if test="notiContent != null and notiContent != ''">noti_content = #{notiContent},</if>
+            <if test="notiType != null and notiType != ''">noti_type = #{notiType},</if>
+            <if test="fileAttachments != null">file_attachments = #{fileAttachments},</if>
+            <if test="pictureAttachments != null">picture_attachments = #{pictureAttachments},</if>
+            <if test="creatorId != null">creator_id = #{creatorId},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+        </trim>
+        where noti_id = #{notiId}
+    </update>
+
+    <delete id="deleteNotificationsByNotiId" parameterType="Long">
+        delete from notifications where noti_id = #{notiId}
+    </delete>
+
+    <delete id="deleteNotificationsByNotiIds" parameterType="String">
+        delete from notifications where noti_id in 
+        <foreach item="notiId" collection="array" open="(" separator="," close=")">
+            #{notiId}
+        </foreach>
+    </delete>
+</mapper>
