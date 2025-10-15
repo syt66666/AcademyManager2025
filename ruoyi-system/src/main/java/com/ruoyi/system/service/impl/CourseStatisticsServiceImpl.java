@@ -35,6 +35,7 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
         int notStartedCourses = 0;
         int enrollingCourses = 0;
         int enrollmentEndedCourses = 0;
+        int ongoingCourses = 0;
         int completedCourses = 0;
         
         for (Courses course : allCourses) {
@@ -49,6 +50,9 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
                 case "enrollment-ended":
                     enrollmentEndedCourses++;
                     break;
+                case "ongoing":
+                    ongoingCourses++;
+                    break;
                 case "completed":
                     completedCourses++;
                     break;
@@ -62,6 +66,7 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
         result.put("notStartedCourses", notStartedCourses);
         result.put("enrollingCourses", enrollingCourses);
         result.put("enrollmentEndedCourses", enrollmentEndedCourses);
+        result.put("ongoingCourses", ongoingCourses);
         result.put("completedCourses", completedCourses);
         result.put("totalEnrollments", totalEnrollments);
         
@@ -197,6 +202,7 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
         int notStartedCourses = 0;
         int enrollingCourses = 0;
         int enrollmentEndedCourses = 0;
+        int ongoingCourses = 0;
         int completedCourses = 0;
         int totalEnrollments = 0;
         
@@ -211,6 +217,9 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
                     break;
                 case "enrollment-ended":
                     enrollmentEndedCourses++;
+                    break;
+                case "ongoing":
+                    ongoingCourses++;
                     break;
                 case "completed":
                     completedCourses++;
@@ -227,6 +236,7 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
         result.put("notStartedCourses", notStartedCourses);
         result.put("enrollingCourses", enrollingCourses);
         result.put("enrollmentEndedCourses", enrollmentEndedCourses);
+        result.put("ongoingCourses", ongoingCourses);
         result.put("completedCourses", completedCourses);
         result.put("totalEnrollments", totalEnrollments);
         

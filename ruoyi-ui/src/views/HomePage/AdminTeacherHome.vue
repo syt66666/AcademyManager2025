@@ -196,42 +196,71 @@
           <!-- 书院课程页面 -->
           <div v-if="activeMenu === 'course'" class="page-content">
             <div class="content-wrapper">
-              <!-- 课程统计概览卡片 -->
-              <div class="stats-overview">
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-reading"></i>
+              <!-- 课程统计图表 -->
+              <div class="course-charts-section">
+                <div class="charts-container">
+                  <div class="chart-card">
+                    <h4 class="chart-title">各书院课程数统计</h4>
+                    <div class="chart-container">
+                      <div ref="courseCountChart" class="chart"></div>
+                    </div>
                   </div>
-                  <div class="card-content">
-                    <div class="card-title">总课程数</div>
-                    <div class="card-value">{{ courseStats.totalCourses }}</div>
-                  </div>
-                </div>
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-time"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="card-title">选课中</div>
-                    <div class="card-value">{{ courseStats.enrollingCourses }}</div>
+                  <div class="chart-card">
+                    <h4 class="chart-title">各书院选课人数统计</h4>
+                    <div class="chart-container">
+                      <div ref="enrollmentCountChart" class="chart"></div>
+                    </div>
                   </div>
                 </div>
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-check"></i>
+              </div>
+
+              <!-- 课程状态统计 -->
+              <div class="course-status-section">
+               <div class="status-stats-grid">
+                  <div class="status-stat-card not-started">
+                    <div class="status-icon">
+                      <i class="el-icon-time"></i>
+                    </div>
+                    <div class="status-content">
+                      <div class="status-title">未开始选课</div>
+                      <div class="status-count">{{ courseStats.notStartedCourses }}</div>
+                    </div>
                   </div>
-                  <div class="card-content">
-                    <div class="card-title">已结束选课</div>
-                    <div class="card-value">{{ courseStats.enrollmentEndedCourses }}</div>
+                  <div class="status-stat-card enrolling">
+                    <div class="status-icon">
+                      <i class="el-icon-loading"></i>
+                    </div>
+                    <div class="status-content">
+                      <div class="status-title">选课进行中</div>
+                      <div class="status-count">{{ courseStats.enrollingCourses }}</div>
+                    </div>
                   </div>
-                </div>
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-user"></i>
+                  <div class="status-stat-card ended">
+                    <div class="status-icon">
+                      <i class="el-icon-check"></i>
+                    </div>
+                    <div class="status-content">
+                      <div class="status-title">选课已结束</div>
+                      <div class="status-count">{{ courseStats.enrollmentEndedCourses }}</div>
+                    </div>
                   </div>
-                  <div class="card-content">
-                    <div class="card-title">总选课人数</div>
-                    <div class="card-value">{{ courseStats.totalEnrollments }}</div>
+                  <div class="status-stat-card ongoing">
+                    <div class="status-icon">
+                      <i class="el-icon-video-play"></i>
+                    </div>
+                    <div class="status-content">
+                      <div class="status-title">课程进行中</div>
+                      <div class="status-count">{{ courseStats.ongoingCourses }}</div>
+                    </div>
+                  </div>
+                  <div class="status-stat-card completed">
+                    <div class="status-icon">
+                      <i class="el-icon-finished"></i>
+                    </div>
+                    <div class="status-content">
+                      <div class="status-title">课程已完成</div>
+                      <div class="status-count">{{ courseStats.completedCourses }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -298,73 +327,6 @@
                 </div>
               </div>
 
-              <!-- 课程状态统计 -->
-              <div class="course-status-section">
-                <h3 class="section-title">课程状态统计</h3>
-                <div class="status-stats-grid">
-                  <div class="status-stat-card not-started">
-                    <div class="status-icon">
-                      <i class="el-icon-time"></i>
-                    </div>
-                    <div class="status-content">
-                      <div class="status-title">未开始选课</div>
-                      <div class="status-count">{{ courseStats.notStartedCourses }}</div>
-                    </div>
-                  </div>
-                  <div class="status-stat-card enrolling">
-                    <div class="status-icon">
-                      <i class="el-icon-loading"></i>
-                    </div>
-                    <div class="status-content">
-                      <div class="status-title">选课进行中</div>
-                      <div class="status-count">{{ courseStats.enrollingCourses }}</div>
-                    </div>
-                  </div>
-                  <div class="status-stat-card ended">
-                    <div class="status-icon">
-                      <i class="el-icon-check"></i>
-                    </div>
-                    <div class="status-content">
-                      <div class="status-title">选课已结束</div>
-                      <div class="status-count">{{ courseStats.enrollmentEndedCourses }}</div>
-                    </div>
-                  </div>
-                  <div class="status-stat-card completed">
-                    <div class="status-icon">
-                      <i class="el-icon-finished"></i>
-                    </div>
-                    <div class="status-content">
-                      <div class="status-title">课程已完成</div>
-                      <div class="status-count">{{ courseStats.completedCourses }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 最近课程列表 -->
-              <div class="recent-courses-section">
-                <h3 class="section-title">最近课程</h3>
-                <div class="courses-list">
-                  <div 
-                    v-for="course in recentCourses" 
-                    :key="course.id"
-                    class="course-item"
-                  >
-                    <div class="course-info">
-                      <div class="course-name">{{ course.name }}</div>
-                      <div class="course-meta">
-                        <span class="course-college">{{ course.college }}</span>
-                        <span class="course-type">{{ course.type }}</span>
-                        <span class="course-date">{{ course.date }}</span>
-                        <span class="course-enrollments">{{ course.enrollments }}人已选</span>
-                      </div>
-                    </div>
-                    <div class="course-status" :class="'status-' + course.status">
-                      {{ getCourseStatusText(course.status) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1009,12 +971,12 @@ import {
   getCourseOverview, 
   getCollegeCourseStats, 
   getCourseTypeDistribution, 
-  getRecentCourses,
   getCourseStatsByCollege,
   getCollegeCourses
 } from '@/api/system/courseStatistics'
 import { listCourses, getCourseBookings } from '@/api/system/courses'
 import { listBookingsWithActivity } from '@/api/system/bookings'
+import * as echarts from 'echarts'
 
 export default {
   name: 'AdminTeacherHome',
@@ -1100,6 +1062,7 @@ export default {
         notStartedCourses: 0,
         enrollingCourses: 0,
         enrollmentEndedCourses: 0,
+        ongoingCourses: 0,
         completedCourses: 0,
         totalEnrollments: 0
       },
@@ -1112,8 +1075,6 @@ export default {
         { key: '3', name: '能力锻造与实践创新课程类', count: 0, percentage: 0 },
         { key: '4', name: '社会责任与领军意识课程类', count: 0, percentage: 0 }
       ],
-      // 最近课程列表
-      recentCourses: [],
       // 专业分流统计数据
       majorStats: {
         totalStudents: 0,
@@ -1165,6 +1126,10 @@ export default {
           pageSize: 10,
           courseId: null
         },
+        
+        // 图表相关
+        courseCountChart: null,
+        enrollmentCountChart: null,
       // 分页相关数据
       currentPage: 1,
       pageSize: 10,
@@ -1894,11 +1859,8 @@ export default {
           })
         }
 
-        // 获取最近课程
-        const recentCoursesResponse = await getRecentCourses()
-        if (recentCoursesResponse.code === 200) {
-          this.recentCourses = recentCoursesResponse.data.recentCourses || []
-        }
+        // 初始化图表
+        this.initCourseCharts()
       } catch (error) {
         console.error('加载课程统计数据失败:', error)
         this.$message.error('加载课程统计数据失败')
@@ -1942,10 +1904,6 @@ export default {
             })
           }
           
-          // 更新最近课程列表（根据选中书院筛选）
-          if (response.data.recentCourses) {
-            this.recentCourses = response.data.recentCourses || []
-          }
         }
       } catch (error) {
         console.error('加载书院课程统计数据失败:', error)
@@ -2030,6 +1988,270 @@ export default {
           status: 'completed'
         }
       ]
+    },
+    
+    // 初始化课程统计图表
+    initCourseCharts() {
+      this.$nextTick(() => {
+        this.initCourseCountChart()
+        this.initEnrollmentCountChart()
+      })
+    },
+    
+    // 初始化课程数统计图表
+    initCourseCountChart() {
+      if (this.courseCountChart) {
+        this.courseCountChart.dispose()
+      }
+      
+      const chartDom = this.$refs.courseCountChart
+      if (!chartDom) return
+      
+      this.courseCountChart = echarts.init(chartDom)
+      
+      // 确保所有七个书院都显示
+      const allColleges = [
+        { key: 'dayu', name: '大煜书院' },
+        { key: 'bochuan', name: '伯川书院' },
+        { key: 'lingxi', name: '令希书院' },
+        { key: 'houde', name: '厚德书院' },
+        { key: 'zhixing', name: '知行书院' },
+        { key: 'duxue', name: '笃学书院' },
+        { key: 'qiushi', name: '求实书院' }
+      ]
+      
+      const collegeData = this.collegeCourseData || {}
+      const data = allColleges.map(college => ({
+        name: college.name,
+        value: collegeData[college.key]?.totalCourses || 0
+      }))
+      
+      const option = {
+        title: {
+          left: 'center',
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 'normal'
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          left: '5%',
+          top: 'middle',
+          width: '20%',
+          formatter: (name) => {
+            return name
+          },
+          textStyle: {
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: '#374151'
+          }
+        },
+        series: [
+          {
+            name: '课程数',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '50%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'],
+            label: {
+              show: true,
+              position: 'outside',
+              formatter: '{b}：{c}',
+              fontSize: 12,
+              color: '#374151',
+              fontWeight: 'bold'
+            },
+            labelLine: {
+              show: true,
+              length: 15,
+              length2: 10,
+              smooth: true,
+              lineStyle: {
+                color: '#999'
+              }
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '18',
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: data
+          },
+          {
+            name: '中心文字',
+            type: 'pie',
+            radius: ['0%', '30%'],
+            center: ['50%', '50%'],
+            label: {
+              show: true,
+              position: 'center',
+              formatter: () => {
+                const total = data.reduce((sum, item) => sum + item.value, 0)
+                return `{total|${total}}\n{label|总课程数}`
+              },
+              rich: {
+                total: {
+                  fontSize: 24,
+                  fontWeight: 'bold',
+                  color: '#374151'
+                },
+                label: {
+                  fontSize: 14,
+                  color: '#6b7280'
+                }
+              }
+            },
+            data: [{ value: 1, itemStyle: { color: 'transparent' } }]
+          }
+        ]
+      }
+      
+      this.courseCountChart.setOption(option)
+    },
+    
+    // 初始化选课人数统计图表
+    initEnrollmentCountChart() {
+      if (this.enrollmentCountChart) {
+        this.enrollmentCountChart.dispose()
+      }
+      
+      const chartDom = this.$refs.enrollmentCountChart
+      if (!chartDom) return
+      
+      this.enrollmentCountChart = echarts.init(chartDom)
+      
+      // 确保所有七个书院都显示
+      const allColleges = [
+        { key: 'dayu', name: '大煜书院' },
+        { key: 'bochuan', name: '伯川书院' },
+        { key: 'lingxi', name: '令希书院' },
+        { key: 'houde', name: '厚德书院' },
+        { key: 'zhixing', name: '知行书院' },
+        { key: 'duxue', name: '笃学书院' },
+        { key: 'qiushi', name: '求实书院' }
+      ]
+      
+      const collegeData = this.collegeCourseData || {}
+      const data = allColleges.map(college => ({
+        name: college.name,
+        value: collegeData[college.key]?.enrollments || 0
+      }))
+      
+      const option = {
+        title: {
+          left: 'center',
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 'normal'
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          left: '5%',
+          top: 'middle',
+          width: '20%',
+          formatter: (name) => {
+            return name
+          },
+          textStyle: {
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: '#374151'
+          }
+        },
+        series: [
+          {
+            name: '选课人数',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '50%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'],
+            label: {
+              show: true,
+              position: 'outside',
+              formatter: '{b}：{c}',
+              fontSize: 12,
+              color: '#374151',
+              fontWeight: 'bold'
+            },
+            labelLine: {
+              show: true,
+              length: 15,
+              length2: 10,
+              smooth: true,
+              lineStyle: {
+                color: '#999'
+              }
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '18',
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: data
+          },
+          {
+            name: '中心文字',
+            type: 'pie',
+            radius: ['0%', '30%'],
+            center: ['50%', '50%'],
+            label: {
+              show: true,
+              position: 'center',
+              formatter: () => {
+                const total = data.reduce((sum, item) => sum + item.value, 0)
+                return `{total|${total}}\n{label|总选课人数}`
+              },
+              rich: {
+                total: {
+                  fontSize: 24,
+                  fontWeight: 'bold',
+                  color: '#374151'
+                },
+                label: {
+                  fontSize: 14,
+                  color: '#6b7280'
+                }
+              }
+            },
+            data: [{ value: 1, itemStyle: { color: 'transparent' } }]
+          }
+        ]
+      }
+      
+      this.enrollmentCountChart.setOption(option)
     }
   },
   mounted() {
@@ -2633,6 +2855,46 @@ export default {
   margin-bottom: 32px;
 }
 
+/* 课程统计图表 */
+.course-charts-section {
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.charts-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.chart-container {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
+}
+
 .course-status-section {
   margin-bottom: 32px;
 }
@@ -2670,6 +2932,10 @@ export default {
   border-left: 4px solid #10b981;
 }
 
+.status-stat-card.ongoing {
+  border-left: 4px solid #f59e0b;
+}
+
 .status-stat-card.completed {
   border-left: 4px solid #8b5cf6;
 }
@@ -2698,6 +2964,10 @@ export default {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
+.status-stat-card.ongoing .status-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
 .status-stat-card.completed .status-icon {
   background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
 }
@@ -2718,97 +2988,6 @@ export default {
   color: #111827;
 }
 
-/* 最近课程样式 */
-.recent-courses-section {
-  margin-bottom: 32px;
-}
-
-.courses-list {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.course-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.2s ease;
-}
-
-.course-item:hover {
-  background-color: #f8fafc;
-}
-
-.course-item:last-child {
-  border-bottom: none;
-}
-
-.course-info {
-  flex: 1;
-}
-
-.course-name {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 8px;
-}
-
-.course-meta {
-  display: flex;
-  gap: 16px;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.course-college {
-  color: #3b82f6;
-  font-weight: 500;
-}
-
-.course-type {
-  color: #10b981;
-}
-
-.course-date {
-  color: #6b7280;
-}
-
-.course-enrollments {
-  color: #8b5cf6;
-  font-weight: 500;
-}
-
-.course-status {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.status-enrolling {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.status-enrollment-ended {
-  background: #d1fae5;
-  color: #059669;
-}
-
-.status-not-started {
-  background: #e5e7eb;
-  color: #6b7280;
-}
-
-.status-completed {
-  background: #ede9fe;
-  color: #7c3aed;
-}
 
 .stat-value.enrolling {
   color: #3b82f6;
