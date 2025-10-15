@@ -737,6 +737,28 @@
       class="college-courses-dialog"
     >
       <div class="dialog-content">
+        <!-- 课程统计信息 -->
+        <div class="course-stats">
+          <div class="course-stats-card">
+            <div class="stat-item">
+              <div class="stat-number">{{ courseStats.total }}</div>
+              <div class="stat-label">课程总数</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">{{ courseStats.ongoing }}</div>
+              <div class="stat-label">进行中</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">{{ courseStats.completed }}</div>
+              <div class="stat-label">已结课</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">{{ courseStats.enrollments }}</div>
+              <div class="stat-label">总选课人数</div>
+            </div>
+          </div>
+        </div>
+
         <el-table
           :data="courseList"
           v-loading="courseLoading"
@@ -857,20 +879,24 @@
       <div class="course-student-stats">
         <div class="course-student-stats-card">
           <div class="stat-item">
-            <div class="stat-number">{{ courseStudentTotal }}</div>
-            <div class="stat-label">总选课人数</div>
+            <div class="stat-number">{{ courseStudentStats.total }}</div>
+            <div class="stat-label">课程总数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ courseStudentList.length }}</div>
-            <div class="stat-label">当前页显示</div>
+            <div class="stat-number">{{ courseStudentStats.ongoing }}</div>
+            <div class="stat-label">进行中</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ selectedCourseForStudents && selectedCourseForStudents.courseCapacity || 0 }}</div>
-            <div class="stat-label">课程容量</div>
+            <div class="stat-number">{{ courseStudentStats.completed }}</div>
+            <div class="stat-label">已结课</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ selectedCourseForStudents && selectedCourseForStudents.courseLocation || '未知' }}</div>
-            <div class="stat-label">课程地点</div>
+            <div class="stat-number">{{ courseStudentStats.approved }}</div>
+            <div class="stat-label">已通过</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ courseStudentStats.rejected }}</div>
+            <div class="stat-label">未通过</div>
           </div>
         </div>
       </div>
@@ -925,6 +951,29 @@
             <template slot-scope="{row}">
               <el-tag size="small" :type="getAcademyTagType(row.college)" effect="plain">
                 {{ row.college || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="studentClass" label="班级" align="center" min-width="100">
+            <template slot-scope="{row}">
+              {{ row.studentClass || '-' }}
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="scoreValue" label="成绩" align="center" min-width="100">
+            <template slot-scope="{row}">
+              {{ row.scoreValue || '-' }}
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="status" label="考核状态" align="center" min-width="100">
+            <template slot-scope="{row}">
+              <el-tag 
+                size="small" 
+                :type="getCourseBookingStatusTagType(row.status)" 
+                effect="plain">
+                {{ getCourseBookingStatusText(row.status) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -1111,6 +1160,13 @@ export default {
       courseList: [],
       courseLoading: false,
       courseTotal: 0,
+      // 课程统计数据
+      courseStats: {
+        total: 0,
+        ongoing: 0,
+        completed: 0,
+        enrollments: 0
+      },
         courseQueryParams: {
           pageNum: 1,
           pageSize: 10,
@@ -1130,6 +1186,15 @@ export default {
         // 图表相关
         courseCountChart: null,
         enrollmentCountChart: null,
+        
+        // 课程学生统计数据
+        courseStudentStats: {
+          total: 0,
+          ongoing: 0,
+          completed: 0,
+          approved: 0,
+          rejected: 0
+        },
       // 分页相关数据
       currentPage: 1,
       pageSize: 10,
@@ -1457,6 +1522,8 @@ export default {
           this.courseList = response.rows || []
           this.courseTotal = response.total || 0
           
+          // 计算课程统计数据
+          this.calculateCourseStats(this.courseList)
         }
       } catch (error) {
         console.error('加载书院课程列表失败:', error)
@@ -1465,6 +1532,34 @@ export default {
         this.courseLoading = false
       }
     },
+    
+    // 计算课程统计数据
+    calculateCourseStats(courses) {
+      this.courseStats = {
+        total: courses.length,
+        ongoing: 0,
+        completed: 0,
+        enrollments: 0
+      }
+      
+      courses.forEach(course => {
+        const courseStatus = this.computeCourseStatus(course)
+        
+        // 根据课程状态统计
+        if (courseStatus === '课程进行中') {
+          this.courseStats.ongoing++
+        } else if (courseStatus === '课程已完成') {
+          this.courseStats.completed++
+        }
+        
+        // 计算选课人数
+        const courseCapacity = course.courseCapacity || 0
+        const courseTotalCapacity = course.courseTotalCapacity || 0
+        const enrollments = Math.max(0, courseCapacity - courseTotalCapacity)
+        this.courseStats.enrollments += enrollments
+      })
+    },
+    
     // 课程分页大小改变
     handleCourseSizeChange(val) {
       this.courseQueryParams.pageSize = val
@@ -1590,14 +1685,29 @@ export default {
     async loadCourseStudentList() {
       try {
         const response = await getCourseBookings(this.courseStudentQueryParams.courseId)
+        console.log('课程学生列表API响应:', response)
         if (response.code === 200) {
           const allStudents = response.rows || []
+          console.log('课程学生数据:', allStudents)
           this.courseStudentTotal = allStudents.length
+          
+          // 计算课程学生统计数据
+          this.calculateCourseStudentStats(allStudents)
+          console.log('课程学生统计数据:', this.courseStudentStats)
           
           // 前端分页处理
           const startIndex = (this.courseStudentQueryParams.pageNum - 1) * this.courseStudentQueryParams.pageSize
           const endIndex = startIndex + this.courseStudentQueryParams.pageSize
           this.courseStudentList = allStudents.slice(startIndex, endIndex)
+        } else {
+          // 重置统计数据
+          this.courseStudentStats = {
+            total: 0,
+            ongoing: 0,
+            completed: 0,
+            approved: 0,
+            rejected: 0
+          }
         }
       } catch (error) {
         console.error('加载课程学生列表失败:', error)
@@ -1615,6 +1725,40 @@ export default {
       this.courseStudentQueryParams.pageNum = val
       this.loadCourseStudentList()
     },
+    
+    // 计算课程学生统计数据
+    calculateCourseStudentStats(allStudents) {
+      this.courseStudentStats = {
+        total: allStudents.length,
+        ongoing: 0,
+        completed: 0,
+        approved: 0,
+        rejected: 0
+      }
+      
+      allStudents.forEach(student => {
+        const status = student.status || '未提交'
+        const courseStatus = this.computeCourseStatus(student)
+        
+        // 根据课程状态统计
+        if (courseStatus === '课程进行中') {
+          this.courseStudentStats.ongoing++
+        } else if (courseStatus === '课程已完成') {
+          this.courseStudentStats.completed++
+        }
+        
+        // 根据审核状态统计
+        switch (status) {
+          case '已通过':
+            this.courseStudentStats.approved++
+            break
+          case '未通过':
+            this.courseStudentStats.rejected++
+            break
+        }
+      })
+    },
+    
     // 关闭课程学生弹窗
     handleCourseStudentDialogClose(done) {
       this.courseStudentDialogVisible = false
@@ -1772,6 +1916,28 @@ export default {
         'submitted': '已提交'
       }
       return statusMap[status] || status
+    },
+    
+    // 获取课程选课状态文本
+    getCourseBookingStatusText(status) {
+      const statusMap = {
+        '未提交': '未提交',
+        '未审核': '未审核',
+        '已通过': '已通过',
+        '未通过': '未通过'
+      }
+      return statusMap[status] || status || '未知'
+    },
+    
+    // 获取课程选课状态标签类型
+    getCourseBookingStatusTagType(status) {
+      const typeMap = {
+        '未提交': 'info',
+        '未审核': 'warning',
+        '已通过': 'success',
+        '未通过': 'danger'
+      }
+      return typeMap[status] || 'info'
     },
     // 获取学生行样式
     getStudentRowClassName({ row, rowIndex }) {
@@ -3326,6 +3492,43 @@ export default {
 }
 
 /* 课程学生统计信息 */
+/* 课程统计信息样式 */
+.course-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.course-stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.course-stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+}
+
+.course-stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.course-stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
 .course-student-stats {
   padding: 20px 24px;
   background: #f8fafc;
