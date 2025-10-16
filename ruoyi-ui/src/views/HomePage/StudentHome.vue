@@ -6,31 +6,44 @@
       <div class="notification-panel">
         <div class="panel-header">
           <i class="el-icon-bell"></i>
-          <span>系统通知</span>
-          <el-button 
-            type="text" 
-            size="mini" 
-            @click="loadNotifications"
-            class="refresh-btn"
-            :loading="notificationsLoading"
-          >
-            <i class="el-icon-refresh"></i>
-          </el-button>
+          <span>书院通知</span>
         </div>
         <div class="notification-content">
-          <div v-if="notifications.length === 0" class="no-notification">
+          <!-- 通知类型标签页 -->
+          <div class="notification-tabs">
+            <div 
+              v-for="tab in notificationTabs" 
+              :key="tab.value"
+              class="notification-tab"
+              :class="{ active: selectedNotificationType === tab.value }"
+              @click="filterNotificationsByType(tab.value)"
+            >
+              {{ tab.label }}
+            </div>
+          </div>
+          
+          <!-- 通知列表 -->
+          <div v-if="filteredNotifications.length === 0" class="no-notification">
             <i class="el-icon-info"></i>
             <span>暂无通知</span>
           </div>
           <div v-else class="notification-list">
             <div 
-              v-for="notification in notifications" 
+              v-for="notification in filteredNotifications" 
               :key="notification.notiId"
               class="notification-item"
               @click="showNotificationDetail(notification)"
             >
-              <div class="notification-title">{{ notification.notiTitle }}</div>
-              <div class="notification-time">{{ formatDate(notification.createdAt) }}</div>
+              <div class="notification-date">
+                {{ formatNotificationDate(notification.createdAt) }}
+              </div>
+              <div class="notification-info">
+                <div class="notification-title">{{ notification.notiTitle }}</div>
+                <div class="notification-badges">
+                  <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
+                  <span v-if="isTopNotification(notification)" class="badge top">TOP</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -41,15 +54,6 @@
         <div class="panel-header">
           <i class="el-icon-calendar"></i>
           <span>近期活动</span>
-          <el-button 
-            type="text" 
-            size="mini" 
-            @click="loadRecentActivities"
-            class="refresh-btn"
-            :loading="activitiesLoading"
-          >
-            <i class="el-icon-refresh"></i>
-          </el-button>
         </div>
         <div class="activities-content">
           <div v-if="recentActivities.length === 0" class="no-activity">
@@ -263,6 +267,21 @@
               </template>
             </el-table-column>
           </el-table>
+          
+          <!-- 分页组件 -->
+          <div class="pagination-container">
+            <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="currentPage"
+              :page-sizes="[10, 20, 50, 100]"
+              :page-size="pageSize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="totalCourses"
+              background
+            >
+            </el-pagination>
+          </div>
         </div>
       </div>
     </div>
@@ -271,8 +290,12 @@
     <el-dialog
       title="通知详情"
       :visible.sync="notificationDialogVisible"
-      width="600px"
+      :width="dialogWidth"
       :close-on-click-modal="false"
+      :modal="true"
+      :lock-scroll="true"
+      custom-class="notification-dialog"
+      :before-close="handleDialogClose"
     >
       <div v-if="currentNotification" class="notification-detail">
         <div class="detail-header">
@@ -332,7 +355,12 @@
       </div>
       
       <div slot="footer" class="dialog-footer">
-        <el-button @click="notificationDialogVisible = false">关闭</el-button>
+        <el-button type="primary" @click="notificationDialogVisible = false" size="medium">
+          <i class="el-icon-check"></i> 确定
+        </el-button>
+        <el-button @click="notificationDialogVisible = false" size="medium">
+          <i class="el-icon-close"></i> 关闭
+        </el-button>
       </div>
     </el-dialog>
   </div>
@@ -351,6 +379,15 @@ export default {
     return {
       // 通知数据
       notifications: [],
+      
+      // 通知类型筛选
+      selectedNotificationType: 'all',
+      notificationTabs: [
+        { value: 'all', label: '全部' },
+        { value: 'system', label: '系统通知' },
+        { value: 'activity', label: '活动通知' },
+        { value: 'course', label: '课程通知' }
+      ],
       
       // 通知详情弹窗
       notificationDialogVisible: false,
@@ -404,6 +441,10 @@ export default {
       selectedCourses: [],
       totalCourses: 0,
       
+      // 分页数据
+      currentPage: 1,
+      pageSize: 10,
+      
       // 加载状态
       loading: false,
       notificationsLoading: false,
@@ -418,6 +459,26 @@ export default {
     // 计算总活动数
     totalAll() {
       return this.activityStatusFilters.reduce((sum, filter) => sum + filter.count, 0);
+    },
+    
+    // 计算弹窗宽度
+    dialogWidth() {
+      // 根据屏幕宽度和侧边栏宽度计算弹窗宽度
+      const screenWidth = window.innerWidth;
+      const sidebarWidth = screenWidth > 1200 ? 200 : (screenWidth > 768 ? 64 : 0);
+      const availableWidth = screenWidth - sidebarWidth - 40; // 减去40px的边距
+      return Math.max(availableWidth, 600) + 'px'; // 最小宽度600px
+    },
+    
+    // 筛选后的通知列表
+    filteredNotifications() {
+      if (this.selectedNotificationType === 'all') {
+        return this.notifications;
+      }
+      return this.notifications.filter(notification => {
+        const notiType = notification.notiType || 'system';
+        return notiType === this.selectedNotificationType;
+      });
     }
   },
   created() {
@@ -575,15 +636,25 @@ export default {
           console.log('一个月前时间:', oneMonthAgo);
           
           // 过滤出一个月内的活动并按时间倒序排列
-          this.recentActivities = allActivities
+          let filteredActivities = allActivities
             .filter(activity => {
               if (!activity.startTime) return false;
               const activityTime = new Date(activity.startTime);
               console.log('活动时间:', activityTime, '是否在一个月内:', activityTime >= oneMonthAgo);
               return activityTime >= oneMonthAgo;
             })
-            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
-            .slice(0, 5);
+            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+          
+          // 如果一个月内的活动不足3个，则获取最近的活动
+          if (filteredActivities.length < 3) {
+            console.log('一个月内活动不足3个，获取最近的活动');
+            filteredActivities = allActivities
+              .filter(activity => activity.startTime)
+              .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+              .slice(0, 5);
+          }
+          
+          this.recentActivities = filteredActivities.slice(0, 5);
             
           console.log('过滤后的近期活动:', this.recentActivities);
         } else {
@@ -652,8 +723,8 @@ export default {
       this.coursesLoading = true;
       try {
         const response = await listBookingsWithCourse({
-          pageNum: 1,
-          pageSize: 10,
+          pageNum: this.currentPage,
+          pageSize: this.pageSize,
           studentId: this.$store.state.user.name
         });
         if (response.code === 200) {
@@ -866,6 +937,55 @@ export default {
     // 打开上传对话框
     openUploadDialog(course) {
       this.$message.info(`打开上传对话框: ${course.courseName}`);
+    },
+    
+    // 处理弹窗关闭
+    handleDialogClose(done) {
+      this.notificationDialogVisible = false;
+      done();
+    },
+    
+    // 根据类型筛选通知
+    filterNotificationsByType(type) {
+      this.selectedNotificationType = type;
+    },
+    
+    // 格式化通知日期
+    formatNotificationDate(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+      return `${day} ${month}月`;
+    },
+    
+    // 判断是否为新通知（3天内）
+    isNewNotification(notification) {
+      if (!notification.createdAt) return false;
+      const now = new Date();
+      const notificationDate = new Date(notification.createdAt);
+      const diffTime = Math.abs(now - notificationDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays <= 3;
+    },
+    
+    // 判断是否为置顶通知
+    isTopNotification(notification) {
+      // 可以根据实际业务逻辑判断，比如优先级字段
+      return notification.priority === 'high' || notification.isTop === true;
+    },
+    
+    // 分页大小改变
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.currentPage = 1; // 重置到第一页
+      this.loadSelectedCourses();
+    },
+    
+    // 当前页改变
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      this.loadSelectedCourses();
     }
   }
 };
@@ -975,43 +1095,147 @@ export default {
   padding: 20px;
 }
 
+/* 通知类型标签页 */
+.notification-tabs {
+  display: flex;
+  border-bottom: 1px solid #e4e7ed;
+  margin-bottom: 16px;
+}
+
+.notification-tab {
+  flex: 1;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #606266;
+  cursor: pointer;
+  transition: all 0.3s;
+  border-bottom: 2px solid transparent;
+}
+
+.notification-tab:hover {
+  color: #409EFF;
+  background: #f0f9ff;
+}
+
+.notification-tab.active {
+  color: #409EFF;
+  background: #f0f9ff;
+  border-bottom-color: #409EFF;
+  font-weight: 600;
+}
+
 /* 通知列表 */
 .notification-list {
   max-height: 200px;
   overflow-y: auto;
 }
 
+/* 自定义滚动条样式 - 类似近期活动 */
+.notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notification-list::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.notification-list::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+
+.notification-list::-webkit-scrollbar-thumb:hover {
+  background: #a8abb2;
+}
+
 .notification-item {
+  display: flex;
+  align-items: flex-start;
   padding: 12px 0;
   border-bottom: 1px solid #f0f2f5;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
 .notification-item:last-child {
   border-bottom: none;
 }
 
+.notification-item:hover {
+  background: #f5f7fa;
+  transform: translateX(4px);
+}
+
+.notification-date {
+  min-width: 60px;
+  background: #409EFF;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.notification-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .notification-title {
   font-weight: 500;
   color: #303133;
-  margin-bottom: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
 }
 
-.notification-time {
-  font-size: 12px;
-  color: #909399;
+.notification-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.new {
+  background: #ff6b6b;
+  color: white;
+}
+
+.badge.top {
+  background: #409EFF;
+  color: white;
 }
 
 /* 活动列表 */
 .activity-list {
-  max-height: 200px;
+  max-height: 240px;
   overflow-y: auto;
+  min-height: 120px;
 }
 
 .activity-item {
-  padding: 12px 0;
+  padding: 14px 0;
   border-bottom: 1px solid #f0f2f5;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .activity-item:last-child {
@@ -1027,13 +1251,15 @@ export default {
 .activity-name {
   font-weight: 500;
   color: #303133;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .activity-time {
   font-size: 12px;
   color: #909399;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 /* 活动完成进度 */
@@ -1239,6 +1465,62 @@ export default {
   opacity: 0.8;
 }
 
+/* 分页组件样式 */
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  padding: 16px 0;
+  border-top: 1px solid #ebeef5;
+  background: #fafbfc;
+}
+
+.pagination-container .el-pagination {
+  text-align: center;
+}
+
+.pagination-container .el-pagination .el-pagination__total {
+  color: #606266;
+  font-weight: 500;
+}
+
+.pagination-container .el-pagination .el-pagination__sizes {
+  color: #606266;
+}
+
+.pagination-container .el-pagination .el-pager li {
+  background: #ffffff;
+  border: 1px solid #dcdfe6;
+  color: #606266;
+  font-weight: 500;
+}
+
+.pagination-container .el-pagination .el-pager li:hover {
+  color: #409EFF;
+}
+
+.pagination-container .el-pagination .el-pager li.active {
+  background: #409EFF;
+  border-color: #409EFF;
+  color: #ffffff;
+}
+
+.pagination-container .el-pagination .btn-prev,
+.pagination-container .el-pagination .btn-next {
+  background: #ffffff;
+  border: 1px solid #dcdfe6;
+  color: #606266;
+}
+
+.pagination-container .el-pagination .btn-prev:hover,
+.pagination-container .el-pagination .btn-next:hover {
+  color: #409EFF;
+}
+
+.pagination-container .el-pagination .el-pagination__jump {
+  color: #606266;
+}
+
 /* 无数据状态 */
 .no-notification,
 .no-activity {
@@ -1292,30 +1574,137 @@ export default {
 }
 
 /* 通知详情弹窗样式 */
+.notification-dialog {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+}
+
+.notification-dialog.el-dialog {
+  border-radius: 8px !important;
+}
+
+.notification-dialog .el-dialog__header,
+.notification-dialog.el-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%) !important;
+  color: white !important;
+  padding: 20px 24px !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(66, 165, 245, 0.3) !important;
+}
+
+.notification-dialog .el-dialog__header::before,
+.notification-dialog.el-dialog .el-dialog__header::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%) !important;
+  pointer-events: none !important;
+}
+
+.notification-dialog .el-dialog__title,
+.notification-dialog.el-dialog .el-dialog__title {
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  letter-spacing: 0.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.notification-dialog .el-dialog__title::before,
+.notification-dialog.el-dialog .el-dialog__title::before {
+  content: '📢' !important;
+  font-size: 16px !important;
+  opacity: 0.9 !important;
+}
+
+.notification-dialog .el-dialog__headerbtn,
+.notification-dialog.el-dialog .el-dialog__headerbtn {
+  top: 20px !important;
+  right: 24px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s ease !important;
+  z-index: 2 !important;
+}
+
+.notification-dialog .el-dialog__headerbtn:hover,
+.notification-dialog.el-dialog .el-dialog__headerbtn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+.notification-dialog .el-dialog__headerbtn .el-dialog__close,
+.notification-dialog.el-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+}
+
+.notification-dialog .el-dialog__body,
+.notification-dialog.el-dialog .el-dialog__body {
+  padding: 0 !important;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #ffffff !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+.notification-dialog .el-dialog__footer {
+  padding: 16px 24px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: right;
+  border-radius: 0 0 8px 8px;
+}
+
 .notification-detail {
   padding: 0;
+  min-height: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
 }
 
 .detail-header {
-  border-bottom: 1px solid #ebeef5;
-  padding-bottom: 16px;
-  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 24px;
+  margin-bottom: 0;
+  background: #ffffff;
 }
 
 .detail-title {
   margin: 0 0 12px 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: #1f2937;
   line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .detail-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   font-size: 14px;
-  color: #909399;
+  color: #6b7280;
+  font-weight: 400;
 }
 
 .detail-type {
@@ -1336,33 +1725,43 @@ export default {
 
 .detail-content {
   margin-bottom: 24px;
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
 }
 
 .content-text {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #606266;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #374151;
   white-space: pre-wrap;
   word-break: break-word;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .detail-attachments {
-  border-top: 1px solid #ebeef5;
-  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  padding: 24px;
+  background: #ffffff;
+  margin-top: auto;
 }
 
 .detail-attachments h4 {
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .detail-attachments h5 {
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 500;
-  color: #606266;
+  color: #6b7280;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .attachment-section {
@@ -1382,29 +1781,32 @@ export default {
 .attachment-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #f8f9fa;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
   border-radius: 6px;
-  border: 1px solid #e9ecef;
-  transition: all 0.2s;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
 }
 
 .attachment-item:hover {
-  background: #e9ecef;
-  border-color: #dee2e6;
+  background: #f3f4f6;
+  border-color: #d1d5db;
 }
 
 .attachment-item i {
-  color: #409EFF;
+  color: #6b7280;
   font-size: 16px;
 }
 
 .file-name {
   flex: 1;
   font-size: 14px;
-  color: #606266;
+  color: #374151;
   word-break: break-all;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .image-gallery {
@@ -1473,5 +1875,63 @@ export default {
 
 .image-preview-dialog .el-message-box__content {
   padding: 20px;
+}
+
+/* 通知弹窗底部按钮样式 */
+.notification-dialog .dialog-footer {
+  margin: 0;
+}
+
+.notification-dialog .dialog-footer .el-button {
+  margin-left: 12px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.notification-dialog .dialog-footer .el-button--primary {
+  background: #3b82f6;
+  border: none;
+  color: white;
+}
+
+.notification-dialog .dialog-footer .el-button--primary:hover {
+  background: #2563eb;
+}
+
+.notification-dialog .dialog-footer .el-button:not(.el-button--primary) {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.notification-dialog .dialog-footer .el-button:not(.el-button--primary):hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+
+/* 响应式设计 - 通知弹窗 */
+@media (max-width: 768px) {
+  .notification-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .notification-dialog .el-dialog__body {
+    max-height: 70vh;
+  }
+  
+  .detail-header,
+  .detail-content,
+  .detail-attachments {
+    padding: 16px;
+  }
+  
+  .detail-title {
+    font-size: 16px;
+  }
 }
 </style>

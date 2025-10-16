@@ -127,7 +127,6 @@
             <if test="startTime != null">start_time = #{startTime},</if>
             <if test="endTime != null">end_time = #{endTime},</if>
             <if test="activityLocation != null">activity_location = #{activityLocation},</if>
-            <if test="activityCapacity != null">activity_capacity = #{activityCapacity},</if>
             <if test="activityStart != null">activity_start = #{activityStart},</if>
             <if test="activityDeadline != null">activity_deadline = #{activityDeadline},</if>
             <if test="activityDescription != null">activity_description = #{activityDescription},</if>
@@ -136,11 +135,22 @@
             <if test="activityType != null">activity_type = #{activityType},</if>
             <if test="status != null">status = #{status},</if>
             <if test="pictureUrl != null">picture_url = #{pictureUrl},</if>
-            <if test="activityTotalCapacity != null">activity_total_capacity = #{activityTotalCapacity},</if>
-             version = version + 1,
+            <if test="activityTotalCapacity != null">
+                activity_total_capacity = #{activityTotalCapacity},
+            </if>
+            <!-- 🔥 总容量变化时重新计算剩余容量 -->
+            <if test="activityTotalCapacity != null">
+                activity_capacity = #{activityTotalCapacity} - (
+                SELECT COALESCE(COUNT(*), 0)
+                FROM bookings
+                WHERE activity_id = #{activityId}
+                AND status IN ('approved', 'submitted')
+                ),
+            </if>
+            version = version + 1,
         </trim>
         where activity_id = #{activityId}
-         and version = #{version}
+        and version = #{version}
     </update>
     <update id="updateActivity2" parameterType="Activities">
         update activities
