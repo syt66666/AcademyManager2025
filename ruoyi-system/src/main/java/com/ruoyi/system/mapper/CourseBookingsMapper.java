@@ -199,4 +199,19 @@ public interface CourseBookingsMapper
      */
     public Map<String, Object> checkCourseBookingSimple(@Param("courseId") Long courseId, @Param("studentId") String studentId);
 
+    /**
+     * 统计总选课人数
+     *
+     * @return 总选课人数
+     */
+    public int countTotalCourseBookings();
+
+    /**
+     * 根据课程ID统计选课人数
+     *
+     * @param courseId 课程ID
+     * @return 选课人数
+     */
+    public int countBookingsByCourseId(@Param("courseId") Long courseId);
+
 }

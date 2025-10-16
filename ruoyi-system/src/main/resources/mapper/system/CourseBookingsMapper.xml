@@ -400,4 +400,17 @@
           AND student_id = #{studentId}
     </delete>
 
+    <!-- 统计总选课人数 -->
+    <select id="countTotalCourseBookings" resultType="int">
+        SELECT COUNT(DISTINCT student_id)
+        FROM course_bookings
+    </select>
+
+    <!-- 根据课程ID统计选课人数 -->
+    <select id="countBookingsByCourseId" resultType="int">
+        SELECT COUNT(DISTINCT student_id)
+        FROM course_bookings
+        WHERE course_id = #{courseId}
+    </select>
+
 </mapper>
