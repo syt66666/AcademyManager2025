@@ -714,6 +714,7 @@ export default {
   },
   data() {
     return {
+      initialBookedCount: 0, // 🔥 新增：保存初始已选人数
       // 遮罩层
       loading: true,
       // 选中数组
@@ -836,6 +837,27 @@ export default {
     this.getCurrentUserAcademy();
     // 测试状态计算逻辑
     this.testStatusComputation();
+  },
+  watch: {
+    // 🔥 新增：监听总容量变化
+    'form.courseTotalCapacity'(newVal, oldVal) {
+      // 只有在编辑模式下才处理
+      if (this.form.courseId && newVal && this.initialBookedCount >= 0) {
+        // 计算新的剩余容量
+        const newRemainingCapacity = newVal - this.initialBookedCount;
+        // 确保剩余容量不为负数
+        if (newRemainingCapacity >= 0) {
+          this.form.courseCapacity = newRemainingCapacity;
+          console.log('✅ 更新剩余容量为:', this.form.courseCapacity);
+        } else {
+          // 如果新总容量小于已选人数，恢复原值并提示
+          this.$nextTick(() => {
+            this.form.courseTotalCapacity = oldVal;
+          });
+          this.$message.warning(`新总容量(${newVal})不能小于已选人数(${this.initialBookedCount})人`);
+        }
+      }
+    }
   },
   methods: {
     // 获取当前用户所属书院
@@ -1307,7 +1329,6 @@ export default {
       this.open = false;
       this.reset();
     },
-
     // 表单重置
     reset() {
       this.form = {
@@ -1467,19 +1488,17 @@ export default {
       const courseId = row.courseId || this.ids
       getCourses(courseId).then(response => {
         this.form = response.data;
-
+        // 🔥 保存初始已选人数
+        this.initialBookedCount = this.form.courseTotalCapacity - this.form.courseCapacity;
+        console.log('💾 保存初始已选人数:', this.initialBookedCount);
         // 确保课程类型是字符串格式，以匹配选项值
         if (this.form.courseType) {
           this.form.courseType = String(this.form.courseType);
         }
-
         // 设置组织单位为当前用户昵称（不可修改）
         this.form.organizer = this.getCurrentUserNickName();
-
         // 保持原有的已报名人数，不重置剩余容量
-        // 如果剩余容量为空或无效，则根据已报名人数计算
         if (!this.form.courseCapacity || this.form.courseCapacity < 0) {
-          // 如果剩余容量无效，假设没有已报名人数
           this.form.courseCapacity = this.form.courseTotalCapacity || 0;
         }
         this.open = true;

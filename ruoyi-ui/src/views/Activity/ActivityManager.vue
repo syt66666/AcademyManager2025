@@ -825,13 +825,13 @@ export default {
     filteredStudents() {
       return this.selectedStudents;
     },
-    
+
     // 检查选中的活动中是否有已结束的活动
     hasEndedActivities() {
       if (!this.ids || this.ids.length === 0) {
         return false;
       }
-      return this.activitiesList.some(activity => 
+      return this.activitiesList.some(activity =>
         this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
       );
     }
@@ -1031,7 +1031,7 @@ export default {
         pageSize: 10,
         activityId: row.activityId
       };
-      
+
       try {
         // 获取所有学生数据（用于排序和统计）
         const allStudentsRes = await listBookingsWithActivity({
@@ -1039,19 +1039,19 @@ export default {
           pageNum: 1,
           pageSize: 1000 // 获取所有学生数据
         });
-        
+
         // 保存所有学生数据
         this.allStudents = allStudentsRes.rows || [];
         this.studentTotal = allStudentsRes.total || 0;
-        
+
         // 计算统计数据
         this.calculateStudentStats(this.allStudents);
-        
+
         // 获取当前页数据
         this.getCurrentPageStudents();
-        
+
         this.dialogVisibleStudents = true;
-        
+
       } catch (e) {
         // 即使出错也显示弹框，但显示错误信息
         this.selectedStudents = [];
@@ -1102,7 +1102,7 @@ export default {
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
         listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
-          
+
           // 如果有活动状态筛选条件，进行前端筛选
           if (this.queryParams.activityStatus) {
             allActivities = allActivities.filter(activity => {
@@ -1110,15 +1110,15 @@ export default {
               return status === this.queryParams.activityStatus;
             });
           }
-          
+
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
-          
+
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
           const endIndex = startIndex + this.queryParams.pageSize;
           const paginatedList = allActivities.slice(startIndex, endIndex);
-          
+
           this.activitiesList = paginatedList;
           this.total = allActivities.length; // 使用筛选后的总数量
           this.loading = false;
@@ -1134,7 +1134,7 @@ export default {
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
         listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
-          
+
           // 如果有活动状态筛选条件，进行前端筛选
           if (this.queryParams.activityStatus) {
             allActivities = allActivities.filter(activity => {
@@ -1142,15 +1142,15 @@ export default {
               return status === this.queryParams.activityStatus;
             });
           }
-          
+
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
-          
+
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
           const endIndex = startIndex + this.queryParams.pageSize;
           const paginatedList = allActivities.slice(startIndex, endIndex);
-          
+
           this.activitiesList = paginatedList;
           this.total = allActivities.length; // 使用筛选后的总数量
           this.loading = false;
@@ -1244,27 +1244,28 @@ export default {
         this.$message.warning('活动已结束，不允许编辑活动信息');
         return;
       }
-
-      this.reset();
+      
       const activityId = row.activityId || this.ids;
-
       this.loading = true;
+      
       try {
         const response = await getActivities(activityId);
-        this.form = response.data;
-
+        const activityData = response.data;
+        
+        // 直接将获取的数据设置到 form
+        this.form = activityData;
+        
         // 确保活动描述字段有值
         if (!this.form.activityDescription) {
           this.form.activityDescription = '';
         }
-
+        
         this.open = true;
         this.title = "修改活动信息";
-
+        
         // 等待对话框和编辑器完全渲染
         await this.$nextTick();
-
-        // 可添加额外处理
+        
       } catch (error) {
         this.$message.error('获取活动详情失败');
       } finally {
@@ -1328,13 +1329,13 @@ export default {
     },
 
 // 处理富文本中的图片，将Base64图片上传到服务器并替换为URL
-    
+
 
     /** 删除按钮操作 */
     handleDelete(row) {
       const activityIds = row.activityId || this.ids;
       const activityNames = row.activityName || this.names;
-      
+
       // 检查是否有已结束的活动
       let endedActivities = [];
       if (row && this.isActivityEnded(row)) {
@@ -1342,12 +1343,12 @@ export default {
       } else if (this.ids && this.ids.length > 0) {
         // 批量删除时，找出所有已结束的活动
         endedActivities = this.activitiesList
-          .filter(activity => 
+          .filter(activity =>
             this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
           )
           .map(activity => activity.activityName);
       }
-      
+
       // 如果有已结束的活动，显示详细的提示信息
       if (endedActivities.length > 0) {
         let message = "以下活动已结束，无法删除：\n";
@@ -1358,12 +1359,12 @@ export default {
         this.$message.warning(message);
         return;
       }
-      
+
       // 构建更详细的确认信息
       let confirmMessage = '是否确认删除活动名称为"' + activityNames + '"的数据项？\n\n';
       confirmMessage += '⚠️ 注意：删除活动将同时删除该活动的所有学生报名记录！\n';
       confirmMessage += '此操作不可撤销，请谨慎操作。';
-      
+
       this.$modal.confirm(confirmMessage).then(function () {
         return delActivities(activityIds);
       }).then(() => {
@@ -1430,7 +1431,7 @@ export default {
     /** 获取学生列表（分页） */
     async getStudentList() {
       if (!this.currentActivityId) return;
-      
+
       this.studentLoading = true;
       try {
         const res = await listBookingsWithActivity(this.studentQueryParams);
@@ -1451,7 +1452,7 @@ export default {
         this.selectedStudents = [];
         return;
       }
-      
+
       const startIndex = (this.studentQueryParams.pageNum - 1) * this.studentQueryParams.pageSize;
       const endIndex = startIndex + this.studentQueryParams.pageSize;
       this.selectedStudents = this.allStudents.slice(startIndex, endIndex);
@@ -1467,18 +1468,18 @@ export default {
     /** 计算学生统计数据 */
     calculateStudentStats(allStudents) {
       this.studentStats.total = allStudents.length;
-      
+
       // 计算各状态人数
-      this.studentStats.pending = allStudents.filter(student => 
+      this.studentStats.pending = allStudents.filter(student =>
         student.status === 'pending' || student.status === '未审核'
       ).length;
-      this.studentStats.approved = allStudents.filter(student => 
+      this.studentStats.approved = allStudents.filter(student =>
         student.status === 'approved' || student.status === '已通过'
       ).length;
-      this.studentStats.rejected = allStudents.filter(student => 
+      this.studentStats.rejected = allStudents.filter(student =>
         student.status === 'rejected' || student.status === '未通过'
       ).length;
-      
+
       // 已提交 = 未审核 + 已通过 + 未通过
       this.studentStats.submitted = this.studentStats.pending + this.studentStats.approved + this.studentStats.rejected;
     },
@@ -1498,10 +1499,10 @@ export default {
     /** 处理表格排序变化 */
     handleSortChange({ column, prop, order }) {
       if (!this.allStudents || this.allStudents.length === 0) return;
-      
+
       // 根据排序字段和顺序对所有数据进行排序
       let sortedStudents = [...this.allStudents];
-      
+
       if (order === 'ascending') {
         // 升序排序
         if (prop === 'studentId') {
@@ -1545,13 +1546,13 @@ export default {
           });
         }
       }
-      
+
       // 更新所有学生数据
       this.allStudents = sortedStudents;
-      
+
       // 重置到第一页
       this.studentQueryParams.pageNum = 1;
-      
+
       // 获取当前页数据
       this.getCurrentPageStudents();
     },
@@ -1576,18 +1577,18 @@ export default {
 
     /** 图片上传成功回调 */
     handleImageSuccess(response, file) {
-      
+
       if (response.code === 200 && response.url) {
         // 提取相对路径部分（如：/profile/upload/...）
         const relativePath = response.fileName || response.url.replace(/^https?:\/\/[^\/]+/, '');
-        
+
         // 使用Vue.set确保响应式更新，存储相对路径
         this.$set(this.form, 'pictureUrl', relativePath);
         this.$message.success('图片上传成功');
-        
+
         // 强制更新视图
         this.$forceUpdate();
-        
+
         // 测试URL处理
       } else {
         this.$message.error(response.msg || '图片上传失败');
@@ -1613,31 +1614,31 @@ export default {
 
     /** 图片加载错误处理 */
     handleImageLoadError(event) {
-      
+
       // 尝试获取更多错误信息
       const img = event.target;
       if (img) {
-        
+
         // 检查是否是网络问题
         if (img.error) {
         }
       }
-      
+
       // 尝试直接访问图片URL来测试
       this.testImageUrl(event.target.src);
-      
+
       this.$message.error('图片加载失败，请检查图片URL或网络连接');
     },
 
     /** 测试图片URL是否可访问 */
     testImageUrl(url) {
-      
+
       // 创建一个新的图片元素来测试
       const testImg = new Image();
       testImg.onload = () => {
       };
       testImg.onerror = (error) => {
-        
+
         // 尝试使用fetch测试
         this.testImageWithFetch(url);
       };
@@ -1648,7 +1649,7 @@ export default {
     async testImageWithFetch(url) {
       try {
         const response = await fetch(url, { method: 'HEAD' });
-        
+
         if (response.ok) {
         } else {
         }
@@ -1684,22 +1685,22 @@ export default {
 
     /** 获取活动图片完整URL */
     getActivityImageUrl(pictureUrl) {
-      
+
       if (!pictureUrl) {
         return '';
       }
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return fullUrl;
       }
-      
+
       // 其他情况直接返回
       return pictureUrl;
     },
@@ -1707,25 +1708,25 @@ export default {
     /** 获取活动图片完整URL（处理中文编码问题） */
     getActivityImageUrlFixed(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return this.getActivityImageUrlFixed(fullUrl);
       }
-      
+
       return pictureUrl;
     },
 
     /** 获取活动图片完整URL（尝试编码版本） */
     getActivityImageUrlEncoded(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，尝试编码处理
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         try {
@@ -1736,45 +1737,66 @@ export default {
             // 对每个路径段进行编码，但保持已编码的部分不变
             return encodeURIComponent(decodeURIComponent(segment));
           }).join('/');
-          
+
           const encodedUrl = `${url.protocol}//${url.host}${encodedPath}`;
           return encodedUrl;
         } catch (error) {
           return pictureUrl;
         }
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return this.getActivityImageUrlEncoded(fullUrl);
       }
-      
+
       return pictureUrl;
     },
 
     /** 智能获取活动图片URL（仿照审核界面实现） */
     getActivityImageUrlSmart(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return fullUrl;
       }
-      
+
       return pictureUrl;
     },
 
   },
   watch: {
-    'form.activityTotalCapacity'(newVal) {
-      this.form.activityCapacity = newVal;
+    'form.activityTotalCapacity'(newVal, oldVal) {
+      if (!this.form.activityId) {
+        // 新增活动模式：剩余容量 = 总容量
+        this.form.activityCapacity = newVal;
+      } else {
+        // 编辑活动模式：需要重新计算剩余容量
+        if (oldVal && newVal && this.form.activityCapacity !== null) {
+          // 计算已选人数（基于旧的总容量）
+          const selectedCount = oldVal - this.form.activityCapacity;
+          
+          // 计算新的剩余容量
+          const newRemainingCapacity = newVal - selectedCount;
+          
+          // 确保剩余容量不为负数
+          if (newRemainingCapacity >= 0) {
+            this.form.activityCapacity = newRemainingCapacity;
+          } else {
+            // 如果新总容量小于已选人数，剩余容量设为0
+            this.form.activityCapacity = 0;
+            this.$message.warning(`新总容量(${newVal})小于已选人数(${selectedCount})，剩余容量已设为0`);
+          }
+        }
+      }
     }
   }
 };
@@ -2326,15 +2348,15 @@ export default {
 /* 增强的学生表格 */
 .enhanced-student-table {
   width: 100% !important;
-  
+
   .el-table {
     width: 100% !important;
   }
-  
+
   .el-table td {
     padding: 8px 12px !important;
   }
-  
+
   .el-table th {
     padding: 8px 12px !important;
   }
@@ -2928,7 +2950,7 @@ export default {
     padding: 8px;
     justify-content: center;
   }
-  
+
   .student-pagination {
     padding: 12px 16px;
   }
