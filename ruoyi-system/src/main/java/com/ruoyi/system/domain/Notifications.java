@@ -38,8 +38,8 @@ public class Notifications extends BaseEntity
     @Excel(name = "创建者ID")
     private String creatorId;
     /** 创建时间 */
-    @JsonFormat(pattern = "yyyy-MM-dd")
-    @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @Excel(name = "创建时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date createdAt;
     // ------------------- 查询专用字段 (非数据库字段) -------------------
     /** 用于查询的文档附件关键词 */

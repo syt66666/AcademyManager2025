@@ -93,7 +93,6 @@ public class NotificationsController extends BaseController
     /**
      * 新增系统通知公告
      */
-
     @Log(title = "系统通知公告", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody Notifications notifications)

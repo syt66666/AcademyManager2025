@@ -838,7 +838,10 @@ export default {
   },
   created() {
     this.getServerTime();
-    this.getList();
+    this.getList().then(() => {
+      // 数据加载完成后再检查路由参数
+      this.checkRouteParams();
+    });
   },
   methods: {
     /** 获取服务器时间 */
@@ -854,6 +857,32 @@ export default {
       } catch (error) {
         // 如果获取服务器时间失败，使用本地时间作为备用
         this.serverTime = new Date();
+      }
+    },
+
+    /** 检查路由参数，处理从首页跳转过来的编辑请求 */
+    async checkRouteParams() {
+      const { activityId, filterMode } = this.$route.query;
+      
+      if (activityId && filterMode === 'single') {
+        // 查找对应的活动
+        const targetActivity = this.activitiesList.find(activity => 
+          activity.activityId == activityId
+        );
+        
+        if (targetActivity) {
+          // 自动打开编辑弹窗
+          await this.handleUpdate(targetActivity);
+        } else {
+          // 如果列表中没有找到，显示错误信息
+          this.$message.error('未找到指定的活动，请刷新页面重试');
+        }
+        
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
       }
     },
 
@@ -1095,12 +1124,12 @@ export default {
     /** 查询活动列表 */
     getList() {
       this.loading = true;
-      getNickName().then(nickName => {
+      return getNickName().then(nickName => {
         this.queryParams.organizer = nickName.msg; // 更新组织者
         // 🔽 确保在 organizer 更新后调用列表接口
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
+        return listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
 
           // 如果有活动状态筛选条件，进行前端筛选
@@ -1127,12 +1156,13 @@ export default {
         }).catch(error => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
+          throw error;
         });
       }).catch(error => {
         // 即使获取组织者名称失败，也尝试获取活动列表
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
+        return listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
 
           // 如果有活动状态筛选条件，进行前端筛选
@@ -1159,6 +1189,7 @@ export default {
         }).catch(listError => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
+          throw listError;
         });
       });
     },

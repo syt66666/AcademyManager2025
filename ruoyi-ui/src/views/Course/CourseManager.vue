@@ -837,6 +837,10 @@ export default {
     this.getCurrentUserAcademy();
     // 测试状态计算逻辑
     this.testStatusComputation();
+    this.getList().then(() => {
+      // 数据加载完成后再检查路由参数
+      this.checkRouteParams();
+    });
   },
   watch: {
     // 🔥 新增：监听总容量变化
@@ -1240,7 +1244,7 @@ export default {
     getList() {
       this.loading = true;
       console.log('查询课程列表参数:', this.queryParams);
-      listCourses(this.queryParams).then(response => {
+      return listCourses(this.queryParams).then(response => {
         console.log('课程列表查询响应:', response);
         const rows = response.rows || [];
         console.log('原始课程数据:', rows);
@@ -1287,6 +1291,10 @@ export default {
 
         // 强制更新视图
         this.$forceUpdate();
+      }).catch(error => {
+        this.loading = false;
+        this.$message.error("获取课程列表失败");
+        throw error;
       });
     },
     // 兜底：根据时间推导课程状态
@@ -1475,6 +1483,32 @@ export default {
       this.ids = selection.map(item => item.courseId)
       this.single = selection.length!==1
       this.multiple = !selection.length
+    },
+
+    /** 检查路由参数，处理从首页跳转过来的编辑请求 */
+    async checkRouteParams() {
+      const { courseId, filterMode } = this.$route.query;
+      
+      if (courseId && filterMode === 'single') {
+        // 查找对应的课程
+        const targetCourse = this.coursesList.find(course => 
+          course.courseId == courseId
+        );
+        
+        if (targetCourse) {
+          // 自动打开编辑弹窗
+          await this.handleUpdate(targetCourse);
+        } else {
+          // 如果列表中没有找到，显示错误信息
+          this.$message.error('未找到指定的课程，请刷新页面重试');
+        }
+        
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
+      }
     },
     /** 新增按钮操作 */
     handleAdd() {
