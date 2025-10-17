@@ -578,14 +578,14 @@ export default {
 
     async approveCurrent() {
       if (!this.currentBooking) return;
-      
+
       try {
         await this.$confirm('确认通过该活动的审核吗？', '审核确认', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
         });
-        
+
         const payload = {
           bookingId: this.currentBooking.bookingId,
           status: '已通过',
@@ -593,7 +593,7 @@ export default {
           reviewTime: new Date().toISOString(),
           reviewer: this.$store.state.user.name
         };
-        
+
         this.actionLoading = true;
         await this.$options.methods._updateSingleBooking.call(this, payload);
         this.$message.success('审核通过');
@@ -789,7 +789,7 @@ export default {
       };
 
       // 先获取组织者名称，作为默认筛选条件
-      getNickName() 
+      getNickName()
         .then(nickName => {
           // 合并查询参数与组织者信息
           const params = { ...this.queryParams, organizer: nickName.msg };
@@ -922,7 +922,7 @@ export default {
               timeout: 30000
             });
           }
-          
+
           const result = await this.parseDocx(response.data);
           this.docxContent = result.html;
         }
@@ -981,7 +981,7 @@ export default {
       try {
         // 从URL中提取文件名
         const fileName = url.split('/').pop() || 'download';
-        
+
         // 方法1: 使用fetch API下载
         try {
           const response = await fetch(url, {
@@ -990,33 +990,33 @@ export default {
               'Authorization': `Bearer ${getToken()}`
             }
           });
-          
+
           if (!response.ok) {
             throw new Error('网络响应不正常');
           }
-          
+
           const blob = await response.blob();
           const blobUrl = URL.createObjectURL(blob);
-          
+
           const a = document.createElement('a');
           a.href = blobUrl;
           a.download = fileName;
           a.style.display = 'none';
           document.body.appendChild(a);
           a.click();
-          
+
           // 清理
           setTimeout(() => {
             document.body.removeChild(a);
             URL.revokeObjectURL(blobUrl);
           }, 100);
-          
+
           this.$message.success('文件下载成功');
           return;
         } catch (fetchError) {
           // Fetch下载失败，尝试备用方法
         }
-        
+
         // 方法2: 直接创建链接下载（备用）
         const a = document.createElement('a');
         a.href = url;
@@ -1024,16 +1024,16 @@ export default {
         a.style.display = 'none';
         document.body.appendChild(a);
         a.click();
-        
+
         setTimeout(() => {
           document.body.removeChild(a);
         }, 100);
-        
+
         this.$message.info('文件下载已开始');
-        
+
       } catch (error) {
         this.$message.error(`下载失败: ${error.message || '请稍后重试'}`);
-        
+
         // 最终备用方案：在新窗口打开
         window.open(url, '_blank');
       }
@@ -1042,12 +1042,12 @@ export default {
     // 获取带认证的PDF URL
     getPdfUrlWithAuth(url) {
       const token = getToken();
-      
+
       // 检测是否为生产环境（服务器部署）
-      const isProduction = window.location.hostname !== 'localhost' && 
+      const isProduction = window.location.hostname !== 'localhost' &&
                           window.location.hostname !== '127.0.0.1' &&
                           !window.location.hostname.includes('192.168.');
-      
+
       if (isProduction && token) {
         // 生产环境：使用文件访问接口
         try {
@@ -1058,7 +1058,7 @@ export default {
           // 文件访问接口构建失败，回退到原始方式
         }
       }
-      
+
       // 本地开发环境或回退方案：使用原始URL
       const fallbackUrl = `${url}#toolbar=0&navpanes=0&scrollbar=0`;
       return fallbackUrl;
