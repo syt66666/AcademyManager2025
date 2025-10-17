@@ -4,12 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.ruoyi.common.core.domain.model.LoginUser;
-import com.ruoyi.system.domain.StuCourse;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -119,7 +116,7 @@ public class ActivitiesController extends BaseController {
     }
 
     /**
-     * 报名
+     * 报名 - 基于实际预约人数更新容量
      *
      * @param params
      * @return
@@ -128,16 +125,64 @@ public class ActivitiesController extends BaseController {
     public AjaxResult signUpCapacity(@RequestBody Map<String, Integer> params) {
         Integer activityId = params.get("activityId");
         Integer version = params.get("version"); // 获取请求体中的 version
-        int result = activityService.decreaseCapacity(activityId,version);
-        return result > 0 ? AjaxResult.success("报名成功") : AjaxResult.error("报名失败");
+        
+        try {
+            int result = activityService.updateCapacityByActualBookings(activityId, version);
+            return result > 0 ? AjaxResult.success("报名成功") : AjaxResult.error("报名失败");
+        } catch (Exception e) {
+            return AjaxResult.error(e.getMessage());
+        }
     }
 
+    /**
+     * 取消报名 - 基于实际预约人数更新容量
+     *
+     * @param params
+     * @return
+     */
     @PostMapping("/cancelSignUpCapacity")
     public AjaxResult cancelSignUpCapacity(@RequestBody Map<String, Integer> params) {
         Integer activityId = params.get("activityId");
         Integer version = params.get("version");
-        int result = activityService.increaseCapacity(activityId,version);
-        return result > 0 ? AjaxResult.success("取消报名成功") : AjaxResult.error("取消报名失败");
+        
+        try {
+            int result = activityService.updateCapacityByActualBookings(activityId, version);
+            return result > 0 ? AjaxResult.success("取消报名成功") : AjaxResult.error("取消报名失败");
+        } catch (Exception e) {
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 获取活动当前预约人数
+     *
+     * @param activityId 活动ID
+     * @return 预约人数
+     */
+    @GetMapping("/bookingCount/{activityId}")
+    public AjaxResult getBookingCount(@PathVariable Integer activityId) {
+        try {
+            int count = activityService.getCurrentBookingCount(activityId);
+            return AjaxResult.success(count);
+        } catch (Exception e) {
+            return AjaxResult.error("获取预约人数失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 检查活动剩余容量
+     *
+     * @param activityId 活动ID
+     * @return 剩余容量
+     */
+    @GetMapping("/remainingCapacity/{activityId}")
+    public AjaxResult getRemainingCapacity(@PathVariable Integer activityId) {
+        try {
+            int capacity = activityService.checkActivityCapacity(activityId);
+            return AjaxResult.success(capacity);
+        } catch (Exception e) {
+            return AjaxResult.error("获取剩余容量失败: " + e.getMessage());
+        }
     }
 
     /**

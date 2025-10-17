@@ -1,84 +1,27 @@
 <template>
-  <div class="app-container">
-    <!-- 欢迎信息 -->
-    <div class="welcome-container">
-      <div class="welcome-card">
-        <div class="welcome-icon">
-          <i class="el-icon-user-solid"></i>
-    </div>
-        <div class="welcome-content">
-          <h1 class="welcome-title">{{ welcomeMessage }}</h1>
-          <p class="welcome-subtitle">{{ currentAcademy ? `欢迎来到${currentAcademy}` : '欢迎使用书院管理系统' }}</p>
-            </div>
-            </div>
-          </div>
-  </div>
+  <component :is="homeComponent" />
 </template>
 
 <script>
-import { getStudent } from "@/api/system/student";
+import StudentHome from "./HomePage/StudentHome.vue";
+import AcademicTeacherHome from "./HomePage/AcademicTeacherHome.vue";
+import AdminTeacherHome from "./HomePage/AdminTeacherHome.vue";
 
 export default {
   name: "HomePage",
-  data() {
-    return {
-      // 当前学生书院信息
-      currentAcademy: '',
-    };
-  },
+  components: { StudentHome, AcademicTeacherHome, AdminTeacherHome },
   computed: {
-    // 判断用户角色
-    userRole() {
+    homeComponent() {
       const userName = this.$store.state.user.name;
-      if (userName === 'admin') return 'system-admin';
-      if (userName === '10000') return 'super-admin';
-      if (userName >= '10001' && userName <= '10007') return 'academy-admin';
-      return 'student';
-    },
-
-    // 判断是否为管理员（包括所有管理员类型）
-    isAdmin() {
-      return ['system-admin', 'super-admin', 'academy-admin'].includes(this.userRole);
-    },
-
-    // 欢迎信息
-    welcomeMessage() {
-      switch (this.userRole) {
-        case 'system-admin':
-          return '你好，系统管理员';
-        case 'super-admin':
-          return '你好，总管理员';
-        case 'academy-admin':
-          return '你好，书院教务员';
-        default:
-          return '你好，学生';
+      if (userName === '10000') {
+        return 'AdminTeacherHome';
       }
-    },
-  },
-  created() {
-    // 初始化学生信息
-    this.getCurrentStudentInfo();
-  },
-  methods: {
-    // 获取当前学生信息
-    async getCurrentStudentInfo() {
-      try {
-        const response = await getStudent(this.$store.state.user.name);
-        console.log('学生信息API响应:', response);
-
-        if (response && response.studentInfo) {
-          this.currentAcademy = response.studentInfo.academy;
-          console.log('当前学生书院:', this.currentAcademy);
-        } else {
-          console.error('获取学生信息失败，响应中没有studentInfo:', response);
-          this.currentAcademy = '未知';
-        }
-      } catch (error) {
-        console.error('获取学生信息异常:', error);
-        this.currentAcademy = '未知';
+      if (userName >= '10001' && userName <= '10007') {
+        return 'AcademicTeacherHome';
       }
-    },
-
+      // 账号为10000以及学生账号默认显示学生首页
+      return 'StudentHome';
+    }
   }
 };
 </script>

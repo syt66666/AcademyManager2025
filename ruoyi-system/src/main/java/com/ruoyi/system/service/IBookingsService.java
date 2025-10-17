@@ -81,4 +81,30 @@ public interface IBookingsService {
      * @return 删除结果（影响的行数）
      */
     int deleteBookingsByActivityId(Long activityId);
+
+    /**
+     * 报名后更新活动容量
+     * @param activityId 活动ID
+     * @param version 版本号
+     * @return 更新结果
+     */
+    int updateActivityCapacityAfterBooking(Integer activityId, Integer version);
+
+    /**
+     * 事务性报名操作 - 解决并发问题
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    int signUpWithTransaction(Long activityId, String studentId, Integer version);
+
+    /**
+     * 事务性取消报名操作 - 解决并发问题
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    int cancelSignUpWithTransaction(Long activityId, String studentId, Integer version);
 }

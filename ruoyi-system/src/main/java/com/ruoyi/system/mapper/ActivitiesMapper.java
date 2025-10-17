@@ -56,10 +56,19 @@ public interface ActivitiesMapper {
     public int deleteActivityByIds(Integer[] activityIds);
 
     /**
-     * 在活动表中更新容量
+     * 基于实际预约人数更新活动容量
      */
-    int increaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
-    int decreaseCapacity(@Param("activityId") Integer activityId, @Param("version") Integer version);
+    int updateCapacityByActualBookings(@Param("activityId") Integer activityId, @Param("version") Integer version);
+    
+    /**
+     * 检查活动是否还有剩余容量
+     */
+    int checkActivityCapacity(@Param("activityId") Integer activityId);
+    
+    /**
+     * 获取活动当前预约人数
+     */
+    int getCurrentBookingCount(@Param("activityId") Integer activityId);
 
     int updateActivity2(Activities activity);
 

@@ -55,10 +55,19 @@ public interface IActivitiesService {
     String importActivity(List<Activities> userList, boolean updateSupport, String operName);
 
     /**
-     * 在活动表中更新容量
+     * 基于实际预约人数更新活动容量
      */
-    int increaseCapacity(Integer activityId,Integer version);
-    int decreaseCapacity(Integer activityId,Integer version);
+    int updateCapacityByActualBookings(Integer activityId, Integer version);
+    
+    /**
+     * 获取活动当前预约人数
+     */
+    int getCurrentBookingCount(Integer activityId);
+    
+    /**
+     * 检查活动剩余容量
+     */
+    int checkActivityCapacity(Integer activityId);
 
     int updateActivity2(Activities activity);
 

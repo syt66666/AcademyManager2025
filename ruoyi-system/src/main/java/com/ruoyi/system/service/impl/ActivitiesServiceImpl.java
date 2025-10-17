@@ -7,7 +7,6 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
 import com.ruoyi.system.domain.Activities;
-import com.ruoyi.system.domain.StuCourse;
 import com.ruoyi.system.mapper.ActivitiesMapper;
 import com.ruoyi.system.service.IActivitiesService;
 import com.ruoyi.system.service.IBookingsService;
@@ -216,34 +215,44 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     }
 
     /**
-     * 修改活动容量
+     * 基于实际预约人数更新活动容量
      */
     @Override
-    public int increaseCapacity(Integer activityId,Integer version) {
+    public int updateCapacityByActualBookings(Integer activityId, Integer version) {
         Activities activity = activitiesMapper.selectActivityById(activityId);
         if (activity == null) {
             throw new ServiceException("活动不存在！");
         }
-        int result = activitiesMapper.increaseCapacity(activityId, version);
-        if (result == 0) {
-            // 不抛出异常，返回0表示操作失败，让调用方处理
-            return 0;
+        
+        // 检查是否还有剩余容量
+        int remainingCapacity = activitiesMapper.checkActivityCapacity(activityId);
+        if (remainingCapacity <= 0) {
+            throw new ServiceException("活动容量已满，无法报名！");
         }
+        
+        // 基于实际预约人数更新容量
+        int result = activitiesMapper.updateCapacityByActualBookings(activityId, version);
+        if (result == 0) {
+            throw new ServiceException("容量更新失败，请重试！");
+        }
+        
         return result;
     }
 
+    /**
+     * 获取活动当前预约人数
+     */
     @Override
-    public int decreaseCapacity(Integer activityId,Integer version) {
-        Activities activity = activitiesMapper.selectActivityById(activityId);
-        if (activity == null) {
-            throw new ServiceException("活动不存在！");
-        }
-        int result = activitiesMapper.decreaseCapacity(activityId, version);
-        if (result == 0) {
-            // 不抛出异常，返回0表示操作失败，让调用方处理
-            return 0;
-        }
-        return result;
+    public int getCurrentBookingCount(Integer activityId) {
+        return activitiesMapper.getCurrentBookingCount(activityId);
+    }
+
+    /**
+     * 检查活动剩余容量
+     */
+    @Override
+    public int checkActivityCapacity(Integer activityId) {
+        return activitiesMapper.checkActivityCapacity(activityId);
     }
 
     @Override

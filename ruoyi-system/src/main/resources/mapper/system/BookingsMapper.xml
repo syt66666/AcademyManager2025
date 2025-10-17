@@ -284,4 +284,61 @@
         DELETE FROM bookings
         WHERE activity_id = #{activityId}
     </delete>
+
+    <!-- 原子性报名操作 - 解决并发问题 -->
+    <insert id="signUpWithTransaction" parameterType="map">
+        INSERT INTO bookings (activity_id, student_id, booked_at, status)
+        SELECT #{activityId}, #{studentId}, NOW(), '未提交'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM bookings 
+            WHERE activity_id = #{activityId} 
+            AND student_id = #{studentId}
+        )
+        AND EXISTS (
+            SELECT 1 FROM activities 
+            WHERE activity_id = #{activityId}
+            AND version = #{version}
+            AND activity_capacity > 0
+        )
+    </insert>
+
+    <!-- 原子性更新活动容量 -->
+    <update id="updateCapacityAfterSignUp" parameterType="map">
+        UPDATE activities 
+        SET activity_capacity = activity_total_capacity - (
+            SELECT COUNT(*) 
+            FROM bookings 
+            WHERE activity_id = #{activityId}
+            AND status IN ('approved', 'submitted', '未提交')
+        ),
+        version = version + 1
+        WHERE activity_id = #{activityId}
+        AND version = #{version}
+    </update>
+
+    <!-- 原子性取消报名操作 -->
+    <delete id="cancelSignUpWithTransaction" parameterType="map">
+        DELETE FROM bookings
+        WHERE activity_id = #{activityId}
+        AND student_id = #{studentId}
+        AND EXISTS (
+            SELECT 1 FROM activities 
+            WHERE activity_id = #{activityId}
+            AND version = #{version}
+        )
+    </delete>
+
+    <!-- 原子性更新活动容量（取消报名后） -->
+    <update id="updateCapacityAfterCancelSignUp" parameterType="map">
+        UPDATE activities 
+        SET activity_capacity = activity_total_capacity - (
+            SELECT COUNT(*) 
+            FROM bookings 
+            WHERE activity_id = #{activityId}
+            AND status IN ('approved', 'submitted', '未提交')
+        ),
+        version = version + 1
+        WHERE activity_id = #{activityId}
+        AND version = #{version}
+    </update>
 </mapper>

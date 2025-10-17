@@ -108,6 +108,46 @@ public interface BookingsMapper {
     int deleteBookingsByActivityId(@Param("activityId") Long activityId);
 
     /**
+     * 原子性报名操作 - 解决并发问题
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 插入结果
+     */
+    int signUpWithTransaction(@Param("activityId") Long activityId, 
+                              @Param("studentId") String studentId, 
+                              @Param("version") Integer version);
+
+    /**
+     * 原子性更新活动容量
+     * @param activityId 活动ID
+     * @param version 版本号
+     * @return 更新结果
+     */
+    int updateCapacityAfterSignUp(@Param("activityId") Long activityId, 
+                                 @Param("version") Integer version);
+
+    /**
+     * 原子性取消报名操作
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 删除结果
+     */
+    int cancelSignUpWithTransaction(@Param("activityId") Long activityId, 
+                                   @Param("studentId") String studentId, 
+                                   @Param("version") Integer version);
+
+    /**
+     * 原子性更新活动容量（取消报名后）
+     * @param activityId 活动ID
+     * @param version 版本号
+     * @return 更新结果
+     */
+    int updateCapacityAfterCancelSignUp(@Param("activityId") Long activityId, 
+                                       @Param("version") Integer version);
+
+    /**
      * 统计总参与人数
      * @return 总参与人数
      */
