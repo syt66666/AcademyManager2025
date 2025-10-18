@@ -309,9 +309,6 @@
             <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
               {{ getActivityStatusText(selectedActivity) }}
             </el-tag>
-            <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
-              {{ getSignStatusText(selectedActivity) }}
-            </el-tag>
           </div>
         </div>
         <el-divider></el-divider>
@@ -2177,8 +2174,9 @@ export default {
       box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
     }
 
-    /* 已报名状态 - 绿色边框和特殊标识 */
+    /* 已报名状态 - 绿色条和特殊标识 */
     &.booked {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
       border: 2px solid #27ae60;
       box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
       position: relative;
@@ -2206,6 +2204,12 @@ export default {
       transform: translateY(-1px);
       box-shadow: 0 4px 16px rgba(69, 127, 202, 0.4);
       background: linear-gradient(to right, rgb(59, 107, 182), rgb(76, 125, 180));
+    }
+
+    /* 已报名状态的hover效果 */
+    &.booked:hover {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+      box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
     }
 
     .event-summary {
