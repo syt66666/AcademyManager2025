@@ -4,7 +4,6 @@ import com.ruoyi.system.domain.Bookings;
 import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.domain.dto.BookingExportDTO;
 import org.apache.ibatis.annotations.Mapper;
-import org.springframework.stereotype.Component;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -100,4 +99,65 @@ public interface BookingsMapper {
      * @return 导出数据列表
      */
     List<BookingExportDTO> selectBookingExportList(BookingExportDTO bookingExportDTO);
+
+    /**
+     * 根据活动ID删除所有相关的预约记录
+     * @param activityId 活动ID
+     * @return 删除结果（影响的行数）
+     */
+    int deleteBookingsByActivityId(@Param("activityId") Long activityId);
+
+    /**
+     * 原子性报名操作 - 解决并发问题
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 插入结果
+     */
+    int signUpWithTransaction(@Param("activityId") Long activityId, 
+                              @Param("studentId") String studentId, 
+                              @Param("version") Integer version);
+
+    /**
+     * 原子性更新活动容量
+     * @param activityId 活动ID
+     * @param version 版本号
+     * @return 更新结果
+     */
+    int updateCapacityAfterSignUp(@Param("activityId") Long activityId, 
+                                 @Param("version") Integer version);
+
+    /**
+     * 原子性取消报名操作
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 删除结果
+     */
+    int cancelSignUpWithTransaction(@Param("activityId") Long activityId, 
+                                   @Param("studentId") String studentId, 
+                                   @Param("version") Integer version);
+
+    /**
+     * 原子性更新活动容量（取消报名后）
+     * @param activityId 活动ID
+     * @param version 版本号
+     * @return 更新结果
+     */
+    int updateCapacityAfterCancelSignUp(@Param("activityId") Long activityId, 
+                                       @Param("version") Integer version);
+
+    /**
+     * 统计总参与人数
+     * @return 总参与人数
+     */
+    int countTotalParticipants();
+
+    /**
+     * 根据组织单位统计参与人数
+     * @param organizer 组织单位
+     * @return 参与人数
+     */
+    int countParticipantsByOrganizer(@Param("organizer") String organizer);
+
 }

@@ -1,4 +1,14 @@
 import request from '@/utils/request'
+
+// 查询课程选课记录列表
+export function listBookings(query) {
+  return request({
+    url: '/system/courseBookings/list',
+    method: 'get',
+    params: query
+  })
+}
+
 // 查询课程选课记录列表（包含课程信息）
 export function listBookingsWithCourse(query) {
   return request({
@@ -7,10 +17,17 @@ export function listBookingsWithCourse(query) {
     params: query
   })
 }
-/**
- * 新增课程选课记录
- */
-export function addCourseBooking(data) {
+
+// 查询课程选课记录详细
+export function getBookings(bookingId) {
+  return request({
+    url: '/system/courseBookings/' + bookingId,
+    method: 'get'
+  })
+}
+
+// 新增课程选课记录
+export function addBookings(data) {
   return request({
     url: '/system/courseBookings',
     method: 'post',
@@ -18,10 +35,8 @@ export function addCourseBooking(data) {
   })
 }
 
-/**
- * 修改课程选课记录
- */
-export function updateCourseBooking(data) {
+// 修改课程选课记录
+export function updateBookings(data) {
   return request({
     url: '/system/courseBookings',
     method: 'put',
@@ -29,139 +44,66 @@ export function updateCourseBooking(data) {
   })
 }
 
-/**
- * 审核课程选课记录
- */
-export function auditCourseBooking(data) {
-  return request({
-    url: '/system/courseBookings/audit',
-    method: 'put',
-    data: data
-  })
-}
-
-/**
- * 删除课程选课记录
- */
-export function deleteCourseBooking(bookingId) {
+// 删除课程选课记录
+export function delBookings(bookingId) {
   return request({
     url: '/system/courseBookings/' + bookingId,
     method: 'delete'
   })
 }
 
-/**
- * 根据课程ID和学生ID删除选课记录
- */
-export function deleteCourseBookingsByCourseAndStudent(courseId, studentId) {
+// 根据课程ID和学生ID删除选课记录
+export function deleteBookingsByCourseAndStudent(courseId, studentId) {
   return request({
-    url: '/system/courseBookings/course/' + courseId + '/student/' + studentId,
-    method: 'delete'
+    url: '/system/courseBookings/byCourseAndStudent',
+    method: 'delete',
+    params: { courseId, studentId }
   })
 }
 
-/**
- * 检查课程选课记录是否存在
- */
+// 检查课程选课状态
 export function checkCourseBookingSimple(courseId, studentId) {
-  const url = '/system/courseBookings/check/' + courseId + '/' + studentId;
-  console.log('checkCourseBookingSimple API调用:', { courseId, studentId, url });
   return request({
-    url: url,
-    method: 'get'
-  })
-}
-
-/**
- * 检查是否已选课
- */
-export function checkIfCourseBooked(courseId, studentId) {
-  return request({
-    url: '/system/courseBookings/checkBooked/' + courseId + '/' + studentId,
-    method: 'get'
-  })
-}
-
-/**
- * 根据学生ID查询已选课程ID列表
- */
-export function getCoursesByStudent(studentId) {
-  return request({
-    url: '/system/courseBookings/courses/' + studentId,
-    method: 'get'
-  })
-}
-
-/**
- * 统计课程选课审核状态
- */
-export function getCourseBookingAuditStatus() {
-  return request({
-    url: '/system/courseBookings/auditCount',
-    method: 'get'
-  })
-}
-
-/**
- * 查询课程选课记录列表（已提交状态）
- */
-export function listCourseBookingsSubmitted(query) {
-  return request({
-    url: '/system/courseBookings/listAudit',
+    url: '/system/courseBookings/checkBooking',
     method: 'get',
-    params: query
+    params: { courseId, studentId }
   })
 }
 
-/**
- * 导出课程选课记录
- */
-export function exportCourseBookings(query) {
+// 新增课程选课记录（简化版）
+export function addBooking(data) {
   return request({
-    url: '/system/courseBookings/export',
+    url: '/system/courseBookings',
     method: 'post',
-    data: query
+    data: data
   })
 }
 
-/**
- * 导出课程选课学生列表
- */
-export function exportCourseBookingStudents(query) {
-  return request({
-    url: '/system/courseBookings/exportStudents',
-    method: 'post',
-    data: query
-  })
-}
-
-
-
-
-// 获取选课详情
-export function getBooking(bookingId) {
-  return request({
-    url: '/system/courseBookings/detail/' + bookingId,
-    method: 'get'
-  })
-}
-// 查询课程选课记录列表（审核列表）
+// 查询课程选课记录审核列表
 export function listBookingsAudit(query) {
   return request({
-    url: '/system/courseBookings/listAudit',
+    url: '/system/courseBookings/auditList',
     method: 'get',
     params: query
   })
 }
 
-// 获取审核统计
-export function getAuditCount() {
+// 查询课程选课记录列表（包含详情）
+export function listBookingsWithDetails(query) {
   return request({
-    url: '/system/courseBookings/auditCount',
-    method: 'get'
+    url: '/system/courseBookings/listWithDetails',
+    method: 'get',
+    params: query
   })
 }
 
+// 获取课程选课记录详细信息（包含课程和学生信息）
+export function getBookingsDetails(bookingId) {
+  return request({
+    url: '/system/courseBookings/details/' + bookingId,
+    method: 'get'
+  })
+}
 
 // 审核课程选课记录
 export function auditBooking(data) {
@@ -172,19 +114,29 @@ export function auditBooking(data) {
   })
 }
 
-// 修改课程选课记录
-export function updateBooking(data) {
+// 批量审核课程选课记录
+export function batchAuditBookings(data) {
   return request({
-    url: '/system/courseBookings',
+    url: '/system/courseBookings/batchAudit',
     method: 'put',
     data: data
   })
 }
 
-// 获取课程选课记录详情
-export function getCourseBooking(bookingId) {
+// 获取审核统计信息
+export function getAuditCount(organizer) {
   return request({
-    url: '/system/courseBookings/' + bookingId,
-    method: 'get'
+    url: '/system/courseBookings/auditCount',
+    method: 'get',
+    params: organizer ? { organizer } : {}
+  })
+}
+
+// 导出课程选课审核列表
+export function exportAuditBookings(query) {
+  return request({
+    url: '/system/courseBookings/exportAudit',
+    method: 'post',
+    params: query
   })
 }

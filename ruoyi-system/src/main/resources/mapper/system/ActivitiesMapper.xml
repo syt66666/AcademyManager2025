@@ -127,7 +127,6 @@
             <if test="startTime != null">start_time = #{startTime},</if>
             <if test="endTime != null">end_time = #{endTime},</if>
             <if test="activityLocation != null">activity_location = #{activityLocation},</if>
-            <if test="activityCapacity != null">activity_capacity = #{activityCapacity},</if>
             <if test="activityStart != null">activity_start = #{activityStart},</if>
             <if test="activityDeadline != null">activity_deadline = #{activityDeadline},</if>
             <if test="activityDescription != null">activity_description = #{activityDescription},</if>
@@ -136,11 +135,22 @@
             <if test="activityType != null">activity_type = #{activityType},</if>
             <if test="status != null">status = #{status},</if>
             <if test="pictureUrl != null">picture_url = #{pictureUrl},</if>
-            <if test="activityTotalCapacity != null">activity_total_capacity = #{activityTotalCapacity},</if>
-             version = version + 1,
+            <if test="activityTotalCapacity != null">
+                activity_total_capacity = #{activityTotalCapacity},
+            </if>
+            <!-- 🔥 总容量变化时重新计算剩余容量 -->
+            <if test="activityTotalCapacity != null">
+                activity_capacity = #{activityTotalCapacity} - (
+                SELECT COALESCE(COUNT(*), 0)
+                FROM bookings
+                WHERE activity_id = #{activityId}
+                AND status IN ('approved', 'submitted')
+                ),
+            </if>
+            version = version + 1,
         </trim>
         where activity_id = #{activityId}
-         and version = #{version}
+        and version = #{version}
     </update>
     <update id="updateActivity2" parameterType="Activities">
         update activities
@@ -174,25 +184,39 @@
         </foreach>
     </delete>
 
-    <update id="increaseCapacity" parameterType="Integer">
-        UPDATE activities
-        SET activity_capacity = activity_capacity + 1,
-            version = version +1
+    <!-- 基于实际预约人数更新活动容量 -->
+    <update id="updateCapacityByActualBookings" parameterType="Integer">
+        UPDATE activities 
+        SET activity_capacity = activity_total_capacity - (
+            SELECT COALESCE(COUNT(*), 0)
+            FROM bookings 
+            WHERE activity_id = #{activityId}
+            AND status IN ('approved', 'submitted', '未提交')
+        ),
+        version = version + 1
         WHERE activity_id = #{activityId}
-          and version = #{version}
+        AND version = #{version}
     </update>
 
-    <update id="decreaseCapacity" parameterType="Integer">
-        UPDATE activities
-        SET activity_capacity = CASE
-                                    WHEN activity_capacity > 0 THEN activity_capacity - 1
-                                    ELSE 0
-            END,
-            version = version +1
+    <!-- 检查活动是否还有剩余容量 -->
+    <select id="checkActivityCapacity" resultType="int">
+        SELECT activity_total_capacity - (
+            SELECT COALESCE(COUNT(*), 0)
+            FROM bookings 
+            WHERE activity_id = #{activityId}
+            AND status IN ('approved', 'submitted', '未提交')
+        ) as remaining_capacity
+        FROM activities 
         WHERE activity_id = #{activityId}
-          and version = #{version}
-          AND activity_capacity > 0
-    </update>
+    </select>
+
+    <!-- 获取活动当前预约人数 -->
+    <select id="getCurrentBookingCount" resultType="int">
+        SELECT COALESCE(COUNT(*), 0)
+        FROM bookings 
+        WHERE activity_id = #{activityId}
+        AND status IN ('approved', 'submitted', '未提交')
+    </select>
 
 
     <!-- 更新为可报名状态 -->

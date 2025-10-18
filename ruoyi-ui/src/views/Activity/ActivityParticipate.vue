@@ -6,14 +6,14 @@
         <i class="el-icon-data-analysis"></i>
         <span>活动统计</span>
       </div>
-      
+
       <div class="stats-content">
         <!-- 左侧状态统计 -->
         <div class="status-stats">
           <h3>活动状态筛选</h3>
           <div class="status-items">
-            <div 
-              class="status-item" 
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未提交' }"
               @click="filterByStatus('未提交')"
             >
@@ -25,9 +25,9 @@
                 <div class="status-label">未提交</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '未通过' }"
               @click="filterByStatus('未通过')"
             >
@@ -39,9 +39,23 @@
                 <div class="status-label">未通过</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item" 
+
+            <div
+              class="status-item"
+              :class="{ active: selectedStatus === '未审核' }"
+              @click="filterByStatus('未审核')"
+            >
+              <div class="status-icon pending">
+                <i class="el-icon-time"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.pending }}</div>
+                <div class="status-label">未审核</div>
+              </div>
+            </div>
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -53,9 +67,9 @@
                 <div class="status-label">已通过</div>
               </div>
             </div>
-            
-            <div 
-              class="status-item clear-filter" 
+
+            <div
+              class="status-item clear-filter"
               :class="{ active: selectedStatus === null }"
               @click="clearStatusFilter"
             >
@@ -69,13 +83,13 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 右侧进度条 -->
         <div class="progress-stats">
           <h3>活动完成进度</h3>
           <div class="progress-items">
-            <div 
-              v-for="(progress, type) in activityProgress" 
+            <div
+              v-for="(progress, type) in activityProgress"
               :key="type"
               class="progress-item"
               :class="{ active: selectedActivityType === type }"
@@ -84,8 +98,8 @@
               <div class="progress-label">{{ getActivityTypeName(type) }}</div>
               <div class="progress-bar-container">
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
+                  <div
+                    class="progress-fill"
                     :style="{ width: progress.percentage + '%' }"
                     :class="getProgressBarClass(progress.percentage, type)"
                   ></div>
@@ -116,8 +130,8 @@
         <!-- 序号列 -->
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
-            <span 
-              class="index-badge" 
+            <span
+              class="index-badge"
               :class="{ 'rejected-badge': scope.row.status === '未通过' }"
             >
               {{ (queryParams.pageNum - 1) * queryParams.pageSize + scope.$index + 1 }}
@@ -127,7 +141,7 @@
         <el-table-column label="活动名称" align="center" prop="activityName" width="200">
           <template slot-scope="scope">
             <div class="activity-name" :title="scope.row.activityName">
-              {{ truncateText(scope.row.activityName, 15) }}
+              <span :title="scope.row.activityName">{{ truncateText(scope.row.activityName, 18) }}</span>
             </div>
           </template>
         </el-table-column>
@@ -176,6 +190,7 @@
                 effect="light"
                 class="status-tag clickable-tag"
                 @click="openUploadDialog(scope.row)"
+                :title="scope.row.reviewComment || '点击查看审核意见'"
               >
                 重新提交
               </el-tag>
@@ -213,14 +228,14 @@
               <div class="expand-row" v-if="props.row.pictureUrl">
                 <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
                 <div class="expand-content">
-        <div class="activity-image-container">
-          <el-image
-            :src="getActivityImageUrl(props.row.pictureUrl)"
-            :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
-            fit="cover"
-            class="activity-image"
-          />
-        </div>
+                  <div class="activity-image-container">
+                    <el-image
+                      :src="getActivityImageUrl(props.row.pictureUrl)"
+                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
+                      fit="cover"
+                      class="activity-image"
+                    />
+                  </div>
                 </div>
               </div>
               <!-- <div class="expand-row">
@@ -289,26 +304,26 @@
       <div v-if="!isViewOnly" class="section">
         <h3>上传图片证明材料</h3>
         <div class="image-upload-container">
-        <el-upload
-          :action="uploadUrl"
-          list-type="picture-card"
-          :file-list="imageFiles"
-          :on-preview="handlePicturePreview"
-          :on-remove="handleRemoveImage"
-          :on-success="handleImageSuccess"
-          :limit="5"
-          multiple
-          accept=".jpg,.jpeg,.png,.gif"
-          :before-upload="beforeImageUpload"
-          :headers="headers"
+          <el-upload
+            :action="uploadUrl"
+            list-type="picture-card"
+            :file-list="imageFiles"
+            :on-preview="handlePicturePreview"
+            :on-remove="handleRemoveImage"
+            :on-success="handleImageSuccess"
+            :limit="5"
+            multiple
+            accept=".jpg,.jpeg,.png,.gif"
+            :before-upload="beforeImageUpload"
+            :headers="headers"
             :auto-upload="true"
             class="image-upload"
-        >
+          >
             <div class="upload-add-card">
               <i class="el-icon-plus upload-add-icon"></i>
               <div class="upload-add-text">添加图片</div>
             </div>
-        </el-upload>
+          </el-upload>
           <div class="upload-tip">
             <i class="el-icon-info"></i>
             最多可上传5张图片，每张大小不超过2MB，支持JPG、PNG、GIF格式
@@ -360,16 +375,16 @@
       <div v-if="!isViewOnly" class="section">
         <h3>上传文档材料</h3>
         <div class="upload-container">
-        <el-upload
-          :action="uploadUrl"
-          :file-list="docFiles"
-          :on-remove="handleRemoveDoc"
-          :on-success="handleDocSuccess"
-          :limit="1"
-          accept=".pdf"
-          :before-upload="beforeDocUpload"
-          :headers="headers"
-          :data="{ filePath: 'bookingImages' }"
+          <el-upload
+            :action="uploadUrl"
+            :file-list="docFiles"
+            :on-remove="handleRemoveDoc"
+            :on-success="handleDocSuccess"
+            :limit="1"
+            accept=".pdf"
+            :before-upload="beforeDocUpload"
+            :headers="headers"
+            :data="{ filePath: 'bookingImages' }"
             :auto-upload="true"
             drag
             class="document-upload"
@@ -384,18 +399,18 @@
             </div>
             <div slot="tip" class="upload-tip">
               <i class="el-icon-info"></i>
-            仅支持上传PDF格式文档，大小不超过10MB
-          </div>
-        </el-upload>
-          
+              仅支持上传1个PDF格式文档，大小不超过10MB
+            </div>
+          </el-upload>
+
           <!-- 自定义文件列表显示 -->
           <div v-if="docFiles && docFiles.length > 0" class="custom-file-list">
             <div v-for="(file, index) in docFiles" :key="index" class="custom-file-item">
               <i class="el-icon-document file-icon"></i>
               <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
-              <el-button 
-                type="text" 
-                icon="el-icon-delete" 
+              <el-button
+                type="text"
+                icon="el-icon-delete"
                 class="remove-btn"
                 @click="handleRemoveDoc(file)"
               ></el-button>
@@ -424,12 +439,13 @@
       </div>
 
 
+
       <!-- 图片预览对话框 -->
-      <el-dialog 
-        :visible.sync="previewVisible" 
-        title="图片预览" 
-        width="70%" 
-        top="5vh" 
+      <el-dialog
+        :visible.sync="previewVisible"
+        title="图片预览"
+        width="70%"
+        top="5vh"
         class="preview-dialog"
         :modal="true"
         :close-on-click-modal="true"
@@ -565,6 +581,7 @@ export default {
       // 文档上传
       docFiles: [],
 
+
       // 已有文件
       existingFiles: [],
 
@@ -577,13 +594,14 @@ export default {
         pageSize: 10,
         studentId: this.$store.state.user.name
       },
-      
+
       // 统计相关数据
       selectedStatus: null, // 当前选中的状态筛选
       allActivitiesList: [], // 所有活动数据，用于统计计算
       statusCounts: {
         unsubmitted: 0,  // 未提交
-        rejected: 0,     // 已拒绝
+        rejected: 0,     // 未通过
+        pending: 0,      // 未审核
         approved: 0      // 已通过
       },
       activityProgress: {
@@ -592,8 +610,8 @@ export default {
         '3': { completed: 0, percentage: 0 }, // 能力锻造与实践创新活动类
         '4': { completed: 0, percentage: 0 }  // 社会责任与领军意识活动类
       },
-          // 进度条筛选：当前选中的活动类型
-          selectedActivityType: null,
+      // 进度条筛选：当前选中的活动类型
+      selectedActivityType: null,
       isViewOnly: false, // 是否为只查看模式
       showFooterButtons: false, // 是否显示底部按钮
 
@@ -628,7 +646,7 @@ export default {
     getActivityTypeName(activityType) {
       const typeMap = {
         '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类', 
+        '2': '知识融合与思维进阶活动类',
         '3': '能力锻造与实践创新活动类',
         '4': '社会责任与领军意识活动类'
       };
@@ -642,7 +660,7 @@ export default {
       const activityEndTime = new Date(endTime);
       return now > activityEndTime;
     },
-    
+
     getActivityTypeTagType(activityType) {
       const map = {
         '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
@@ -662,14 +680,31 @@ export default {
         return fileName;
       }
 
+      const baseUrl = process.env.VUE_APP_BASE_API || '';
+      
+      // 检查文件名是否已经包含了baseUrl前缀
+      if (fileName.startsWith(baseUrl)) {
+        // 如果已经包含了baseUrl，直接返回
+        return fileName;
+      }
+      
       // 确保路径格式正确
       let normalizedPath = fileName;
       if (!normalizedPath.startsWith('/')) {
         normalizedPath = '/' + normalizedPath;
       }
 
-      const baseUrl = process.env.VUE_APP_BASE_API || '';
-      return `${baseUrl}${normalizedPath}`;
+      const fullUrl = `${baseUrl}${normalizedPath}`;
+      
+      // 添加调试信息
+      console.log('构建文件URL:', {
+        fileName: fileName,
+        normalizedPath: normalizedPath,
+        baseUrl: baseUrl,
+        fullUrl: fullUrl
+      });
+      
+      return fullUrl;
     },
 
     // 获取预览图片URL
@@ -683,12 +718,16 @@ export default {
 
       // 服务器返回的文件
       if (file.url) {
-        return this.getFileFullUrl(file.url);
+        const fullUrl = this.getFileFullUrl(file.url);
+        console.log('预览图片URL:', fullUrl);
+        return fullUrl;
       }
 
       // response中的文件
       if (file.response && file.response.fileName) {
-        return this.getFileFullUrl(file.response.fileName);
+        const fullUrl = this.getFileFullUrl(file.response.fileName);
+        console.log('预览图片URL (response):', fullUrl);
+        return fullUrl;
       }
 
       return '';
@@ -719,20 +758,22 @@ export default {
     initFileLists(data) {
       this.imageFiles = [];
       this.docFiles = [];
+      
       // 初始化图片文件
       if (data.proof && Array.isArray(data.proof)) {
         data.proof.forEach(fileName => {
           if (fileName) {
             const fullUrl = this.getFileFullUrl(fileName);
-          this.imageFiles.push({
-            name: this.extractFileName(fileName),
+            this.imageFiles.push({
+              name: this.extractFileName(fileName),
               url: fullUrl,
               isOld: true,
               downloading: false // 添加下载状态
-          });
+            });
           }
         });
       }
+      
       // 初始化文档文件
       if (data.summary) {
         const fullUrl = this.getFileFullUrl(data.summary);
@@ -819,7 +860,7 @@ export default {
 
 
       this.previewVisible = true;
-      
+
     },
 
     // 更新当前预览图片
@@ -879,7 +920,7 @@ export default {
         this.$message.warning('没有可下载的图片');
         return;
       }
-      
+
       this.imageFiles.forEach(file => {
         this.downloadFileReliably(file);
       });
@@ -888,7 +929,7 @@ export default {
     // 获取文件名（不包含路径）
     getFileNameOnly(fileName) {
       if (!fileName) return '未知文件';
-      
+
       // 如果包含路径分隔符，取最后一部分
       const parts = fileName.split('/');
       return parts[parts.length - 1];
@@ -1014,6 +1055,7 @@ export default {
           }
         }
 
+
         // 提交到后端
         const res = await updateBooking({
           bookingId: this.currentBooking.bookingId,
@@ -1074,6 +1116,7 @@ export default {
       return true;
     },
 
+
     // 移除图片
     handleRemoveImage(file, fileList) {
       if (fileList) {
@@ -1111,7 +1154,7 @@ export default {
         pageSize: 1000, // 获取足够多的数据
         studentId: this.$store.state.user.name
       };
-      
+
       listBookingsWithActivity(statsParams).then(response => {
         this.allActivitiesList = response.rows || [];
         // 更新统计数据
@@ -1177,12 +1220,12 @@ export default {
         // 获取状态优先级
         const priorityA = statusPriority[a.status] || 999;
         const priorityB = statusPriority[b.status] || 999;
-        
+
         // 如果优先级相同，按活动开始时间排序（最新的在前）
         if (priorityA === priorityB) {
           return new Date(b.startTime) - new Date(a.startTime);
         }
-        
+
         // 按优先级排序
         return priorityA - priorityB;
       });
@@ -1199,6 +1242,7 @@ export default {
       this.statusCounts = {
         unsubmitted: 0,
         rejected: 0,
+        pending: 0,
         approved: 0
       };
 
@@ -1210,6 +1254,9 @@ export default {
             break;
           case '未通过':
             this.statusCounts.rejected++;
+            break;
+          case '未审核':
+            this.statusCounts.pending++;
             break;
           case '已通过':
             this.statusCounts.approved++;
@@ -1246,14 +1293,14 @@ export default {
     filterByStatus(status) {
       this.selectedStatus = status;
       this.queryParams.pageNum = 1;
-      
+
       // 添加状态筛选参数
       if (status) {
         this.queryParams.status = status;
       } else {
         delete this.queryParams.status;
       }
-      
+
       this.getList();
     },
 
@@ -1418,6 +1465,24 @@ export default {
       }
     },
 
+    // 测试文件访问
+    async testFileAccess(url) {
+      try {
+        console.log('测试文件访问:', url);
+        const response = await fetch(url, { method: 'HEAD' });
+        console.log('文件访问测试结果:', {
+          url: url,
+          status: response.status,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        return response.ok;
+      } catch (error) {
+        console.error('文件访问测试失败:', error);
+        return false;
+      }
+    },
+
     // 可靠的下载方法
     async downloadFileReliably(file) {
       try {
@@ -1441,6 +1506,12 @@ export default {
           throw new Error('无法获取文件下载地址');
         }
 
+        // 测试文件访问
+        const isAccessible = await this.testFileAccess(downloadUrl);
+        if (!isAccessible) {
+          this.$message.error('文件无法访问，请检查文件路径或服务器配置');
+          return;
+        }
 
         // 方法1: 使用fetch API下载
         try {
@@ -1466,6 +1537,7 @@ export default {
           this.$message.success('文件下载成功');
           return;
         } catch (fetchError) {
+          console.error('Fetch下载失败:', fetchError);
         }
 
         // 方法2: 直接创建链接下载（备用）
@@ -1606,17 +1678,17 @@ export default {
     /** 获取活动图片完整URL（仿照审核界面实现） */
     getActivityImageUrl(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
       if (pictureUrl.startsWith('/profile/')) {
         return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
       }
-      
+
       return pictureUrl;
     },
 
@@ -1764,6 +1836,11 @@ export default {
 
 .status-icon.rejected {
   background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
+.status-icon.pending {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
   color: white;
 }
 
@@ -2143,22 +2220,22 @@ export default {
     flex-direction: column;
     gap: 30px;
   }
-  
+
   .status-items {
     justify-content: center;
   }
-  
+
   .progress-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .progress-label {
     min-width: auto;
     width: 100%;
   }
-  
+
   .progress-bar-container {
     width: 100%;
   }
@@ -2169,18 +2246,18 @@ export default {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .status-item {
     min-width: auto;
     justify-content: center;
   }
-  
+
   .card-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .record-count {
     margin-left: 0;
   }

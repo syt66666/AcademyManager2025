@@ -7,9 +7,9 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.bean.BeanValidators;
 import com.ruoyi.system.domain.Activities;
-import com.ruoyi.system.domain.StuCourse;
 import com.ruoyi.system.mapper.ActivitiesMapper;
 import com.ruoyi.system.service.IActivitiesService;
+import com.ruoyi.system.service.IBookingsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +24,8 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     private ActivitiesMapper activitiesMapper;
     @Autowired
     private Validator validator;
+    @Autowired
+    private IBookingsService bookingsService;
 
     /**
      * 查询活动信息
@@ -114,6 +116,25 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      */
     @Override
     public int deleteActivityByIds(Integer[] activityIds) {
+        // 检查是否有已结束的活动
+        for (Integer activityId : activityIds) {
+            if (isActivityEnded(activityId)) {
+                Activities activity = activitiesMapper.selectActivityById(activityId);
+                String activityName = activity != null ? activity.getActivityName() : "未知活动";
+                throw new ServiceException("活动【" + activityName + "】已结束，无法删除！");
+            }
+        }
+        
+        // 先删除每个活动相关的所有booking记录
+        for (Integer activityId : activityIds) {
+            try {
+                int deletedBookings = bookingsService.deleteBookingsByActivityId(activityId.longValue());
+                System.out.println("活动ID " + activityId + " 删除了 " + deletedBookings + " 条预约记录");
+            } catch (Exception e) {
+                System.err.println("删除活动 " + activityId + " 的预约记录时出错: " + e.getMessage());
+                // 继续删除活动，不因为预约记录删除失败而阻止活动删除
+            }
+        }
         return activitiesMapper.deleteActivityByIds(activityIds);
     }
 
@@ -125,6 +146,21 @@ public class ActivitiesServiceImpl implements IActivitiesService {
      */
     @Override
     public int deleteActivityById(Integer activityId) {
+        // 检查活动是否已结束
+        if (isActivityEnded(activityId)) {
+            Activities activity = activitiesMapper.selectActivityById(activityId);
+            String activityName = activity != null ? activity.getActivityName() : "未知活动";
+            throw new ServiceException("活动【" + activityName + "】已结束，无法删除！");
+        }
+        
+        // 先删除该活动相关的所有booking记录
+        try {
+            int deletedBookings = bookingsService.deleteBookingsByActivityId(activityId.longValue());
+            System.out.println("活动ID " + activityId + " 删除了 " + deletedBookings + " 条预约记录");
+        } catch (Exception e) {
+            System.err.println("删除活动 " + activityId + " 的预约记录时出错: " + e.getMessage());
+            // 继续删除活动，不因为预约记录删除失败而阻止活动删除
+        }
         return activitiesMapper.deleteActivityById(activityId);
     }
 
@@ -179,38 +215,67 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     }
 
     /**
-     * 修改活动容量
+     * 基于实际预约人数更新活动容量
      */
     @Override
-    public int increaseCapacity(Integer activityId,Integer version) {
+    public int updateCapacityByActualBookings(Integer activityId, Integer version) {
         Activities activity = activitiesMapper.selectActivityById(activityId);
         if (activity == null) {
             throw new ServiceException("活动不存在！");
         }
-        int result = activitiesMapper.increaseCapacity(activityId, version);
-        if (result == 0) {
-            throw new ServiceException("数据出现错误，请刷新重试！");
+        
+        // 检查是否还有剩余容量
+        int remainingCapacity = activitiesMapper.checkActivityCapacity(activityId);
+        if (remainingCapacity <= 0) {
+            throw new ServiceException("活动容量已满，无法报名！");
         }
+        
+        // 基于实际预约人数更新容量
+        int result = activitiesMapper.updateCapacityByActualBookings(activityId, version);
+        if (result == 0) {
+            throw new ServiceException("容量更新失败，请重试！");
+        }
+        
         return result;
     }
 
+    /**
+     * 获取活动当前预约人数
+     */
     @Override
-    public int decreaseCapacity(Integer activityId,Integer version) {
-        Activities activity = activitiesMapper.selectActivityById(activityId);
-        if (activity == null) {
-            throw new ServiceException("活动不存在！");
-        }
-        int result = activitiesMapper.decreaseCapacity(activityId, version);
-        if (result == 0) {
-            throw new ServiceException("数据出现错误，请刷新重试！");
-        }
-        return result;
+    public int getCurrentBookingCount(Integer activityId) {
+        return activitiesMapper.getCurrentBookingCount(activityId);
+    }
+
+    /**
+     * 检查活动剩余容量
+     */
+    @Override
+    public int checkActivityCapacity(Integer activityId) {
+        return activitiesMapper.checkActivityCapacity(activityId);
     }
 
     @Override
     public boolean checkActivityUnique(String activityName, String organizer, Integer activityId) {
         int count = activitiesMapper.checkActivityUnique(activityName, organizer, activityId);
         return count == 0;
+    }
+
+    @Override
+    public boolean isActivityEnded(Integer activityId) {
+        Activities activity = activitiesMapper.selectActivityById(activityId);
+        if (activity == null) {
+            return false; // 活动不存在，认为未结束
+        }
+        
+        Date now = new Date();
+        Date endTime = activity.getEndTime();
+        
+        if (endTime == null) {
+            return false; // 没有结束时间，认为未结束
+        }
+        
+        return now.after(endTime);
     }
 
     /**

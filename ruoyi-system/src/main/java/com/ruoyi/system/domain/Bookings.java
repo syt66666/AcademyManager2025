@@ -1,6 +1,8 @@
 package com.ruoyi.system.domain;
 
 import com.ruoyi.common.core.domain.BaseEntity;
+import com.ruoyi.system.utils.JpaJsonConverter;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -25,7 +27,10 @@ public class Bookings extends BaseEntity {
     /** 预约时间 */
     private LocalDateTime bookAt;
     /** 证明材料 */
-    private String proof;
+    //private String proof;
+    @Column(columnDefinition = "json")
+    @Convert(converter = JpaJsonConverter.class)
+    private List<String> proof;
 
     /** 学生总结 */
     private String summary;

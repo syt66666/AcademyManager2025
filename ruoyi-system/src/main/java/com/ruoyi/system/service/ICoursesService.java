@@ -35,7 +35,6 @@ public interface ICoursesService
      */
     public int insertCourses(Courses courses);
 
-
     /**
      * 修改【请填写功能名称】
      *
@@ -52,9 +51,6 @@ public interface ICoursesService
      */
     public int deleteCoursesByCourseIds(Long[] courseIds);
 
-    int increaseCapacity(Integer courseId,Integer version);
-    int decreaseCapacity(Integer courseId,Integer version);
-
     /**
      * 删除【请填写功能名称】信息
      *
@@ -62,5 +58,30 @@ public interface ICoursesService
      * @return 结果
      */
     public int deleteCoursesByCourseId(Long courseId);
-    boolean checkCourseUnique(String courseName, String organizer, Integer courseId);
+
+    /**
+     * 减少课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 结果
+     */
+    public int decreaseCapacity(Long courseId, Integer version);
+
+    /**
+     * 增加课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 结果
+     */
+    public int increaseCapacity(Long courseId, Integer version);
+
+    /**
+     * 检查课程是否已开始选课
+     *
+     * @param courseId 课程ID
+     * @return 是否已开始选课
+     */
+    public boolean isCourseSignUpStarted(Long courseId);
 }

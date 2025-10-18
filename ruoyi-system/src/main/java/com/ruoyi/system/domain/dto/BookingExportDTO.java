@@ -25,6 +25,10 @@ public class BookingExportDTO {
     @Excel(name = "所属书院")
     private String academy;
     
+    /** 学生班级 */
+    @Excel(name = "学生班级")
+    private String studentClass;
+    
     /** 审核状态 */
     @Excel(name = "审核状态")
     private String status;

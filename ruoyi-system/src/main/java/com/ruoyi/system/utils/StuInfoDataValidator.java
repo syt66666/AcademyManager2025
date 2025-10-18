@@ -36,8 +36,8 @@ public class StuInfoDataValidator {
     // 学号格式验证正则表达式（11位数字）
     private static final Pattern STUDENT_ID_PATTERN = Pattern.compile("^\\d{11}$");
 
-    // 姓名格式验证正则表达式（2-10个字符，支持中文、英文、数字）
-    private static final Pattern NAME_PATTERN = Pattern.compile("^[\\u4e00-\\u9fa5a-zA-Z0-9]{2,10}$");
+    // 姓名格式验证正则表达式（2-10个字符，支持中文、英文、数字、特殊字符如·等）
+    private static final Pattern NAME_PATTERN = Pattern.compile("^[\\u4e00-\\u9fa5a-zA-Z0-9·\\-\\s]{2,10}$");
 
     // 行政班格式验证正则表达式（书院名+4位数字+班）
     private static final Pattern STUDENT_CLASS_PATTERN = Pattern.compile("^[\\u4e00-\\u9fa5]+\\d{4}班$");

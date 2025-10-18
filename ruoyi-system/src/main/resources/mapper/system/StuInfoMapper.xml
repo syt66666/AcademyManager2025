@@ -50,6 +50,7 @@
             <if test="policyStatus != null "> and policy_status = #{policyStatus}</if>
             <if test="studentSex != null  and studentSex != ''"> and student_sex = #{studentSex}</if>
         </where>
+        ORDER BY enrollment_year DESC, student_id ASC
     </select>
 
     <select id="selectStuInfoById" parameterType="String" resultMap="StuInfoResult">
@@ -135,6 +136,7 @@
             <if test="systemMajor != null and systemMajor != ''">AND system_major = #{systemMajor}</if>
             <if test="changeMajorType != null and changeMajorType != ''">AND change_major_type = #{changeMajorType}</if>
         </where>
+        ORDER BY enrollment_year DESC, student_id ASC
     </select>
 
 </mapper>

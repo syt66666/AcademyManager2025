@@ -24,6 +24,7 @@ export function listBookingsAudit(query) {
     params: query
   })
 }
+
 /**
  * 查询预约详细
  */
@@ -111,6 +112,38 @@ export function checkBookingSimple(activityId, studentId) {
     url: '/system/bookings/checkBooking',
     method: 'get',
     params: { activityId, studentId }
+  })
+}
+
+/**
+ * 原子性报名接口 - 解决并发问题
+ */
+export function signUpActivity(data) {
+  return request({
+    url: '/system/bookings/signUp',
+    method: 'post',
+    data: data
+  })
+}
+
+/**
+ * 原子性取消报名接口 - 解决并发问题
+ */
+export function cancelSignUpActivity(data) {
+  return request({
+    url: '/system/bookings/cancelSignUp',
+    method: 'post',
+    data: data
+  })
+}
+
+/**
+ * 获取学生的所有报名活动ID列表
+ */
+export function getBookedActivities(studentId) {
+  return request({
+    url: `/system/bookings/activities/${studentId}`,
+    method: 'get'
   })
 }
 

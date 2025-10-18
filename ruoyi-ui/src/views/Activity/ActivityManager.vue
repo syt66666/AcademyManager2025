@@ -95,6 +95,9 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
+        <el-tooltip v-if="hasEndedActivities" content="选中的活动中包含已结束的活动，点击删除时会提示无法删除" placement="top">
+          <i class="el-icon-warning" style="color: #E6A23C; margin-left: 8px; font-size: 16px;"></i>
+        </el-tooltip>
       </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </div>
@@ -108,7 +111,7 @@
       </div>
 
       <!-- 表格美化 -->
-      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}">
+      <el-table v-loading="loading" :data="activitiesList" @selection-change="handleSelectionChange" class="modern-table" :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}" :row-class-name="getRowClassName">
         <el-table-column type="selection" width="45" align="center"/>
         <el-table-column label="序号" width="80" align="center">
           <template v-slot="scope">
@@ -117,10 +120,10 @@
           </span>
           </template>
         </el-table-column>
-        <el-table-column label="活动名称" align="center" prop="activityName" width="180">
+        <el-table-column label="活动名称" align="center" prop="activityName" width="300">
           <template slot-scope="scope">
             <div class="activity-name" :title="scope.row.activityName">
-              {{ truncateText(scope.row.activityName, 12) }}
+              <span :title="scope.row.activityName">{{ truncateText(scope.row.activityName, 18) }}</span>
             </div>
           </template>
         </el-table-column>
@@ -132,7 +135,7 @@
           </template>
         </el-table-column>
         <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="时间安排" align="center" min-width="250">
           <template slot-scope="scope">
             <div class="time-schedule-inline">
               <!-- 报名时间 -->
@@ -157,7 +160,7 @@
         </el-table-column>
 
         <!-- 活动状态列 -->
-        <el-table-column label="活动状态" align="center" width="100">
+        <el-table-column label="活动状态" align="center" width="150">
           <template slot-scope="scope">
             <el-tag :type="getActivityStatusTag(scope.row)" effect="dark" class="status-tag">
               {{ getActivityStatusText(scope.row) }}
@@ -165,7 +168,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="报名人数" align="center" width="100">
+        <el-table-column label="报名人数" align="center" width="120">
           <template #default="scope">
             <div class="participants">
               <el-progress
@@ -184,7 +187,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="150">
+        <el-table-column label="操作" width="200">
           <template slot-scope="scope">
             <div class="action-buttons">
               <el-button
@@ -254,7 +257,7 @@
     <el-dialog
       :title="title"
       :visible.sync="open"
-      width="600px"
+      width="700px"
       append-to-body
       class="activity-form-dialog"
       :before-close="handleDialogClose">
@@ -394,6 +397,8 @@
                   :rows="6"
                   placeholder="请输入活动描述"
                   class="form-textarea"
+                  maxlength="200"
+                  show-word-limit
                 />
               </el-form-item>
 
@@ -424,7 +429,7 @@
                     <div v-else class="upload-placeholder">
                       <i class="el-icon-plus"></i>
                       <div class="upload-text">点击上传图片</div>
-                      <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 2MB</div>
+                      <div class="upload-tip">支持 JPG、PNG 格式，大小不超过 5MB</div>
                     </div>
                   </el-upload>
                 </div>
@@ -466,7 +471,7 @@
     <el-dialog
       title="预约活动学生列表"
       :visible.sync="dialogVisibleStudents"
-      width="60%"
+      width="50%"
       append-to-body
       class="student-dialog"
       :before-close="handleStudentDialogClose">
@@ -475,19 +480,23 @@
       <div class="student-stats">
         <div class="stats-card">
           <div class="stat-item">
-            <div class="stat-number">{{ selectedStudents.length }}</div>
+            <div class="stat-number">{{ studentStats.total }}</div>
             <div class="stat-label">总报名人数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('approved') }}</div>
+            <div class="stat-number">{{ studentStats.submitted }}</div>
+            <div class="stat-label">已提交</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.pending }}</div>
+            <div class="stat-label">未审核</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.approved }}</div>
             <div class="stat-label">已通过</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('submitted') }}</div>
-            <div class="stat-label">待审核</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-number">{{ getStatusCount('rejected') }}</div>
+            <div class="stat-number">{{ studentStats.rejected }}</div>
             <div class="stat-label">未通过</div>
           </div>
         </div>
@@ -507,9 +516,10 @@
             'font-weight': '600',
             'border-bottom': '2px solid #e2e8f0'
           }"
-          :row-class-name="getStudentRowClassName">
+          :row-class-name="getStudentRowClassName"
+          @sort-change="handleSortChange">
 
-          <el-table-column label="序号" width="70" align="center">
+          <el-table-column label="序号" width="60" align="center">
             <template v-slot="scope">
               <span class="index-badge">
                 {{ scope.$index + 1 }}
@@ -517,7 +527,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="studentId" label="学号" min-width="140" sortable>
+          <el-table-column prop="studentId" label="学号" align="center" min-width="140" sortable>
             <template slot-scope="{row}">
               <div class="student-id-container">
                 <span class="student-id">{{ row.studentId }}</span>
@@ -533,7 +543,7 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="studentName" label="姓名" min-width="100" sortable>
+          <el-table-column prop="studentName" label="姓名" align="center" min-width="100" sortable>
             <template slot-scope="{row}">
               <div class="student-name-container">
                 <span class="student-name">{{ row.studentName }}</span>
@@ -542,14 +552,21 @@
             </template>
           </el-table-column>
 
-          <el-table-column prop="academy" label="所属书院" min-width="120" sortable>
+          <el-table-column prop="studentClass" label="学生班级" align="center" min-width="120" sortable>
+            <template slot-scope="{row}">
+              <el-tag size="small" type="primary" effect="plain">
+                {{ row.studentClass || '未知' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+
+          <el-table-column prop="academy" label="所属书院" align="center" min-width="120" >
             <template slot-scope="{row}">
               <el-tag size="small" :type="getAcademyTagType(row.academy)" effect="plain">
                 {{ row.academy || '未知' }}
               </el-tag>
             </template>
           </el-table-column>
-
 
           <el-table-column prop="status" label="审核状态" min-width="110" align="center">
             <template slot-scope="{row}">
@@ -563,20 +580,23 @@
         </el-table>
       </div>
 
-
-      <div slot="footer" class="dialog-footer">
-        <div class="footer-left">
-          <span class="total-info">共 {{ filteredStudents.length }} 名学生</span>
-        </div>
-        <div class="footer-right">
-          <el-button
-            type="primary"
-            icon="el-icon-download"
-            @click="handleExportStudents"
-            class="export-btn">
-            导出名单
-          </el-button>
-        </div>
+      <!-- 学生列表分页及导出按钮 -->
+      <div class="student-pagination">
+        <el-button
+          type="primary"
+          icon="el-icon-download"
+          @click="handleExportStudents"
+          class="export-btn">
+          导出名单
+        </el-button>
+        <pagination
+          v-show="studentTotal > 0"
+          :total="studentTotal"
+          :page.sync="studentQueryParams.pageNum"
+          :limit.sync="studentQueryParams.pageSize"
+          @pagination="handleStudentPagination"
+          class="custom-pagination"
+        />
       </div>
     </el-dialog>
 
@@ -601,6 +621,7 @@ import {getToken} from "@/utils/auth";
 import {listBookingsWithActivity} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
+import { getServerTime } from "@/api/common/time";
 
 export default {
   name: "Activities",
@@ -618,7 +639,25 @@ export default {
       // 新增状态
       dialogVisibleStudents: false,
       selectedStudents: [],
+      allStudents: [], // 所有学生数据（用于排序）
       studentLoading: false,
+      studentTotal: 0,
+      currentActivityId: null,
+      studentQueryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        activityId: null
+      },
+      // 学生统计数据
+      studentStats: {
+        total: 0,
+        submitted: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0
+      },
+      // 服务器时间
+      serverTime: null,
       // 图片上传相关
       imagePreviewVisible: false,
       previewImageUrl: '',
@@ -725,6 +764,18 @@ export default {
             trigger: "blur"
           }
         ],
+        activityDescription: [
+          {
+            validator: (rule, value, callback) => {
+              if (value && value.length > 200) {
+                callback(new Error("活动描述不能超过200字"));
+              } else {
+                callback();
+              }
+            },
+            trigger: "blur"
+          }
+        ],
         organizer: [
           {required: true, message: "组织单位不能为空", trigger: "blur"}
         ],
@@ -770,15 +821,71 @@ export default {
     };
   },
   computed: {
-    // 学生列表（直接显示所有学生，不进行过滤）
+    // 学生列表（直接显示当前页的学生）
     filteredStudents() {
       return this.selectedStudents;
+    },
+
+    // 检查选中的活动中是否有已结束的活动
+    hasEndedActivities() {
+      if (!this.ids || this.ids.length === 0) {
+        return false;
+      }
+      return this.activitiesList.some(activity =>
+        this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
+      );
     }
   },
   created() {
-    this.getList();
+    this.getServerTime();
+    this.getList().then(() => {
+      // 数据加载完成后再检查路由参数
+      this.checkRouteParams();
+    });
   },
   methods: {
+    /** 获取服务器时间 */
+    async getServerTime() {
+      try {
+        const response = await getServerTime();
+        if (response.code === 200) {
+          this.serverTime = new Date(response.data);
+        } else {
+          // 如果获取服务器时间失败，使用本地时间作为备用
+          this.serverTime = new Date();
+        }
+      } catch (error) {
+        // 如果获取服务器时间失败，使用本地时间作为备用
+        this.serverTime = new Date();
+      }
+    },
+
+    /** 检查路由参数，处理从首页跳转过来的编辑请求 */
+    async checkRouteParams() {
+      const { activityId, filterMode } = this.$route.query;
+      
+      if (activityId && filterMode === 'single') {
+        // 查找对应的活动
+        const targetActivity = this.activitiesList.find(activity => 
+          activity.activityId == activityId
+        );
+        
+        if (targetActivity) {
+          // 自动打开编辑弹窗
+          await this.handleUpdate(targetActivity);
+        } else {
+          // 如果列表中没有找到，显示错误信息
+          this.$message.error('未找到指定的活动，请刷新页面重试');
+        }
+        
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
+      }
+    },
+
     statusTagType(status) {
       const map = {
         '未开始': '',         // 默认蓝色（适合未开始状态）
@@ -797,7 +904,8 @@ export default {
 
     /** 获取活动状态文本 */
     getActivityStatusText(row) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const start = new Date(row.startTime);
       const end = new Date(row.endTime);
       const deadline = new Date(row.activityDeadline);
@@ -826,9 +934,19 @@ export default {
 
     /** 判断活动是否已结束 */
     isActivityEnded(row) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const end = new Date(row.endTime);
       return now > end;
+    },
+
+
+    /** 获取表格行的样式类名 */
+    getRowClassName({row}) {
+      if (this.isActivityEnded(row)) {
+        return 'ended-activity-row';
+      }
+      return '';
     },
 
     /** 计算容量百分比 */
@@ -936,18 +1054,39 @@ export default {
     // 查看选课学生
     async handleViewStudents(row) {
       this.studentLoading = true;
+      this.currentActivityId = row.activityId; // 保存当前活动ID
+      this.studentQueryParams = {
+        pageNum: 1,
+        pageSize: 10,
+        activityId: row.activityId
+      };
+
       try {
-        const res = await listBookingsWithActivity({
-          activityId: row.activityId // 使用当前行的活动ID，而不是硬编码的6
+        // 获取所有学生数据（用于排序和统计）
+        const allStudentsRes = await listBookingsWithActivity({
+          activityId: row.activityId,
+          pageNum: 1,
+          pageSize: 1000 // 获取所有学生数据
         });
 
-        // 无论是否有学生预约，都显示弹框
-        this.selectedStudents = res.rows || [];
+        // 保存所有学生数据
+        this.allStudents = allStudentsRes.rows || [];
+        this.studentTotal = allStudentsRes.total || 0;
+
+        // 计算统计数据
+        this.calculateStudentStats(this.allStudents);
+
+        // 获取当前页数据
+        this.getCurrentPageStudents();
+
         this.dialogVisibleStudents = true;
-        
+
       } catch (e) {
         // 即使出错也显示弹框，但显示错误信息
         this.selectedStudents = [];
+        this.allStudents = [];
+        this.studentTotal = 0;
+        this.resetStudentStats();
         this.dialogVisibleStudents = true;
         this.$message.error("获取学生预约活动数据失败，请稍后再试");
       } finally {
@@ -956,8 +1095,8 @@ export default {
     },
     /** 计算活动状态 */
     calculateStatus() {
-      // 获取当前时间（使用服务器时间更准确，这里先用客户端时间）
-      const now = new Date().getTime();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = (this.serverTime || new Date()).getTime();
       const startSign = new Date(this.form.activityStart).getTime();
       const deadline = new Date(this.form.activityDeadline).getTime();
       const startActivity = new Date(this.form.startTime).getTime();
@@ -985,14 +1124,14 @@ export default {
     /** 查询活动列表 */
     getList() {
       this.loading = true;
-      getNickName().then(nickName => {
+      return getNickName().then(nickName => {
         this.queryParams.organizer = nickName.msg; // 更新组织者
         // 🔽 确保在 organizer 更新后调用列表接口
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
+        return listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
-          
+
           // 如果有活动状态筛选条件，进行前端筛选
           if (this.queryParams.activityStatus) {
             allActivities = allActivities.filter(activity => {
@@ -1000,15 +1139,15 @@ export default {
               return status === this.queryParams.activityStatus;
             });
           }
-          
+
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
-          
+
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
           const endIndex = startIndex + this.queryParams.pageSize;
           const paginatedList = allActivities.slice(startIndex, endIndex);
-          
+
           this.activitiesList = paginatedList;
           this.total = allActivities.length; // 使用筛选后的总数量
           this.loading = false;
@@ -1017,14 +1156,15 @@ export default {
         }).catch(error => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
+          throw error;
         });
       }).catch(error => {
         // 即使获取组织者名称失败，也尝试获取活动列表
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
+        return listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
-          
+
           // 如果有活动状态筛选条件，进行前端筛选
           if (this.queryParams.activityStatus) {
             allActivities = allActivities.filter(activity => {
@@ -1032,15 +1172,15 @@ export default {
               return status === this.queryParams.activityStatus;
             });
           }
-          
+
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
-          
+
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
           const endIndex = startIndex + this.queryParams.pageSize;
           const paginatedList = allActivities.slice(startIndex, endIndex);
-          
+
           this.activitiesList = paginatedList;
           this.total = allActivities.length; // 使用筛选后的总数量
           this.loading = false;
@@ -1049,6 +1189,7 @@ export default {
         }).catch(listError => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
+          throw listError;
         });
       });
     },
@@ -1116,16 +1257,6 @@ export default {
       this.open = true;
       this.title = "添加活动信息";
     },
-    // /** 修改按钮操作 */
-    // handleUpdate(row) {
-    //   this.reset();
-    //   const activityId = row.activityId || this.ids
-    //   getActivities(activityId).then(response => {
-    //     this.form = response.data;
-    //     this.open = true;
-    //     this.title = "修改活动信息";
-    //   });
-    // },
 
     /** 修改按钮操作 */
     async handleUpdate(row) {
@@ -1134,27 +1265,28 @@ export default {
         this.$message.warning('活动已结束，不允许编辑活动信息');
         return;
       }
-
-      this.reset();
+      
       const activityId = row.activityId || this.ids;
-
       this.loading = true;
+      
       try {
         const response = await getActivities(activityId);
-        this.form = response.data;
-
+        const activityData = response.data;
+        
+        // 直接将获取的数据设置到 form
+        this.form = activityData;
+        
         // 确保活动描述字段有值
         if (!this.form.activityDescription) {
           this.form.activityDescription = '';
         }
-
+        
         this.open = true;
         this.title = "修改活动信息";
-
+        
         // 等待对话框和编辑器完全渲染
         await this.$nextTick();
-
-        // 可添加额外处理
+        
       } catch (error) {
         this.$message.error('获取活动详情失败');
       } finally {
@@ -1217,19 +1349,50 @@ export default {
       }
     },
 
-// 处理富文本中的图片，将Base64图片上传到服务器并替换为URL
-    
-
     /** 删除按钮操作 */
     handleDelete(row) {
       const activityIds = row.activityId || this.ids;
       const activityNames = row.activityName || this.names;
-      this.$modal.confirm('是否确认删除活动名称为"' + activityNames + '"的数据项？').then(function () {
+
+      // 检查是否有已结束的活动
+      let endedActivities = [];
+      if (row && this.isActivityEnded(row)) {
+        endedActivities.push(row.activityName);
+      } else if (this.ids && this.ids.length > 0) {
+        // 批量删除时，找出所有已结束的活动
+        endedActivities = this.activitiesList
+          .filter(activity =>
+            this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
+          )
+          .map(activity => activity.activityName);
+      }
+
+      // 如果有已结束的活动，显示详细的提示信息
+      if (endedActivities.length > 0) {
+        let message = "以下活动已结束，无法删除：\n";
+        endedActivities.forEach(name => {
+          message += "• " + name + "\n";
+        });
+        message += "\n请取消选择已结束的活动后重试。";
+        this.$message.warning(message);
+        return;
+      }
+
+      // 构建更详细的确认信息
+      let confirmMessage = '是否确认删除活动名称为"' + activityNames + '"的数据项？\n\n';
+      confirmMessage += '⚠️ 注意：删除活动将同时删除该活动的所有学生报名记录！\n';
+      confirmMessage += '此操作不可撤销，请谨慎操作。';
+
+      this.$modal.confirm(confirmMessage).then(function () {
         return delActivities(activityIds);
       }).then(() => {
         this.getList();
-        this.$message.success("删除成功");
-      }).catch(() => {
+        this.$message.success("删除成功，相关学生报名记录已一并删除");
+      }).catch((error) => {
+        // 处理后端返回的错误信息
+        if (error && error.message && error.message.includes("已结束")) {
+          this.$message.error(error.message);
+        }
       });
     },
 
@@ -1248,18 +1411,16 @@ export default {
 
     // ========== 学生列表相关方法 ==========
 
-    /** 获取状态统计数量 */
-    getStatusCount(status) {
-      return this.selectedStudents.filter(student => student.status === status).length;
-    },
-
     /** 获取书院标签类型 */
     getAcademyTagType(academy) {
       const academyColors = {
-        '知行书院': 'primary',
-        '明德书院': 'success',
-        '博雅书院': 'warning',
-        '至善书院': 'info',
+        '大煜书院': 'primary',
+        '伯川书院': 'success',
+        '令希书院': 'warning',
+        '厚德书院': 'info',
+        '知行书院': 'danger',
+        '笃学书院': '',
+        '求实书院': 'primary',
         '未知': ''
       };
       return academyColors[academy] || 'info';
@@ -1288,19 +1449,148 @@ export default {
       done();
     },
 
+    /** 获取学生列表（分页） */
+    async getStudentList() {
+      if (!this.currentActivityId) return;
+
+      this.studentLoading = true;
+      try {
+        const res = await listBookingsWithActivity(this.studentQueryParams);
+        this.selectedStudents = res.rows || [];
+        this.studentTotal = res.total || 0;
+      } catch (e) {
+        this.selectedStudents = [];
+        this.studentTotal = 0;
+        this.$message.error("获取学生列表失败");
+      } finally {
+        this.studentLoading = false;
+      }
+    },
+
+    /** 获取当前页学生数据（从所有学生数据中分页） */
+    getCurrentPageStudents() {
+      if (!this.allStudents || this.allStudents.length === 0) {
+        this.selectedStudents = [];
+        return;
+      }
+
+      const startIndex = (this.studentQueryParams.pageNum - 1) * this.studentQueryParams.pageSize;
+      const endIndex = startIndex + this.studentQueryParams.pageSize;
+      this.selectedStudents = this.allStudents.slice(startIndex, endIndex);
+    },
+
+    /** 学生列表分页处理 */
+    handleStudentPagination(pagination) {
+      this.studentQueryParams.pageNum = pagination.page;
+      this.studentQueryParams.pageSize = pagination.limit;
+      this.getCurrentPageStudents();
+    },
+
+    /** 计算学生统计数据 */
+    calculateStudentStats(allStudents) {
+      this.studentStats.total = allStudents.length;
+
+      // 计算各状态人数
+      this.studentStats.pending = allStudents.filter(student =>
+        student.status === 'pending' || student.status === '未审核'
+      ).length;
+      this.studentStats.approved = allStudents.filter(student =>
+        student.status === 'approved' || student.status === '已通过'
+      ).length;
+      this.studentStats.rejected = allStudents.filter(student =>
+        student.status === 'rejected' || student.status === '未通过'
+      ).length;
+
+      // 已提交 = 未审核 + 已通过 + 未通过
+      this.studentStats.submitted = this.studentStats.pending + this.studentStats.approved + this.studentStats.rejected;
+    },
+
+    /** 重置学生统计数据 */
+    resetStudentStats() {
+      this.studentStats = {
+        total: 0,
+        submitted: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0
+      };
+    },
+
+
+    /** 处理表格排序变化 */
+    handleSortChange({ column, prop, order }) {
+      if (!this.allStudents || this.allStudents.length === 0) return;
+
+      // 根据排序字段和顺序对所有数据进行排序
+      let sortedStudents = [...this.allStudents];
+
+      if (order === 'ascending') {
+        // 升序排序
+        if (prop === 'studentId') {
+          sortedStudents.sort((a, b) => {
+            const idA = parseInt(a.studentId) || 0;
+            const idB = parseInt(b.studentId) || 0;
+            return idA - idB;
+          });
+        } else if (prop === 'studentName') {
+          sortedStudents.sort((a, b) => {
+            const nameA = a.studentName || '';
+            const nameB = b.studentName || '';
+            return nameA.localeCompare(nameB, 'zh-CN');
+          });
+        } else if (prop === 'studentClass') {
+          sortedStudents.sort((a, b) => {
+            const classA = a.studentClass || '未知';
+            const classB = b.studentClass || '未知';
+            return classA.localeCompare(classB, 'zh-CN');
+          });
+        }
+      } else if (order === 'descending') {
+        // 降序排序
+        if (prop === 'studentId') {
+          sortedStudents.sort((a, b) => {
+            const idA = parseInt(a.studentId) || 0;
+            const idB = parseInt(b.studentId) || 0;
+            return idB - idA;
+          });
+        } else if (prop === 'studentName') {
+          sortedStudents.sort((a, b) => {
+            const nameA = a.studentName || '';
+            const nameB = b.studentName || '';
+            return nameB.localeCompare(nameA, 'zh-CN');
+          });
+        } else if (prop === 'studentClass') {
+          sortedStudents.sort((a, b) => {
+            const classA = a.studentClass || '未知';
+            const classB = b.studentClass || '未知';
+            return classB.localeCompare(classA, 'zh-CN');
+          });
+        }
+      }
+
+      // 更新所有学生数据
+      this.allStudents = sortedStudents;
+
+      // 重置到第一页
+      this.studentQueryParams.pageNum = 1;
+
+      // 获取当前页数据
+      this.getCurrentPageStudents();
+    },
+
     // ========== 图片上传相关方法 ==========
 
     /** 图片上传前验证 */
     beforeImageUpload(file) {
       const isImage = file.type.startsWith('image/');
-      const isLt2M = file.size / 1024 / 1024 < 2;
+      const isLt5M = file.size / 1024 / 1024 < 5;
 
       if (!isImage) {
         this.$message.error('只能上传图片文件!');
         return false;
       }
-      if (!isLt2M) {
-        this.$message.error('上传图片大小不能超过 2MB!');
+      if (!isLt5M) {
+        this.$message.error('上传图片大小不能超过 5MB!');
         return false;
       }
       return true;
@@ -1308,18 +1598,18 @@ export default {
 
     /** 图片上传成功回调 */
     handleImageSuccess(response, file) {
-      
+
       if (response.code === 200 && response.url) {
         // 提取相对路径部分（如：/profile/upload/...）
         const relativePath = response.fileName || response.url.replace(/^https?:\/\/[^\/]+/, '');
-        
+
         // 使用Vue.set确保响应式更新，存储相对路径
         this.$set(this.form, 'pictureUrl', relativePath);
         this.$message.success('图片上传成功');
-        
+
         // 强制更新视图
         this.$forceUpdate();
-        
+
         // 测试URL处理
       } else {
         this.$message.error(response.msg || '图片上传失败');
@@ -1345,31 +1635,31 @@ export default {
 
     /** 图片加载错误处理 */
     handleImageLoadError(event) {
-      
+
       // 尝试获取更多错误信息
       const img = event.target;
       if (img) {
-        
+
         // 检查是否是网络问题
         if (img.error) {
         }
       }
-      
+
       // 尝试直接访问图片URL来测试
       this.testImageUrl(event.target.src);
-      
+
       this.$message.error('图片加载失败，请检查图片URL或网络连接');
     },
 
     /** 测试图片URL是否可访问 */
     testImageUrl(url) {
-      
+
       // 创建一个新的图片元素来测试
       const testImg = new Image();
       testImg.onload = () => {
       };
       testImg.onerror = (error) => {
-        
+
         // 尝试使用fetch测试
         this.testImageWithFetch(url);
       };
@@ -1380,7 +1670,7 @@ export default {
     async testImageWithFetch(url) {
       try {
         const response = await fetch(url, { method: 'HEAD' });
-        
+
         if (response.ok) {
         } else {
         }
@@ -1416,22 +1706,22 @@ export default {
 
     /** 获取活动图片完整URL */
     getActivityImageUrl(pictureUrl) {
-      
+
       if (!pictureUrl) {
         return '';
       }
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return fullUrl;
       }
-      
+
       // 其他情况直接返回
       return pictureUrl;
     },
@@ -1439,25 +1729,25 @@ export default {
     /** 获取活动图片完整URL（处理中文编码问题） */
     getActivityImageUrlFixed(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return this.getActivityImageUrlFixed(fullUrl);
       }
-      
+
       return pictureUrl;
     },
 
     /** 获取活动图片完整URL（尝试编码版本） */
     getActivityImageUrlEncoded(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，尝试编码处理
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         try {
@@ -1468,45 +1758,66 @@ export default {
             // 对每个路径段进行编码，但保持已编码的部分不变
             return encodeURIComponent(decodeURIComponent(segment));
           }).join('/');
-          
+
           const encodedUrl = `${url.protocol}//${url.host}${encodedPath}`;
           return encodedUrl;
         } catch (error) {
           return pictureUrl;
         }
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return this.getActivityImageUrlEncoded(fullUrl);
       }
-      
+
       return pictureUrl;
     },
 
     /** 智能获取活动图片URL（仿照审核界面实现） */
     getActivityImageUrlSmart(pictureUrl) {
       if (!pictureUrl) return '';
-      
+
       // 如果已经是完整URL，直接返回
       if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
         return pictureUrl;
       }
-      
+
       // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
       if (pictureUrl.startsWith('/profile/')) {
         const fullUrl = `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
         return fullUrl;
       }
-      
+
       return pictureUrl;
     },
 
   },
   watch: {
-    'form.activityTotalCapacity'(newVal) {
-      this.form.activityCapacity = newVal;
+    'form.activityTotalCapacity'(newVal, oldVal) {
+      if (!this.form.activityId) {
+        // 新增活动模式：剩余容量 = 总容量
+        this.form.activityCapacity = newVal;
+      } else {
+        // 编辑活动模式：需要重新计算剩余容量
+        if (oldVal && newVal && this.form.activityCapacity !== null) {
+          // 计算已选人数（基于旧的总容量）
+          const selectedCount = oldVal - this.form.activityCapacity;
+          
+          // 计算新的剩余容量
+          const newRemainingCapacity = newVal - selectedCount;
+          
+          // 确保剩余容量不为负数
+          if (newRemainingCapacity >= 0) {
+            this.form.activityCapacity = newRemainingCapacity;
+          } else {
+            // 如果新总容量小于已选人数，剩余容量设为0
+            this.form.activityCapacity = 0;
+            this.$message.warning(`新总容量(${newVal})小于已选人数(${selectedCount})，剩余容量已设为0`);
+          }
+        }
+      }
     }
   }
 };
@@ -1723,16 +2034,16 @@ export default {
 
 .index-badge {
   display: inline-block;
-  width: 36px;
-  height: 36px;
-  line-height: 36px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
   text-align: center;
   border-radius: 50%;
   background: linear-gradient(135deg, #409EFF, #64b5ff);
   color: white;
   font-weight: 600;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+  font-size: 12px;
+  box-shadow: 0 1px 4px rgba(64, 158, 255, 0.3);
 }
 
 
@@ -2013,30 +2324,30 @@ export default {
 
 /* 学生统计信息 */
 .student-stats {
-  padding: 20px 24px;
+  padding: 12px 16px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px 12px 0 0;
+  border-radius: 8px 8px 0 0;
 
   .stats-card {
     display: flex;
     justify-content: space-around;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
     .stat-item {
       text-align: center;
 
       .stat-number {
-        font-size: 28px;
+        font-size: 20px;
         font-weight: 700;
         color: #409EFF;
-        margin-bottom: 8px;
+        margin-bottom: 4px;
       }
 
       .stat-label {
-        font-size: 14px;
+        font-size: 12px;
         color: #606266;
         font-weight: 500;
       }
@@ -2047,24 +2358,39 @@ export default {
 
 /* 学生表格容器 */
 .student-table-container {
-  margin: 20px 24px;
+  margin: 8px 12px;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
   overflow: hidden;
 }
 
 /* 增强的学生表格 */
 .enhanced-student-table {
+  width: 100% !important;
+
+  .el-table {
+    width: 100% !important;
+  }
+
+  .el-table td {
+    padding: 8px 12px !important;
+  }
+
+  .el-table th {
+    padding: 8px 12px !important;
+  }
+
   .student-id-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 6px;
 
     .student-id {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      font-size: 13px;
+      font-size: 14px;
       color: #409EFF;
       font-weight: 500;
     }
@@ -2083,11 +2409,13 @@ export default {
   .student-name-container {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    gap: 6px;
 
     .student-name {
       font-weight: 600;
       color: #303133;
+      font-size: 13px;
     }
   }
 
@@ -2379,14 +2707,29 @@ export default {
   }
 }
 
-/* 时间网格布局 */
+/* 时间网格布局*/
 .time-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* 改为单列布局 */
   gap: 20px;
 
   .time-item {
     margin-bottom: 0;
+    
+    /* 确保时间选择框有足够的宽度 */
+    .el-form-item__content {
+      width: 100%;
+    }
+
+    /* 时间选择框标签样式 */
+    .el-form-item__label {
+      font-weight: 600;
+      color: #303133;
+      font-size: 14px;
+      line-height: 40px;
+      padding-right: 12px;
+      width: 100px; /* 固定标签宽度 */
+    }
   }
 }
 
@@ -2419,16 +2762,44 @@ export default {
 
 .form-datetime {
   width: 100%;
-
+  max-width: 350px; /* 设置最大宽度，让时间框不会过长 */
+  
   .el-input__inner {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
+    font-size: 14px; /* 确保字体大小合适 */
+    padding: 0 15px; /* 增加内边距 */
+    height: 40px; /* 增加高度 */
+    line-height: 40px;
 
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
     }
+  }
+
+  /* 时间选择器图标样式 */
+  .el-input__suffix {
+    .el-input__suffix-inner {
+      .el-input__icon {
+        color: #409EFF;
+        font-size: 16px;
+      }
+    }
+  }
+
+  /* 占位符文本样式 */
+  .el-input__inner::placeholder {
+    color: #c0c4cc;
+    font-size: 14px;
+  }
+
+  /* 确保选中值能完整显示 */
+  .el-input__inner {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -2583,8 +2954,13 @@ export default {
   }
 
   .time-grid {
-    grid-template-columns: 1fr;
     gap: 16px;
+    
+    .time-item {
+      .form-datetime {
+        min-width: 280px; /* 移动端调整最小宽度 */
+      }
+    }
   }
 
   .dialog-footer {
@@ -2598,11 +2974,79 @@ export default {
   }
 }
 
+/* 时间选择框在对话框中的特殊优化 */
+.activity-form-dialog .time-grid {
+  .time-item {
+    .form-datetime {
+      max-width: 180px; /* 设置最大宽度，避免过长 */
+      
+      .el-input__inner {
+        font-size: 15px; /* 稍微增大字体 */
+        padding: 0 30px; /* 增加左右内边距 */
+      }
+    }
+  }
+}
+
+/* 确保时间选择框在中等屏幕上也有足够空间 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .activity-form-dialog .time-grid {
+    .time-item {
+      .form-datetime {
+        max-width: 350px;
+      }
+    }
+  }
+}
+
+/* 已结束活动行样式 */
+.ended-activity-row {
+  background-color: #f5f5f5 !important;
+  color: #999 !important;
+  opacity: 0.6;
+}
+
+.ended-activity-row:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.ended-activity-row td {
+  color: #999 !important;
+}
+
+/* 已结束活动的选择框样式 - 保持正常可点击状态 */
+.ended-activity-row .el-checkbox {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.ended-activity-row .el-checkbox__input {
+  cursor: pointer;
+}
+
+/* 学生分页样式 */
+.student-pagination {
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-top: 1px solid #e4e7ed;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-pagination .custom-pagination {
+  margin: 0;
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
   .custom-pagination {
     padding: 8px;
     justify-content: center;
+  }
+
+  .student-pagination {
+    padding: 12px 16px;
   }
 }
 

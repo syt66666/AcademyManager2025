@@ -3,8 +3,9 @@ package com.ruoyi.system.mapper;
 import java.util.List;
 import com.ruoyi.system.domain.Enrollments;
 import com.ruoyi.system.domain.StuEnrollments;
+import org.apache.ibatis.annotations.Mapper;
 
-
+@Mapper
 public interface EnrollmentsMapper
 {
     /**

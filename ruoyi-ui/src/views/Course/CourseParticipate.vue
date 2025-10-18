@@ -4,13 +4,13 @@
     <div class="stats-card">
       <div class="card-header">
         <i class="el-icon-data-analysis"></i>
-        <span>选课统计</span>
+        <span>选课状态筛选</span>
       </div>
 
       <div class="stats-content">
-        <!-- 左侧状态统计 -->
+        <!-- 状态筛选 -->
         <div class="status-stats">
-          <h3>选课状态筛选</h3>
+
           <div class="status-items">
             <div
               class="status-item"
@@ -42,6 +42,20 @@
 
             <div
               class="status-item"
+              :class="{ active: selectedStatus === '未考核' }"
+              @click="filterByStatus('未考核')"
+            >
+              <div class="status-icon pending">
+                <i class="el-icon-time"></i>
+              </div>
+              <div class="status-info">
+                <div class="status-count">{{ statusCounts.pending }}</div>
+                <div class="status-label">未考核</div>
+              </div>
+            </div>
+
+            <div
+              class="status-item"
               :class="{ active: selectedStatus === '已通过' }"
               @click="filterByStatus('已通过')"
             >
@@ -63,42 +77,13 @@
                 <i class="el-icon-view"></i>
               </div>
               <div class="status-info">
-                <div class="status-count">{{ total }}</div>
+                <div class="status-count">{{ totalAll }}</div>
                 <div class="status-label">全部</div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 右侧进度条 -->
-        <div class="progress-stats">
-          <h3>课程完成进度</h3>
-          <div class="progress-items">
-            <div
-              v-for="(progress, type) in courseProgress"
-              :key="type"
-              class="progress-item"
-              :class="{ active: selectedCourseType === type }"
-              @click="filterByCourseType(type)"
-            >
-              <div class="progress-label">{{ getCourseTypeName(type) }}</div>
-              <div class="progress-bar-container">
-                <div class="progress-bar">
-                  <div
-                    class="progress-fill"
-                    :style="{ width: progress.percentage + '%' }"
-                    :class="getProgressBarClass(progress.percentage, type)"
-                  >
-                    <div class="progress-status-text" :class="getProgressTextClass(progress.status)">
-                      {{ progress.status }}
-                    </div>
-                  </div>
-                </div>
-                <div class="progress-text">{{ Math.round(progress.percentage) }}%</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -129,6 +114,14 @@
           </template>
         </el-table-column>
         <el-table-column label="课程名称" align="center" prop="courseName" />
+        <!-- 类型列 -->
+        <el-table-column label="课程性质" align="center" width="120">
+          <template slot-scope="scope">
+            <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
+              {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column label="课程类型" align="center" prop="courseType" width="200">
           <template slot-scope="scope">
             <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
@@ -136,8 +129,28 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="上课地点" align="center" prop="courseLocation" />
+        <!-- 学分列 -->
+        <el-table-column label="学分" align="center" width="80">
+          <template slot-scope="scope">
+            <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="课程地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
+        <!-- 成绩来源于列 -->
+        <el-table-column label="成绩来源于" align="center" width="120">
+          <template slot-scope="scope">
+            <el-tag 
+              v-if="scope.row.scoreType" 
+              :type="getScoreTypeTagType(scope.row.scoreType)" 
+              effect="plain" 
+              class="score-type-tag"
+            >
+              {{ scope.row.scoreType }}
+            </el-tag>
+            <span v-else class="no-score-type">暂无成绩</span>
+          </template>
+        </el-table-column>
         <el-table-column label="课程开始时间" align="center" prop="startTime" >
           <template slot-scope="scope">
             <span>{{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
@@ -148,6 +161,8 @@
             <span>{{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}:{s}') }}</span>
           </template>
         </el-table-column>
+
+
 
         <el-table-column label="材料提交" align="center" width="120">
           <template slot-scope="scope">
@@ -177,15 +192,15 @@
               >
                 重新提交
               </el-tag>
-              <!-- 未审核状态 - 添加点击功能 -->
+              <!-- 未考核状态 - 添加点击功能 -->
               <el-tag
-                v-if="scope.row.status === '未审核'"
+                v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
                 type="warning"
                 effect="light"
                 class="clickable-tag"
                 @click="openUploadDialog(scope.row)"
               >
-                未审核
+                未考核
               </el-tag>
               <!-- 已通过状态 - 添加点击功能 -->
               <el-tag
@@ -206,28 +221,7 @@
             <div class="expand-card">
               <div class="expand-row">
                 <div class="expand-label"><i class="el-icon-document"></i> 课程描述:</div>
-                <div class="expand-content">{{ props.row.notes || '暂无描述' }}</div>
-              </div>
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-coin"></i> 课程学分:</div>
-                <div class="expand-content">{{ props.row.courseCredit }} 学分</div>
-              </div>
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-collection-tag"></i> 课程类别:</div>
-                <div class="expand-content">{{ props.row.courseCategory }}</div>
-              </div>
-              <div class="expand-row" v-if="props.row.pictureUrl">
-                <div class="expand-label"><i class="el-icon-picture"></i> 课程图片:</div>
-                <div class="expand-content">
-                  <div class="course-image-container">
-                    <el-image
-                      :src="getCourseImageUrl(props.row.pictureUrl)"
-                      :preview-src-list="[getCourseImageUrl(props.row.pictureUrl)]"
-                      fit="cover"
-                      class="course-image"
-                    />
-                  </div>
-                </div>
+                <div class="expand-content">{{ props.row.courseDescription || '暂无描述' }}</div>
               </div>
               <div class="expand-row" v-if="!isCourseEnded(props.row.endTime)">
                 <div class="expand-label"><i class="el-icon-time"></i> 材料提交提示:</div>
@@ -259,19 +253,19 @@
       width="40%"
       :close-on-click-modal="false"
     >
-      <!-- 审核意见显示区域 -->
+      <!-- 考核意见显示区域 -->
       <div v-if="currentBooking && currentBooking.status === '未通过' && currentBooking.reviewComment" class="audit-feedback-section">
-        <h3><i class="el-icon-warning-outline"></i> 审核意见</h3>
+        <h3><i class="el-icon-warning-outline"></i> 考核意见</h3>
         <div class="audit-feedback-content">
           <div class="audit-feedback-text">{{ currentBooking.reviewComment }}</div>
           <div class="audit-feedback-meta">
             <span class="audit-time">
               <i class="el-icon-time"></i>
-              审核时间：{{ parseTime(currentBooking.reviewTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
+              考核时间：{{ parseTime(currentBooking.reviewTime, '{y}-{m}-{d} {h}:{i}:{s}') }}
             </span>
             <span v-if="currentBooking.reviewer" class="audit-reviewer">
               <i class="el-icon-user"></i>
-              审核人：{{ currentBooking.reviewer }}
+              考核人：{{ currentBooking.reviewer }}
             </span>
           </div>
         </div>
@@ -296,6 +290,7 @@
             :file-list="zipFiles"
             :on-remove="handleRemoveZip"
             :on-success="handleZipSuccess"
+            :on-progress="handleZipProgress"
             :limit="1"
             accept=".zip,.rar,.7z"
             :before-upload="beforeZipUpload"
@@ -324,11 +319,20 @@
             <div v-for="(file, index) in zipFiles" :key="index" class="custom-file-item">
               <i class="el-icon-folder file-icon"></i>
               <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
+              <div class="file-progress" v-if="file.uploading">
+                <el-progress 
+                  :percentage="file.progress" 
+                  :status="file.progress === 100 ? 'success' : ''"
+                  :stroke-width="6"
+                  :show-text="true"
+                ></el-progress>
+              </div>
               <el-button
                 type="text"
                 icon="el-icon-delete"
                 class="remove-btn"
                 @click="handleRemoveZip(file)"
+                :disabled="file.uploading"
               ></el-button>
             </div>
           </div>
@@ -474,8 +478,7 @@
 
 
 <script>
-import { listBookings, listBookingsWithCourse, updateBookings, getBookings } from "@/api/system/courseBookings";
-import { listCourse } from "@/api/system/course";
+import { listBookingsWithCourse, updateBookings, getBookings } from "@/api/system/courseBookings";
 import { getToken } from "@/utils/auth";
 
 export default {
@@ -500,6 +503,7 @@ export default {
       // 遮罩层
       loading: true,
       total: 0,
+      totalAll: 0, // 所有数据的数量，不受筛选影响
       coursesList: [],
       queryParams: {
         pageNum: 1,
@@ -513,16 +517,9 @@ export default {
       statusCounts: {
         unsubmitted: 0,  // 未提交
         rejected: 0,     // 未通过
+        pending: 0,      // 未考核
         approved: 0      // 已通过
       },
-      courseProgress: {
-        '1': { completed: 0, percentage: 0 }, // 必修课程
-        '2': { completed: 0, percentage: 0 }, // 选修课程
-        '3': { completed: 0, percentage: 0 }, // 实践课程
-        '4': { completed: 0, percentage: 0 }  // 其他课程
-      },
-      // 进度条筛选：当前选中的课程类型
-      selectedCourseType: null,
       isViewOnly: false, // 是否为只查看模式
       showFooterButtons: false, // 是否显示底部按钮
 
@@ -585,6 +582,40 @@ export default {
       }
       return map[courseType] || 'info';
     },
+
+    // 获取课程分类名称
+    getCourseCategoryName(courseCategory) {
+      const categoryMap = {
+        '必修': '必修',
+        '选修': '选修',
+        '实践': '实践',
+        '其他': '其他'
+      };
+      return categoryMap[courseCategory] || courseCategory;
+    },
+
+    // 获取课程分类标签颜色
+    getCourseCategoryTagType(courseCategory) {
+      const map = {
+        '必修': 'danger',    // 必修 - 红色
+        '选修': 'success',   // 选修 - 绿色
+        '实践': 'warning',   // 实践 - 橙色
+        '其他': 'info'       // 其他 - 蓝色
+      }
+      return map[courseCategory] || 'info';
+    },
+
+    // 获取成绩来源标签颜色
+    getScoreTypeTagType(scoreType) {
+      const map = {
+        '正考': 'success',     // 正考 - 绿色
+        '补考': 'warning',     // 补考 - 橙色
+        '重修': 'danger',      // 重修 - 红色
+        '免修': 'info',        // 免修 - 蓝色
+        '缓考': 'primary'      // 缓考 - 紫色
+      }
+      return map[scoreType] || 'info';
+    },
     // 获取文件的完整URL（用于显示）
     getFileFullUrl(fileName) {
       if (!fileName) return '';
@@ -594,13 +625,20 @@ export default {
         return fileName;
       }
 
+      const baseUrl = process.env.VUE_APP_BASE_API || '';
+      
+      // 检查文件名是否已经包含了baseUrl前缀
+      if (fileName.startsWith(baseUrl)) {
+        // 如果已经包含了baseUrl，直接返回
+        return fileName;
+      }
+      
       // 确保路径格式正确
       let normalizedPath = fileName;
       if (!normalizedPath.startsWith('/')) {
         normalizedPath = '/' + normalizedPath;
       }
 
-      const baseUrl = process.env.VUE_APP_BASE_API || '';
       return `${baseUrl}${normalizedPath}`;
     },
 
@@ -657,12 +695,25 @@ export default {
           name: this.extractFileName(data.proof),
           url: fullUrl,
           isOld: true,
-          downloading: false // 添加下载状态
+          downloading: false, // 添加下载状态
+          uploading: false,
+          progress: 100
         });
       }
       console.log('初始化文件列表完成:', {
         zipFiles: this.zipFiles
       });
+    },
+
+    // 压缩包上传进度处理
+    handleZipProgress(event, file, fileList) {
+      console.log('压缩包上传进度:', event.percent);
+      // 更新文件的上传进度
+      const targetFile = this.zipFiles.find(f => f.uid === file.uid);
+      if (targetFile) {
+        this.$set(targetFile, 'progress', Math.round(event.percent));
+        this.$set(targetFile, 'uploading', true);
+      }
     },
 
     // 修复压缩包上传成功处理
@@ -676,12 +727,16 @@ export default {
               name: fileName,
               url: this.getFileFullUrl(fileName),
               isOld: false,
-              downloading: false // 添加下载状态
+              downloading: false, // 添加下载状态
+              uploading: false,
+              progress: 100
             };
           }
           return {
             ...f,
-            downloading: f.downloading || false // 确保有下载状态
+            downloading: f.downloading || false, // 确保有下载状态
+            uploading: false,
+            progress: 100
           };
         });
         this.$message.success('压缩包上传成功');
@@ -847,7 +902,7 @@ export default {
         title = '重新提交';
         viewOnly = false;
         showButtons = true;
-      } else if (enrollment.status === '未审核') {
+      } else if (enrollment.status === '未考核') {
         title = '查看材料';
         viewOnly = true;
         showButtons = false;
@@ -873,7 +928,7 @@ export default {
         const res = await getBookings(enrollment.bookingId);
         if (res.code === 200) {
           const data = res.data || {};
-          // 更新当前选课信息，包含审核意见等详细字段
+          // 更新当前选课信息，包含考核意见等详细字段
           this.currentBooking = {
             ...this.currentBooking,
             ...data
@@ -916,7 +971,7 @@ export default {
         const res = await updateBookings({
           bookingId: this.currentBooking.bookingId,
           proof: proofFileName,
-          status: "未审核"
+          status: "未考核"
         });
 
         if (res.code === 200) {
@@ -939,16 +994,16 @@ export default {
 
     // 压缩包上传前校验
     beforeZipUpload(file) {
-      console.log('压缩包上传前验证:', { 
-        name: file.name, 
-        type: file.type, 
-        size: file.size 
+      console.log('压缩包上传前验证:', {
+        name: file.name,
+        type: file.type,
+        size: file.size
       });
-      
-      const isZip = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'].includes(file.type) || 
-                   file.name.toLowerCase().endsWith('.zip') || 
-                   file.name.toLowerCase().endsWith('.rar') || 
-                   file.name.toLowerCase().endsWith('.7z');
+
+      const isZip = ['application/zip', 'application/x-rar-compressed', 'application/x-7z-compressed'].includes(file.type) ||
+        file.name.toLowerCase().endsWith('.zip') ||
+        file.name.toLowerCase().endsWith('.rar') ||
+        file.name.toLowerCase().endsWith('.7z');
       const isLt50M = file.size / 1024 / 1024 < 50;
 
       console.log('文件验证结果:', { isZip, isLt50M, sizeMB: (file.size / 1024 / 1024).toFixed(2) });
@@ -961,7 +1016,7 @@ export default {
         this.$message.error('上传文件大小不能超过 50MB!');
         return false;
       }
-      
+
       console.log('文件验证通过，开始上传');
       return true;
     },
@@ -992,15 +1047,17 @@ export default {
       };
 
       console.log('获取统计数据参数:', statsParams);
-      
+
       listBookingsWithCourse(statsParams).then(response => {
         console.log('统计数据响应:', response);
         this.allCoursesList = response.rows || [];
+        this.totalAll = this.allCoursesList.length; // 设置所有数据的数量
         // 更新统计数据
         this.updateStatistics();
       }).catch(error => {
         console.error('获取统计数据失败:', error);
         this.allCoursesList = [];
+        this.totalAll = 0;
       });
     },
 
@@ -1008,24 +1065,17 @@ export default {
     getList() {
       this.loading = true;
       console.log('查询参数:', this.queryParams);
-      
+
       listBookingsWithCourse(this.queryParams).then(response => {
         console.log('查询响应:', response);
         let rows = response.rows || [];
 
-        // 本地筛选：如果选择了进度条类型，则只显示该类型的记录
-        if (this.selectedCourseType) {
-          rows = rows.filter(item => String(item.courseType) === String(this.selectedCourseType));
-        }
 
         // 对选课列表按照材料提交状态进行排序（同优先级下按开始时间由晚到早）
         const sortedRows = this.sortCoursesByStatus(rows);
         this.coursesList = sortedRows;
         this.total = rows.length;
-        
-        // 更新状态统计（基于当前显示的列表）
-        this.calculateStatusCounts();
-        
+
         this.loading = false;
       }).catch(error => {
         console.error('获取选课列表失败:', error);
@@ -1034,27 +1084,14 @@ export default {
       });
     },
 
-    /** 通过进度条筛选：点击某类型，筛选出该类型的课程；再次点击同类型则清除筛选 */
-    filterByCourseType(type) {
-      // 切换选中状态
-      if (this.selectedCourseType === type) {
-        this.selectedCourseType = null;
-      } else {
-        this.selectedCourseType = type;
-        this.queryParams.pageNum = 1;
-      }
-
-      // 重新拉取数据并应用本地筛选
-      this.getList();
-    },
 
     /** 按照材料提交状态排序选课列表 */
     sortCoursesByStatus(courses) {
-      // 定义状态优先级：未通过 > 课程未结束 > 未审核 > 已通过
+      // 定义状态优先级：未通过 > 课程未结束 > 未考核 > 已通过
       const statusPriority = {
         '未通过': 1,
         '未提交': 2,  // 课程未结束对应未提交状态
-        '未审核': 3,
+        '未考核': 3,
         '已通过': 4
       };
 
@@ -1076,7 +1113,6 @@ export default {
     /** 更新统计数据 */
     updateStatistics() {
       this.calculateStatusCounts();
-      this.calculateCourseProgress();
     },
 
     /** 计算状态统计 */
@@ -1084,17 +1120,22 @@ export default {
       this.statusCounts = {
         unsubmitted: 0,
         rejected: 0,
+        pending: 0,
         approved: 0
       };
 
-      // 使用当前显示的列表数据计算统计
-      this.coursesList.forEach(course => {
+      // 使用所有数据计算统计，不受筛选影响
+      this.allCoursesList.forEach(course => {
         switch(course.status) {
           case '未提交':
             this.statusCounts.unsubmitted++;
             break;
           case '未通过':
             this.statusCounts.rejected++;
+            break;
+          case '未考核':
+          case '未审核':
+            this.statusCounts.pending++;
             break;
           case '已通过':
             this.statusCounts.approved++;
@@ -1103,78 +1144,6 @@ export default {
       });
     },
 
-    /** 计算课程类型进度 */
-    calculateCourseProgress() {
-      console.log('开始计算课程完成进度...');
-      console.log('所有课程数据:', this.allCoursesList);
-      
-      // 重置进度
-      Object.keys(this.courseProgress).forEach(type => {
-        this.courseProgress[type] = { completed: 0, percentage: 0, status: '未开始' };
-      });
-
-      // 计算每个类型课程的进行时间百分比（基于所有课程数据）
-      this.allCoursesList.forEach(course => {
-        if (course.courseType && course.startTime && course.endTime) {
-          const type = course.courseType.toString();
-          const now = new Date();
-          const startTime = new Date(course.startTime);
-          const endTime = new Date(course.endTime);
-          
-          console.log(`--- 正在计算课程: ${course.courseName} (类型: ${type}) ---`);
-          console.log(`  课程开始时间: ${course.startTime} -> ${startTime}`);
-          console.log(`  课程结束时间: ${course.endTime} -> ${endTime}`);
-          console.log(`  当前系统时间: ${now}`);
-          console.log(`  材料提交状态: ${course.status}`);
-          
-          if (this.courseProgress[type]) {
-            // 计算课程进行的时间百分比
-            let percentage = 0;
-            let status = '未开始';
-            
-            if (now < startTime) {
-              // 课程还未开始
-              percentage = 0;
-              status = '未开始';
-              console.log('  结果: 课程还未开始。');
-            } else if (now >= endTime) {
-              // 课程已结束，根据材料提交状态显示不同信息
-              percentage = 100;
-              if (course.status === '未提交') {
-                status = '课程已结束，需要提交材料';
-              } else if (course.status === '未审核') {
-                status = '材料已提交，正在审核中';
-              } else if (course.status === '已通过') {
-                status = '材料已通过，此课程已结束';
-              } else if (course.status === '未通过') {
-                status = '材料未通过，需要重新提交';
-              } else {
-                status = '课程已结束';
-              }
-              console.log(`  结果: 课程已结束，状态: ${status}`);
-            } else {
-              // 课程进行中，计算百分比
-              const totalDuration = endTime.getTime() - startTime.getTime();
-              const elapsed = now.getTime() - startTime.getTime();
-              percentage = Math.min((elapsed / totalDuration) * 100, 100);
-              status = '进行中';
-              console.log(`  结果: 课程进行中。已进行时间: ${elapsed}ms, 总时长: ${totalDuration}ms, 百分比: ${percentage}%`);
-            }
-            
-            // 更新该类型的进度（取最大值，因为可能有多个同类型课程）
-            this.courseProgress[type].percentage = Math.max(this.courseProgress[type].percentage, percentage);
-            this.courseProgress[type].completed = percentage > 0 ? 1 : 0;
-            this.courseProgress[type].status = status;
-            console.log(`  更新类型 ${type} 的进度为: ${this.courseProgress[type].percentage}%, 状态: ${status}`);
-          }
-        } else {
-          console.warn(`跳过课程 ${course.courseName} 的进度计算，因为缺少课程类型、开始时间或结束时间。`);
-        }
-      });
-      
-      console.log('--- 课程完成进度计算结束 ---');
-      console.log('最终 courseProgress 对象:', this.courseProgress);
-    },
 
     /** 根据状态筛选 */
     filterByStatus(status) {
@@ -1183,7 +1152,12 @@ export default {
 
       // 添加状态筛选参数
       if (status) {
-        this.queryParams.status = status;
+        // 如果选择"未考核"，则查询"未审核"状态
+        if (status === '未考核') {
+          this.queryParams.status = '未审核';
+        } else {
+          this.queryParams.status = status;
+        }
       } else {
         delete this.queryParams.status;
       }
@@ -1199,40 +1173,6 @@ export default {
       this.getList();
     },
 
-    /** 获取进度条样式类 */
-    getProgressBarClass(percentage, courseType) {
-      const baseClass = this.getCourseTypeBaseClass(courseType);
-      if (percentage >= 100) return `${baseClass}-full`;
-      if (percentage >= 75) return `${baseClass}-high`;
-      if (percentage >= 50) return `${baseClass}-medium`;
-      if (percentage >= 25) return `${baseClass}-low`;
-      return `${baseClass}-empty`;
-    },
-
-    /** 获取课程类型对应的基础样式类 */
-    getCourseTypeBaseClass(courseType) {
-      const map = {
-        '1': 'progress-primary',   // 必修课程 - 蓝色
-        '2': 'progress-success',   // 选修课程 - 绿色
-        '3': 'progress-warning',   // 实践课程 - 橙色
-        '4': 'progress-danger'     // 其他课程 - 红色
-      };
-      return map[courseType] || 'progress-info';
-    },
-
-    /** 获取进度文本样式类 */
-    getProgressTextClass(status) {
-      const statusClassMap = {
-        '未开始': 'status-not-started',
-        '进行中': 'status-in-progress',
-        '需要提交材料': 'status-need-submit',
-        '材料在审核中': 'status-under-review',
-        '材料已通过': 'status-approved',
-        '材料未通过需要重新提交': 'status-rejected',
-        '课程已结束': 'status-completed'
-      };
-      return statusClassMap[status] || 'status-default';
-    },
 
     /** 获取表格行的CSS类名 */
     getRowClassName({ row, rowIndex }) {
@@ -1568,7 +1508,7 @@ export default {
       this.activityImagePreviewVisible = true;
     },
 
-    /** 获取课程图片完整URL（仿照审核界面实现） */
+    /** 获取课程图片完整URL（仿照考核界面实现） */
     getCourseImageUrl(pictureUrl) {
       if (!pictureUrl) return '';
 
@@ -1577,7 +1517,7 @@ export default {
         return pictureUrl;
       }
 
-      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照审核界面）
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径（仿照考核界面）
       if (pictureUrl.startsWith('/profile/')) {
         return `${process.env.VUE_APP_BASE_API}${pictureUrl}`;
       }
@@ -1647,17 +1587,16 @@ export default {
 /* 统计大盒子样式 */
 .stats-content {
   display: flex;
-  gap: 40px;
+  justify-content: center;
   margin-top: 20px;
 }
 
-.status-stats,
-.progress-stats {
+.status-stats {
   flex: 1;
+  max-width: 800px;
 }
 
-.status-stats h3,
-.progress-stats h3 {
+.status-stats h3 {
   margin: 0 0 20px 0;
   font-size: 16px;
   font-weight: 600;
@@ -1725,6 +1664,11 @@ export default {
   color: white;
 }
 
+.status-icon.pending {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+}
+
 .status-icon.approved {
   background: linear-gradient(135deg, #27ae60, #2ecc71);
   color: white;
@@ -1753,226 +1697,6 @@ export default {
   margin-top: 4px;
 }
 
-/* 进度条样式 */
-.progress-items {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.progress-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.progress-label {
-  min-width: 200px;
-  font-size: 14px;
-  color: #606266;
-  font-weight: 500;
-}
-
-.progress-item.active .progress-label {
-  color: #303133;
-  font-weight: 700;
-}
-
-.progress-item:hover {
-  transform: translateY(-1px);
-}
-
-.progress-bar-container {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 12px;
-  background: #f0f2f5;
-  border-radius: 6px;
-  overflow: hidden;
-  position: relative;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 6px;
-  transition: all 0.6s ease;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.progress-fill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  animation: shimmer 2s infinite;
-}
-
-/* 进度条内的状态文本 */
-.progress-status-text {
-  position: relative;
-  z-index: 2;
-  font-size: 11px;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-/* 必修课程 - 蓝色系 */
-.progress-primary-empty {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-}
-
-.progress-primary-low {
-  background: linear-gradient(135deg, #90caf9, #64b5f6);
-}
-
-.progress-primary-medium {
-  background: linear-gradient(135deg, #42a5f5, #2196f3);
-}
-
-.progress-primary-high {
-  background: linear-gradient(135deg, #1e88e5, #1976d2);
-}
-
-.progress-primary-full {
-  background: linear-gradient(135deg, #1565c0, #0d47a1);
-}
-
-/* 选修课程 - 绿色系 */
-.progress-success-empty {
-  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
-}
-
-.progress-success-low {
-  background: linear-gradient(135deg, #a5d6a7, #81c784);
-}
-
-.progress-success-medium {
-  background: linear-gradient(135deg, #66bb6a, #4caf50);
-}
-
-.progress-success-high {
-  background: linear-gradient(135deg, #43a047, #388e3c);
-}
-
-.progress-success-full {
-  background: linear-gradient(135deg, #2e7d32, #1b5e20);
-}
-
-/* 实践课程 - 橙色系 */
-.progress-warning-empty {
-  background: linear-gradient(135deg, #fff3e0, #ffcc80);
-}
-
-.progress-warning-low {
-  background: linear-gradient(135deg, #ffb74d, #ffa726);
-}
-
-.progress-warning-medium {
-  background: linear-gradient(135deg, #ff9800, #fb8c00);
-}
-
-.progress-warning-high {
-  background: linear-gradient(135deg, #f57c00, #ef6c00);
-}
-
-.progress-warning-full {
-  background: linear-gradient(135deg, #e65100, #d84315);
-}
-
-/* 其他课程 - 红色系 */
-.progress-danger-empty {
-  background: linear-gradient(135deg, #ffebee, #ffcdd2);
-}
-
-.progress-danger-low {
-  background: linear-gradient(135deg, #ef9a9a, #e57373);
-}
-
-.progress-danger-medium {
-  background: linear-gradient(135deg, #f44336, #e53935);
-}
-
-.progress-danger-high {
-  background: linear-gradient(135deg, #d32f2f, #c62828);
-}
-
-.progress-danger-full {
-  background: linear-gradient(135deg, #b71c1c, #8d1a1a);
-}
-
-.progress-text {
-  min-width: 40px;
-  font-size: 12px;
-  font-weight: 600;
-  text-align: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-/* 进度条内状态文本样式 */
-.status-not-started {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.status-in-progress {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.status-need-submit {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-under-review {
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-approved {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-rejected {
-  color: #fff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-}
-
-.status-completed {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.status-default {
-  color: rgba(255, 255, 255, 0.8);
-}
 
 
 /* 现代化表格 */
@@ -2085,6 +1809,27 @@ export default {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* 学分显示样式 */
+.credit-value {
+  font-weight: 600;
+  color: #409EFF;
+  background: rgba(64, 158, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* 课程分类标签样式 */
+.category-tag {
+  font-weight: 500;
+  padding: 0 12px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 /* 扩展卡片 */
 .expand-card {
   background: #f9fafc;
@@ -2141,27 +1886,11 @@ export default {
 /* 响应式设计 */
 @media (max-width: 1200px) {
   .stats-content {
-    flex-direction: column;
-    gap: 30px;
+    justify-content: center;
   }
 
   .status-items {
     justify-content: center;
-  }
-
-  .progress-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .progress-label {
-    min-width: auto;
-    width: 100%;
-  }
-
-  .progress-bar-container {
-    width: 100%;
   }
 }
 
@@ -2201,7 +1930,7 @@ export default {
   font-weight: 600;
 }
 
-/* 审核意见显示区域样式 */
+/* 考核意见显示区域样式 */
 .audit-feedback-section {
   margin-bottom: 30px;
   padding: 20px;
@@ -2329,7 +2058,7 @@ export default {
   padding: 20px;
 }
 
-/* 审核界面样式 - 与ActivityAudit.vue保持一致 */
+/* 考核界面样式 - 与ActivityAudit.vue保持一致 */
 .section {
   margin-bottom: 30px;
   padding: 15px;
@@ -3087,6 +2816,52 @@ export default {
 
 .custom-file-item .file-name {
   font-size: 13px;
+}
+
+/* 文件上传进度样式 */
+.file-progress {
+  flex: 1;
+  margin: 8px 0;
+  padding: 0 8px;
+}
+
+.file-progress .el-progress {
+  margin: 0;
+}
+
+.file-progress .el-progress__text {
+  font-size: 12px;
+  color: #409EFF;
+  font-weight: 500;
+}
+
+/* 上传中状态的文件项样式 */
+.custom-file-item:has(.file-progress) {
+  background: #f0f9ff;
+  border-color: #b3d8ff;
+}
+
+.custom-file-item:has(.file-progress) .file-icon {
+  color: #409EFF;
+}
+
+.custom-file-item:has(.file-progress) .file-name {
+  color: #409EFF;
+  font-weight: 500;
+}
+
+/* 成绩来源于列样式 */
+.score-type-tag {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.no-score-type {
+  color: #909399;
+  font-size: 12px;
+  font-style: italic;
 }
 
 </style>

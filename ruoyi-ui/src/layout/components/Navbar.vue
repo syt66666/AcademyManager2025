@@ -112,21 +112,23 @@ export default {
       } else {
         getStudent(this.userName).then(response => {
           const studentInfo = response.studentInfo;
-          this.studentName = studentInfo.studentName;
-          this.department = studentInfo.academy;
-          this.major = studentInfo.major;
-          if (studentInfo.divertForm === '可类内任选，并转专业') {
-            this.splitFlow = '类内任选专业'
-          } else if (studentInfo.divertForm === '可类内任选，不能转专业') {
-            this.splitFlow = '域内任选专业'
-          } else if (studentInfo.divertForm === '可域内任选，并转专业') {
-            this.splitFlow = '域内任选专业'
-          }else this.splitFlow = studentInfo.divertForm;
-          this.specialty = studentInfo.originalSystemMajor;
-          if (studentInfo.innovationClass === 1) {
-            this.specialClass = '是';
-          } else {
-            this.specialClass = '否';
+          if (studentInfo) {
+            this.studentName = studentInfo.studentName;
+            this.department = studentInfo.academy;
+            this.major = studentInfo.major;
+            if (studentInfo.divertForm === '可类内任选，并转专业') {
+              this.splitFlow = '类内任选专业'
+            } else if (studentInfo.divertForm === '可类内任选，不能转专业') {
+              this.splitFlow = '域内任选专业'
+            } else if (studentInfo.divertForm === '可域内任选，并转专业') {
+              this.splitFlow = '域内任选专业'
+            }else this.splitFlow = studentInfo.divertForm;
+            this.specialty = studentInfo.originalSystemMajor;
+            if (studentInfo.innovationClass === 1) {
+              this.specialClass = '是';
+            } else {
+              this.specialClass = '否';
+            }
           }
         });
       }

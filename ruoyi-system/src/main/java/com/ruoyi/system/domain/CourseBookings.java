@@ -1,7 +1,6 @@
 package com.ruoyi.system.domain;
 
 import java.util.Date;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
@@ -62,6 +61,10 @@ public class CourseBookings extends BaseEntity
     /** 组织单位 */
     @Excel(name = "组织单位")
     private String organizer;
+
+    /** 成绩值（审核通过时录入） */
+    @Excel(name = "成绩值")
+    private String scoreValue;
 
     /** 创建时间 */
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -172,6 +175,15 @@ public class CourseBookings extends BaseEntity
     {
         return organizer;
     }
+    public void setScoreValue(String scoreValue)
+    {
+        this.scoreValue = scoreValue;
+    }
+
+    public String getScoreValue()
+    {
+        return scoreValue;
+    }
     public void setCreatedTime(Date createdTime)
     {
         this.createdTime = createdTime;
@@ -205,6 +217,7 @@ public class CourseBookings extends BaseEntity
                 .append("reviewerComment", getReviewerComment())
                 .append("reviewTime", getReviewTime())
                 .append("organizer", getOrganizer())
+                .append("scoreValue", getScoreValue())
                 .append("createdTime", getCreatedTime())
                 .append("updatedTime", getUpdatedTime())
                 .toString();

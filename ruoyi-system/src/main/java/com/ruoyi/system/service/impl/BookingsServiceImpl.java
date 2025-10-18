@@ -7,18 +7,17 @@ import com.ruoyi.common.utils.ServletUtils;
 import com.ruoyi.common.utils.ip.IpUtils;
 import com.ruoyi.system.domain.AuditHistory;
 import com.ruoyi.system.domain.Bookings;
-import com.ruoyi.system.domain.StuAbilityScore;
-import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.domain.dto.BookingExportDTO;
 import com.ruoyi.system.mapper.AuditHistoryMapper;
 import com.ruoyi.system.mapper.BookingsMapper;
 import com.ruoyi.system.service.IBookingsService;
 import com.ruoyi.system.service.ISysUserService;
+import com.ruoyi.system.service.IActivitiesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -36,6 +35,8 @@ public class BookingsServiceImpl implements IBookingsService {
     private AuditHistoryMapper auditHistoryMapper;
     @Autowired
     private ISysUserService userService;
+    @Autowired
+    private IActivitiesService activitiesService;
     /**
      * 查询预约列表
      * @param bookings 查询条件
@@ -234,6 +235,20 @@ public class BookingsServiceImpl implements IBookingsService {
         }
     }
 
+    @Override
+    public int deleteBookingsByActivityId(Long activityId) {
+        try {
+            System.out.println("删除活动相关的所有预约记录: activityId=" + activityId);
+            int result = bookingsMapper.deleteBookingsByActivityId(activityId);
+            System.out.println("删除结果: " + result + " 条记录被删除");
+            return result;
+        } catch (Exception e) {
+            System.err.println("删除活动相关预约记录异常: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("删除活动相关预约记录失败", e);
+        }
+    }
+
     public Map<String, Integer> countAuditStatus() {
         try {
             return bookingsMapper.countAuditStatus();
@@ -269,5 +284,90 @@ public class BookingsServiceImpl implements IBookingsService {
     @Override
     public List<BookingExportDTO> selectBookingExportList(BookingExportDTO bookingExportDTO) {
         return bookingsMapper.selectBookingExportList(bookingExportDTO);
+    }
+
+    /**
+     * 报名后更新活动容量
+     * @param activityId 活动ID
+     * @param version 版本号
+     * @return 更新结果
+     */
+    @Override
+    public int updateActivityCapacityAfterBooking(Integer activityId, Integer version) {
+        try {
+            // 调用ActivitiesService的方法来更新容量
+            return activitiesService.updateCapacityByActualBookings(activityId, version);
+        } catch (Exception e) {
+            System.err.println("更新活动容量失败: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * 事务性报名操作 - 解决并发问题
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int signUpWithTransaction(Long activityId, String studentId, Integer version) {
+        try {
+            // 1. 原子性插入预约记录（包含重复检查和容量检查）
+            int insertResult = bookingsMapper.signUpWithTransaction(activityId, studentId, version);
+            
+            if (insertResult <= 0) {
+                // 插入失败，可能是重复报名或容量不足
+                return 0;
+            }
+            
+            // 2. 原子性更新活动容量
+            int updateResult = bookingsMapper.updateCapacityAfterSignUp(activityId, version);
+            
+            if (updateResult <= 0) {
+                // 容量更新失败，抛出异常触发回滚
+                throw new ServiceException("活动容量更新失败");
+            }
+            
+            return 1; // 成功
+        } catch (Exception e) {
+            System.err.println("事务性报名失败: " + e.getMessage());
+            throw new ServiceException("报名失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 事务性取消报名操作 - 解决并发问题
+     * @param activityId 活动ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int cancelSignUpWithTransaction(Long activityId, String studentId, Integer version) {
+        try {
+            // 1. 原子性删除预约记录（包含版本检查）
+            int deleteResult = bookingsMapper.cancelSignUpWithTransaction(activityId, studentId, version);
+            
+            if (deleteResult <= 0) {
+                // 删除失败，可能是未报名或版本不匹配
+                return 0;
+            }
+            
+            // 2. 原子性更新活动容量
+            int updateResult = bookingsMapper.updateCapacityAfterCancelSignUp(activityId, version);
+            
+            if (updateResult <= 0) {
+                // 容量更新失败，抛出异常触发回滚
+                throw new ServiceException("活动容量更新失败");
+            }
+            
+            return 1; // 成功
+        } catch (Exception e) {
+            System.err.println("事务性取消报名失败: " + e.getMessage());
+            throw new ServiceException("取消报名失败: " + e.getMessage());
+        }
     }
 }

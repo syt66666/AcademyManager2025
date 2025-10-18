@@ -30,6 +30,8 @@
         <result property="activityName"   column="activity_name"   />
         <result property="activityLocation" column="activity_location" />
         <result property="activityType"   column="activity_type"   />
+        <result property="activityStart"  column="activity_start"  />
+        <result property="activityDeadline" column="activity_deadline" />
         <result property="startTime"      column="start_time"       />
         <result property="endTime"       column="end_time"       />
         <result property="activityDescription" column="activity_description" />
@@ -63,6 +65,8 @@
         a.activity_name,
         a.activity_location,
         a.activity_type,
+        a.activity_start,
+        a.activity_deadline,
         a.start_time,
         a.end_time,
         a.activity_description,
@@ -242,6 +246,7 @@
         b.student_id as studentId,
         s.student_name as studentName,
         s.academy,
+        s.student_class as studentClass,
         b.status
         FROM bookings b
         LEFT JOIN stu_info s ON b.student_id = s.student_id
@@ -252,6 +257,20 @@
         </where>
         ORDER BY b.booked_at DESC
     </select>
+
+    <!-- 统计总参与人数 -->
+    <select id="countTotalParticipants" resultType="int">
+        SELECT COUNT(DISTINCT student_id) FROM bookings
+    </select>
+
+    <!-- 根据组织单位统计参与人数 -->
+    <select id="countParticipantsByOrganizer" resultType="int">
+        SELECT COUNT(DISTINCT b.student_id)
+        FROM bookings b
+        LEFT JOIN activities a ON b.activity_id = a.activity_id
+        WHERE a.organizer = #{organizer}
+    </select>
+
     <!-- 检查报名记录是否存在 -->
     <select id="checkBookingExists" resultType="int">
         SELECT COUNT(1)
@@ -259,4 +278,67 @@
         WHERE activity_id = #{activityId}
           AND student_id = #{studentId}
     </select>
+
+    <!-- 根据活动ID删除所有相关的预约记录 -->
+    <delete id="deleteBookingsByActivityId">
+        DELETE FROM bookings
+        WHERE activity_id = #{activityId}
+    </delete>
+
+    <!-- 原子性报名操作 - 解决并发问题 -->
+    <insert id="signUpWithTransaction" parameterType="map">
+        INSERT INTO bookings (activity_id, student_id, booked_at, status)
+        SELECT #{activityId}, #{studentId}, NOW(), '未提交'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM bookings 
+            WHERE activity_id = #{activityId} 
+            AND student_id = #{studentId}
+        )
+        AND EXISTS (
+            SELECT 1 FROM activities 
+            WHERE activity_id = #{activityId}
+            AND version = #{version}
+            AND activity_capacity > 0
+        )
+    </insert>
+
+    <!-- 原子性更新活动容量 -->
+    <update id="updateCapacityAfterSignUp" parameterType="map">
+        UPDATE activities 
+        SET activity_capacity = activity_total_capacity - (
+            SELECT COUNT(*) 
+            FROM bookings 
+            WHERE activity_id = #{activityId}
+            AND status IN ('approved', 'submitted', '未提交')
+        ),
+        version = version + 1
+        WHERE activity_id = #{activityId}
+        AND version = #{version}
+    </update>
+
+    <!-- 原子性取消报名操作 -->
+    <delete id="cancelSignUpWithTransaction" parameterType="map">
+        DELETE FROM bookings
+        WHERE activity_id = #{activityId}
+        AND student_id = #{studentId}
+        AND EXISTS (
+            SELECT 1 FROM activities 
+            WHERE activity_id = #{activityId}
+            AND version = #{version}
+        )
+    </delete>
+
+    <!-- 原子性更新活动容量（取消报名后） -->
+    <update id="updateCapacityAfterCancelSignUp" parameterType="map">
+        UPDATE activities 
+        SET activity_capacity = activity_total_capacity - (
+            SELECT COUNT(*) 
+            FROM bookings 
+            WHERE activity_id = #{activityId}
+            AND status IN ('approved', 'submitted', '未提交')
+        ),
+        version = version + 1
+        WHERE activity_id = #{activityId}
+        AND version = #{version}
+    </update>
 </mapper>
