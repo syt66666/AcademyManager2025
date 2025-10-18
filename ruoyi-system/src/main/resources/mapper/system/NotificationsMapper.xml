@@ -39,6 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="creatorId != null "> and creator_id = #{creatorId}</if>
             <if test="createdAt != null "> and created_at = #{createdAt}</if>
         </where>
+        ORDER BY created_at DESC
     </select>
     
     <select id="selectNotificationsByNotiId" parameterType="Long" resultMap="NotificationsResult">

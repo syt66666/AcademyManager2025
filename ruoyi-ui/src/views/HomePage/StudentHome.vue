@@ -11,8 +11,8 @@
         <div class="notification-content">
           <!-- 通知类型标签页 -->
           <div class="notification-tabs">
-            <div 
-              v-for="tab in notificationTabs" 
+            <div
+              v-for="tab in notificationTabs"
               :key="tab.value"
               class="notification-tab"
               :class="{ active: selectedNotificationType === tab.value }"
@@ -21,15 +21,15 @@
               {{ tab.label }}
             </div>
           </div>
-          
+
           <!-- 通知列表 -->
           <div v-if="filteredNotifications.length === 0" class="no-notification">
             <i class="el-icon-info"></i>
             <span>暂无通知</span>
           </div>
           <div v-else class="notification-list">
-            <div 
-              v-for="notification in filteredNotifications" 
+            <div
+              v-for="notification in filteredNotifications"
               :key="notification.notiId"
               class="notification-item"
               @click="showNotificationDetail(notification)"
@@ -61,8 +61,8 @@
             <span>暂无活动</span>
           </div>
           <div v-else class="activity-list">
-            <div 
-              v-for="activity in recentActivities" 
+            <div
+              v-for="activity in recentActivities"
               :key="activity.activityId"
               class="activity-item"
               @click="goToActivityBooking(activity)"
@@ -90,16 +90,16 @@
         </div>
         <div class="completion-content">
           <div class="progress-categories">
-            <div 
-              v-for="category in activityCategories" 
+            <div
+              v-for="category in activityCategories"
               :key="category.type"
               class="progress-category"
             >
               <div class="category-label">{{ category.name }}</div>
               <div class="progress-bar-container">
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
+                  <div
+                    class="progress-fill"
                     :style="{ width: category.progress + '%' }"
                   ></div>
                 </div>
@@ -118,8 +118,8 @@
         </div>
         <div class="status-content">
           <div class="status-filters">
-            <div 
-              v-for="status in activityStatusFilters" 
+            <div
+              v-for="status in activityStatusFilters"
               :key="status.value"
               class="status-filter-item"
               :class="{ active: selectedStatus === status.value }"
@@ -133,7 +133,7 @@
                 <div class="status-label">{{ status.label }}</div>
               </div>
             </div>
-            <div 
+            <div
               class="status-filter-item clear-filter"
               :class="{ active: selectedStatus === null }"
               @click="clearStatusFilter"
@@ -163,111 +163,124 @@
           <el-table
             :data="selectedCourses"
             style="width: 100%"
-            class="course-table"
+            class="modern-table"
             :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
             v-loading="coursesLoading"
             empty-text="暂无数据"
           >
+            <!-- 序号列 -->
             <el-table-column label="序号" width="80" align="center">
               <template v-slot="scope">
-                <span class="index-badge">
+                <span
+                  class="index-badge"
+                  :class="{ 'rejected-badge': scope.row.status === '未通过' }"
+                >
                   {{ scope.$index + 1 }}
                 </span>
               </template>
             </el-table-column>
-            <el-table-column prop="courseName" label="课程名称" min-width="150" />
-            <el-table-column label="课程性质" width="100" align="center">
-              <template v-slot="scope">
-                <el-tag 
-                  :type="getCourseCategoryTagType(scope.row.courseCategory)" 
-                  size="mini"
-                  effect="plain"
-                >
+            <el-table-column label="课程名称" align="center" prop="courseName" />
+            <!-- 类型列 -->
+            <el-table-column label="课程性质" align="center" width="120">
+              <template slot-scope="scope">
+                <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
                   {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="课程类型" width="120" align="center">
-              <template v-slot="scope">
-                <el-tag 
-                  :type="getCourseTypeTagType(scope.row.courseType)" 
-                  size="mini"
-                  effect="plain"
-                >
+            <el-table-column label="课程类型" align="center" prop="courseType" width="200">
+              <template slot-scope="scope">
+                <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
                   {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="学分" width="80" align="center">
-              <template v-slot="scope">
+            <!-- 学分列 -->
+            <el-table-column label="学分" align="center" width="80">
+              <template slot-scope="scope">
                 <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="courseLocation" label="课程地点" min-width="120" />
-            <el-table-column prop="organizer" label="组织单位" min-width="120" />
-            <el-table-column label="成绩来源于" width="120" align="center">
-              <template v-slot="scope">
-                <el-tag 
-                  v-if="scope.row.scoreType" 
-                  :type="getScoreTypeTagType(scope.row.scoreType)" 
-                  size="mini"
+            <el-table-column label="课程地点" align="center" prop="courseLocation" />
+            <el-table-column label="组织单位" align="center" prop="organizer" />
+            <!-- 成绩来源于列 -->
+            <el-table-column label="成绩来源于" align="center" width="120">
+              <template slot-scope="scope">
+                <el-tag
+                  v-if="scope.row.scoreType"
+                  :type="getScoreTypeTagType(scope.row.scoreType)"
                   effect="plain"
+                  class="score-type-tag"
                 >
                   {{ scope.row.scoreType }}
                 </el-tag>
                 <span v-else class="no-score-type">暂无成绩</span>
               </template>
             </el-table-column>
-            <el-table-column label="课程开始时间" width="140" align="center">
-              <template v-slot="scope">
+            <el-table-column label="课程开始时间" align="center" prop="startTime" >
+              <template slot-scope="scope">
                 <span>{{ formatDateTime(scope.row.startTime) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="课程结束时间" width="140" align="center">
-              <template v-slot="scope">
+            <el-table-column label="课程结束时间" align="center" prop="endTime">
+              <template slot-scope="scope">
                 <span>{{ formatDateTime(scope.row.endTime) }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="材料提交" width="100" align="center">
-              <template v-slot="scope">
+
+            <el-table-column label="材料提交" align="center" width="120">
+              <template slot-scope="scope">
+                <!-- 课程未结束时显示提示信息 -->
                 <el-tag
                   v-if="!isCourseEnded(scope.row.endTime)"
                   type="info"
-                  size="mini"
                   effect="light"
+                  class="status-tag"
                 >课程未结束</el-tag>
+                <!-- 课程结束后显示上传按钮或状态标签 -->
                 <template v-else>
                   <el-button
                     v-if="scope.row.status === '未提交'"
                     type="text"
                     size="mini"
+                    class="action-button upload-button"
                     @click="openUploadDialog(scope.row)"
                   >提交</el-button>
+                  <!-- 未通过状态 -->
                   <el-tag
                     v-if="scope.row.status === '未通过'"
                     type="danger"
-                    size="mini"
                     effect="light"
+                    class="status-tag clickable-tag"
                     @click="openUploadDialog(scope.row)"
-                    class="clickable-tag"
-                  >重新提交</el-tag>
+                  >
+                    重新提交
+                  </el-tag>
+                  <!-- 未考核状态 - 添加点击功能 -->
                   <el-tag
                     v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
                     type="warning"
-                    size="mini"
                     effect="light"
-                  >审核中</el-tag>
+                    class="clickable-tag"
+                    @click="openUploadDialog(scope.row)"
+                  >
+                    未考核
+                  </el-tag>
+                  <!-- 已通过状态 - 添加点击功能 -->
                   <el-tag
                     v-if="scope.row.status === '已通过'"
                     type="success"
-                    size="mini"
                     effect="light"
-                  >已通过</el-tag>
+                    class="status-tag clickable-tag"
+                    @click="openUploadDialog(scope.row)"
+                  >
+                    已通过
+                  </el-tag>
                 </template>
               </template>
             </el-table-column>
           </el-table>
-          
+
           <!-- 分页组件 -->
           <div class="pagination-container">
             <el-pagination
@@ -307,21 +320,21 @@
             <span class="detail-time">{{ formatDateTime(currentNotification.createdAt) }}</span>
           </div>
         </div>
-        
+
         <div class="detail-content">
           <div class="content-text" v-html="formatNotificationContent(currentNotification.notiContent)"></div>
         </div>
-        
+
         <!-- 附件部分 -->
         <div v-if="hasAttachments(currentNotification)" class="detail-attachments">
           <h4>附件</h4>
-          
+
           <!-- 文档附件 -->
           <div v-if="currentNotification.fileAttachments && currentNotification.fileAttachments.length > 0" class="attachment-section">
             <h5>文档附件</h5>
             <div class="attachment-list">
-              <div 
-                v-for="(file, index) in currentNotification.fileAttachments" 
+              <div
+                v-for="(file, index) in currentNotification.fileAttachments"
                 :key="index"
                 class="attachment-item"
               >
@@ -333,13 +346,13 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 图片附件 -->
           <div v-if="currentNotification.pictureAttachments && currentNotification.pictureAttachments.length > 0" class="attachment-section">
             <h5>图片附件</h5>
             <div class="image-gallery">
-              <div 
-                v-for="(image, index) in currentNotification.pictureAttachments" 
+              <div
+                v-for="(image, index) in currentNotification.pictureAttachments"
                 :key="index"
                 class="image-item"
                 @click="previewImage(image)"
@@ -353,11 +366,8 @@
           </div>
         </div>
       </div>
-      
+
       <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="notificationDialogVisible = false" size="medium">
-          <i class="el-icon-check"></i> 确定
-        </el-button>
         <el-button @click="notificationDialogVisible = false" size="medium">
           <i class="el-icon-close"></i> 关闭
         </el-button>
@@ -370,6 +380,7 @@
 import { listNotificationsPublic } from "@/api/system/notifications";
 import { listActivities } from "@/api/system/activities";
 import { listActivity } from "@/api/system/activity";
+import { listBookingsWithActivity } from "@/api/system/bookings";
 import { listBookingsWithCourse } from "@/api/system/courseBookings";
 import { parseTime } from "@/utils/ruoyi";
 
@@ -379,7 +390,7 @@ export default {
     return {
       // 通知数据
       notifications: [],
-      
+
       // 通知类型筛选
       selectedNotificationType: 'all',
       notificationTabs: [
@@ -388,46 +399,46 @@ export default {
         { value: 'activity', label: '活动通知' },
         { value: 'course', label: '课程通知' }
       ],
-      
+
       // 通知详情弹窗
       notificationDialogVisible: false,
       currentNotification: null,
-      
+
       // 近期活动数据
       recentActivities: [],
-      
+
       // 活动分类进度数据
       activityCategories: [
-        { 
-          type: 'personality', 
-          name: '人格塑造与价值引领活动类', 
-          completed: 0, 
-          total: 8, 
-          progress: 0 
+        {
+          type: 'personality',
+          name: '人格塑造与价值引领活动类',
+          completed: 0,
+          total: 8,
+          progress: 0
         },
-        { 
-          type: 'knowledge', 
-          name: '知识融合与思维进阶活动类', 
-          completed: 0, 
-          total: 8, 
-          progress: 0 
+        {
+          type: 'knowledge',
+          name: '知识融合与思维进阶活动类',
+          completed: 0,
+          total: 8,
+          progress: 0
         },
-        { 
-          type: 'ability', 
-          name: '能力锻造与实践创新活动类', 
-          completed: 0, 
-          total: 8, 
-          progress: 0 
+        {
+          type: 'ability',
+          name: '能力锻造与实践创新活动类',
+          completed: 0,
+          total: 8,
+          progress: 0
         },
-        { 
-          type: 'social', 
-          name: '社会责任与领军意识活动类', 
-          completed: 0, 
-          total: 8, 
-          progress: 0 
+        {
+          type: 'social',
+          name: '社会责任与领军意识活动类',
+          completed: 0,
+          total: 8,
+          progress: 0
         }
       ],
-      
+
       // 活动状态筛选
       selectedStatus: null,
       activityStatusFilters: [
@@ -436,21 +447,21 @@ export default {
         { value: '未审核', label: '未审核', icon: 'el-icon-time', iconClass: 'pending', count: 0 },
         { value: '已通过', label: '已通过', icon: 'el-icon-check', iconClass: 'approved', count: 0 }
       ],
-      
+
       // 已选课程数据
       selectedCourses: [],
       totalCourses: 0,
-      
+
       // 分页数据
       currentPage: 1,
       pageSize: 10,
-      
+
       // 加载状态
       loading: false,
       notificationsLoading: false,
       activitiesLoading: false,
       coursesLoading: false,
-      
+
       // 自动刷新定时器
       refreshTimer: null
     };
@@ -460,7 +471,7 @@ export default {
     totalAll() {
       return this.activityStatusFilters.reduce((sum, filter) => sum + filter.count, 0);
     },
-    
+
     // 计算弹窗宽度
     dialogWidth() {
       // 根据屏幕宽度和侧边栏宽度计算弹窗宽度
@@ -469,7 +480,7 @@ export default {
       const availableWidth = screenWidth - sidebarWidth - 40; // 减去40px的边距
       return Math.max(availableWidth, 600) + 'px'; // 最小宽度600px
     },
-    
+
     // 筛选后的通知列表
     filteredNotifications() {
       if (this.selectedNotificationType === 'all') {
@@ -500,27 +511,27 @@ export default {
       this.currentNotification = notification;
       this.notificationDialogVisible = true;
     },
-    
+
     // 格式化通知内容
     formatNotificationContent(content) {
       if (!content) return '暂无内容';
       // 将换行符转换为HTML换行
       return content.replace(/\n/g, '<br>');
     },
-    
+
     // 检查是否有附件
     hasAttachments(notification) {
       const hasFiles = notification.fileAttachments && notification.fileAttachments.length > 0;
       const hasPictures = notification.pictureAttachments && notification.pictureAttachments.length > 0;
       return hasFiles || hasPictures;
     },
-    
+
     // 获取文件名
     getFileName(filePath) {
       if (!filePath) return '';
       return filePath.split('/').pop() || filePath;
     },
-    
+
     // 下载文件
     downloadFile(filePath) {
       if (!filePath) return;
@@ -532,7 +543,7 @@ export default {
       link.click();
       document.body.removeChild(link);
     },
-    
+
     // 预览图片
     previewImage(imagePath) {
       if (!imagePath) return;
@@ -543,7 +554,7 @@ export default {
         customClass: 'image-preview-dialog'
       });
     },
-    
+
     // 加载所有数据
     async loadData() {
       this.loading = true;
@@ -570,36 +581,37 @@ export default {
         console.log('当前用户信息:', this.$store.state.user);
         console.log('API基础URL:', process.env.VUE_APP_BASE_API);
         console.log('请求URL:', '/system/notifications/public/list');
-        
-        // 使用公开接口
+
+        // 使用公开接口，获取所有通知
         const response = await listNotificationsPublic({
           pageNum: 1,
-          pageSize: 5
+          pageSize: 10  // 增加页面大小以显示所有通知
         });
-        
+
         console.log('通知API响应:', response);
-        
+
         if (response && response.code === 200) {
+          // 数据库查询已经按时间倒序排序，直接使用
           this.notifications = response.rows || [];
-          console.log('成功加载通知数据:', this.notifications);
+          console.log('成功加载通知数据（数据库已按时间倒序）:', this.notifications);
         } else {
           console.log('API返回非200状态码:', response?.code, response?.msg);
           this.$message.error('加载通知失败: ' + (response?.msg || '服务器返回错误'));
         }
-        
+
       } catch (error) {
         console.error('=== 通知加载失败 ===');
         console.error('错误对象:', error);
         console.error('错误类型:', typeof error);
         console.error('错误值:', error);
-        
+
         if (error.response) {
           console.error('HTTP响应错误:');
           console.error('状态码:', error.response.status);
           console.error('状态文本:', error.response.statusText);
           console.error('响应数据:', error.response.data);
           console.error('响应头:', error.response.headers);
-          
+
           this.$message.error(`加载通知失败: HTTP ${error.response.status} - ${error.response.statusText}`);
         } else if (error.request) {
           console.error('网络请求错误:');
@@ -623,18 +635,18 @@ export default {
           pageNum: 1,
           pageSize: 100 // 获取更多数据以便过滤
         });
-        
+
         console.log('活动API响应:', response);
-        
+
         if (response.code === 200) {
           const allActivities = response.rows || [];
           console.log('所有活动数据:', allActivities);
-          
+
           // 计算一个月前的时间
           const oneMonthAgo = new Date();
           oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
           console.log('一个月前时间:', oneMonthAgo);
-          
+
           // 过滤出一个月内的活动并按时间倒序排列
           let filteredActivities = allActivities
             .filter(activity => {
@@ -644,7 +656,7 @@ export default {
               return activityTime >= oneMonthAgo;
             })
             .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-          
+
           // 如果一个月内的活动不足3个，则获取最近的活动
           if (filteredActivities.length < 3) {
             console.log('一个月内活动不足3个，获取最近的活动');
@@ -653,9 +665,9 @@ export default {
               .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
               .slice(0, 5);
           }
-          
+
           this.recentActivities = filteredActivities.slice(0, 5);
-            
+
           console.log('过滤后的近期活动:', this.recentActivities);
         } else {
           console.error('API响应错误:', response);
@@ -672,43 +684,60 @@ export default {
     // 加载活动完成进度数据
     async loadActivityProgress() {
       try {
-        // 获取当前学期
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth() + 1;
-        let currentSemester = '';
-        
-        if (currentMonth >= 9 || currentMonth <= 1) {
-          currentSemester = `${currentYear}-${currentYear + 1}-1`;
-        } else if (currentMonth >= 3 && currentMonth <= 7) {
-          currentSemester = `${currentYear - 1}-${currentYear}-2`;
-        }
-        
-        // 获取活动记录数据
-        const response = await listActivity({
+        // 获取活动预约记录数据（包含活动信息）
+        const response = await listBookingsWithActivity({
           pageNum: 1,
           pageSize: 1000,
-          studentId: this.$store.state.user.name,
-          semester: currentSemester
+          studentId: this.$store.state.user.name
         });
-        
+
         if (response.code === 200) {
-          const activityRecords = response.rows || [];
-          
+          const bookingRecords = response.rows || [];
+          console.log('=== 活动预约记录数据 ===');
+          console.log('API响应:', response);
+          console.log('总记录数:', bookingRecords.length);
+          console.log('预约记录详情:', bookingRecords);
+          console.log('当前用户:', this.$store.state.user.name);
+
+          if (bookingRecords.length === 0) {
+            console.warn('⚠️ bookings表中没有数据！');
+            console.warn('请检查：');
+            console.warn('1. 学生是否已预约活动');
+            console.warn('2. bookings表中是否有该学生的记录');
+            console.warn('3. API接口是否正确');
+          } else {
+            console.log('✅ 找到预约记录，开始处理数据...');
+            bookingRecords.forEach((record, index) => {
+              console.log(`记录 ${index + 1}:`, {
+                activityId: record.activityId,
+                activityName: record.activityName,
+                activityType: record.activityType,
+                status: record.status,
+                studentId: record.studentId
+              });
+            });
+          }
+
           // 按活动类型分类统计
           this.activityCategories.forEach(category => {
-            const categoryRecords = activityRecords.filter(record => 
+            const categoryRecords = bookingRecords.filter(record =>
               this.getActivityType(record.activityType) === category.type
             );
-            category.completed = categoryRecords.filter(record => 
-              record.auditStatus === '已通过'
+            category.completed = categoryRecords.filter(record =>
+              record.status === '已通过'
             ).length;
             category.total = Math.max(categoryRecords.length, 8); // 至少显示8个
             category.progress = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
+
+            console.log(`分类 ${category.name} 统计:`, {
+              completed: category.completed,
+              total: category.total,
+              progress: category.progress
+            });
           });
-          
+
           // 更新活动状态筛选的计数
-          this.updateActivityStatusCounts(activityRecords);
+          this.updateActivityStatusCounts(bookingRecords);
         } else {
           this.$message.error('加载活动进度失败');
         }
@@ -912,7 +941,7 @@ export default {
     goToActivityBooking(activity) {
       console.log('准备跳转到活动预约界面，活动ID:', activity.activityId);
       console.log('活动信息:', activity);
-      
+
       this.$router.push({
         path: '/Activity/ActivityBooking',
         query: { activityId: activity.activityId }
@@ -926,10 +955,10 @@ export default {
 
 
     // 更新活动状态筛选的计数
-    updateActivityStatusCounts(activityRecords) {
+    updateActivityStatusCounts(bookingRecords) {
       this.activityStatusFilters.forEach(filter => {
-        filter.count = activityRecords.filter(record => 
-          record.auditStatus === filter.value
+        filter.count = bookingRecords.filter(record =>
+          record.status === filter.value
         ).length;
       });
     },
@@ -938,18 +967,18 @@ export default {
     openUploadDialog(course) {
       this.$message.info(`打开上传对话框: ${course.courseName}`);
     },
-    
+
     // 处理弹窗关闭
     handleDialogClose(done) {
       this.notificationDialogVisible = false;
       done();
     },
-    
+
     // 根据类型筛选通知
     filterNotificationsByType(type) {
       this.selectedNotificationType = type;
     },
-    
+
     // 格式化通知日期
     formatNotificationDate(date) {
       if (!date) return '';
@@ -958,7 +987,7 @@ export default {
       const month = d.getMonth() + 1;
       return `${day} ${month}月`;
     },
-    
+
     // 判断是否为新通知（3天内）
     isNewNotification(notification) {
       if (!notification.createdAt) return false;
@@ -968,20 +997,20 @@ export default {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return diffDays <= 3;
     },
-    
+
     // 判断是否为置顶通知
     isTopNotification(notification) {
       // 可以根据实际业务逻辑判断，比如优先级字段
       return notification.priority === 'high' || notification.isTop === true;
     },
-    
+
     // 分页大小改变
     handleSizeChange(val) {
       this.pageSize = val;
       this.currentPage = 1; // 重置到第一页
       this.loadSelectedCourses();
     },
-    
+
     // 当前页改变
     handleCurrentChange(val) {
       this.currentPage = val;
@@ -1127,8 +1156,9 @@ export default {
 
 /* 通知列表 */
 .notification-list {
-  max-height: 200px;
+  max-height: 400px;  /* 增加高度以显示更多通知 */
   overflow-y: auto;
+  overflow-x: hidden;  /* 隐藏水平滚动条 */
 }
 
 /* 自定义滚动条样式 - 类似近期活动 */
@@ -1194,6 +1224,8 @@ export default {
   font-size: 14px;
   line-height: 1.4;
   margin: 0;
+  word-wrap: break-word;  /* 允许长文本换行，避免水平滚动 */
+  overflow-wrap: break-word;  /* 兼容性更好的换行 */
 }
 
 .notification-badges {
@@ -1222,9 +1254,9 @@ export default {
 
 /* 活动列表 */
 .activity-list {
-  max-height: 240px;
+  max-height: 400px;  /* 与通知列表保持一致的高度 */
   overflow-y: auto;
-  min-height: 120px;
+  min-height: auto;  /* 移除固定最小高度，让内容自适应 */
 }
 
 .activity-item {
@@ -1232,7 +1264,7 @@ export default {
   border-bottom: 1px solid #f0f2f5;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-height: 60px;
+  min-height: auto;  /* 移除固定最小高度，让内容自适应 */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1412,57 +1444,162 @@ export default {
   color: white;
 }
 
-/* 课程表格样式 */
-.course-table {
-  border-radius: 8px;
+/* 现代化表格 */
+.modern-table {
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid #e4e7ed;
 }
 
-.course-table /deep/ .el-table__header th {
-  background: #f8fafc !important;
-  color: #303133;
+.modern-table th {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
   font-weight: 600;
-  font-size: 0.9rem;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding: 16px 12px;
 }
 
-.course-table /deep/ .el-table__body td {
-  color: #606266;
-  transition: background 0.2s;
+.modern-table td {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 12px;
 }
 
-.course-table /deep/ .el-table__body tr:hover td {
-  background: #f5f7fa !important;
+.modern-table tr:hover td {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
 }
 
-.credit-value {
-  font-weight: 600;
+/* 材料提交按钮样式 - 统一文字按钮风格 */
+.action-button {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.upload-button {
   color: #409EFF;
 }
 
-.index-badge {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  background: #ebf4ff;
-  border-radius: 50%;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
-  color: #2b6cb0;
+.upload-button:hover {
+  background-color: rgba(64, 158, 255, 0.1);
+}
+
+.reupload-button {
+  color: #ef4444;
+}
+
+.reupload-button:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.status-tag {
+  padding: 5px 8px;
   font-size: 12px;
 }
 
+/* 重新提交标签样式 */
+.status-tag.reupload-tag {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-tag.reupload-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 活动未结束标签特殊样式 */
+.status-tag[type="info"] {
+  background-color: #f4f4f5;
+  border-color: #d3d4d6;
+  color: #909399;
+  font-weight: 500;
+}
+
+/* 序号徽章 */
+.index-badge {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+}
+
+/* 未通过状态的红色序号徽章 */
+.index-badge.rejected-badge {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* 课程类型标签 */
+.course-type-tag {
+  font-weight: 500;
+  padding: 0 16px;
+  height: 32px;
+  line-height: 32px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 学分显示样式 */
+.credit-value {
+  font-weight: 600;
+  color: #409EFF;
+  background: rgba(64, 158, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+/* 课程分类标签样式 */
+.category-tag {
+  font-weight: 500;
+  padding: 0 12px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 成绩类型标签样式 */
+.score-type-tag {
+  font-weight: 500;
+  padding: 0 12px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 无成绩样式 */
 .no-score-type {
   color: #c0c4cc;
   font-size: 12px;
 }
 
+/* 可点击标签样式 */
 .clickable-tag {
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .clickable-tag:hover {
-  opacity: 0.8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 分页组件样式 */
@@ -1526,7 +1663,7 @@ export default {
 .no-activity {
   text-align: center;
   color: #909399;
-  padding: 40px 0;
+  padding: 20px 0;  /* 减少内边距，避免大块空白 */
 }
 
 .no-notification i,
@@ -1542,17 +1679,17 @@ export default {
   .middle-section {
     flex-direction: column;
   }
-  
+
   .progress-category {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .category-label {
     min-width: auto;
   }
-  
+
   .status-filters {
     justify-content: center;
   }
@@ -1563,11 +1700,11 @@ export default {
     margin-left: 0;
     padding: 10px;
   }
-  
+
   .status-filters {
     flex-direction: column;
   }
-  
+
   .status-filter-item {
     min-width: auto;
   }
@@ -1919,17 +2056,17 @@ export default {
     width: 95% !important;
     margin: 0 auto;
   }
-  
+
   .notification-dialog .el-dialog__body {
     max-height: 70vh;
   }
-  
+
   .detail-header,
   .detail-content,
   .detail-attachments {
     padding: 16px;
   }
-  
+
   .detail-title {
     font-size: 16px;
   }
