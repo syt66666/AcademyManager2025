@@ -192,8 +192,11 @@
     <el-dialog
       title="通知详情"
       :visible.sync="notificationDialogVisible"
-      width="600px"
+      :width="dialogWidth"
       :close-on-click-modal="false"
+      :modal="true"
+      :lock-scroll="true"
+      custom-class="notification-dialog"
     >
       <div v-if="currentNotification" class="notification-detail">
         <div class="detail-header">
@@ -252,9 +255,6 @@
         </div>
       </div>
 
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="notificationDialogVisible = false">关闭</el-button>
-      </div>
     </el-dialog>
 
     <!-- 发布通知弹窗 -->
@@ -462,6 +462,15 @@ export default {
     };
   },
   computed: {
+    // 计算弹窗宽度
+    dialogWidth() {
+      // 根据屏幕宽度和侧边栏宽度计算弹窗宽度
+      const screenWidth = window.innerWidth;
+      const sidebarWidth = screenWidth > 1200 ? 200 : (screenWidth > 768 ? 64 : 0);
+      const availableWidth = screenWidth - sidebarWidth - 40; // 减去40px的边距
+      return Math.max(availableWidth, 800) + 'px'; // 最小宽度800px，比StudentHome更大
+    },
+
     // 判断用户角色
     userRole() {
       const userName = this.$store.state.user.name;
@@ -954,161 +963,271 @@ export default {
     // 初始化活动统计图表
     initActivityChart() {
       const chart = echarts.init(this.$refs.activityChart);
-      const total = this.activityStats.pending + this.activityStats.approved + this.activityStats.rejected;
+      
+      // 准备数据
+      const data = [
+        { value: this.activityStats.pending, name: '未审核' },
+        { value: this.activityStats.approved, name: '已通过' },
+        { value: this.activityStats.rejected, name: '未通过' }
+      ];
+
       const option = {
+        backgroundColor: '#ffffff',
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{b}: {c} ({d}%)',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          textStyle: {
+            color: '#fff'
+          }
         },
         legend: {
-          show: false // 完全隐藏图例
+          orient: 'vertical',
+          right: '5%',
+          bottom: '10%',
+          data: data.map(item => item.name),
+          textStyle: {
+            fontSize: 13,
+            color: '#333',
+            fontWeight: '500'
+          },
+          itemGap: 15,
+          itemWidth: 14,
+          itemHeight: 14
         },
         series: [
           {
             name: '活动统计',
             type: 'pie',
-            radius: ['40%', '70%'],
+            radius: ['35%', '65%'],
             center: ['50%', '50%'],
-            avoidLabelOverlap: false,
+            data: data,
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'outside',
+              fontSize: 14.625,
+              color: '#000000',
+              formatter: '{b}\n{c} ({d}%)',
+              textStyle: {
+                fontWeight: '500',
+                lineHeight: 20.25
+              },
+              distance: 45,
+              avoidLabelOverlap: true,
+              minAngle: 10
+            },
+            labelLine: {
+              show: true,
+              length: 33.75,
+              length2: 18,
+              lineStyle: {
+                width: 1,
+                color: '#000000'
+              },
+              smooth: true,
+              smoothLength: 10
+            },
+            itemStyle: {
+              normal: {
+                borderWidth: 2,
+                borderColor: '#fff',
+                borderRadius: 3,
+                color: function (params) {
+                  const colors = ['#409EFF', '#67C23A', '#F56C6C'];
+                  return colors[params.dataIndex % colors.length];
+                }
+              }
+            },
+            animationType: 'scale',
+            animationEasing: 'elasticOut',
+            animationDuration: 1500
+          },
+          {
+            name: '总数',
+            type: 'pie',
+            radius: ['0%', '35%'],
+            center: ['50%', '50%'],
+            data: [{ value: 1, name: '' }],
             label: {
               show: true,
               position: 'center',
-              formatter: function() {
+              formatter: () => {
+                const total = this.activityStats.pending + this.activityStats.approved + this.activityStats.rejected;
                 return `活动总数\n${total}`;
               },
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 'bold',
-              color: '#303133'
-            },
-            emphasis: {
-              label: {
-                show: false
+              color: '#2c3e50',
+              textStyle: {
+                fontSize: 16,
+                fontWeight: 'bold',
+                color: '#2c3e50'
+              },
+              rich: {
+                title: {
+                  fontSize: 14,
+                  color: '#7f8c8d',
+                  fontWeight: 'normal'
+                },
+                number: {
+                  fontSize: 18,
+                  color: '#2c3e50',
+                  fontWeight: 'bold'
+                }
               }
             },
-            labelLine: {
-              show: false
+            itemStyle: {
+              color: 'transparent'
             },
-            data: [
-              { value: this.activityStats.pending, name: '未审核', itemStyle: { color: '#409EFF' } },
-              { value: this.activityStats.approved, name: '已通过', itemStyle: { color: '#67C23A' } },
-              { value: this.activityStats.rejected, name: '未通过', itemStyle: { color: '#F56C6C' } }
-            ]
+            emphasis: {
+              itemStyle: {
+                color: 'transparent'
+              }
+            }
           }
         ]
       };
+
       chart.setOption(option);
 
       // 添加点击事件
       chart.on('click', (params) => {
         this.handleActivityChartClick(params.name);
       });
-
-      // 添加悬浮事件来动态更新中心标签
-      chart.on('mouseover', (params) => {
-        // 根据状态名称获取对应的颜色
-        let statusColor = '#303133';
-        switch(params.name) {
-          case '未审核':
-            statusColor = '#409EFF';
-            break;
-          case '已通过':
-            statusColor = '#67C23A';
-            break;
-          case '未通过':
-            statusColor = '#F56C6C';
-            break;
-        }
-
-        const option = {
-          series: [{
-            label: {
-              show: false,
-              position: 'center',
-              formatter: function() {
-                return `${params.name}\n${params.value}`;
-              },
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: statusColor,
-              textStyle: {
-                color: statusColor,
-                fontSize: 14,
-                fontWeight: 'bold'
-              },
-              emphasis: {
-                color: statusColor,
-                textStyle: {
-                  color: statusColor
-                }
-              }
-            }
-          }]
-        };
-        chart.setOption(option);
-      });
-
-      // 添加鼠标离开事件恢复原始标签
-      chart.on('mouseout', () => {
-        const option = {
-          series: [{
-            label: {
-              show: true,
-              position: 'center',
-              formatter: function() {
-                return `活动总数\n${total}`;
-              },
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: '#303133'
-            }
-          }]
-        };
-        chart.setOption(option);
-      });
     },
 
     // 初始化课程统计图表
     initCourseChart() {
       const chart = echarts.init(this.$refs.courseChart);
-      const total = this.courseStats.pending + this.courseStats.approved + this.courseStats.rejected;
+      const data = [
+        { value: this.courseStats.pending, name: '未考核' },
+        { value: this.courseStats.approved, name: '已通过' },
+        { value: this.courseStats.rejected, name: '未通过' }
+      ];
+
       const option = {
+        backgroundColor: '#ffffff',
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: '{b}: {c} ({d}%)',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          textStyle: {
+            color: '#fff'
+          }
         },
         legend: {
-          show: false // 完全隐藏图例
+          orient: 'vertical',
+          right: '5%',
+          bottom: '10%',
+          data: data.map(item => item.name),
+          textStyle: {
+            fontSize: 13,
+            color: '#333',
+            fontWeight: '500'
+          },
+          itemGap: 15,
+          itemWidth: 14,
+          itemHeight: 14
         },
         series: [
           {
             name: '课程统计',
             type: 'pie',
-            radius: ['40%', '70%'],
+            radius: ['35%', '65%'],
             center: ['50%', '50%'],
-            avoidLabelOverlap: false,
+            data: data,
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'outside',
+              fontSize: 14.625,
+              color: '#000000',
+              formatter: '{b}\n{c} ({d}%)',
+              textStyle: {
+                lineHeight: 20.25
+              },
+              distance: 45,
+              avoidLabelOverlap: true,
+              minAngle: 10
+            },
+            labelLine: {
+              show: true,
+              length: 33.75,
+              length2: 18,
+              lineStyle: {
+                color: '#000000'
+              },
+              smooth: true,
+              smoothLength: 10
+            },
+            itemStyle: {
+              borderWidth: 2,
+              borderColor: '#fff',
+              borderRadius: 3,
+              color: function (params) {
+                const colors = ['#409EFF', '#67C23A', '#F56C6C'];
+                return colors[params.dataIndex % colors.length];
+              }
+            },
+            animationType: 'scale',
+            animationEasing: 'elasticOut',
+            animationDuration: 1500
+          },
+          {
+            name: '总数',
+            type: 'pie',
+            radius: ['0%', '35%'],
+            center: ['50%', '50%'],
+            data: [{ value: 1, name: '' }],
             label: {
               show: true,
               position: 'center',
-              formatter: function() {
+              formatter: () => {
+                const total = this.courseStats.pending + this.courseStats.approved + this.courseStats.rejected;
                 return `课程总数\n${total}`;
               },
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: 'bold',
-              color: '#303133'
-            },
-            emphasis: {
-              label: {
-                show: false
+              color: '#2c3e50',
+              textStyle: {
+                lineHeight: 24
+              },
+              rich: {
+                title: {
+                  fontSize: 14,
+                  color: '#7f8c8d',
+                  fontWeight: 'normal'
+                },
+                number: {
+                  fontSize: 18,
+                  color: '#2c3e50',
+                  fontWeight: 'bold'
+                }
               }
             },
-            labelLine: {
-              show: false
+            itemStyle: {
+              color: 'transparent'
             },
-            data: [
-              { value: this.courseStats.pending, name: '未考核', itemStyle: { color: '#409EFF' } },
-              { value: this.courseStats.approved, name: '已通过', itemStyle: { color: '#67C23A' } },
-              { value: this.courseStats.rejected, name: '未通过', itemStyle: { color: '#F56C6C' } }
-            ]
+            emphasis: {
+              itemStyle: {
+                color: 'transparent'
+              }
+            }
           }
         ]
       };
@@ -1117,69 +1236,6 @@ export default {
       // 添加点击事件
       chart.on('click', (params) => {
         this.handleCourseChartClick(params.name);
-      });
-
-      // 添加悬浮事件来动态更新中心标签
-      chart.on('mouseover', (params) => {
-        // 根据状态名称获取对应的颜色
-        let statusColor = '#303133';
-        switch(params.name) {
-          case '未考核':
-            statusColor = '#409EFF';
-            break;
-          case '已通过':
-            statusColor = '#67C23A';
-            break;
-          case '未通过':
-            statusColor = '#F56C6C';
-            break;
-        }
-
-        const option = {
-          series: [{
-            label: {
-              show: false,
-              position: 'center',
-              formatter: function() {
-                return `${params.name}\n${params.value}`;
-              },
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: statusColor,
-              textStyle: {
-                color: statusColor,
-                fontSize: 14,
-                fontWeight: 'bold'
-              },
-              emphasis: {
-                color: statusColor,
-                textStyle: {
-                  color: statusColor
-                }
-              }
-            }
-          }]
-        };
-        chart.setOption(option);
-      });
-
-      // 添加鼠标离开事件恢复原始标签
-      chart.on('mouseout', () => {
-        const option = {
-          series: [{
-            label: {
-              show: true,
-              position: 'center',
-              formatter: function() {
-                return `课程总数\n${total}`;
-              },
-              fontSize: 14,
-              fontWeight: 'bold',
-              color: '#303133'
-            }
-          }]
-        };
-        chart.setOption(option);
       });
     },
 
@@ -1517,34 +1573,28 @@ export default {
       if (this.$refs.activityChart) {
         const chart = echarts.getInstanceByDom(this.$refs.activityChart);
         if (chart) {
-          const total = this.activityStats.pending + this.activityStats.approved + this.activityStats.rejected;
+          const data = [
+            { value: this.activityStats.pending, name: '未审核' },
+            { value: this.activityStats.approved, name: '已通过' },
+            { value: this.activityStats.rejected, name: '未通过' }
+          ];
+
           const option = {
             series: [{
-              data: [
-                { value: this.activityStats.pending, name: '未审核', itemStyle: { color: '#409EFF' } },
-                { value: this.activityStats.approved, name: '已通过', itemStyle: { color: '#67C23A' } },
-                { value: this.activityStats.rejected, name: '未通过', itemStyle: { color: '#F56C6C' } }
-              ],
+              data: data,
+              itemStyle: {
+                normal: {
+                  color: function (params) {
+                    const colors = ['#409EFF', '#67C23A', '#F56C6C'];
+                    return colors[params.dataIndex % colors.length];
+                  }
+                }
+              }
+            }, {
               label: {
-                show: true,
-                position: 'center',
-                formatter: function() {
+                formatter: () => {
+                  const total = this.activityStats.pending + this.activityStats.approved + this.activityStats.rejected;
                   return `活动总数\n${total}`;
-                },
-                fontSize: 14,
-                fontWeight: 'bold',
-                color: '#303133'
-              },
-              emphasis: {
-                label: {
-                  show: true,
-                  position: 'center',
-                  formatter: function(params) {
-                    return `${params.name}\n${params.value}`;
-                  },
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  color: '#303133'
                 }
               }
             }]
@@ -1580,37 +1630,26 @@ export default {
       if (this.$refs.courseChart) {
         const chart = echarts.getInstanceByDom(this.$refs.courseChart);
         if (chart) {
+          const data = [
+            { value: this.courseStats.pending, name: '未考核' },
+            { value: this.courseStats.approved, name: '已通过' },
+            { value: this.courseStats.rejected, name: '未通过' }
+          ];
           const total = this.courseStats.pending + this.courseStats.approved + this.courseStats.rejected;
+          
           const option = {
-            series: [{
-              data: [
-                { value: this.courseStats.pending, name: '未考核', itemStyle: { color: '#409EFF' } },
-                { value: this.courseStats.approved, name: '已通过', itemStyle: { color: '#67C23A' } },
-                { value: this.courseStats.rejected, name: '未通过', itemStyle: { color: '#F56C6C' } }
-              ],
-              label: {
-                show: true,
-                position: 'center',
-                formatter: function() {
-                  return `课程总数\n${total}`;
-                },
-                fontSize: 14,
-                fontWeight: 'bold',
-                color: '#303133'
+            series: [
+              {
+                data: data
               },
-              emphasis: {
+              {
                 label: {
-                  show: true,
-                  position: 'center',
-                  formatter: function(params) {
-                    return `${params.name}\n${params.value}`;
-                  },
-                  fontSize: 14,
-                  fontWeight: 'bold',
-                  color: '#303133'
+                  formatter: () => {
+                    return `课程总数\n${total}`;
+                  }
                 }
               }
-            }]
+            ]
           };
           chart.setOption(option);
         }
@@ -2249,30 +2288,137 @@ export default {
 }
 
 /* 通知详情弹窗样式 */
+.notification-dialog {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+}
+
+.notification-dialog.el-dialog {
+  border-radius: 8px !important;
+}
+
+.notification-dialog .el-dialog__header,
+.notification-dialog.el-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%) !important;
+  color: white !important;
+  padding: 20px 24px !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: 0 2px 8px rgba(66, 165, 245, 0.3) !important;
+}
+
+.notification-dialog .el-dialog__header::before,
+.notification-dialog.el-dialog .el-dialog__header::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%) !important;
+  pointer-events: none !important;
+}
+
+.notification-dialog .el-dialog__title,
+.notification-dialog.el-dialog .el-dialog__title {
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  letter-spacing: 0.5px !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.notification-dialog .el-dialog__title::before,
+.notification-dialog.el-dialog .el-dialog__title::before {
+  content: '📢' !important;
+  font-size: 16px !important;
+  opacity: 0.9 !important;
+}
+
+.notification-dialog .el-dialog__headerbtn,
+.notification-dialog.el-dialog .el-dialog__headerbtn {
+  top: 20px !important;
+  right: 24px !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  transition: all 0.3s ease !important;
+  z-index: 2 !important;
+}
+
+.notification-dialog .el-dialog__headerbtn:hover,
+.notification-dialog.el-dialog .el-dialog__headerbtn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+.notification-dialog .el-dialog__headerbtn .el-dialog__close,
+.notification-dialog.el-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+}
+
+.notification-dialog .el-dialog__body,
+.notification-dialog.el-dialog .el-dialog__body {
+  padding: 0 !important;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: #ffffff !important;
+  border-radius: 0 0 8px 8px !important;
+}
+
+.notification-dialog .el-dialog__footer {
+  padding: 16px 24px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: right;
+  border-radius: 0 0 8px 8px;
+}
+
 .notification-detail {
   padding: 0;
+  min-height: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
 }
 
 .detail-header {
-  border-bottom: 1px solid #ebeef5;
-  padding-bottom: 16px;
-  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 24px;
+  margin-bottom: 0;
+  background: #ffffff;
 }
 
 .detail-title {
   margin: 0 0 12px 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 600;
-  color: #303133;
+  color: #1f2937;
   line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .detail-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   font-size: 14px;
-  color: #909399;
+  color: #6b7280;
+  font-weight: 400;
 }
 
 .detail-type {
@@ -2286,36 +2432,50 @@ export default {
   gap: 4px;
 }
 
+.detail-time::before {
+  content: "🕒";
+  font-size: 12px;
+}
 
 .detail-content {
   margin-bottom: 24px;
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
 }
 
 .content-text {
-  font-size: 14px;
-  line-height: 1.6;
-  color: #606266;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #374151;
   white-space: pre-wrap;
   word-break: break-word;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .detail-attachments {
-  border-top: 1px solid #ebeef5;
-  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+  padding: 24px;
+  background: #ffffff;
+  margin-top: auto;
 }
 
 .detail-attachments h4 {
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
+  color: #1f2937;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .detail-attachments h5 {
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 500;
-  color: #606266;
+  color: #6b7280;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .attachment-section {
@@ -2335,29 +2495,32 @@ export default {
 .attachment-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #f8f9fa;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
   border-radius: 6px;
-  border: 1px solid #e9ecef;
-  transition: all 0.2s;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
 }
 
 .attachment-item:hover {
-  background: #e9ecef;
-  border-color: #dee2e6;
+  background: #f3f4f6;
+  border-color: #d1d5db;
 }
 
 .attachment-item i {
-  color: #409EFF;
+  color: #6b7280;
   font-size: 16px;
 }
 
 .file-name {
   flex: 1;
   font-size: 14px;
-  color: #606266;
+  color: #374151;
   word-break: break-all;
+  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
 .image-gallery {
@@ -2474,11 +2637,11 @@ export default {
 }
 
 .chart-card {
-  height: 500px;
+  height: 600px;
 }
 
 .chart-content {
-  height: 450px;
+  height: 550px;
 }
 
 .chart {
@@ -2698,6 +2861,63 @@ export default {
 
   .charts-container {
     grid-template-columns: 1fr;
+  }
+}
+
+/* 通知弹窗底部按钮样式 */
+.notification-dialog .dialog-footer {
+  margin: 0;
+}
+
+.notification-dialog .dialog-footer .el-button {
+  margin-left: 12px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.notification-dialog .dialog-footer .el-button--primary {
+  background: #3b82f6;
+  border: none;
+  color: white;
+}
+
+.notification-dialog .dialog-footer .el-button--primary:hover {
+  background: #2563eb;
+}
+
+.notification-dialog .dialog-footer .el-button:not(.el-button--primary) {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.notification-dialog .dialog-footer .el-button:not(.el-button--primary):hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* 响应式设计 - 通知弹窗 */
+@media (max-width: 768px) {
+  .notification-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .notification-dialog .el-dialog__body {
+    max-height: 70vh;
+  }
+  
+  .detail-header,
+  .detail-content,
+  .detail-attachments {
+    padding: 16px;
+  }
+  
+  .detail-title {
+    font-size: 16px;
   }
 }
 
