@@ -394,30 +394,6 @@
           AND student_id = #{studentId}
     </delete>
 
-    <select id="selectCourseBookingsWithCourseList" parameterType="CourseBookings" resultMap="CourseBookingDTOResult">
-        <include refid="selectCourseBookingsWithCourseVo"/>
-        <where>
-            <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
-            <if test="courseId != null "> and cb.course_id = #{courseId}</if>
-            <if test="bookAt != null "> and cb.book_at = #{bookAt}</if>
-            <if test="proof != null  and proof != ''"> and cb.proof = #{proof}</if>
-            <if test="summary != null  and summary != ''"> and cb.summary = #{summary}</if>
-            <if test="status != null  and status != ''"> and cb.status = #{status}</if>
-            <if test="reviewer != null  and reviewer != ''"> and cb.reviewer = #{reviewer}</if>
-            <if test="reviewerComment != null  and reviewerComment != ''"> and cb.reviewer_comment = #{reviewerComment}</if>
-            <if test="reviewTime != null "> and cb.review_time = #{reviewTime}</if>
-            <if test="organizer != null  and organizer != ''"> and cb.organizer = #{organizer}</if>
-            <if test="createdTime != null "> and cb.created_time = #{createdTime}</if>
-            <if test="updatedTime != null "> and cb.updated_time = #{updatedTime}</if>
-        </where>
-    </select>
-
-    <select id="checkIfBooked" resultType="boolean">
-        SELECT COUNT(1) > 0
-        FROM course_bookings
-        WHERE course_id = #{courseId}
-          AND student_id = #{studentId}
-    </select>
 
     <delete id="deleteByCourseAndStudent">
         DELETE FROM course_bookings
