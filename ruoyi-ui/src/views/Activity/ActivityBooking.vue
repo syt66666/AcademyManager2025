@@ -229,6 +229,24 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="报名人数" align="center" width="120">
+          <template slot-scope="scope">
+            <div class="participants">
+              <el-progress
+                :percentage="calculateCapacityPercentage(scope.row)"
+                :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+                :show-text="false"
+                :stroke-width="10"
+                class="progress-bar"
+              />
+              <div class="count">
+                <span :class="getCapacityClass(scope.row)">
+                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                </span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" align="center" fixed="right" width="120">
           <template slot-scope="scope">
             <!-- 添加取消限制检查 -->
@@ -883,6 +901,20 @@ export default {
       if (percentage >= 0.8) return 'capacity-high';
       if (percentage >= 0.5) return 'capacity-medium';
       return 'capacity-low';
+    },
+
+    // 计算容量百分比
+    calculateCapacityPercentage(row) {
+      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
+      const used = row.activityTotalCapacity - row.activityCapacity;
+      return Math.round((used / row.activityTotalCapacity) * 100);
+    },
+
+    // 获取进度条颜色
+    getProgressColor(percentage) {
+      if (percentage >= 80) return '#f87171';
+      if (percentage >= 50) return '#fbbf24';
+      return '#4ade80';
     },
 
     // 格式化日期时间
@@ -2004,6 +2036,38 @@ export default {
 
 .time-inline-content {
   color: #606266;
+  font-weight: 500;
+}
+
+/* 报名人数列样式 */
+.participants {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-bar {
+  width: 100%;
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.capacity-high {
+  color: #F56C6C;
+  font-weight: 500;
+}
+
+.capacity-medium {
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.capacity-low {
+  color: #67C23A;
   font-weight: 500;
 }
 

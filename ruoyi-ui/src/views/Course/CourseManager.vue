@@ -91,9 +91,6 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
-        <el-tooltip v-if="hasStartedCourses" content="选中的课程中包含已开始选课的课程，点击删除时会提示无法删除" placement="top">
-          <i class="el-icon-warning" style="color: #E6A23C; margin-left: 8px; font-size: 16px;"></i>
-        </el-tooltip>
         <!-- 注释掉导出按钮：因需求暂时隐藏导出功能，后续可恢复 -->
         <!-- <el-button
                   type="warning"

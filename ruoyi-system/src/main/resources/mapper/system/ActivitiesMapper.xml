@@ -140,12 +140,12 @@
             </if>
             <!-- 🔥 总容量变化时重新计算剩余容量 -->
             <if test="activityTotalCapacity != null">
-                activity_capacity = #{activityTotalCapacity} - (
+                activity_capacity = GREATEST(0, #{activityTotalCapacity} - (
                 SELECT COALESCE(COUNT(*), 0)
                 FROM bookings
                 WHERE activity_id = #{activityId}
                 AND status IN ('approved', 'submitted')
-                ),
+                )),
             </if>
             version = version + 1,
         </trim>
@@ -187,12 +187,12 @@
     <!-- 基于实际预约人数更新活动容量 -->
     <update id="updateCapacityByActualBookings" parameterType="Integer">
         UPDATE activities 
-        SET activity_capacity = activity_total_capacity - (
+        SET activity_capacity = GREATEST(0, activity_total_capacity - (
             SELECT COALESCE(COUNT(*), 0)
             FROM bookings 
             WHERE activity_id = #{activityId}
             AND status IN ('approved', 'submitted', '未提交')
-        ),
+        )),
         version = version + 1
         WHERE activity_id = #{activityId}
         AND version = #{version}
@@ -200,12 +200,12 @@
 
     <!-- 检查活动是否还有剩余容量 -->
     <select id="checkActivityCapacity" resultType="int">
-        SELECT activity_total_capacity - (
+        SELECT GREATEST(0, activity_total_capacity - (
             SELECT COALESCE(COUNT(*), 0)
             FROM bookings 
             WHERE activity_id = #{activityId}
             AND status IN ('approved', 'submitted', '未提交')
-        ) as remaining_capacity
+        )) as remaining_capacity
         FROM activities 
         WHERE activity_id = #{activityId}
     </select>

@@ -117,4 +117,52 @@ public class CoursesController extends BaseController
         int result = coursesService.increaseCapacity(courseId, version);
         return result > 0 ? AjaxResult.success("取消选课成功") : AjaxResult.error("取消选课失败");
     }
+
+    /**
+     * 课程选课 - 原子性操作，解决并发问题
+     */
+    @Log(title = "课程选课", businessType = BusinessType.INSERT)
+    @PostMapping("/signUp")
+    public AjaxResult signUp(@RequestBody Map<String, Object> params) {
+        try {
+            Long courseId = Long.valueOf(params.get("courseId").toString());
+            String studentId = (String) params.get("studentId");
+            Integer version = Integer.valueOf(params.get("version").toString());
+            
+            // 使用事务性的原子操作
+            int result = coursesService.signUpWithTransaction(courseId, studentId, version);
+            
+            if (result > 0) {
+                return AjaxResult.success("选课成功");
+            } else {
+                return AjaxResult.error("选课失败，可能容量已满或已选课过");
+            }
+        } catch (Exception e) {
+            return AjaxResult.error("选课失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 课程取消选课 - 原子性操作，解决并发问题
+     */
+    @Log(title = "课程取消选课", businessType = BusinessType.DELETE)
+    @PostMapping("/cancelSignUp")
+    public AjaxResult cancelSignUp(@RequestBody Map<String, Object> params) {
+        try {
+            Long courseId = Long.valueOf(params.get("courseId").toString());
+            String studentId = (String) params.get("studentId");
+            Integer version = Integer.valueOf(params.get("version").toString());
+            
+            // 使用事务性的原子操作
+            int result = coursesService.cancelSignUpWithTransaction(courseId, studentId, version);
+            
+            if (result > 0) {
+                return AjaxResult.success("取消选课成功");
+            } else {
+                return AjaxResult.error("取消选课失败，可能未选课或已取消");
+            }
+        } catch (Exception e) {
+            return AjaxResult.error("取消选课失败: " + e.getMessage());
+        }
+    }
 }

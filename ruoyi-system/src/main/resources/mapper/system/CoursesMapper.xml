@@ -141,7 +141,7 @@
 
     <update id="decreaseCapacity">
         UPDATE courses 
-        SET course_capacity = course_capacity - 1,
+        SET course_capacity = GREATEST(0, course_capacity - 1),
             version = version + 1
         WHERE course_id = #{courseId} 
           AND version = #{version}
@@ -150,7 +150,7 @@
 
     <update id="increaseCapacity">
         UPDATE courses 
-        SET course_capacity = course_capacity + 1,
+        SET course_capacity = LEAST(course_total_capacity, course_capacity + 1),
             version = version + 1
         WHERE course_id = #{courseId} 
           AND version = #{version}

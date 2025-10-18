@@ -214,4 +214,42 @@ public interface CourseBookingsMapper
      */
     public int countBookingsByCourseId(@Param("courseId") Long courseId);
 
+    /**
+     * 原子性选课操作 - 解决并发问题
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    public int signUpWithTransaction(@Param("courseId") Long courseId, @Param("studentId") String studentId, @Param("version") Integer version);
+
+    /**
+     * 原子性更新课程容量
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    public int updateCapacityAfterSignUp(@Param("courseId") Long courseId, @Param("version") Integer version);
+
+    /**
+     * 原子性取消选课操作
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    public int cancelSignUpWithTransaction(@Param("courseId") Long courseId, @Param("studentId") String studentId, @Param("version") Integer version);
+
+    /**
+     * 原子性更新课程容量（取消选课后）
+     *
+     * @param courseId 课程ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    public int updateCapacityAfterCancelSignUp(@Param("courseId") Long courseId, @Param("version") Integer version);
+
 }

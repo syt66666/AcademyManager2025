@@ -305,12 +305,12 @@
     <!-- 原子性更新活动容量 -->
     <update id="updateCapacityAfterSignUp" parameterType="map">
         UPDATE activities 
-        SET activity_capacity = activity_total_capacity - (
+        SET activity_capacity = GREATEST(0, activity_total_capacity - (
             SELECT COUNT(*) 
             FROM bookings 
             WHERE activity_id = #{activityId}
             AND status IN ('approved', 'submitted', '未提交')
-        ),
+        )),
         version = version + 1
         WHERE activity_id = #{activityId}
         AND version = #{version}
@@ -331,12 +331,12 @@
     <!-- 原子性更新活动容量（取消报名后） -->
     <update id="updateCapacityAfterCancelSignUp" parameterType="map">
         UPDATE activities 
-        SET activity_capacity = activity_total_capacity - (
+        SET activity_capacity = GREATEST(0, activity_total_capacity - (
             SELECT COUNT(*) 
             FROM bookings 
             WHERE activity_id = #{activityId}
             AND status IN ('approved', 'submitted', '未提交')
-        ),
+        )),
         version = version + 1
         WHERE activity_id = #{activityId}
         AND version = #{version}
