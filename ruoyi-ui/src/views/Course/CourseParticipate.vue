@@ -138,7 +138,7 @@
         <el-table-column label="课程地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
         <!-- 成绩来源于列 -->
-        <el-table-column label="成绩来源于" align="center" width="120">
+        <el-table-column label="课程成绩" align="center" width="120">
           <template slot-scope="scope">
             <el-tag 
               v-if="scope.row.scoreType" 
@@ -148,7 +148,7 @@
             >
               {{ scope.row.scoreType }}
             </el-tag>
-            <span v-else class="no-score-type">暂无成绩</span>
+            <span v-else class="no-score-type">-</span>
           </template>
         </el-table-column>
         <el-table-column label="课程开始时间" align="center" prop="startTime" >

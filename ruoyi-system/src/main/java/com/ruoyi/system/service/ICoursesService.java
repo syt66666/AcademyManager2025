@@ -84,4 +84,24 @@ public interface ICoursesService
      * @return 是否已开始选课
      */
     public boolean isCourseSignUpStarted(Long courseId);
+
+    /**
+     * 事务性选课操作 - 解决并发问题
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    public int signUpWithTransaction(Long courseId, String studentId, Integer version);
+
+    /**
+     * 事务性取消选课操作 - 解决并发问题
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    public int cancelSignUpWithTransaction(Long courseId, String studentId, Integer version);
 }

@@ -394,6 +394,7 @@
           AND student_id = #{studentId}
     </delete>
 
+
     <delete id="deleteByCourseAndStudent">
         DELETE FROM course_bookings
         WHERE course_id = #{courseId}
@@ -412,5 +413,62 @@
         FROM course_bookings
         WHERE course_id = #{courseId}
     </select>
+
+    <!-- 原子性选课操作 - 解决并发问题 -->
+    <insert id="signUpWithTransaction" parameterType="map">
+        INSERT INTO course_bookings (course_id, student_id, booking_time, status)
+        SELECT #{courseId}, #{studentId}, NOW(), '未提交'
+        WHERE NOT EXISTS (
+            SELECT 1 FROM course_bookings
+            WHERE course_id = #{courseId}
+            AND student_id = #{studentId}
+        )
+        AND EXISTS (
+            SELECT 1 FROM courses
+            WHERE course_id = #{courseId}
+            AND version = #{version}
+            AND course_capacity > 0
+        )
+    </insert>
+
+    <!-- 原子性更新课程容量 -->
+    <update id="updateCapacityAfterSignUp" parameterType="map">
+        UPDATE courses
+        SET course_capacity = GREATEST(0, course_total_capacity - (
+            SELECT COUNT(*)
+            FROM course_bookings
+            WHERE course_id = #{courseId}
+            AND status IN ('approved', 'submitted', '未提交')
+        )),
+        version = version + 1
+        WHERE course_id = #{courseId}
+        AND version = #{version}
+    </update>
+
+    <!-- 原子性取消选课操作 -->
+    <delete id="cancelSignUpWithTransaction" parameterType="map">
+        DELETE FROM course_bookings
+        WHERE course_id = #{courseId}
+        AND student_id = #{studentId}
+        AND EXISTS (
+            SELECT 1 FROM courses
+            WHERE course_id = #{courseId}
+            AND version = #{version}
+        )
+    </delete>
+
+    <!-- 原子性更新课程容量（取消选课后） -->
+    <update id="updateCapacityAfterCancelSignUp" parameterType="map">
+        UPDATE courses
+        SET course_capacity = GREATEST(0, course_total_capacity - (
+            SELECT COUNT(*)
+            FROM course_bookings
+            WHERE course_id = #{courseId}
+            AND status IN ('approved', 'submitted', '未提交')
+        )),
+        version = version + 1
+        WHERE course_id = #{courseId}
+        AND version = #{version}
+    </update>
 
 </mapper>

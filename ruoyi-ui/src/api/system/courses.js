@@ -94,3 +94,21 @@ export function checkCourseUnique(params) {
     data: params
   })
 }
+
+// 原子性选课操作
+export function signUpCourse(data) {
+  return request({
+    url: '/system/courses/signUp',
+    method: 'post',
+    data: data
+  })
+}
+
+// 原子性取消选课操作
+export function cancelSignUpCourse(data) {
+  return request({
+    url: '/system/courses/cancelSignUp',
+    method: 'post',
+    data: data
+  })
+}

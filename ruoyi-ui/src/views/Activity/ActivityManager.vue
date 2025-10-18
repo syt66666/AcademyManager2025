@@ -257,7 +257,7 @@
     <el-dialog
       :title="title"
       :visible.sync="open"
-      width="600px"
+      width="700px"
       append-to-body
       class="activity-form-dialog"
       :before-close="handleDialogClose">
@@ -397,7 +397,7 @@
                   :rows="6"
                   placeholder="请输入活动描述"
                   class="form-textarea"
-                  maxlength="100"
+                  maxlength="200"
                   show-word-limit
                 />
               </el-form-item>
@@ -767,8 +767,8 @@ export default {
         activityDescription: [
           {
             validator: (rule, value, callback) => {
-              if (value && value.length > 100) {
-                callback(new Error("活动描述不能超过100字"));
+              if (value && value.length > 200) {
+                callback(new Error("活动描述不能超过200字"));
               } else {
                 callback();
               }
@@ -838,7 +838,10 @@ export default {
   },
   created() {
     this.getServerTime();
-    this.getList();
+    this.getList().then(() => {
+      // 数据加载完成后再检查路由参数
+      this.checkRouteParams();
+    });
   },
   methods: {
     /** 获取服务器时间 */
@@ -854,6 +857,32 @@ export default {
       } catch (error) {
         // 如果获取服务器时间失败，使用本地时间作为备用
         this.serverTime = new Date();
+      }
+    },
+
+    /** 检查路由参数，处理从首页跳转过来的编辑请求 */
+    async checkRouteParams() {
+      const { activityId, filterMode } = this.$route.query;
+      
+      if (activityId && filterMode === 'single') {
+        // 查找对应的活动
+        const targetActivity = this.activitiesList.find(activity => 
+          activity.activityId == activityId
+        );
+        
+        if (targetActivity) {
+          // 自动打开编辑弹窗
+          await this.handleUpdate(targetActivity);
+        } else {
+          // 如果列表中没有找到，显示错误信息
+          this.$message.error('未找到指定的活动，请刷新页面重试');
+        }
+        
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
       }
     },
 
@@ -1095,12 +1124,12 @@ export default {
     /** 查询活动列表 */
     getList() {
       this.loading = true;
-      getNickName().then(nickName => {
+      return getNickName().then(nickName => {
         this.queryParams.organizer = nickName.msg; // 更新组织者
         // 🔽 确保在 organizer 更新后调用列表接口
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
+        return listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
 
           // 如果有活动状态筛选条件，进行前端筛选
@@ -1127,12 +1156,13 @@ export default {
         }).catch(error => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
+          throw error;
         });
       }).catch(error => {
         // 即使获取组织者名称失败，也尝试获取活动列表
         // 先获取所有活动数据（不分页）
         const allDataParams = { ...this.queryParams, pageNum: 1, pageSize: 10000 };
-        listActivities(allDataParams).then(response => {
+        return listActivities(allDataParams).then(response => {
           let allActivities = response.rows;
 
           // 如果有活动状态筛选条件，进行前端筛选
@@ -1159,6 +1189,7 @@ export default {
         }).catch(listError => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
+          throw listError;
         });
       });
     },
@@ -1226,16 +1257,6 @@ export default {
       this.open = true;
       this.title = "添加活动信息";
     },
-    // /** 修改按钮操作 */
-    // handleUpdate(row) {
-    //   this.reset();
-    //   const activityId = row.activityId || this.ids
-    //   getActivities(activityId).then(response => {
-    //     this.form = response.data;
-    //     this.open = true;
-    //     this.title = "修改活动信息";
-    //   });
-    // },
 
     /** 修改按钮操作 */
     async handleUpdate(row) {
@@ -1328,9 +1349,6 @@ export default {
       }
     },
 
-// 处理富文本中的图片，将Base64图片上传到服务器并替换为URL
-
-
     /** 删除按钮操作 */
     handleDelete(row) {
       const activityIds = row.activityId || this.ids;
@@ -1396,10 +1414,13 @@ export default {
     /** 获取书院标签类型 */
     getAcademyTagType(academy) {
       const academyColors = {
-        '知行书院': 'primary',
-        '明德书院': 'success',
-        '博雅书院': 'warning',
-        '至善书院': 'info',
+        '大煜书院': 'primary',
+        '伯川书院': 'success',
+        '令希书院': 'warning',
+        '厚德书院': 'info',
+        '知行书院': 'danger',
+        '笃学书院': '',
+        '求实书院': 'primary',
         '未知': ''
       };
       return academyColors[academy] || 'info';
@@ -2686,14 +2707,29 @@ export default {
   }
 }
 
-/* 时间网格布局 */
+/* 时间网格布局*/
 .time-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* 改为单列布局 */
   gap: 20px;
 
   .time-item {
     margin-bottom: 0;
+    
+    /* 确保时间选择框有足够的宽度 */
+    .el-form-item__content {
+      width: 100%;
+    }
+
+    /* 时间选择框标签样式 */
+    .el-form-item__label {
+      font-weight: 600;
+      color: #303133;
+      font-size: 14px;
+      line-height: 40px;
+      padding-right: 12px;
+      width: 100px; /* 固定标签宽度 */
+    }
   }
 }
 
@@ -2726,16 +2762,44 @@ export default {
 
 .form-datetime {
   width: 100%;
-
+  max-width: 350px; /* 设置最大宽度，让时间框不会过长 */
+  
   .el-input__inner {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
     transition: all 0.3s ease;
+    font-size: 14px; /* 确保字体大小合适 */
+    padding: 0 15px; /* 增加内边距 */
+    height: 40px; /* 增加高度 */
+    line-height: 40px;
 
     &:focus {
       border-color: #409EFF;
       box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.1);
     }
+  }
+
+  /* 时间选择器图标样式 */
+  .el-input__suffix {
+    .el-input__suffix-inner {
+      .el-input__icon {
+        color: #409EFF;
+        font-size: 16px;
+      }
+    }
+  }
+
+  /* 占位符文本样式 */
+  .el-input__inner::placeholder {
+    color: #c0c4cc;
+    font-size: 14px;
+  }
+
+  /* 确保选中值能完整显示 */
+  .el-input__inner {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
@@ -2890,8 +2954,13 @@ export default {
   }
 
   .time-grid {
-    grid-template-columns: 1fr;
     gap: 16px;
+    
+    .time-item {
+      .form-datetime {
+        min-width: 280px; /* 移动端调整最小宽度 */
+      }
+    }
   }
 
   .dialog-footer {
@@ -2901,6 +2970,31 @@ export default {
     .footer-right {
       width: 100%;
       justify-content: center;
+    }
+  }
+}
+
+/* 时间选择框在对话框中的特殊优化 */
+.activity-form-dialog .time-grid {
+  .time-item {
+    .form-datetime {
+      max-width: 180px; /* 设置最大宽度，避免过长 */
+      
+      .el-input__inner {
+        font-size: 15px; /* 稍微增大字体 */
+        padding: 0 30px; /* 增加左右内边距 */
+      }
+    }
+  }
+}
+
+/* 确保时间选择框在中等屏幕上也有足够空间 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .activity-form-dialog .time-grid {
+    .time-item {
+      .form-datetime {
+        max-width: 350px;
+      }
     }
   }
 }

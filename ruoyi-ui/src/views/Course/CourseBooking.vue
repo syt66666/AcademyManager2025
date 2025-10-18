@@ -106,27 +106,33 @@
             </el-tag>
           </template>
         </el-table-column>
+        <!-- 学分列 -->
+        <el-table-column label="学分" align="center" width="80">
+          <template slot-scope="scope">
+            <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
+          </template>
+        </el-table-column>
         <!-- 上课地点列 -->
         <el-table-column label="上课地点" align="center" prop="courseLocation" show-overflow-tooltip />
         <!-- 组织单位列 -->
 
         <!-- 时间安排列 -->
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="时间安排" align="center" min-width="250">
           <template slot-scope="scope">
             <div class="time-schedule-inline">
               <!-- 选课时间 -->
               <div class="time-inline-item signup-time">
-                <i class="el-icon-time"></i>
-                <span class="time-label">选课时间：</span>
-                <span class="time-content">
+                <i class="el-icon-user"></i>
+                <span class="time-inline-label">选课时间</span>
+                <span class="time-inline-content">
                   {{ parseTime(scope.row.courseStart, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.courseDeadline, '{y}-{m}-{d} {h}:{i}') }}
                 </span>
               </div>
               <!-- 课程时间 -->
               <div class="time-inline-item activity-time">
                 <i class="el-icon-date"></i>
-                <span class="time-label">课程时间：</span>
-                <span class="time-content">
+                <span class="time-inline-label">课程时间</span>
+                <span class="time-inline-content">
                   {{ parseTime(scope.row.startTime, '{y}-{m}-{d} {h}:{i}') }} 至 {{ parseTime(scope.row.endTime, '{y}-{m}-{d} {h}:{i}') }}
                 </span>
               </div>
@@ -145,10 +151,20 @@
         <!-- 选课人数列 -->
         <el-table-column label="选课人数" align="center" width="120">
           <template slot-scope="scope">
-          <span>
-            {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}
-            /{{ scope.row.courseTotalCapacity }}
-          </span>
+            <div class="participants">
+              <el-progress
+                :percentage="calculateCapacityPercentage(scope.row)"
+                :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+                :show-text="false"
+                :stroke-width="10"
+                class="progress-bar"
+              />
+              <div class="count">
+                <span :class="getCapacityClass(scope.row)">
+                  {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}/{{ scope.row.courseTotalCapacity }}
+                </span>
+              </div>
+            </div>
           </template>
         </el-table-column>
 
@@ -363,7 +379,7 @@
 </template>
 
 <script>
-import { listCourses, getCourses, delCourses, addCourses, updateCourses, signUpCapacity, cancelSignUpCapacity, checkCourseUnique } from "@/api/system/courses";
+import { listCourses, getCourses, delCourses, addCourses, updateCourses, signUpCapacity, cancelSignUpCapacity, checkCourseUnique, signUpCourse, cancelSignUpCourse } from "@/api/system/courses";
 import {parseTime} from "@/utils/ruoyi";
 import {addBooking, checkCourseBookingSimple, deleteBookingsByCourseAndStudent} from "@/api/system/courseBookings";
 import {getStudent} from "@/api/system/student";
@@ -494,129 +510,32 @@ export default {
     // 修复：提交取消报名
     async submitCancelSignUp(course) {
       try {
-        console.log('开始取消选课流程，课程ID:',course.courseId);
+        console.log('开始取消选课流程，课程ID:', course.courseId);
 
-        // 0. 先刷新课程数据以确保使用最新版本号
-        await this.getList();
-        const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-        if (latestCourse) {
-          course.version = latestCourse.version;
-          course.courseCapacity = latestCourse.courseCapacity;
-          console.log('更新为最新版本号和容量:', course.version, course.courseCapacity);
-        }
+        // 使用原子性取消选课操作
+        const cancelData = {
+          courseId: Number(course.courseId),
+          studentId: this.$store.state.user.name,
+          version: Number(course.version) || 0
+        };
 
-        // 1. 先检查选课记录是否存在
-        console.log('检查选课记录是否存在...');
-        let bookingExists = false;
-        try {
-          const bookingStatus = await checkCourseBookingSimple(course.courseId, this.$store.state.user.name);
-          console.log('选课状态检查结果:', bookingStatus);
-          bookingExists = bookingStatus.data.isBooked;
-        } catch (checkError) {
-          console.error('检查选课状态失败:', checkError);
-          // 如果检查失败，假设记录不存在
-          bookingExists = false;
-        }
+        console.log('原子性取消选课数据:', cancelData);
+        const response = await cancelSignUpCourse(cancelData);
+        console.log('原子性取消选课响应:', response);
 
-        // 2. 如果选课记录存在，则删除
-        if (bookingExists) {
-          console.log('选课记录存在，执行删除...');
-          try {
-            const deleteResult = await deleteBookingsByCourseAndStudent(
-              course.courseId,
-              this.$store.state.user.name
-            );
-            console.log('删除选课记录结果:', deleteResult);
-
-            // 检查删除是否成功
-            if (!deleteResult || deleteResult.code !== 200) {
-              console.warn('删除选课记录返回非成功状态:', deleteResult);
-              // 不抛出异常，继续执行，但记录警告
-            }
-          } catch (deleteError) {
-            console.error('删除选课记录异常:', deleteError);
-            // 如果删除失败，尝试继续执行，但记录警告
-            console.warn('删除选课记录失败，但继续执行取消流程');
-          }
+        if (response.code === 200) {
+          this.$message.success("取消选课成功！");
+          this.detailDialogVisible = false;
+          this.selectedCourse = null;
+          // 重新获取课程列表以更新状态
+          await this.getList();
         } else {
-          console.log('选课记录不存在，跳过删除步骤');
+          this.$message.error(response.msg || "取消选课失败");
         }
-
-        // 3. 恢复课程容量 - 添加重试机制
-        console.log('恢复课程容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`恢复课程容量，第${capacityRetryCount}次尝试...`);
-            const capacityResult = await cancelSignUpCapacity(course.courseId, course.version);
-            console.log('恢复容量结果:', capacityResult);
-
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-              console.log('课程容量恢复成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`恢复课程容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的课程信息以获取正确的版本号
-                const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-                if (latestCourse) {
-                  course.version = latestCourse.version;
-                  course.courseCapacity = latestCourse.courseCapacity;
-                  console.log('更新版本号和容量:', course.version, course.courseCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('恢复课程容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`恢复课程容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的课程信息以获取正确的版本号
-              const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-              if (latestCourse) {
-                course.version = latestCourse.version;
-                course.courseCapacity = latestCourse.courseCapacity;
-                console.log('更新版本号和容量:', course.version, course.courseCapacity);
-              }
-            }
-          }
-        }
-
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复课程容量失败，已重试' + maxCapacityRetries + '次');
-        }
-
-        // 4. 课程选课不需要记录到user_limite表，跳过取消记录步骤
-        console.log('课程选课取消，无需记录到user_limite表');
-
-        this.$message.success("取消选课成功！");
-        this.detailDialogVisible = false;
-        this.selectedCourse = null;
-
-        // 5. 直接重新获取课程列表以立即更新状态
-        await this.getList();
 
       } catch (error) {
         console.error("取消选课失败:", error);
-
-        // 更详细的错误信息
-        if (error.response) {
-          console.error('错误响应:', error.response);
-          this.$message.error(`取消选课失败: ${error.response.data?.msg || error.response.statusText}`);
-        } else if (error.request) {
-          console.error('请求错误:', error.request);
-          this.$message.error("取消选课失败: 网络连接错误");
-        } else {
-          this.$message.error("取消选课失败: " + (error.message || "请稍后重试"));
-        }
+        this.$message.error("取消选课失败: " + (error.message || "请稍后重试"));
       }
     },
 
@@ -659,127 +578,29 @@ export default {
           return;
         }
 
-        // 0. 先刷新课程数据以确保使用最新版本号
-        await this.getList();
-        const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-        if (latestCourse) {
-          course.version = latestCourse.version;
-          course.courseCapacity = latestCourse.courseCapacity;
-          console.log('更新为最新版本号和容量:', course.version, course.courseCapacity);
-        }
-
-        // 1. 先检查是否已经选过课
-        try {
-          console.log('检查选课状态...');
-          const bookingStatus = await checkCourseBookingSimple(
-            Number(course.courseId),  // 转换为数字
-            this.$store.state.user.name
-          );
-          console.log('选课状态检查结果:', bookingStatus);
-
-          if (bookingStatus.data && bookingStatus.data.isBooked) {
-            this.$message.warning('您已经选过该课程了！');
-            return;
-          }
-        } catch (checkError) {
-          console.warn('检查选课状态失败，继续执行选课流程:', checkError);
-        }
-
-        // 2. 更新课程容量 - 添加重试机制
-        console.log('更新课程容量...');
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            console.log(`更新课程容量，第${capacityRetryCount}次尝试...`);
-            const capacityResponse = await signUpCapacity(
-              Number(course.courseId),  // 转换为数字
-              Number(course.version) || 0  // 转换为数字
-            );
-            console.log('容量更新响应:', capacityResponse);
-
-            if (capacityResponse.code === 200) {
-              capacitySuccess = true;
-              console.log('课程容量更新成功');
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                console.warn(`更新课程容量失败，第${capacityRetryCount}次尝试，准备重试...`);
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的课程信息以获取正确的版本号
-                const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-                if (latestCourse) {
-                  course.version = latestCourse.version;
-                  course.courseCapacity = latestCourse.courseCapacity;
-                  console.log('更新版本号和容量:', course.version, course.courseCapacity);
-                }
-              }
-            }
-          } catch (capacityError) {
-            console.error('更新课程容量异常:', capacityError);
-            if (capacityRetryCount < maxCapacityRetries) {
-              console.warn(`更新课程容量异常，第${capacityRetryCount}次尝试，准备重试...`);
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的课程信息以获取正确的版本号
-              const latestCourse = this.coursesList.find(c => c.courseId === course.courseId);
-              if (latestCourse) {
-                course.version = latestCourse.version;
-                course.courseCapacity = latestCourse.courseCapacity;
-                console.log('更新版本号和容量:', course.version, course.courseCapacity);
-              }
-            }
-          }
-        }
-
-        // 如果容量更新失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('更新课程容量失败，已重试' + maxCapacityRetries + '次');
-        }
-
-        // 3. 添加选课记录 - 确保参数类型正确
-        console.log('添加选课记录...');
-        const bookingData = {
-          courseId: Number(course.courseId),  // 转换为数字
+        // 使用原子性选课操作
+        const signUpData = {
+          courseId: Number(course.courseId),
           studentId: this.$store.state.user.name,
-          bookingTime: new Date().toISOString(),
-          status: '未提交'
+          version: Number(course.version) || 0
         };
 
-        console.log('选课记录数据:', bookingData);
-        const bookingResponse = await addBooking(bookingData);
-        console.log('选课记录添加响应:', bookingResponse);
+        console.log('原子性选课数据:', signUpData);
+        const response = await signUpCourse(signUpData);
+        console.log('原子性选课响应:', response);
 
-        if (bookingResponse.code !== 200) {
-          throw new Error(bookingResponse.msg || '添加选课记录失败');
+        if (response.code === 200) {
+          this.$message.success("选课成功！");
+          this.detailDialogVisible = false;
+          // 重新获取课程列表以更新状态
+          await this.getList();
+        } else {
+          this.$message.error(response.msg || "选课失败");
         }
-
-        this.$message.success("选课成功！");
-        this.detailDialogVisible = false;
-
-        // 4. 直接重新获取课程列表以立即更新状态
-        await this.getList();
 
       } catch (error) {
         console.error("选课失败:", error);
-
-        // 更详细的错误信息
-        if (error.response) {
-          console.error('错误响应详情:', error.response);
-          if (error.response.status === 400) {
-            this.$message.error("选课失败: 参数类型错误，请检查数据格式");
-          } else {
-            this.$message.error(`选课失败: ${error.response.data?.msg || error.response.statusText}`);
-          }
-        } else if (error.request) {
-          console.error('请求错误:', error.request);
-          this.$message.error("选课失败: 网络连接错误");
-        } else {
-          this.$message.error("选课失败: " + (error.message || "请稍后重试"));
-        }
+        this.$message.error("选课失败: " + (error.message || "请稍后重试"));
       }
     },
 
@@ -870,6 +691,20 @@ export default {
       if (percentage >= 0.8) return 'capacity-high';
       if (percentage >= 0.5) return 'capacity-medium';
       return 'capacity-low';
+    },
+
+    // 计算容量百分比
+    calculateCapacityPercentage(row) {
+      if (!row.courseTotalCapacity || row.courseTotalCapacity <= 0) return 0;
+      const used = row.courseTotalCapacity - row.courseCapacity;
+      return Math.round((used / row.courseTotalCapacity) * 100);
+    },
+
+    // 获取进度条颜色
+    getProgressColor(percentage) {
+      if (percentage >= 80) return '#f87171';
+      if (percentage >= 50) return '#fbbf24';
+      return '#4ade80';
     },
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
@@ -1724,46 +1559,86 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .time-inline-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  justify-content: center;
   font-size: 12px;
   line-height: 1.4;
+  white-space: nowrap;
 }
 
 .time-inline-item.signup-time {
-  background: rgba(64, 158, 255, 0.08);
-  border: 1px solid rgba(64, 158, 255, 0.2);
-  color: #409EFF;
+  i {
+    color: #409EFF;
+    margin-right: 4px;
+  }
+  .time-inline-label {
+    color: #409EFF;
+    font-weight: 600;
+    margin-right: 8px;
+  }
 }
 
 .time-inline-item.activity-time {
-  background: rgba(103, 194, 58, 0.08);
-  border: 1px solid rgba(103, 194, 58, 0.2);
-  color: #67C23A;
+  i {
+    color: #67C23A;
+    margin-right: 4px;
+  }
+  .time-inline-label {
+    color: #67C23A;
+    font-weight: 600;
+    margin-right: 8px;
+  }
 }
 
 .time-inline-item i {
   font-size: 14px;
-  flex-shrink: 0;
 }
 
-.time-label {
+.time-inline-label {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.time-inline-content {
+  color: #606266;
   font-weight: 500;
-  flex-shrink: 0;
 }
 
-.time-content {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* 选课人数列样式 */
+.participants {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-bar {
+  width: 100%;
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.capacity-high {
+  color: #F56C6C;
+  font-weight: 500;
+}
+
+.capacity-medium {
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.capacity-low {
+  color: #67C23A;
+  font-weight: 500;
 }
 
 </style>

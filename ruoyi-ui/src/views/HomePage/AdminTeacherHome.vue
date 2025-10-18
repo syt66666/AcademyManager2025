@@ -332,169 +332,7 @@
 
           <!-- 专业分流页面 -->
           <div v-if="activeMenu === 'major'" class="page-content">
-            <div class="content-wrapper">
-              <!-- 分流统计概览卡片 -->
-              <div class="stats-overview">
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-s-grid"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="card-title">总分流人数</div>
-                    <div class="card-value">{{ majorStats.totalStudents }}</div>
-                  </div>
-                </div>
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-refresh"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="card-title">跨书院分流</div>
-                    <div class="card-value">{{ majorStats.crossCollegeTransfers }}</div>
-                  </div>
-                </div>
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-check"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="card-title">保持原专业</div>
-                    <div class="card-value">{{ majorStats.keepOriginalMajor }}</div>
-                  </div>
-                </div>
-                <div class="overview-card">
-                  <div class="card-icon">
-                    <i class="el-icon-edit"></i>
-                  </div>
-                  <div class="card-content">
-                    <div class="card-title">转专业人数</div>
-                    <div class="card-value">{{ majorStats.majorChanges }}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 各书院分流统计 -->
-              <div class="college-stats-section">
-                <h3 class="section-title">各书院分流统计</h3>
-                <div class="college-stats-grid">
-                  <div 
-                    v-for="college in collegeList" 
-                    :key="college.key"
-                    class="college-stat-card"
-                    :class="{ 'active': selectedCollege === college.key }"
-                    @click="handleCollegeFilter(college.key)"
-                  >
-                    <div class="college-header">
-                      <i :class="college.icon" class="college-stat-icon"></i>
-                      <span class="college-name">{{ college.name }}</span>
-                    </div>
-                    <div class="college-numbers">
-                      <div class="stat-item">
-                        <span class="stat-label">分流人数</span>
-                        <span class="stat-value">{{ getCollegeTransferCount(college.key) }}</span>
-                      </div>
-                      <div class="stat-item">
-                        <span class="stat-label">转入人数</span>
-                        <span class="stat-value incoming">{{ getCollegeIncomingCount(college.key) }}</span>
-                      </div>
-                      <div class="stat-item">
-                        <span class="stat-label">转出人数</span>
-                        <span class="stat-value outgoing">{{ getCollegeOutgoingCount(college.key) }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 分流类型分布 -->
-              <div class="transfer-type-section">
-                <h3 class="section-title">分流类型分布</h3>
-                <div class="type-distribution">
-                  <div 
-                    v-for="(type, index) in transferTypes" 
-                    :key="type.key"
-                    class="type-item"
-                    :style="{ '--progress': type.percentage + '%' }"
-                  >
-                    <div class="type-header">
-                      <span class="type-name">{{ type.name }}</span>
-                      <span class="type-count">{{ type.count }}人</span>
-                    </div>
-                    <div class="progress-bar">
-                      <div class="progress-fill" :style="{ width: type.percentage + '%' }"></div>
-                    </div>
-                    <div class="type-percentage">{{ type.percentage }}%</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 分流流向统计 -->
-              <div class="transfer-flow-section">
-                <h3 class="section-title">分流流向统计</h3>
-                <div class="flow-stats-grid">
-                  <div class="flow-stat-card">
-                    <div class="flow-header">
-                      <i class="el-icon-s-promotion flow-icon"></i>
-                      <span class="flow-title">热门转入书院</span>
-                    </div>
-                    <div class="flow-list">
-                      <div 
-                        v-for="(college, index) in popularIncomingColleges" 
-                        :key="college.name"
-                        class="flow-item"
-                      >
-                        <span class="flow-rank">{{ index + 1 }}</span>
-                        <span class="flow-name">{{ college.name }}</span>
-                        <span class="flow-count">{{ college.count }}人</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="flow-stat-card">
-                    <div class="flow-header">
-                      <i class="el-icon-s-promotion flow-icon"></i>
-                      <span class="flow-title">热门转出书院</span>
-                    </div>
-                    <div class="flow-list">
-                      <div 
-                        v-for="(college, index) in popularOutgoingColleges" 
-                        :key="college.name"
-                        class="flow-item"
-                      >
-                        <span class="flow-rank">{{ index + 1 }}</span>
-                        <span class="flow-name">{{ college.name }}</span>
-                        <span class="flow-count">{{ college.count }}人</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 最近分流记录 -->
-              <div class="recent-transfers-section">
-                <h3 class="section-title">最近分流记录</h3>
-                <div class="transfers-list">
-                  <div 
-                    v-for="transfer in recentTransfers" 
-                    :key="transfer.id"
-                    class="transfer-item"
-                  >
-                    <div class="transfer-info">
-                      <div class="transfer-student">{{ transfer.studentName }}</div>
-                      <div class="transfer-meta">
-                        <span class="transfer-from">{{ transfer.fromCollege }}</span>
-                        <i class="el-icon-right transfer-arrow"></i>
-                        <span class="transfer-to">{{ transfer.toCollege }}</span>
-                        <span class="transfer-type">{{ transfer.transferType }}</span>
-                        <span class="transfer-date">{{ transfer.date }}</span>
-                      </div>
-                    </div>
-                    <div class="transfer-status" :class="'status-' + transfer.status">
-                      {{ getTransferStatusText(transfer.status) }}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Qstatistics />
           </div>
         </div>
       </div>
@@ -1026,9 +864,13 @@ import {
 import { listCourses, getCourseBookings } from '@/api/system/courses'
 import { listBookingsWithActivity } from '@/api/system/bookings'
 import * as echarts from 'echarts'
+import Qstatistics from '@/views/Qstatistics/index.vue'
 
 export default {
   name: 'AdminTeacherHome',
+  components: {
+    Qstatistics
+  },
   data() {
     return {
       activeMenu: 'activity', // 默认选中书院活动
@@ -1124,29 +966,7 @@ export default {
         { key: '3', name: '能力锻造与实践创新课程类', count: 0, percentage: 0 },
         { key: '4', name: '社会责任与领军意识课程类', count: 0, percentage: 0 }
       ],
-      // 专业分流统计数据
-      majorStats: {
-        totalStudents: 0,
-        crossCollegeTransfers: 0,
-        keepOriginalMajor: 0,
-        majorChanges: 0
-      },
-      // 各书院分流数据
-      collegeTransferData: {},
-      // 分流类型分布
-      transferTypes: [
-        { key: '1', name: '保持当前专业', count: 0, percentage: 0 },
-        { key: '2', name: '域内任选专业', count: 0, percentage: 0 },
-        { key: '3', name: '类内任选专业', count: 0, percentage: 0 },
-        { key: '4', name: '创新班政策内任选专业', count: 0, percentage: 0 },
-        { key: '5', name: '转专业', count: 0, percentage: 0 }
-      ],
-      // 热门转入书院
-      popularIncomingColleges: [],
-      // 热门转出书院
-      popularOutgoingColleges: [],
-      // 最近分流记录
-      recentTransfers: [],
+        
       // 弹窗相关数据
       dialogVisible: false,
       selectedCollegeForDetail: '',
@@ -1240,10 +1060,6 @@ export default {
       // 当切换到课程页面时，加载课程统计数据
       if (menuKey === 'course') {
         this.loadCourseStats()
-      }
-      // 当切换到专业分流页面时，加载分流统计数据
-      if (menuKey === 'major') {
-        this.loadMajorStats()
       }
     },
     async handleCollegeFilter(collegeKey) {
@@ -3163,20 +2979,6 @@ export default {
   color: #8b5cf6;
 }
 
-/* 专业分流样式 */
-.transfer-type-section {
-  margin-bottom: 32px;
-}
-
-.transfer-flow-section {
-  margin-bottom: 32px;
-}
-
-.flow-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
 
 .flow-stat-card {
   background: white;

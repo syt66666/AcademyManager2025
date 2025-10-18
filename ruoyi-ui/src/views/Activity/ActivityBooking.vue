@@ -229,6 +229,24 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="报名人数" align="center" width="120">
+          <template slot-scope="scope">
+            <div class="participants">
+              <el-progress
+                :percentage="calculateCapacityPercentage(scope.row)"
+                :color="getProgressColor(calculateCapacityPercentage(scope.row))"
+                :show-text="false"
+                :stroke-width="10"
+                class="progress-bar"
+              />
+              <div class="count">
+                <span :class="getCapacityClass(scope.row)">
+                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                </span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="操作" align="center" fixed="right" width="120">
           <template slot-scope="scope">
             <!-- 添加取消限制检查 -->
@@ -308,9 +326,6 @@
           <div class="status-tags">
             <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
               {{ getActivityStatusText(selectedActivity) }}
-            </el-tag>
-            <el-tag :type="getSignStatusTag(selectedActivity)" size="medium" effect="light" class="sign-tag">
-              {{ getSignStatusText(selectedActivity) }}
             </el-tag>
           </div>
         </div>
@@ -452,7 +467,7 @@
 
 <script>
 import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities } from "@/api/system/activities";
-import { addBooking, deleteBookingsByActivityAndStudent } from "@/api/system/bookings";
+import { addBooking, deleteBookingsByActivityAndStudent, signUpActivity, getBookedActivities, cancelSignUpActivity } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 import { checkBookingSimple } from "@/api/system/bookings";
 import { getStudent } from "@/api/system/student";
@@ -497,7 +512,6 @@ export default {
         availableOnly: false, // 只显示可报名活动
       },
       // 实时同步相关
-      isSyncing: false, // 是否正在同步数据
     };
   },
   computed: {
@@ -763,11 +777,37 @@ export default {
           // 使用 Vue.set 确保响应式更新
           this.$set(activity, 'isBooked', res.data.isBooked);
         }).catch(error => {
+          console.error(`检查活动 ${activity.activityId} 报名状态失败:`, error);
           this.$set(activity, 'isBooked', false);
         })
       );
 
       await Promise.all(checkPromises);
+    },
+
+    // 根据数据库中的实际报名记录更新所有活动状态
+    async updateBookingStatusFromDatabase() {
+      try {
+        const response = await getBookedActivities(this.$store.state.user.name);
+        
+        if (response.code === 200) {
+          const bookedActivityIds = response.data || [];
+          
+          // 更新所有活动的报名状态
+          this.activitiesList.forEach(activity => {
+            const isBooked = bookedActivityIds.includes(activity.activityId);
+            this.$set(activity, 'isBooked', isBooked);
+          });
+          
+          // 如果当前有选中的活动，也更新其状态
+          if (this.selectedActivity) {
+            const isSelectedBooked = bookedActivityIds.includes(this.selectedActivity.activityId);
+            this.$set(this.selectedActivity, 'isBooked', isSelectedBooked);
+          }
+        }
+      } catch (error) {
+        console.error('从数据库更新报名状态失败:', error);
+      }
     },
 
     // 搜索按钮操作
@@ -861,6 +901,20 @@ export default {
       if (percentage >= 0.8) return 'capacity-high';
       if (percentage >= 0.5) return 'capacity-medium';
       return 'capacity-low';
+    },
+
+    // 计算容量百分比
+    calculateCapacityPercentage(row) {
+      if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
+      const used = row.activityTotalCapacity - row.activityCapacity;
+      return Math.round((used / row.activityTotalCapacity) * 100);
+    },
+
+    // 获取进度条颜色
+    getProgressColor(percentage) {
+      if (percentage >= 80) return '#f87171';
+      if (percentage >= 50) return '#fbbf24';
+      return '#4ade80';
     },
 
     // 格式化日期时间
@@ -1002,7 +1056,7 @@ export default {
       }
     },
 
-    // 提交报名
+    // 提交报名 - 使用原子性报名接口
     async submitSignUp(activity) {
       try {
         // 0. 先检查是否已经报名过
@@ -1021,48 +1075,32 @@ export default {
           return;
         }
 
-        // 1. 更新活动容量（使用最新的版本号）
-        await signUpCapacity(activity.activityId, latestActivity.version);
-
-        // 2. 添加报名记录
-        const bookingData = {
+        // 1. 使用原子性报名接口
+        const signUpData = {
           activityId: activity.activityId,
           studentId: this.$store.state.user.name,
-          bookAt: new Date().toISOString(),
-          status: "未提交"
+          version: latestActivity.version
         };
-        console.log('报名数据:', bookingData);
-        console.log('当前活动信息:', activity);
-        console.log('最新活动信息:', latestActivity);
-        await addBooking(bookingData);
+        
+        
+        const response = await signUpActivity(signUpData);
+        
+        if (response.code === 200) {
+          this.$message.success("报名成功！");
 
-        // 3. 更新活动状态
-        const updatedActivity = {
-          ...latestActivity,
-          activityCapacity: Math.max(latestActivity.activityCapacity - 1, 0),
-          version: latestActivity.version + 1,
-          isBooked: true // 标记为已报名
-        };
+          // 报名成功后关闭详情弹窗
+          this.detailDialogVisible = false;
+          this.selectedActivity = null;
 
-        // 4. 更新活动列表
-        const index = this.activitiesList.findIndex(a => a.activityId === activity.activityId);
-        if (index !== -1) {
-          // 使用 Vue.set 确保响应式更新
-          this.$set(this.activitiesList, index, updatedActivity);
+          // 等待数据库事务完成
+          await new Promise(resolve => setTimeout(resolve, 300));
+
+          // 根据数据库中的实际报名记录更新所有活动状态
+          await this.updateBookingStatusFromDatabase();
+
+        } else {
+          this.$message.error(response.msg || "报名失败");
         }
-
-        this.$message.success("报名成功！");
-        console.log('活动预约界面报名成功，活动ID:', activity.activityId, '用户:', this.$store.state.user.name);
-
-        // 报名成功后关闭详情弹窗
-        this.detailDialogVisible = false;
-        this.selectedActivity = null;
-
-        // 重新检查报名状态以确保数据同步
-        await this.checkBookingStatus();
-
-        // 额外同步一次数据，确保其他用户能看到最新状态
-        await this.syncActivityData();
       } catch (error) {
         console.error("报名失败:", error);
         this.$message.error("报名失败: " + (error.msg || "请稍后重试"));
@@ -1080,179 +1118,45 @@ export default {
           activity.activityCapacity = latestActivity.activityCapacity;
         }
 
-        // 1. 先检查报名记录是否存在
-        let bookingExists = false;
-        try {
-          const bookingStatus = await checkBookingSimple(activity.activityId, this.$store.state.user.name);
-          bookingExists = bookingStatus.data.isBooked;
-        } catch (checkError) {
-          // 如果检查失败，假设记录不存在
-          bookingExists = false;
-        }
-
-        // 2. 如果报名记录存在，则删除
-        if (bookingExists) {
-          try {
-            const deleteResult = await deleteBookingsByActivityAndStudent(
-              activity.activityId,
-              this.$store.state.user.name
-            );
-
-            // 检查删除是否成功
-            if (!deleteResult || deleteResult.code !== 200) {
-              // 不抛出异常，继续执行，但记录警告
-            }
-          } catch (deleteError) {
-            // 如果删除失败，尝试继续执行，但记录警告
-          }
-        }
-
-        // 3. 恢复活动容量 - 添加重试机制
-        let capacitySuccess = false;
-        let capacityRetryCount = 0;
-        const maxCapacityRetries = 3;
-
-        while (!capacitySuccess && capacityRetryCount < maxCapacityRetries) {
-          try {
-            capacityRetryCount++;
-            const capacityResult = await cancelSignUpCapacity(activity.activityId, activity.version);
-
-            // 检查容量恢复是否成功
-            if (capacityResult && capacityResult.code === 200) {
-              capacitySuccess = true;
-            } else {
-              if (capacityRetryCount < maxCapacityRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 500));
-                // 重新获取最新的活动信息以获取正确的版本号
-                const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-                if (latestActivity) {
-                  activity.version = latestActivity.version;
-                  activity.activityCapacity = latestActivity.activityCapacity;
-                }
-              }
-            }
-          } catch (capacityError) {
-            if (capacityRetryCount < maxCapacityRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 500));
-              // 重新获取最新的活动信息以获取正确的版本号
-              const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-              if (latestActivity) {
-                activity.version = latestActivity.version;
-                activity.activityCapacity = latestActivity.activityCapacity;
-              }
-            }
-          }
-        }
-
-        // 如果容量恢复失败，抛出异常
-        if (!capacitySuccess) {
-          throw new Error('恢复活动容量失败，已重试' + maxCapacityRetries + '次');
-        }
-
-        // 4. 记录取消信息到数据库 - 添加重试机制
+        // 使用原子性取消报名接口
         const cancelData = {
-          studentId: this.$store.state.user.name,
           activityId: activity.activityId,
-          cancelTime: new Date().toISOString()
+          studentId: this.$store.state.user.name,
+          version: activity.version
         };
 
-        // 添加重试机制
-        let cancelResult = null;
-        let cancelSuccess = false;
-        let retryCount = 0;
-        const maxRetries = 3;
+        const response = await cancelSignUpActivity(cancelData);
 
-        while (!cancelSuccess && retryCount < maxRetries) {
-          try {
-            retryCount++;
-            cancelResult = await recordCancel(cancelData);
+        if (response.code === 200) {
+          this.$message.success("取消报名成功！");
 
-            // 检查取消记录是否成功保存
-            if (cancelResult && cancelResult.code === 200) {
-              cancelSuccess = true;
-            } else {
-              if (retryCount < maxRetries) {
-                // 等待一段时间后重试
-                await new Promise(resolve => setTimeout(resolve, 1000));
-              }
+          // 取消报名成功后关闭详情弹窗
+          this.detailDialogVisible = false;
+          this.selectedActivity = null;
+
+          // 等待数据库事务完成
+          await new Promise(resolve => setTimeout(resolve, 300));
+
+          // 根据数据库中的实际报名记录更新所有活动状态
+          await this.updateBookingStatusFromDatabase();
+
+          // 异步重新加载取消限制信息，但不影响当前UI状态
+          setTimeout(async () => {
+            try {
+              await this.loadCancelLimitInfo();
+            } catch (error) {
+              // 后台更新失败，不影响用户操作
             }
-          } catch (recordError) {
-            if (retryCount < maxRetries) {
-              // 等待一段时间后重试
-              await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-          }
-        }
-
-        // 如果重试后仍然失败，抛出异常
-        if (!cancelSuccess) {
-          throw new Error('取消记录保存失败，已重试' + maxRetries + '次');
-        }
-
-        // 5. 立即查询数据库验证取消记录
-        const verifyResponse = await getCancelCount(this.$store.state.user.name);
-
-        if (verifyResponse && verifyResponse.code === 200) {
-          const actualCancelCount = verifyResponse.data;
-
-          // 如果实际取消次数没有增加，说明有问题
-          if (actualCancelCount === 0) {
-            // 不抛出异常，继续执行，但记录警告
-          }
-        }
-
-        // 6. 重新获取活动列表以同步最新数据（包括版本号和容量）
-        await this.getList();
-
-        // 7. 重新加载取消限制信息
-        await this.loadCancelLimitInfo();
-
-        if (this.remainingCancels > 0) {
-          this.$message.success(`取消报名成功！本月还可取消 ${this.remainingCancels} 次`);
+          }, 1000);
         } else {
-          this.$message.warning('取消报名成功！本月取消次数已用完，将无法报名新活动，但仍可取消已报名的活动');
+          this.$message.error(response.msg || "取消报名失败");
         }
-
-        this.detailDialogVisible = false;
-        this.selectedActivity = null;
-        await this.checkBookingStatus();
-
-        // 额外同步一次数据，确保其他用户能看到最新状态
-        await this.syncActivityData();
-
       } catch (error) {
-        // 更详细的错误信息
-        if (error.response) {
-          this.$message.error(`取消报名失败: ${error.response.data?.msg || error.response.statusText}`);
-        } else if (error.request) {
-          this.$message.error("取消报名失败: 网络连接错误");
-        } else {
-          this.$message.error("取消报名失败: " + (error.message || "请稍后重试"));
-        }
+        console.error("取消报名失败:", error);
+        this.$message.error("取消报名失败: " + (error.msg || "请稍后重试"));
       }
     },
 
-    // 添加重试机制
-    async retryOperation(operation, maxRetries = 3, delay = 1000) {
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          return await operation();
-        } catch (error) {
-          if (i === maxRetries - 1) {
-            throw error;
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-      }
-    },
-    // 使用重试机制删除报名记录
-    async safeDeleteBooking(activityId, studentId) {
-      return await this.retryOperation(async () => {
-        return await deleteBookingsByActivityAndStudent(activityId, studentId);
-      });
-    },
     /** 预览活动图片 */
     previewActivityImage(imageUrl) {
       this.previewImageUrl = imageUrl;
@@ -1283,52 +1187,6 @@ export default {
       return text.substring(0, maxLength) + '...';
     },
 
-    // 同步活动数据（在报名操作后调用）
-    async syncActivityData() {
-      if (this.isSyncing) {
-        console.log('正在同步中，跳过本次同步');
-        return;
-      }
-
-      try {
-        this.isSyncing = true;
-        console.log('同步活动数据...');
-
-        // 静默获取最新数据，不显示loading状态
-        const allParams = {
-          ...this.queryParams,
-          organizer: this.currentAcademy // 只获取学生所在书院的活动
-        };
-
-        const response = await listActivities(allParams);
-        let activities = response.rows || [];
-
-        // 如果选择了"只显示可报名活动"，则进行前端过滤
-        if (this.queryParams.availableOnly) {
-          activities = activities.filter(activity => {
-            const status = this.getActivityStatusText(activity);
-            if (status !== "报名进行中") {
-              return false;
-            }
-            if (activity.activityCapacity <= 0) {
-              return false;
-            }
-            return !activity.isBooked;
-          });
-        }
-
-        // 更新活动列表数据
-        this.activitiesList = activities;
-        this.total = response.total;
-
-        console.log('活动数据已同步，当前活动数量:', activities.length);
-      } catch (error) {
-        console.error('同步活动数据失败:', error);
-        // 同步失败，不显示错误信息给用户
-      } finally {
-        this.isSyncing = false;
-      }
-    },
 
     // 日历相关方法
     prevMonth() {
@@ -1413,8 +1271,6 @@ export default {
     async getLatestActivityInfo(activityId) {
       try {
         const response = await getActivities(activityId);
-        console.log('获取最新活动信息响应:', response);
-        console.log('活动组织者:', response.data?.organizer);
         return response.data;
       } catch (error) {
         console.error("获取活动信息失败:", error);
@@ -2183,6 +2039,38 @@ export default {
   font-weight: 500;
 }
 
+/* 报名人数列样式 */
+.participants {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.progress-bar {
+  width: 100%;
+}
+
+.count {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.capacity-high {
+  color: #F56C6C;
+  font-weight: 500;
+}
+
+.capacity-medium {
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.capacity-low {
+  color: #67C23A;
+  font-weight: 500;
+}
+
 /* 视图切换标签样式 */
 .view-tabs {
   flex: 1;
@@ -2350,8 +2238,9 @@ export default {
       box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
     }
 
-    /* 已报名状态 - 绿色边框和特殊标识 */
+    /* 已报名状态 - 绿色条和特殊标识 */
     &.booked {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
       border: 2px solid #27ae60;
       box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
       position: relative;
@@ -2379,6 +2268,12 @@ export default {
       transform: translateY(-1px);
       box-shadow: 0 4px 16px rgba(69, 127, 202, 0.4);
       background: linear-gradient(to right, rgb(59, 107, 182), rgb(76, 125, 180));
+    }
+
+    /* 已报名状态的hover效果 */
+    &.booked:hover {
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
+      box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
     }
 
     .event-summary {

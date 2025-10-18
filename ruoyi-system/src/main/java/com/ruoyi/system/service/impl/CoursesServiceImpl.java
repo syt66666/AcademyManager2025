@@ -4,7 +4,9 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.system.mapper.CoursesMapper;
+import com.ruoyi.system.mapper.CourseBookingsMapper;
 import com.ruoyi.system.domain.Courses;
 import com.ruoyi.system.service.ICoursesService;
 import com.ruoyi.common.exception.ServiceException;
@@ -20,6 +22,9 @@ public class CoursesServiceImpl implements ICoursesService
 {
     @Autowired
     private CoursesMapper coursesMapper;
+
+    @Autowired
+    private CourseBookingsMapper courseBookingsMapper;
 
     /**
      * 查询【请填写功能名称】
@@ -151,5 +156,75 @@ public class CoursesServiceImpl implements ICoursesService
         
         Date now = new Date();
         return now.after(course.getCourseStart()) || now.equals(course.getCourseStart());
+    }
+
+    /**
+     * 事务性选课操作 - 解决并发问题
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int signUpWithTransaction(Long courseId, String studentId, Integer version) {
+        try {
+            // 1. 原子性插入选课记录（包含重复检查和容量检查）
+            int insertResult = courseBookingsMapper.signUpWithTransaction(courseId, studentId, version);
+            
+            if (insertResult <= 0) {
+                // 插入失败，可能是重复选课或容量不足
+                return 0;
+            }
+            
+            // 2. 原子性更新课程容量
+            int updateResult = courseBookingsMapper.updateCapacityAfterSignUp(courseId, version);
+            
+            if (updateResult <= 0) {
+                // 容量更新失败，抛出异常触发回滚
+                throw new ServiceException("课程容量更新失败");
+            }
+            
+            return 1; // 成功
+        } catch (Exception e) {
+            System.err.println("事务性选课失败: " + e.getMessage());
+            throw new ServiceException("选课失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 事务性取消选课操作 - 解决并发问题
+     *
+     * @param courseId 课程ID
+     * @param studentId 学生ID
+     * @param version 版本号
+     * @return 操作结果
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int cancelSignUpWithTransaction(Long courseId, String studentId, Integer version) {
+        try {
+            // 1. 原子性删除选课记录（包含版本检查）
+            int deleteResult = courseBookingsMapper.cancelSignUpWithTransaction(courseId, studentId, version);
+            
+            if (deleteResult <= 0) {
+                // 删除失败，可能是未选课或版本不匹配
+                return 0;
+            }
+            
+            // 2. 原子性更新课程容量
+            int updateResult = courseBookingsMapper.updateCapacityAfterCancelSignUp(courseId, version);
+            
+            if (updateResult <= 0) {
+                // 容量更新失败，抛出异常触发回滚
+                throw new ServiceException("课程容量更新失败");
+            }
+            
+            return 1; // 成功
+        } catch (Exception e) {
+            System.err.println("事务性取消选课失败: " + e.getMessage());
+            throw new ServiceException("取消选课失败: " + e.getMessage());
+        }
     }
 }

@@ -1,17 +1,18 @@
 <template>
   <div class="container">
-    <!-- 左侧部分 (echarts 图表部分) -->
-    <div class="left-container">
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-container">
       <el-card class="custom-card">
-        <!-- 滑动按钮 -->
-        <div class="switch-container">
-          <el-switch
-            v-model="isAfterMajorChange"
-            active-text="转专业后"
-            inactive-text="分流后"
-            @change="updateChart"
-          />
+        <div class="loading-content">
+          <i class="el-icon-loading"></i>
+          <p>正在加载图表数据...</p>
         </div>
+      </el-card>
+    </div>
+    
+    <!-- 左侧部分 (echarts 图表部分) -->
+    <div v-else class="left-container">
+      <el-card class="custom-card">
         <!-- 用于放置Echarts图表的DOM元素 -->
         <div id="echarts1" class="echart-container" />
         <div id="echarts3" class="echart-container" />
@@ -20,7 +21,7 @@
     </div>
     <div class="right-container">
       <div id="echarts-container" class="echart-container"></div>
-      <div class="student">
+      <div class="student-section">
         <student-index ref="student" />
       </div>
     </div>
@@ -36,36 +37,84 @@ export default {
   components: { StudentIndex },
   data() {
     return {
-      isAfterMajorChange: false,//初始状态为分流后
       academyChangeType : { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, 'Unknown': 0 },
       selected: null,
       options: ["令希书院","伯川书院","厚德书院","大煜书院","求实书院","知行书院","笃学书院"],
+      loading: true,
+      chartData: null,
+      chartInstances: {},
+      updateTimer: null
     }
   },
-  mounted() {
-    this.isAfterMajorChange = false; // 确保状态初始化
-    this.getEcharts1();
-    //this.getEcharts3();
+  async mounted() {
+    this.loading = true;
+    try {
+      await this.loadChartData();
+      // 确保DOM完全渲染后再初始化图表
+      this.$nextTick(() => {
+        this.getEcharts1();
+      });
+    } catch (error) {
+      console.error('加载图表数据失败:', error);
+      this.$message.error('加载图表数据失败');
+    } finally {
+      this.loading = false;
+    }
   },
   watch: {
     selected(newVal, oldVal) {
-      if(this.selected!==null){
-        this.noHideCharts();
-        this.getEcharts3();
-        this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
-      }else {
-        // 如果 selected 为 null，隐藏图表
-        this.hideCharts();
+      // 清除之前的定时器
+      if (this.updateTimer) {
+        clearTimeout(this.updateTimer);
       }
-    },
-    isAfterMajorChange(newVal) {
-      // 在状态改变时执行的逻辑，可以用于触发其他操作
-      this.getEcharts1();
-      this.selected=null;
-
+      
+      // 使用防抖处理
+      this.updateTimer = setTimeout(() => {
+        if(this.selected!==null){
+          this.noHideCharts();
+          this.getEcharts3();
+          this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
+        }else {
+          // 如果 selected 为 null，隐藏图表
+          this.hideCharts();
+        }
+      }, 100); // 100ms防抖延迟
     }
   },
+  beforeDestroy() {
+    // 清理定时器
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer);
+    }
+    
+    // 销毁图表实例
+    Object.values(this.chartInstances).forEach(chart => {
+      if (chart) {
+        chart.dispose();
+      }
+    });
+  },
   methods:{
+    // 加载图表数据
+    async loadChartData() {
+      if (this.chartData) {
+        return this.chartData; // 使用缓存数据
+      }
+      
+      try {
+        const response = await fetchEchartsData2(3);
+        if (response.code === 200) {
+          this.chartData = response.data;
+          return this.chartData;
+        } else {
+          throw new Error('获取数据失败');
+        }
+      } catch (error) {
+        console.error('获取图表数据失败:', error);
+        throw error;
+      }
+    },
+
     noHideCharts() {
       // 假设你有一个容器 ID 为 'echarts-container'
       const chartContainer = document.getElementById('echarts3');
@@ -98,7 +147,19 @@ export default {
     },
     echarts1(data) {
       var chartDom = document.getElementById('echarts1');
+      
+      // 检查DOM元素是否存在
+      if (!chartDom) {
+        console.error('图表容器不存在: echarts1');
+        return;
+      }
+      
+      // 使用缓存的图表实例或创建新的
+      if (this.chartInstances.echarts1) {
+        this.chartInstances.echarts1.dispose();
+      }
       var myChart = echarts.init(chartDom);
+      this.chartInstances.echarts1 = myChart;
 
       // 固定书院顺序
       const fixedAcademies = [
@@ -117,11 +178,9 @@ export default {
       let afterData = new Array(fixedAcademies.length).fill(0);
       this.academyChangeType = {};
 
-      // 获取数据源
-      const afterCnt = this.isAfterMajorChange ? data.afterCnt2 : data.afterCnt1;
-      const afterMajorChangeType = this.isAfterMajorChange
-        ? data.afterMajorChangeType
-        : data.changeMajorType;
+      // 获取数据源 - 固定使用分流后数据
+      const afterCnt = data.afterCnt1;
+      const afterMajorChangeType = data.changeMajorType;
       const beforeCountConfig = {
         '大煜书院': 395,
         '伯川书院': 674,
@@ -154,8 +213,9 @@ export default {
         }
       });
 
-      // ECharts配置
+      // ECharts配置 - 优化性能
       const option = {
+        animation: false, // 禁用动画提升性能
         title: {
           text: "专业分流前后书院人数统计",
           left: 'center',
@@ -377,57 +437,58 @@ export default {
       });
     },
 
-    getEcharts1() {
-      // 调用 fetchEchartsData2 来获取数据
-        fetchEchartsData2(3)
-          .then(response => {
-            this.echarts1(response.data);
-          })
-    },
-    getEcharts3() {
-      fetchEchartsData2(3)
-        .then(response => {
-          this.echarts3(response.data,this.selected);
+    async getEcharts1() {
+      try {
+        const data = await this.loadChartData();
+        // 确保DOM已经渲染完成
+        this.$nextTick(() => {
+          this.echarts1(data);
         });
+      } catch (error) {
+        console.error('获取图表数据失败:', error);
+        this.$message.error('获取图表数据失败');
+      }
+    },
+    async getEcharts3() {
+      try {
+        const data = await this.loadChartData();
+        // 确保DOM已经渲染完成
+        this.$nextTick(() => {
+          this.echarts3(data, this.selected);
+        });
+      } catch (error) {
+        console.error('获取图表数据失败:', error);
+        this.$message.error('获取图表数据失败');
+      }
     },
 
     echarts3(data, academy) {
       var chartDom = document.getElementById('echarts3');
-      var myChart = echarts.init(chartDom);
-      let allMajors;
-      if(this.isAfterMajorChange===false){
-        // // 定义所有可能的专业列表（横坐标）
-        // if (academy === '求实书院') {
-        //   allMajors = ["软件工程", "网络工程", "集成电路设计与集成系统", "电子科学与技术"];
-        // } else if (academy === '令希书院') {
-        //   allMajors = ["智能建造", "水利水电工程", "港口航道与海岸工程", "海洋资源开发技术", "交通工程", "工程管理", "建筑环境与能源应用工程", "土木工程", "工程力学", "飞行器设计与工程", "船舶与海洋工程", "建筑学", "城乡规划"];
-        // } else if (academy === '伯川书院') {
-        //   allMajors = ["智能制造工程", "能源与动力工程", "机械设计制造及其自动化", "车辆工程（英语强化）", "测控技术与仪器", "金属材料工程", "功能材料", "材料成型及控制工程", "生物医学工程"];
-        // } else if (academy === '厚德书院') {
-        //   allMajors = ["金融学", "工商管理", "国际经济与贸易", "知识产权", "公共事业管理", "马克思主义理论", "广播电视学", "汉语言文学", "英语", "翻译", "日语", "建筑学", "城乡规划", "视觉传达设计", "环境设计", "雕塑", "运动训练"];
-        // } else if (academy === '大煜书院') {
-        //   allMajors = ["精细化工", "化学工程与工艺", "制药工程", "高分子材料与工程", "安全工程", "过程装备与控制工程", "环境科学", "环境工程", "生物工程","储能科学与工程"];
-        // } else if (academy === '知行书院') {
-        //   allMajors = ["电气工程及其自动化", "自动化", "电子信息工程", "计算机科学与技术", "生物医学工程", "光电信息科学与工程", "大数据管理与应用", "信息管理与信息系统","金融学", "工商管理", "国际经济与贸易","知识产权","物流管理"];
-        // } else if (academy === '笃学书院') {
-        //   allMajors = ["数学与应用数学", "信息与计算科学", "应用物理学", "应用化学", "工程力学", "生物工程"];
-        // } else {
-        //   allMajors = []; // 默认为空数组
-        // }
-        allMajors = data.afterCnt1 && data.afterCnt1[academy]
-          ? Object.keys(data.afterCnt1[academy])
-          : [];
-      }else{
-          // 动态获取当前书院所有存在的专业（来自 afterCnt2 数据）
-          allMajors = data.afterCnt2 && data.afterCnt2[academy]
-            ? Object.keys(data.afterCnt2[academy])
-            : [];
+      
+      // 检查DOM元素是否存在
+      if (!chartDom) {
+        console.error('图表容器不存在: echarts3');
+        return;
       }
+      
+      // 使用缓存的图表实例或创建新的
+      if (this.chartInstances.echarts3) {
+        this.chartInstances.echarts3.dispose();
+      }
+      var myChart = echarts.init(chartDom);
+      this.chartInstances.echarts3 = myChart;
+      let allMajors;
+      
+      // 固定使用分流后数据
+      allMajors = data.afterCnt1 && data.afterCnt1[academy]
+        ? Object.keys(data.afterCnt1[academy])
+        : [];
 
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
-      // 遍历数据，根据数据更新 yData
-      if (this.isAfterMajorChange===false&&data.afterCnt1 && data.afterCnt1[academy]) {
+      
+      // 固定使用分流后数据填充
+      if (data.afterCnt1 && data.afterCnt1[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt1[academy])) {
           // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
           let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
@@ -436,17 +497,6 @@ export default {
           }
         }
       }
-      // 遍历数据，根据数据更新 yData
-      if (this.isAfterMajorChange===true&&data.afterCnt2 && data.afterCnt2[academy]) {
-        for (let [k2, v2] of Object.entries(data.afterCnt2[academy])) {
-          // 如果当前专业存在于 allMajors 中，则累计该专业的学生人数
-          let majorIndex = allMajors.indexOf(k2); // 获取专业名称在 allMajors 中的位置
-          if (majorIndex !== -1) {
-            yData[majorIndex] += v2; // 增加该专业的学生人数
-          }
-        }
-      }
-      let type=this.isAfterMajorChange;
       const option = {
         title: {
           text: `${this.selected}分流后各专业人数统计`,
@@ -543,10 +593,8 @@ export default {
       myChart.on('click', function(param) {
         if (param.componentType === 'series') {
           const clickedMajor = param.name;  // 获取点击的专业名称
-
-            console.log('this.isAfterMajorChange11:'+type)
           // 获取该专业的专业类型分布数据
-          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor,type);
+          const majorChangeType = getChangeMajorTypeForMajor(data, academy, clickedMajor);
           // 显示该专业的转专业类型的比例，可以用饼图展示
           updateChangeTypeChart(majorChangeType,clickedMajor);
           that.$refs.student.major = clickedMajor;
@@ -555,17 +603,11 @@ export default {
       });
 
       // 获取该专业的转专业类型分布
-      function getChangeMajorTypeForMajor(data, academy, major,type) {
+      function getChangeMajorTypeForMajor(data, academy, major) {
         const afterMajorChangeType = {};  // 统计该专业的转专业类型
-        // // 遍历数据，统计该专业的转专业类型
-        if (type===true&&data.afterMajorChangeType && data.afterMajorChangeType[academy] && data.afterMajorChangeType[academy][major]) {
-          for (let [changeType, count] of Object.entries(data.afterMajorChangeType[academy][major])) {
-            afterMajorChangeType[changeType] = count;
-          }
-        }
-
-        // 遍历数据，统计该专业的转专业类型
-        if (type===false&&data.changeMajorType && data.changeMajorType[academy] && data.changeMajorType[academy][major]) {
+        
+        // 固定使用分流后数据
+        if (data.changeMajorType && data.changeMajorType[academy] && data.changeMajorType[academy][major]) {
           for (let [changeType, count] of Object.entries(data.changeMajorType[academy][major])) {
             afterMajorChangeType[changeType] = count;
           }
@@ -696,35 +738,88 @@ export default {
 };
 </script>
 <style scoped>
+/* 加载状态样式 */
+.loading-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #666;
+}
+
+.loading-content i {
+  font-size: 32px;
+  margin-bottom: 16px;
+  color: #409eff;
+  animation: rotating 2s linear infinite;
+}
+
+@keyframes rotating {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content p {
+  margin: 0;
+  font-size: 14px;
+}
+
 .container {
   display: flex; /* 使用 flex 布局 */
   justify-content: space-between; /* 在水平上分布子元素 */
-  gap: 20px; /* 设置左右容器之间的间距 */
-  margin-left: 100px;
 }
 
 .left-container {
   width: 60%; /* 左侧部分占屏幕的60% */
   display: flex;
   flex-direction: column; /* 垂直排列图表 */
-  gap: 20px; /* 设置图表之间的间距 */
+
 }
 
 .right-container {
-  width: 40%; /* 右侧部分占屏幕的35% */
+  width: 40%; /* 右侧部分占屏幕的40% */
+  display: flex;
   flex-direction: column; /* 垂直排列图表 */
+  gap: 20px; /* 设置图表之间的间距 */
+}
 
+.student-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .echart-container {
   width: 100%;
-  height: 300px; /* 适当调整图表的高度 */
-  min-height: 200px; /* 最小高度 */
+  gap: 10px; /* 设置图表之间的间距 */
+  height: 370px; /* 恢复固定高度，避免图表过扁 */
+  min-height: 370px; /* 最小高度 */
 }
 
 .student {
   width: 100%;
   background-color: rgba(255, 255, 255, 0);
+}
+
+
+.student-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 300px; /* 确保学生信息组件有足够的最小高度 */
 }
 
 /* 在小屏幕上重新调整 */

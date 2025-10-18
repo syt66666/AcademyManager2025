@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +71,54 @@ public class BookingsController extends BaseController {
     @PostMapping
     public AjaxResult add(@RequestBody Bookings bookings) {
         return toAjax(bookingsService.insertBookings(bookings));
+    }
+
+    /**
+     * 活动报名 - 原子性操作，解决并发问题
+     */
+    @Log(title = "活动报名", businessType = BusinessType.INSERT)
+    @PostMapping("/signUp")
+    public AjaxResult signUp(@RequestBody Map<String, Object> params) {
+        try {
+            Long activityId = Long.valueOf(params.get("activityId").toString());
+            String studentId = (String) params.get("studentId");
+            Integer version = Integer.valueOf(params.get("version").toString());
+            
+            // 使用事务性的原子操作
+            int result = bookingsService.signUpWithTransaction(activityId, studentId, version);
+            
+            if (result > 0) {
+                return AjaxResult.success("报名成功");
+            } else {
+                return AjaxResult.error("报名失败，可能容量已满或已报名过");
+            }
+        } catch (Exception e) {
+            return AjaxResult.error("报名失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 活动取消报名 - 原子性操作，解决并发问题
+     */
+    @Log(title = "活动取消报名", businessType = BusinessType.DELETE)
+    @PostMapping("/cancelSignUp")
+    public AjaxResult cancelSignUp(@RequestBody Map<String, Object> params) {
+        try {
+            Long activityId = Long.valueOf(params.get("activityId").toString());
+            String studentId = (String) params.get("studentId");
+            Integer version = Integer.valueOf(params.get("version").toString());
+            
+            // 使用事务性的原子操作
+            int result = bookingsService.cancelSignUpWithTransaction(activityId, studentId, version);
+            
+            if (result > 0) {
+                return AjaxResult.success("取消报名成功");
+            } else {
+                return AjaxResult.error("取消报名失败，可能未报名或已取消");
+            }
+        } catch (Exception e) {
+            return AjaxResult.error("取消报名失败: " + e.getMessage());
+        }
     }
 
     /**
