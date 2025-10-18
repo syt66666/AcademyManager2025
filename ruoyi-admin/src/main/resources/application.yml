@@ -7,15 +7,15 @@ ruoyi:
   # 版权年份
   copyrightYear: 2024
   # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
-#  profile: D:/ruoyi/uploadPath
-  profile: C:\\project_uploads\\competition
+  profile: D:/ruoyi/uploadPath
+#  profile: C:\\project_uploads\\competition
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
   captchaType: math
 # 新增文件上传路径配置（与原有配置合并）
 file:
-  upload-dir: C:\\project_uploads\\competition  # 绝对路径
+  upload-dir: D:\\ruoyi\\uploadPath  # 绝对路径
   max-file-size: 50MB
   allowed-extensions: png,jpg,jpeg,pdf,zip,rar,7z
 
