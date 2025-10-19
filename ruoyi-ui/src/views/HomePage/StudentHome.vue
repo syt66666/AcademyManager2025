@@ -244,9 +244,6 @@
         <div class="detail-header">
           <h3 class="detail-title">{{ currentNotification.notiTitle }}</h3>
           <div class="detail-meta">
-            <span class="detail-type">
-              <el-tag size="small" type="info">{{ currentNotification.notiType || '系统通知' }}</el-tag>
-            </span>
             <span class="detail-time">{{ formatDateTime(currentNotification.createdAt) }}</span>
           </div>
         </div>
@@ -2059,16 +2056,11 @@ export default {
 .detail-meta {
   display: flex;
   align-items: center;
-  gap: 20px;
   font-size: 14px;
   color: #6b7280;
   font-weight: 400;
 }
 
-.detail-type {
-  display: flex;
-  align-items: center;
-}
 
 .detail-time {
   display: flex;
