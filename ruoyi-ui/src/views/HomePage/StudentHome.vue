@@ -5,31 +5,23 @@
       <!-- 左上角通知栏 -->
       <div class="notification-panel">
         <div class="panel-header">
-          <i class="el-icon-bell"></i>
-          <span>书院通知</span>
+          <div class="header-left">
+            <i class="el-icon-bell"></i>
+            <span>书院通知</span>
+          </div>
+          <el-button type="text" size="small" @click="goToAllNotifications" class="all-button">
+            全部
+          </el-button>
         </div>
         <div class="notification-content">
-          <!-- 通知类型标签页 -->
-          <div class="notification-tabs">
-            <div
-              v-for="tab in notificationTabs"
-              :key="tab.value"
-              class="notification-tab"
-              :class="{ active: selectedNotificationType === tab.value }"
-              @click="filterNotificationsByType(tab.value)"
-            >
-              {{ tab.label }}
-            </div>
-          </div>
-
           <!-- 通知列表 -->
-          <div v-if="filteredNotifications.length === 0" class="no-notification">
+          <div v-if="notifications.length === 0" class="no-notification">
             <i class="el-icon-info"></i>
             <span>暂无通知</span>
           </div>
           <div v-else class="notification-list">
             <div
-              v-for="notification in filteredNotifications"
+              v-for="notification in notifications"
               :key="notification.notiId"
               class="notification-item"
               @click="showNotificationDetail(notification)"
@@ -52,8 +44,13 @@
       <!-- 右上角近期活动通知 -->
       <div class="recent-activities-panel">
         <div class="panel-header">
-          <i class="el-icon-calendar"></i>
-          <span>近期活动</span>
+          <div class="header-left">
+            <i class="el-icon-calendar"></i>
+            <span>近期活动</span>
+          </div>
+          <el-button type="text" size="small" @click="goToAllActivities" class="all-button">
+            全部
+          </el-button>
         </div>
         <div class="activities-content">
           <div v-if="recentActivities.length === 0" class="no-activity">
@@ -67,8 +64,13 @@
               class="activity-item"
               @click="goToActivityBooking(activity)"
             >
-              <div class="activity-name">{{ activity.activityName }}</div>
-              <div class="activity-time">{{ formatDateTime(activity.startTime) }}</div>
+              <div class="activity-content">
+                <div class="activity-name">{{ activity.activityName }}</div>
+                <div class="activity-times">
+                  <span class="time-info">报名截止：{{ formatDateTime(activity.activityDeadline) }}</span>
+                  <span class="time-info">活动结束：{{ formatDateTime(activity.endTime) }}</span>
+                </div>
+              </div>
               <div class="activity-status">
                 <el-tag :type="getActivityStatusTag(activity)" size="mini">
                   {{ getActivityStatusText(activity) }}
@@ -85,7 +87,6 @@
       <!-- 左边活动完成情况 -->
       <div class="activity-completion-panel">
         <div class="panel-header">
-          <i class="el-icon-pie-chart"></i>
           <span>活动完成进度</span>
         </div>
         <div class="completion-content">
@@ -94,8 +95,16 @@
               v-for="category in activityCategories"
               :key="category.type"
               class="progress-category"
+              @click="goToActivityParticipateByType(category.type)"
             >
-              <div class="category-label">{{ category.name }}</div>
+              <el-tooltip
+                :content="getCompletedActivitiesText(category)"
+                placement="top"
+                effect="dark"
+                :disabled="category.completed === 0"
+              >
+                <div class="category-label">{{ category.name }}</div>
+              </el-tooltip>
               <div class="progress-bar-container">
                 <div class="progress-bar">
                   <div
@@ -113,7 +122,6 @@
       <!-- 右边活动状态筛选 -->
       <div class="activity-status-panel">
         <div class="panel-header">
-          <i class="el-icon-filter"></i>
           <span>活动状态筛选</span>
         </div>
         <div class="status-content">
@@ -157,144 +165,66 @@
         <div class="panel-header">
           <i class="el-icon-reading"></i>
           <span>我的选课记录</span>
-          <span class="record-count">共 {{ totalCourses }} 条记录</span>
+          <div class="header-right">
+            <span class="record-count">共 {{ totalCourses }} 条记录</span>
+            <el-button type="text" size="small" @click="goToAllCourses" class="all-button">
+              全部
+            </el-button>
+          </div>
         </div>
         <div class="courses-content">
-          <el-table
-            :data="selectedCourses"
-            style="width: 100%"
-            class="modern-table"
-            :header-cell-style="{backgroundColor: '#f8fafc', color: '#303133'}"
-            v-loading="coursesLoading"
-            empty-text="暂无数据"
-          >
-            <!-- 序号列 -->
-            <el-table-column label="序号" width="80" align="center">
-              <template v-slot="scope">
-                <span
-                  class="index-badge"
-                  :class="{ 'rejected-badge': scope.row.status === '未通过' }"
-                >
-                  {{ scope.$index + 1 }}
-                </span>
-              </template>
-            </el-table-column>
-            <el-table-column label="课程名称" align="center" prop="courseName" />
-            <!-- 类型列 -->
-            <el-table-column label="课程性质" align="center" width="120">
-              <template slot-scope="scope">
-                <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
-                  {{ getCourseCategoryName(scope.row.courseCategory) || '未分类' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="课程类型" align="center" prop="courseType" width="200">
-              <template slot-scope="scope">
-                <el-tag :type="getCourseTypeTagType(scope.row.courseType)" effect="plain" class="course-type-tag">
-                  {{ getCourseTypeName(scope.row.courseType) || '未分类' }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <!-- 学分列 -->
-            <el-table-column label="学分" align="center" width="80">
-              <template slot-scope="scope">
-                <span class="credit-value">{{ scope.row.courseCredit || 0 }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="课程地点" align="center" prop="courseLocation" />
-            <el-table-column label="组织单位" align="center" prop="organizer" />
-            <!-- 成绩来源于列 -->
-            <el-table-column label="成绩来源于" align="center" width="120">
-              <template slot-scope="scope">
-                <el-tag
-                  v-if="scope.row.scoreType"
-                  :type="getScoreTypeTagType(scope.row.scoreType)"
-                  effect="plain"
-                  class="score-type-tag"
-                >
-                  {{ scope.row.scoreType }}
-                </el-tag>
-                <span v-else class="no-score-type">暂无成绩</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="课程开始时间" align="center" prop="startTime" >
-              <template slot-scope="scope">
-                <span>{{ formatDateTime(scope.row.startTime) }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="课程结束时间" align="center" prop="endTime">
-              <template slot-scope="scope">
-                <span>{{ formatDateTime(scope.row.endTime) }}</span>
-              </template>
-            </el-table-column>
-
-            <el-table-column label="材料提交" align="center" width="120">
-              <template slot-scope="scope">
-                <!-- 课程未结束时显示提示信息 -->
-                <el-tag
-                  v-if="!isCourseEnded(scope.row.endTime)"
-                  type="info"
-                  effect="light"
-                  class="status-tag"
-                >课程未结束</el-tag>
-                <!-- 课程结束后显示上传按钮或状态标签 -->
-                <template v-else>
-                  <el-button
-                    v-if="scope.row.status === '未提交'"
-                    type="text"
-                    size="mini"
-                    class="action-button upload-button"
-                    @click="openUploadDialog(scope.row)"
-                  >提交</el-button>
-                  <!-- 未通过状态 -->
-                  <el-tag
-                    v-if="scope.row.status === '未通过'"
-                    type="danger"
-                    effect="light"
-                    class="status-tag clickable-tag"
-                    @click="openUploadDialog(scope.row)"
-                  >
-                    重新提交
-                  </el-tag>
-                  <!-- 未考核状态 - 添加点击功能 -->
-                  <el-tag
-                    v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
-                    type="warning"
-                    effect="light"
-                    class="clickable-tag"
-                    @click="openUploadDialog(scope.row)"
-                  >
-                    未考核
-                  </el-tag>
-                  <!-- 已通过状态 - 添加点击功能 -->
-                  <el-tag
-                    v-if="scope.row.status === '已通过'"
-                    type="success"
-                    effect="light"
-                    class="status-tag clickable-tag"
-                    @click="openUploadDialog(scope.row)"
-                  >
-                    已通过
-                  </el-tag>
-                </template>
-              </template>
-            </el-table-column>
-          </el-table>
-
-          <!-- 分页组件 -->
-          <div class="pagination-container">
-            <el-pagination
-              @size-change="handleSizeChange"
-              @current-change="handleCurrentChange"
-              :current-page="currentPage"
-              :page-sizes="[10, 20, 50, 100]"
-              :page-size="pageSize"
-              layout="total, sizes, prev, pager, next, jumper"
-              :total="totalCourses"
-              background
-            >
-            </el-pagination>
+          <div v-if="selectedCourses.length === 0" class="no-course">
+            <i class="el-icon-info"></i>
+            <span>暂无选课记录</span>
           </div>
+          <div v-else class="course-list">
+            <div
+              v-for="course in selectedCourses"
+              :key="course.id"
+              class="course-item"
+              @click="goToCourseParticipate(course)"
+            >
+              <div class="course-content">
+                <div class="course-header">
+                  <div class="course-name">{{ course.courseName }}</div>
+                  <div class="course-status">
+                    <el-tag :type="getCourseStatusTag(course.status)" size="mini">
+                      {{ course.status }}
+                    </el-tag>
+                  </div>
+                </div>
+                <div class="course-info-layout">
+                  <div class="info-row">
+                    <div class="left-info">
+                      <span class="info-label">课程开始时间：</span>
+                      <span class="info-value">{{ formatDateTime(course.courseStart) }}</span>
+                    </div>
+                    <div class="right-info">
+                      <span class="info-label">
+                        <i class="el-icon-location"></i>
+                        地点：
+                      </span>
+                      <span class="info-value">{{ course.courseLocation || '未设置地点' }}</span>
+                    </div>
+                  </div>
+                  <div class="info-row">
+                    <div class="left-info">
+                      <span class="info-label">课程结束时间：</span>
+                      <span class="info-value">{{ formatDateTime(course.courseDeadline) }}</span>
+                    </div>
+                    <div class="right-info">
+                      <span class="info-label">
+                        <i class="el-icon-trophy"></i>
+                        成绩：
+                      </span>
+                      <span class="info-value">{{ course.scoreType || '暂无成绩' }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -391,15 +321,6 @@ export default {
       // 通知数据
       notifications: [],
 
-      // 通知类型筛选
-      selectedNotificationType: 'all',
-      notificationTabs: [
-        { value: 'all', label: '全部' },
-        { value: 'system', label: '系统通知' },
-        { value: 'activity', label: '活动通知' },
-        { value: 'course', label: '课程通知' }
-      ],
-
       // 通知详情弹窗
       notificationDialogVisible: false,
       currentNotification: null,
@@ -452,9 +373,6 @@ export default {
       selectedCourses: [],
       totalCourses: 0,
 
-      // 分页数据
-      currentPage: 1,
-      pageSize: 10,
 
       // 加载状态
       loading: false,
@@ -479,17 +397,6 @@ export default {
       const sidebarWidth = screenWidth > 1200 ? 200 : (screenWidth > 768 ? 64 : 0);
       const availableWidth = screenWidth - sidebarWidth - 40; // 减去40px的边距
       return Math.max(availableWidth, 600) + 'px'; // 最小宽度600px
-    },
-
-    // 筛选后的通知列表
-    filteredNotifications() {
-      if (this.selectedNotificationType === 'all') {
-        return this.notifications;
-      }
-      return this.notifications.filter(notification => {
-        const notiType = notification.notiType || 'system';
-        return notiType === this.selectedNotificationType;
-      });
     }
   },
   created() {
@@ -630,10 +537,10 @@ export default {
     async loadRecentActivities() {
       this.activitiesLoading = true;
       try {
-        // 不限制组织者，获取所有活动
+        // 获取所有活动
         const response = await listActivities({
           pageNum: 1,
-          pageSize: 100 // 获取更多数据以便过滤
+          pageSize: 1000 // 获取所有数据
         });
 
         console.log('活动API响应:', response);
@@ -642,33 +549,15 @@ export default {
           const allActivities = response.rows || [];
           console.log('所有活动数据:', allActivities);
 
-          // 计算一个月前的时间
-          const oneMonthAgo = new Date();
-          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-          console.log('一个月前时间:', oneMonthAgo);
+          // 按activity_start时间倒序排列所有活动
+          const sortedActivities = allActivities
+            .filter(activity => activity.activityStart) // 过滤掉没有activity_start时间的活动
+            .sort((a, b) => new Date(b.activityStart) - new Date(a.activityStart));
 
-          // 过滤出一个月内的活动并按时间倒序排列
-          let filteredActivities = allActivities
-            .filter(activity => {
-              if (!activity.startTime) return false;
-              const activityTime = new Date(activity.startTime);
-              console.log('活动时间:', activityTime, '是否在一个月内:', activityTime >= oneMonthAgo);
-              return activityTime >= oneMonthAgo;
-            })
-            .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+          // 取前5个活动
+          this.recentActivities = sortedActivities.slice(0, 5);
 
-          // 如果一个月内的活动不足3个，则获取最近的活动
-          if (filteredActivities.length < 3) {
-            console.log('一个月内活动不足3个，获取最近的活动');
-            filteredActivities = allActivities
-              .filter(activity => activity.startTime)
-              .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
-              .slice(0, 5);
-          }
-
-          this.recentActivities = filteredActivities.slice(0, 5);
-
-          console.log('过滤后的近期活动:', this.recentActivities);
+          console.log('按activity_start时间倒序排列的近期活动:', this.recentActivities);
         } else {
           console.error('API响应错误:', response);
           this.$message.error('加载近期活动失败');
@@ -723,16 +612,27 @@ export default {
             const categoryRecords = bookingRecords.filter(record =>
               this.getActivityType(record.activityType) === category.type
             );
-            category.completed = categoryRecords.filter(record =>
+            // 获取已完成的活动
+            const completedRecords = categoryRecords.filter(record =>
               record.status === '已通过'
-            ).length;
+            );
+            
+            category.completed = completedRecords.length;
             category.total = Math.max(categoryRecords.length, 8); // 至少显示8个
             category.progress = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
+            
+            // 添加已完成活动的详细信息
+            category.completedActivities = completedRecords.map(record => ({
+              name: record.activityName,
+              activityId: record.activityId,
+              completedTime: record.updatedAt || record.createdAt
+            }));
 
             console.log(`分类 ${category.name} 统计:`, {
               completed: category.completed,
               total: category.total,
-              progress: category.progress
+              progress: category.progress,
+              completedActivities: category.completedActivities
             });
           });
 
@@ -752,13 +652,21 @@ export default {
       this.coursesLoading = true;
       try {
         const response = await listBookingsWithCourse({
-          pageNum: this.currentPage,
-          pageSize: this.pageSize,
+          pageNum: 1,
+          pageSize: 1000, // 获取所有数据
           studentId: this.$store.state.user.name
         });
         if (response.code === 200) {
-          this.selectedCourses = response.rows || [];
-          this.totalCourses = response.total || 0;
+          const allCourses = response.rows || [];
+          
+          // 按course_start时间倒序排列选课记录
+          this.selectedCourses = allCourses
+            .filter(course => course.courseStart) // 过滤掉没有course_start时间的课程
+            .sort((a, b) => new Date(b.courseStart) - new Date(a.courseStart));
+          
+          this.totalCourses = this.selectedCourses.length;
+          
+          console.log('按course_start时间倒序排列的选课记录:', this.selectedCourses);
         } else {
           this.$message.error('加载选课记录失败');
         }
@@ -927,14 +835,26 @@ export default {
 
     // 根据状态筛选
     filterByStatus(status) {
-      this.selectedStatus = status;
-      this.$message.info(`筛选状态: ${status}`);
+      this.$router.push({
+        path: '/Activity/ActivityParticipate',
+        query: {
+          status: status,
+          autoFilter: 'true'
+        }
+      }).catch(error => {
+        console.error('跳转到活动参与页面失败:', error);
+        this.$message.error('跳转到活动参与页面失败，请检查路由配置');
+      });
     },
 
     // 清除状态筛选
     clearStatusFilter() {
-      this.selectedStatus = null;
-      this.$message.info('显示全部活动');
+      this.$router.push({
+        path: '/Activity/ActivityParticipate'
+      }).catch(error => {
+        console.error('跳转到活动参与页面失败:', error);
+        this.$message.error('跳转到活动参与页面失败，请检查路由配置');
+      });
     },
 
     // 跳转到活动预约界面
@@ -974,11 +894,6 @@ export default {
       done();
     },
 
-    // 根据类型筛选通知
-    filterNotificationsByType(type) {
-      this.selectedNotificationType = type;
-    },
-
     // 格式化通知日期
     formatNotificationDate(date) {
       if (!date) return '';
@@ -1004,17 +919,100 @@ export default {
       return notification.priority === 'high' || notification.isTop === true;
     },
 
-    // 分页大小改变
-    handleSizeChange(val) {
-      this.pageSize = val;
-      this.currentPage = 1; // 重置到第一页
-      this.loadSelectedCourses();
+
+    // 获取已完成活动的显示文本
+    getCompletedActivitiesText(category) {
+      if (!category.completedActivities || category.completedActivities.length === 0) {
+        return '暂无已完成的活动';
+      }
+      
+      const activityNames = category.completedActivities.map(activity => activity.name);
+      return `已完成的活动：\n${activityNames.join('\n')}`;
     },
 
-    // 当前页改变
-    handleCurrentChange(val) {
-      this.currentPage = val;
-      this.loadSelectedCourses();
+    // 跳转到所有通知页面
+    goToAllNotifications() {
+      console.log('跳转到所有通知页面');
+      this.$message.info('跳转到通知管理页面');
+      // 这里可以添加跳转到通知管理页面的逻辑
+      // this.$router.push({ path: '/system/notice' });
+    },
+
+    // 跳转到所有活动页面（活动预约界面）
+    goToAllActivities() {
+      console.log('跳转到活动预约界面 - 活动列表视图');
+      this.$router.push({
+        path: '/Activity/ActivityBooking',
+        query: { 
+          view: 'list',  // 指定跳转到活动列表视图
+          tab: 'activity-list'  // 指定活动列表标签页
+        }
+      }).then(() => {
+        console.log('成功跳转到活动预约界面 - 活动列表视图');
+      }).catch(error => {
+        console.error('跳转到活动预约界面失败:', error);
+        this.$message.error('跳转到活动预约界面失败，请检查路由配置');
+      });
+    },
+
+    // 根据活动类型跳转到活动参与界面
+    goToActivityParticipateByType(activityType) {
+      console.log('准备跳转到活动参与界面，活动类型:', activityType);
+      
+      // 将类型映射为数字
+      const typeMap = {
+        'personality': '1',  // 人格塑造与价值引领活动类
+        'knowledge': '2',    // 知识融合与思维进阶活动类
+        'ability': '3',      // 能力锻造与实践创新活动类
+        'social': '4'        // 社会责任与领军意识活动类
+      };
+      
+      const typeValue = typeMap[activityType] || activityType;
+      
+      this.$router.push({
+        path: '/Activity/ActivityParticipate',
+        query: {
+          activityType: typeValue,
+          autoFilter: 'true'
+        }
+      }).then(() => {
+        console.log('成功跳转到活动参与界面，类型筛选:', typeValue);
+      }).catch(error => {
+        console.error('跳转到活动参与界面失败:', error);
+        this.$message.error('跳转到活动参与界面失败，请检查路由配置');
+      });
+    },
+
+    // 跳转到课程参与界面
+    goToCourseParticipate(course) {
+      console.log('准备跳转到课程参与界面，课程信息:', course);
+      
+      this.$router.push({
+        path: '/Course/CourseParticipate',
+        query: {
+          courseId: course.id || course.courseId,
+          courseName: course.courseName,
+          autoFilter: 'true'
+        }
+      }).then(() => {
+        console.log('成功跳转到课程参与界面，课程ID:', course.id || course.courseId);
+      }).catch(error => {
+        console.error('跳转到课程参与界面失败:', error);
+        this.$message.error('跳转到课程参与界面失败，请检查路由配置');
+      });
+    },
+
+    // 跳转到所有课程页面
+    goToAllCourses() {
+      console.log('跳转到所有课程页面');
+      this.$router.push({
+        path: '/Course/CourseParticipate'
+      }).then(() => {
+        console.log('成功跳转到所有课程页面');
+      }).catch(error => {
+        console.error('跳转到所有课程页面失败:', error);
+        this.$message.error('跳转到所有课程页面失败，请检查路由配置');
+      });
     }
   }
 };
@@ -1075,6 +1073,7 @@ export default {
 .panel-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 16px 20px;
   background: linear-gradient(135deg, #409EFF, #64b5ff);
   color: white;
@@ -1082,10 +1081,25 @@ export default {
   font-size: 16px;
 }
 
-.panel-header i {
-  margin-right: 8px;
-  font-size: 18px;
+.header-left {
+  display: flex;
+  align-items: center;
 }
+
+.all-button {
+  color: white !important;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  margin-left: auto;
+}
+
+.all-button:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
 
 .view-all-btn {
   margin-left: auto;
@@ -1108,9 +1122,14 @@ export default {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.record-count {
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-left: auto;
-  margin-right: 10px;
+}
+
+.record-count {
   font-size: 12px;
   opacity: 0.9;
 }
@@ -1118,10 +1137,13 @@ export default {
 /* 面板内容 */
 .notification-content,
 .activities-content,
-.completion-content,
-.status-content,
 .courses-content {
   padding: 20px;
+}
+
+.completion-content,
+.status-content {
+  padding: 12px 16px; /* 减少内边距，让内容更紧凑 */
 }
 
 /* 通知类型标签页 */
@@ -1131,34 +1153,13 @@ export default {
   margin-bottom: 16px;
 }
 
-.notification-tab {
-  flex: 1;
-  padding: 8px 12px;
-  text-align: center;
-  font-size: 14px;
-  color: #606266;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-bottom: 2px solid transparent;
-}
-
-.notification-tab:hover {
-  color: #409EFF;
-  background: #f0f9ff;
-}
-
-.notification-tab.active {
-  color: #409EFF;
-  background: #f0f9ff;
-  border-bottom-color: #409EFF;
-  font-weight: 600;
-}
 
 /* 通知列表 */
 .notification-list {
-  max-height: 400px;  /* 增加高度以显示更多通知 */
+  max-height: 240px;  /* 与活动列表保持一致的高度 */
   overflow-y: auto;
   overflow-x: hidden;  /* 隐藏水平滚动条 */
+  min-height: 240px;  /* 设置最小高度，保持与活动列表对齐 */
 }
 
 /* 自定义滚动条样式 - 类似近期活动 */
@@ -1254,7 +1255,7 @@ export default {
 
 /* 活动列表 */
 .activity-list {
-  max-height: 400px;  /* 与通知列表保持一致的高度 */
+  max-height: 240px;  /* 限制高度，确保只显示3条活动 */
   overflow-y: auto;
   min-height: auto;  /* 移除固定最小高度，让内容自适应 */
 }
@@ -1266,8 +1267,9 @@ export default {
   transition: all 0.3s ease;
   min-height: auto;  /* 移除固定最小高度，让内容自适应 */
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .activity-item:last-child {
@@ -1280,6 +1282,12 @@ export default {
   border-radius: 6px;
 }
 
+.activity-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 .activity-name {
   font-weight: 500;
   color: #303133;
@@ -1288,23 +1296,51 @@ export default {
   line-height: 1.4;
 }
 
-.activity-time {
+.activity-times {
+  margin-bottom: 8px;
+}
+
+.time-info {
+  display: block;
   font-size: 12px;
   color: #909399;
-  margin-bottom: 8px;
+  margin-bottom: 2px;
+  line-height: 1.4;
+}
+
+.time-info:last-child {
+  margin-bottom: 0;
+}
+
+.activity-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
 
 /* 活动完成进度 */
 .progress-categories {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: px; /* 减少间距，让内容更紧凑 */
 }
 
 .progress-category {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.progress-category:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .category-label {
@@ -1322,16 +1358,16 @@ export default {
 
 .progress-bar {
   width: 100%;
-  height: 8px;
+  height: 6px; /* 减少进度条高度，让内容更紧凑 */
   background: #f0f2f5;
-  border-radius: 4px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #409EFF, #64b5ff);
-  border-radius: 4px;
+  border-radius: 3px; /* 与进度条圆角保持一致 */
   transition: width 0.3s ease;
 }
 
@@ -1346,20 +1382,22 @@ export default {
 /* 状态筛选 */
 .status-filters {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 10px; /* 增加间距，让内容更舒适 */
+  flex-wrap: nowrap; /* 不换行，确保在一行显示 */
+  justify-content: space-between; /* 平均分布 */
 }
 
 .status-filter-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px 16px; /* 增加内边距，让内容更饱满 */
   background: #f8fafc;
   border-radius: 8px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 120px;
+  flex: 1; /* 让每个项目平均分配宽度 */
+  min-width: 0; /* 允许flex收缩 */
 }
 
 .status-filter-item:hover {
@@ -1388,14 +1426,14 @@ export default {
 }
 
 .status-icon {
-  width: 32px;
+  width: 32px; /* 增加图标大小 */
   height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px;
-  font-size: 14px;
+  margin-right: 10px; /* 增加右边距 */
+  font-size: 16px; /* 增加字体大小 */
 }
 
 .status-icon.unsubmitted {
@@ -1429,13 +1467,13 @@ export default {
 }
 
 .status-count {
-  font-size: 18px;
+  font-size: 18px; /* 增加数字大小 */
   font-weight: 700;
   line-height: 1;
 }
 
 .status-label {
-  font-size: 12px;
+  font-size: 13px; /* 增加标签字体大小 */
   margin-top: 2px;
 }
 
@@ -1660,17 +1698,167 @@ export default {
 
 /* 无数据状态 */
 .no-notification,
-.no-activity {
+.no-activity,
+.no-course {
   text-align: center;
   color: #909399;
   padding: 20px 0;  /* 减少内边距，避免大块空白 */
 }
 
 .no-notification i,
-.no-activity i {
+.no-activity i,
+.no-course i {
   font-size: 32px;
   margin-bottom: 8px;
   display: block;
+}
+
+/* 课程列表样式 */
+.course-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-height: 120px; /* 调整高度以只显示一行（2个课程） */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 8px;
+}
+
+/* 自定义滚动条样式 */
+.course-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.course-list::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.course-list::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 3px;
+}
+
+.course-list::-webkit-scrollbar-thumb:hover {
+  background: #a8abb2;
+}
+
+.course-item {
+  padding: 12px; /* 减少内边距以适应单行显示 */
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px; /* 减少间距 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  height: 100px; /* 设置固定高度，确保单行显示 */
+}
+
+.course-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.05), rgba(64, 158, 255, 0.02));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.course-item:hover {
+  background: #f8f9fa;
+  border-color: #409EFF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+}
+
+.course-item:hover::before {
+  opacity: 1;
+}
+
+.course-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.course-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.course-name {
+  font-weight: 600;
+  color: #303133;
+  font-size: 14px; /* 稍微减少字体大小 */
+  line-height: 1.3;
+  flex: 1;
+}
+
+.course-info-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 4px; /* 减少间距以适应固定高度 */
+  margin-top: 4px;
+  flex: 1;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px; /* 减少间距以适应固定高度 */
+}
+
+.left-info,
+.right-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.left-info {
+  justify-content: flex-start;
+}
+
+.right-info {
+  justify-content: flex-end;
+}
+
+.info-label {
+  font-size: 11px; /* 减少字体大小 */
+  color: #909399;
+  min-width: 50px; /* 减少最小宽度 */
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.info-label i {
+  color: #909399;
+  font-size: 11px; /* 减少图标大小 */
+}
+
+.info-value {
+  font-size: 11px; /* 减少字体大小 */
+  color: #606266;
+  flex: 1;
+}
+
+.course-status {
+  flex-shrink: 0;
 }
 
 /* 响应式设计 */
@@ -1707,6 +1895,39 @@ export default {
 
   .status-filter-item {
     min-width: auto;
+  }
+
+  /* 移动端课程列表改为单列 */
+  .course-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .course-item {
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .course-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .left-info,
+  .right-info {
+    justify-content: flex-start;
+  }
+
+  .info-label {
+    min-width: 50px;
   }
 }
 

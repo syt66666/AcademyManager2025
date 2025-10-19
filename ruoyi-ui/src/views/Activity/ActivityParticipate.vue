@@ -640,8 +640,30 @@ export default {
   created() {
     this.getAllActivitiesForStats();
     this.getList();
+    this.checkRouteParams();
   },
   methods: {
+    // 检查路由参数并自动筛选
+    checkRouteParams() {
+      const { status, activityType, autoFilter } = this.$route.query;
+      
+      if (autoFilter === 'true') {
+        // 延迟执行筛选，确保页面完全加载
+        this.$nextTick(() => {
+          // 优先处理活动类型筛选
+          if (activityType) {
+            this.filterByActivityType(activityType);
+          }
+          // 然后处理状态筛选
+          else if (status) {
+            this.filterByStatus(status);
+          }
+          // 清除路由参数
+          this.$router.replace({ path: this.$route.path, query: {} });
+        });
+      }
+    },
+
     // 活动类型映射函数：将数字转换为对应的类型名称
     getActivityTypeName(activityType) {
       const typeMap = {
@@ -1170,7 +1192,12 @@ export default {
       listBookingsWithActivity(this.queryParams).then(response => {
         let rows = response.rows || [];
 
-        // 本地筛选：如果选择了进度条类型，则只显示该类型且状态为“已通过”的记录
+        // 本地筛选：如果选择了状态，则只显示该状态的记录
+        if (this.selectedStatus) {
+          rows = rows.filter(item => item.status === this.selectedStatus);
+        }
+
+        // 本地筛选：如果选择了进度条类型，则只显示该类型且状态为"已通过"的记录
         if (this.selectedActivityType) {
           rows = rows.filter(item => String(item.activityType) === String(this.selectedActivityType) && item.status === '已通过');
         }

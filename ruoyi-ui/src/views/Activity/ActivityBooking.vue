@@ -568,6 +568,8 @@ export default {
     await this.getCurrentStudentInfo();
     // 初始加载取消限制信息
     await this.loadCancelLimitInfo();
+    // 检查路由参数，处理从首页跳转过来的活动详情请求
+    await this.checkRouteParams();
 
   },
   async mounted() {
@@ -611,6 +613,89 @@ export default {
       } catch (error) {
         // 如果获取服务器时间失败，使用本地时间作为备用
         this.serverTime = new Date();
+      }
+    },
+
+    /** 检查路由参数，处理从首页跳转过来的活动详情请求 */
+    async checkRouteParams() {
+      const { activityId, view, tab } = this.$route.query;
+      
+      // 处理视图切换参数
+      if (view === 'list' || tab === 'activity-list') {
+        console.log('检测到活动列表视图参数，切换到活动列表标签页');
+        this.activeView = 'list';
+      }
+      
+      if (activityId) {
+        console.log('=== 开始处理路由参数 ===');
+        console.log('检测到路由参数 activityId:', activityId, '类型:', typeof activityId);
+        
+        try {
+          // 直接通过API获取指定活动，不依赖当前页面的活动列表
+          console.log('通过API直接获取活动详情...');
+          const response = await this.getActivityById(activityId);
+          
+          if (response && response.activityId) {
+            console.log('通过API找到活动:', response.activityName);
+            
+            // 等待一小段时间确保页面完全加载
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 自动打开活动详情弹窗
+            this.handleDetail(response);
+            console.log('成功打开活动详情弹窗');
+          } else {
+            console.error('=== API未返回活动数据 ===');
+            console.error('查找的活动ID:', activityId);
+            
+            // 如果API方式失败，尝试在当前活动列表中查找
+            console.log('尝试在当前活动列表中查找...');
+            if (this.activitiesList.length === 0) {
+              await this.getList();
+            }
+            
+            let targetActivity = this.activitiesList.find(activity => 
+              activity.activityId == activityId
+            );
+            
+            if (targetActivity) {
+              console.log('在当前列表中找到活动:', targetActivity.activityName);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              this.handleDetail(targetActivity);
+            } else {
+              this.$message.warning(`未找到ID为 ${activityId} 的活动，请检查活动是否存在`);
+            }
+          }
+          
+        } catch (error) {
+          console.error('处理路由参数时出错:', error);
+          this.$message.error('处理活动详情请求时出错，请刷新页面重试');
+        }
+        
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
+        
+        console.log('=== 路由参数处理完成 ===');
+      }
+    },
+
+    /** 通过活动ID直接获取活动详情 */
+    async getActivityById(activityId) {
+      try {
+        // 使用getActivities API直接获取活动详情
+        const response = await getActivities(activityId);
+        if (response && response.code === 200) {
+          return response.data;
+        } else {
+          console.error('API返回错误:', response);
+          return null;
+        }
+      } catch (error) {
+        console.error('获取活动详情失败:', error);
+        return null;
       }
     },
 
