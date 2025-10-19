@@ -44,12 +44,17 @@
           <i class="el-icon-bell"></i>
           <span>通知列表</span>
           <el-tag type="info" size="small">{{ total }} 条通知</el-tag>
+          <el-tag v-if="currentUserCollege" type="success" size="small" style="margin-left: 8px;">
+            <i class="el-icon-filter"></i>
+            {{ currentUserCollege }} 书院
+          </el-tag>
         </div>
         <div class="header-right">
           <el-button
             type="primary"
             icon="el-icon-plus"
             @click="showPublishDialog"
+            v-if="canManageNotifications"
             class="add-button"
           >
             发布通知
@@ -89,6 +94,7 @@
                 icon="el-icon-edit"
                 @click.stop="editNotification(notification)"
                 title="编辑通知"
+                v-if="canManageNotifications"
                 class="action-btn edit-btn"
               ></el-button>
               <el-button
@@ -97,6 +103,7 @@
                 icon="el-icon-delete"
                 @click.stop="deleteNotification(notification)"
                 title="删除通知"
+                v-if="canManageNotifications"
                 class="action-btn delete-btn"
               ></el-button>
             </div>
@@ -119,8 +126,9 @@
     <el-dialog
       title="通知详情"
       :visible.sync="detailDialogVisible"
-      width="600px"
+      :width="dialogWidth"
       :close-on-click-modal="false"
+      custom-class="notification-dialog"
     >
       <div v-if="currentNotification" class="notification-detail">
         <div class="detail-header">
@@ -136,7 +144,7 @@
           <p>{{ currentNotification.notiContent }}</p>
         </div>
       </div>
-
+      
       <div slot="footer" class="dialog-footer">
         <el-button @click="detailDialogVisible = false">关闭</el-button>
       </div>
@@ -171,7 +179,7 @@
           ></el-input>
         </el-form-item>
       </el-form>
-
+      
       <div slot="footer" class="dialog-footer">
         <el-button @click="publishDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitPublish" :loading="publishSubmitting">发布</el-button>
@@ -207,7 +215,7 @@
           ></el-input>
         </el-form-item>
       </el-form>
-
+      
       <div slot="footer" class="dialog-footer">
         <el-button @click="editDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitEdit" :loading="editSubmitting">保存</el-button>
@@ -218,6 +226,7 @@
 
 <script>
 import { listNotificationsPublic, addNotifications, updateNotifications, delNotifications } from "@/api/system/notifications";
+import { getStudent, getNickName } from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
 
 export default {
@@ -230,12 +239,14 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
+      // 当前用户书院
+      currentUserCollege: '',
       // 通知列表
       notifications: [],
       // 查询参数
       queryParams: {
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 20, // 增加初始加载数量以获取更多数据
         notiTitle: null
       },
       // 通知详情弹窗
@@ -284,6 +295,26 @@ export default {
       }
     };
   },
+  computed: {
+    // 参照首页书院通知弹窗宽度：根据屏幕宽度与侧边栏动态计算，最小 800px
+    dialogWidth() {
+      const screenWidth = window.innerWidth;
+      const sidebarWidth = screenWidth > 1200 ? 200 : (screenWidth > 768 ? 64 : 0);
+      const availableWidth = screenWidth - sidebarWidth - 40; // 预留边距
+      return Math.max(availableWidth, 800) + 'px';
+    },
+    // 管理按钮可见性：账号 username 为 admin 或 10001-10007 视为管理员
+    canManageNotifications() {
+      const userName = (this.$store.state.user && this.$store.state.user.name) || '';
+      if (!userName) return false;
+
+      if (userName === 'admin') return true;
+
+      const n = parseInt(userName, 10);
+      const inAdminRange = !isNaN(n) && n >= 10001 && n <= 10007;
+      return inAdminRange;
+    }
+  },
   created() {
     this.getList();
   },
@@ -291,13 +322,112 @@ export default {
     /** 查询通知列表 */
     async getList() {
       this.loading = true;
+      const startTime = Date.now();
+      
       try {
-        const response = await listNotificationsPublic(this.queryParams);
-        this.notifications = response.rows || [];
-        this.total = response.total || 0;
+        console.log('开始加载通知列表，查询参数:', this.queryParams);
+        
+        // 添加超时处理
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('请求超时')), 10000); // 10秒超时
+        });
+        
+        const apiPromise = listNotificationsPublic(this.queryParams);
+        const response = await Promise.race([apiPromise, timeoutPromise]);
+        
+        const loadTime = Date.now() - startTime;
+        console.log(`通知列表API响应 (耗时: ${loadTime}ms):`, response);
+        
+        if (response && response.code === 200) {
+          // 获取所有通知数据
+          const allNotifications = response.rows || [];
+          console.log('所有通知数据:', allNotifications);
+          
+          // 获取当前用户的书院信息
+          let userCollege = '';
+          try {
+            // 1) 优先：从学生信息API获取 academy
+            const studentResponse = await getStudent(this.$store.state.user.name);
+            if (studentResponse && studentResponse.studentInfo && studentResponse.studentInfo.academy) {
+              userCollege = studentResponse.studentInfo.academy;
+              console.log('当前用户书院（student.academy）:', userCollege);
+            }
+
+            // 2) 其次：从 store 获取 academy
+            if (!userCollege) {
+              userCollege = this.$store.state.user.academy || '';
+              if (userCollege) {
+                console.log('当前用户书院（store.academy）:', userCollege);
+              }
+            }
+
+            // 3) 兜底：部分管理端将 nickName 用作书院名
+            if (!userCollege) {
+              try {
+                const nn = await getNickName();
+                if (nn && nn.msg) {
+                  userCollege = nn.msg;
+                  console.log('当前用户书院（nickName 兜底）:', userCollege);
+                }
+              } catch (e) {
+                console.warn('获取 nickName 兜底失败:', e);
+              }
+            }
+
+            this.currentUserCollege = userCollege;
+          } catch (error) {
+            console.error('获取用户书院信息失败:', error);
+            this.currentUserCollege = '';
+          }
+          
+          // 根据用户书院过滤通知（匹配noti_type字段）
+          if (userCollege) {
+            console.log('开始筛选通知，用户书院:', userCollege);
+            console.log('筛选前通知数量:', allNotifications.length);
+            
+            // 显示所有不同的noti_type值用于调试
+            const uniqueTypes = [...new Set(allNotifications.map(n => n.noti_type || n.notiType))];
+            console.log('数据库中所有不同的noti_type值:', uniqueTypes);
+            
+            this.notifications = allNotifications.filter(notification => {
+              // 如果通知的noti_type与用户书院匹配，则显示
+              const notificationCollege = notification.noti_type || notification.notiType;
+              const isMatch = notificationCollege === userCollege;
+              if (isMatch) {
+                console.log(`匹配的通知: "${notification.notiTitle}" (书院: "${notificationCollege}")`);
+              }
+              return isMatch;
+            });
+            console.log('过滤后的书院通知数量:', this.notifications.length);
+          } else {
+            // 如果没有书院信息，显示所有通知
+            this.notifications = allNotifications;
+            console.log('未找到用户书院信息，显示所有通知');
+          }
+          
+          this.total = this.notifications.length;
+          console.log('筛选后的通知数量:', this.total);
+        } else {
+          console.log('API返回非200状态码:', response?.code, response?.msg);
+          this.$message.error('获取通知列表失败: ' + (response?.msg || '服务器返回错误'));
+          this.notifications = [];
+          this.total = 0;
+        }
+        
+        if (loadTime > 3000) {
+          console.warn('通知列表加载较慢，耗时:', loadTime + 'ms');
+        }
+        
       } catch (error) {
-        console.error('获取通知列表失败:', error);
-        this.$message.error('获取通知列表失败');
+        const loadTime = Date.now() - startTime;
+        console.error(`获取通知列表失败 (耗时: ${loadTime}ms):`, error);
+        
+        if (error.message === '请求超时') {
+          this.$message.error('请求超时，请检查网络连接');
+        } else {
+          this.$message.error('获取通知列表失败');
+        }
+        
         this.notifications = [];
         this.total = 0;
       } finally {
@@ -338,16 +468,6 @@ export default {
     formatNotificationTime(date) {
       if (!date) return '';
       return parseTime(date, '{y}-{m}-{d} {h}:{i}');
-    },
-
-    /** 获取通知类型标签 */
-    getNotificationTypeLabel(type) {
-      const typeMap = {
-        'system': '系统通知',
-        'activity': '活动通知',
-        'course': '课程通知'
-      };
-      return typeMap[type] || '系统通知';
     },
 
     /** 获取通知类型颜色 */
@@ -409,7 +529,7 @@ export default {
           try {
             const now = new Date();
             const localTimeString = now.toISOString();
-
+            
             const publishData = {
               ...this.publishForm,
               creatorId: this.$store.state.user.name || '',
@@ -471,6 +591,56 @@ export default {
 </script>
 
 <style scoped>
+.notification-dialog {
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e4e7ed;
+}
+
+.notification-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%) !important;
+  color: white !important;
+  padding: 20px 24px !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.notification-dialog .el-dialog__title {
+  color: white !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.notification-detail {
+  padding: 0;
+  min-height: 400px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+.detail-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 24px;
+  margin-bottom: 0;
+  background: #ffffff;
+}
+
+.detail-content {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .notification-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+}
 .app-container {
   padding: 20px;
   background: #f5f7fa;

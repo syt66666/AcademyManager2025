@@ -460,9 +460,35 @@ export default {
         console.log('总记录数:', response?.total);
 
         if (response && response.code === 200) {
-          // 确保数据格式正确
-          const notifications = response.rows || response.data || [];
-          this.notifications = Array.isArray(notifications) ? notifications : [];
+          // 获取所有通知数据
+          const allNotifications = response.rows || response.data || [];
+          console.log('所有通知数据:', allNotifications);
+          
+          // 获取当前用户的书院信息
+          let userCollege = '';
+          try {
+            const nickNameResponse = await getNickName();
+            if (nickNameResponse && nickNameResponse.msg) {
+              userCollege = nickNameResponse.msg;
+              console.log('当前用户书院（nickName）:', userCollege);
+            }
+          } catch (error) {
+            console.error('获取用户书院信息失败:', error);
+          }
+          
+          // 根据用户书院过滤通知（匹配noti_type字段）
+          if (userCollege) {
+            this.notifications = allNotifications.filter(notification => {
+              // 如果通知的noti_type与用户书院匹配，则显示
+              const notificationCollege = notification.noti_type || notification.notiType;
+              return notificationCollege === userCollege;
+            });
+            console.log('过滤后的书院通知:', this.notifications);
+          } else {
+            // 如果没有书院信息，显示所有通知
+            this.notifications = allNotifications;
+            console.log('未找到用户书院信息，显示所有通知');
+          }
 
           // 确保按创建时间降序排序（最新的在前）
           console.log('排序前的通知时间:', this.notifications.map(n => ({
@@ -492,6 +518,7 @@ export default {
               id: notification.notiId,
               title: notification.notiTitle,
               type: notification.notiType,
+              noti_type: notification.noti_type,
               content: notification.notiContent?.substring(0, 50) + '...',
               creator: notification.creatorId,
               createdAt: notification.createdAt
