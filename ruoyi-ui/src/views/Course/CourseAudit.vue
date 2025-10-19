@@ -582,10 +582,36 @@ export default {
     }
   },
   created() {
+    this.checkRouteParams();
     this.getList();
     this.fetchAuditCount();
   },
   methods: {
+    /** 检查路由参数，处理从首页跳转过来的筛选请求 */
+    checkRouteParams() {
+      const { status } = this.$route.query;
+
+      if (status) {
+        // 根据状态参数设置筛选条件
+        const statusMap = {
+          'pending': '未考核',
+          'approved': '已通过',
+          'rejected': '未通过'
+        };
+
+        this.queryParams.status = statusMap[status] || status;
+
+        // 显示筛选提示
+        this.$message.success(`已筛选${this.queryParams.status}的考核记录`);
+
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
+      }
+    },
+
     // 成绩标签类型判断
     getScoreTagType(score) {
       if (!score) return 'info';

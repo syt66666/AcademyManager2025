@@ -736,12 +736,13 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
+        courseId: null,
         courseName: null,
         courseLocation: null,
         courseType: null,
         courseCategory: null,
         organizer: null,
-
+        status: null
       },
       // 课程状态选项
       courseStatusOptions: [
@@ -1276,6 +1277,11 @@ export default {
           filteredList = filteredList.filter(r => r.courseCategory === selectedCategory);
         }
 
+        // 按课程ID过滤
+        if (this.queryParams.courseId) {
+          filteredList = filteredList.filter(r => r.courseId == this.queryParams.courseId);
+        }
+
         // 按照课程开始时间排序（从早到晚）
         this.coursesList = filteredList.sort((a, b) => {
           const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
@@ -1472,8 +1478,25 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
-      this.resetForm("queryForm");
-      this.handleQuery();
+      // 手动重置所有查询参数，确保所有筛选条件被清空
+      this.queryParams.courseId = null;
+      this.queryParams.courseName = null;
+      this.queryParams.courseLocation = null;
+      this.queryParams.courseType = null;
+      this.queryParams.courseCategory = null;
+      this.queryParams.status = null;
+      // 注意：不重置organizer，因为需要保持当前用户的组织者身份
+
+      // 重置表单显示
+      if (this.$refs.queryForm) {
+        this.$refs.queryForm.resetFields();
+      }
+
+      // 重置页码到第一页
+      this.queryParams.pageNum = 1;
+
+      // 重新获取列表
+      this.getList();
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
@@ -1482,24 +1505,31 @@ export default {
       this.multiple = !selection.length
     },
 
-    /** 检查路由参数，处理从首页跳转过来的编辑请求 */
+    /** 检查路由参数，处理从首页跳转过来的筛选请求 */
     async checkRouteParams() {
       const { courseId, filterMode } = this.$route.query;
-      
+
       if (courseId && filterMode === 'single') {
-        // 查找对应的课程
-        const targetCourse = this.coursesList.find(course => 
-          course.courseId == courseId
-        );
-        
-        if (targetCourse) {
-          // 自动打开编辑弹窗
-          await this.handleUpdate(targetCourse);
-        } else {
-          // 如果列表中没有找到，显示错误信息
-          this.$message.error('未找到指定的课程，请刷新页面重试');
-        }
-        
+        // 根据课程ID筛选课程
+        this.queryParams.courseId = courseId;
+        this.handleQuery();
+
+        // 显示筛选成功消息
+        this.$message.success('已筛选出指定课程');
+
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
+      } else if (filterMode === 'current') {
+        // 处理本学期课程筛选
+        this.queryParams.status = '选课进行中'; // 只显示进行中的课程
+        this.handleQuery();
+
+        // 显示筛选成功消息
+        this.$message.success('已筛选出本学期课程');
+
         // 清除路由参数，避免刷新页面时重复触发
         this.$router.replace({
           path: this.$route.path,

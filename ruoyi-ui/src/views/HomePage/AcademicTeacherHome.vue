@@ -2,10 +2,96 @@
   <div class="app-container">
     <!-- 主要内容区域 -->
     <div class="main-content">
-      <!-- 左侧列 -->
-      <div class="left-column">
-        <!-- 左侧上方：书院通知 -->
-        <div class="news-panel">
+      <!-- 审核统计card - 横跨左右两列 -->
+      <div class="audit-card-full">
+        <el-card class="audit-card" shadow="hover">
+          <div slot="header" class="card-header">
+            <span class="card-title">
+              <i class="el-icon-s-check"></i>
+              审核统计
+            </span>
+          </div>
+          <div class="audit-content">
+            <!-- 活动审核和课程考核并排显示 -->
+            <div class="audit-row">
+              <!-- 活动审核 -->
+              <div class="audit-section">
+                <div class="audit-title">活动审核</div>
+                <div class="audit-stats">
+                  <div class="stat-item pending" @click="goToActivityAudit('pending')">
+                    <div class="stat-icon">
+                      <i class="el-icon-view"></i>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-label">未审核</div>
+                      <div class="stat-value">{{ activityAuditStats.pending }}</div>
+                    </div>
+                  </div>
+                  <div class="stat-item approved" @click="goToActivityAudit('approved')">
+                    <div class="stat-icon">
+                      <i class="el-icon-check"></i>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-label">已通过</div>
+                      <div class="stat-value">{{ activityAuditStats.approved }}</div>
+                    </div>
+                  </div>
+                  <div class="stat-item rejected" @click="goToActivityAudit('rejected')">
+                    <div class="stat-icon">
+                      <i class="el-icon-close"></i>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-label">未通过</div>
+                      <div class="stat-value">{{ activityAuditStats.rejected }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 课程考核 -->
+              <div class="audit-section">
+                <div class="audit-title">课程考核</div>
+                <div class="audit-stats">
+                  <div class="stat-item pending" @click="goToCourseAudit('pending')">
+                    <div class="stat-icon">
+                      <i class="el-icon-view"></i>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-label">未审核</div>
+                      <div class="stat-value">{{ courseAuditStats.pending }}</div>
+                    </div>
+                  </div>
+                  <div class="stat-item approved" @click="goToCourseAudit('approved')">
+                    <div class="stat-icon">
+                      <i class="el-icon-check"></i>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-label">已通过</div>
+                      <div class="stat-value">{{ courseAuditStats.approved }}</div>
+                    </div>
+                  </div>
+                  <div class="stat-item rejected" @click="goToCourseAudit('rejected')">
+                    <div class="stat-icon">
+                      <i class="el-icon-close"></i>
+                    </div>
+                    <div class="stat-info">
+                      <div class="stat-label">未通过</div>
+                      <div class="stat-value">{{ courseAuditStats.rejected }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 左右两列容器 -->
+      <div class="columns-container">
+        <!-- 左侧列 -->
+        <div class="left-column">
+          <!-- 左侧上方：书院通知 -->
+          <div class="news-panel">
           <div class="panel-header">
             <i class="el-icon-bell"></i>
             <span>书院通知</span>
@@ -13,46 +99,22 @@
               <el-button
                 type="text"
                 size="small"
-                @click="loadNotifications"
-                :loading="notificationsLoading"
+                @click="goToNoticeManager"
                 class="refresh-btn"
               >
-                <i class="el-icon-refresh"></i>
-                刷新
-              </el-button>
-              <el-button
-                type="text"
-                size="small"
-                @click="showPublishDialog"
-                v-if="isAdmin"
-                class="add-notification-btn"
-              >
-                <i class="el-icon-plus"></i>
-                发布通知
+                <i class="el-icon-view"></i>
+                查看全部
               </el-button>
             </div>
           </div>
           <div class="news-content">
-            <!-- 通知类型标签页 -->
-            <div class="notification-tabs">
-              <div 
-                v-for="tab in notificationTabs" 
-                :key="tab.value"
-                class="notification-tab"
-                :class="{ active: selectedNotificationType === tab.value }"
-                @click="filterNotificationsByType(tab.value)"
-              >
-                {{ tab.label }}
-              </div>
-            </div>
-            
-            <div v-if="filteredNotifications.length === 0" class="no-notification">
+            <div v-if="notifications.length === 0" class="no-notification">
               <i class="el-icon-info"></i>
               <span>暂无通知</span>
             </div>
             <div v-else class="notification-list" ref="notificationList">
               <div
-                v-for="notification in filteredNotifications"
+                v-for="notification in notifications.slice(0, 5)"
                 :key="notification.notiId"
                 class="notification-item"
                 @click="showNotificationDetail(notification)"
@@ -62,24 +124,9 @@
                 </div>
                 <div class="notification-info">
                   <div class="notification-title">{{ notification.notiTitle }}</div>
-                </div>
-                <div v-if="isAdmin" class="notification-actions">
-                  <el-button
-                    type="text"
-                    size="medium"
-                    icon="el-icon-edit"
-                    @click.stop="editNotification(notification)"
-                    title="编辑通知"
-                    class="action-btn edit-btn"
-                  ></el-button>
-                  <el-button
-                    type="text"
-                    size="medium"
-                    icon="el-icon-delete"
-                    @click.stop="deleteNotification(notification)"
-                    title="删除通知"
-                    class="action-btn delete-btn"
-                  ></el-button>
+                  <div class="notification-badges">
+                    <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -88,27 +135,24 @@
 
         <!-- 左侧下方：统计图表 -->
         <div class="charts-container">
-          <!-- 活动统计环形图 -->
+          <!-- 统计图表 -->
           <el-card class="chart-card" shadow="hover">
             <div slot="header" class="card-header">
               <span class="card-title">
-                活动统计
+                活动与课程统计
               </span>
             </div>
             <div class="chart-content">
-              <div ref="activityChart" class="chart"></div>
-            </div>
-          </el-card>
-
-          <!-- 课程统计环形图 -->
-          <el-card class="chart-card" shadow="hover">
-            <div slot="header" class="card-header">
-              <span class="card-title">
-                课程统计
-              </span>
-            </div>
-            <div class="chart-content">
-              <div ref="courseChart" class="chart"></div>
+              <div class="chart-row">
+                <div class="chart-item">
+                  <div class="chart-subtitle">活动统计</div>
+                  <div ref="statsChart" class="chart"></div>
+                </div>
+                <div class="chart-item">
+                  <div class="chart-subtitle">课程统计</div>
+                  <div ref="courseStatsChart" class="chart"></div>
+                </div>
+              </div>
             </div>
           </el-card>
         </div>
@@ -126,7 +170,7 @@
             <el-button type="text" size="small" @click="goToActivityManager()">查看全部</el-button>
           </div>
           <div class="activity-list">
-            <div v-for="(activity, index) in recentActivities" :key="index" class="activity-item" @click="goToActivityManager(activity)">
+            <div v-for="(activity, index) in recentActivities.slice(0, 5)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
               <div class="activity-time">
                 <div class="time-day">{{ activity.day }}</div>
                 <div class="time-month">{{ activity.month }}</div>
@@ -159,7 +203,7 @@
             <el-button type="text" size="small" @click="goToCourseManager()">课程管理</el-button>
           </div>
           <div class="course-list">
-            <div v-for="(course, index) in currentCourses" :key="index" class="course-item" @click="goToCourseManager(course)">
+            <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
               <div class="course-time">
                 <div class="time-day">{{ getCourseDay(course) }}</div>
                 <div class="time-month">{{ getCourseMonth(course) }}</div>
@@ -186,6 +230,7 @@
           </div>
         </el-card>
       </div>
+      </div>
     </div>
 
     <!-- 通知详情弹窗 -->
@@ -202,9 +247,6 @@
         <div class="detail-header">
           <h3 class="detail-title">{{ currentNotification.notiTitle }}</h3>
           <div class="detail-meta">
-            <span class="detail-type">
-              <el-tag size="small" type="info">{{ currentNotification.notiType || '系统通知' }}</el-tag>
-            </span>
             <span class="detail-time">{{ formatDateTime(currentNotification.createdAt) }}</span>
           </div>
         </div>
@@ -257,101 +299,6 @@
 
     </el-dialog>
 
-    <!-- 发布通知弹窗 -->
-    <el-dialog
-      title="发布通知"
-      :visible.sync="publishDialogVisible"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form
-        :model="publishForm"
-        :rules="publishRules"
-        ref="publishForm"
-        label-width="80px"
-      >
-        <el-form-item label="通知标题" prop="notiTitle">
-          <el-input
-            v-model="publishForm.notiTitle"
-            placeholder="请输入通知标题"
-            maxlength="100"
-            show-word-limit
-          ></el-input>
-        </el-form-item>
-
-        <el-form-item label="通知类型" prop="notiType">
-          <el-select v-model="publishForm.notiType" placeholder="请选择通知类型" style="width: 100%">
-            <el-option label="系统通知" value="system"></el-option>
-            <el-option label="活动公告" value="activity"></el-option>
-            <el-option label="课程通知" value="course"></el-option>
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="通知内容" prop="notiContent">
-          <el-input
-            type="textarea"
-            v-model="publishForm.notiContent"
-            placeholder="请输入通知内容"
-            :rows="6"
-            maxlength="1000"
-            show-word-limit
-          ></el-input>
-        </el-form-item>
-      </el-form>
-
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="publishDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitPublish" :loading="publishSubmitting">发布</el-button>
-      </div>
-    </el-dialog>
-
-    <!-- 编辑通知弹窗 -->
-    <el-dialog
-      title="编辑通知"
-      :visible.sync="editDialogVisible"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form
-        :model="editForm"
-        :rules="editRules"
-        ref="editForm"
-        label-width="80px"
-      >
-        <el-form-item label="通知标题" prop="notiTitle">
-          <el-input
-            v-model="editForm.notiTitle"
-            placeholder="请输入通知标题"
-            maxlength="100"
-            show-word-limit
-          ></el-input>
-        </el-form-item>
-
-        <el-form-item label="通知类型" prop="notiType">
-          <el-select v-model="editForm.notiType" placeholder="请选择通知类型" style="width: 100%">
-            <el-option label="系统通知" value="system"></el-option>
-            <el-option label="活动公告" value="activity"></el-option>
-            <el-option label="课程通知" value="course"></el-option>
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="通知内容" prop="notiContent">
-          <el-input
-            type="textarea"
-            v-model="editForm.notiContent"
-            placeholder="请输入通知内容"
-            :rows="6"
-            maxlength="1000"
-            show-word-limit
-          ></el-input>
-        </el-form-item>
-      </el-form>
-
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitEdit" :loading="editSubmitting">保存</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -361,7 +308,7 @@ import { listActivities } from "@/api/system/activities";
 import { listCourses } from "@/api/system/courses";
 import { getAuditCount } from "@/api/system/bookings";
 import { getAuditCount as getCourseAuditCount } from "@/api/system/courseBookings";
-import { listNotificationsPublic, addNotifications, updateNotifications, delNotifications, getNotifications } from "@/api/system/notifications";
+import { listNotificationsPublic } from "@/api/system/notifications";
 import { parseTime } from "@/utils/ruoyi";
 import * as echarts from 'echarts';
 
@@ -378,67 +325,7 @@ export default {
       notificationDialogVisible: false,
       currentNotification: null,
 
-      // 通知类型筛选
-      selectedNotificationType: 'all',
-      notificationTabs: [
-        { value: 'all', label: '全部' },
-        { value: 'system', label: '系统通知' },
-        { value: 'activity', label: '活动通知' },
-        { value: 'course', label: '课程通知' }
-      ],
 
-      // 发布通知数据
-      publishDialogVisible: false,
-      publishSubmitting: false,
-      publishForm: {
-        notiTitle: '',
-        notiType: '',
-        notiContent: '',
-        fileAttachments: null,
-        pictureAttachments: null,
-        creatorId: '',
-        createdAt: null
-      },
-      publishRules: {
-        notiTitle: [
-          { required: true, message: '请输入通知标题', trigger: 'blur' },
-          { min: 2, max: 100, message: '标题长度在 2 到 100 个字符', trigger: 'blur' }
-        ],
-        notiType: [
-          { required: true, message: '请选择通知类型', trigger: 'change' }
-        ],
-        notiContent: [
-          { required: true, message: '请输入通知内容', trigger: 'blur' },
-          { min: 10, max: 1000, message: '内容长度在 10 到 1000 个字符', trigger: 'blur' }
-        ]
-      },
-
-      // 编辑通知数据
-      editDialogVisible: false,
-      editSubmitting: false,
-      editForm: {
-        notiId: null,
-        notiTitle: '',
-        notiType: '',
-        notiContent: '',
-        fileAttachments: null,
-        pictureAttachments: null,
-        creatorId: '',
-        createdAt: null
-      },
-      editRules: {
-        notiTitle: [
-          { required: true, message: '请输入通知标题', trigger: 'blur' },
-          { min: 2, max: 100, message: '标题长度在 2 到 100 个字符', trigger: 'blur' }
-        ],
-        notiType: [
-          { required: true, message: '请选择通知类型', trigger: 'change' }
-        ],
-        notiContent: [
-          { required: true, message: '请输入通知内容', trigger: 'blur' },
-          { min: 10, max: 1000, message: '内容长度在 10 到 1000 个字符', trigger: 'blur' }
-        ]
-      },
 
       // 近期活动数据
       recentActivities: [],
@@ -458,7 +345,28 @@ export default {
         pending: 0,
         approved: 0,
         rejected: 0
-      }
+      },
+
+      // 课程统计图表数据
+      courseChartData: [],
+      courseStatsChart: null,
+
+      // 活动审核统计数据
+      activityAuditStats: {
+        pending: 0,
+        approved: 0,
+        rejected: 0
+      },
+
+      // 课程考核统计数据
+      courseAuditStats: {
+        pending: 0,
+        approved: 0,
+        rejected: 0
+      },
+
+      // 月份活动数据
+      monthlyActivityData: []
     };
   },
   computed: {
@@ -499,22 +407,13 @@ export default {
       }
     },
 
-    // 筛选后的通知列表
-    filteredNotifications() {
-      if (this.selectedNotificationType === 'all') {
-        return this.notifications;
-      }
-      return this.notifications.filter(notification => {
-        const notiType = notification.notiType || 'system';
-        return notiType === this.selectedNotificationType;
-      });
-    },
 
   },
   mounted() {
     // 初始化图表
     this.$nextTick(() => {
       this.initCharts();
+      this.initCourseStatsChart();
     });
   },
   created() {
@@ -530,6 +429,12 @@ export default {
     this.getActivityStats();
     // 获取课程统计数据
     this.getCourseStats();
+    // 获取活动审核统计数据
+    this.getActivityAuditStats();
+    // 获取课程考核统计数据
+    this.getCourseAuditStats();
+    // 获取月度活动数据
+    this.getMonthlyActivityData();
   },
   methods: {
     // 加载通知数据
@@ -728,32 +633,7 @@ export default {
       return plainText.length > 50 ? plainText.substring(0, 50) + '...' : plainText;
     },
 
-    // 显示发布通知弹窗
-    showPublishDialog() {
-      this.publishDialogVisible = true;
-      this.resetPublishForm();
-    },
 
-    // 编辑通知
-    editNotification(notification) {
-      this.editDialogVisible = true;
-      this.editForm = {
-        notiId: notification.notiId,
-        notiTitle: notification.notiTitle,
-        notiType: notification.notiType,
-        notiContent: notification.notiContent,
-        fileAttachments: notification.fileAttachments,
-        pictureAttachments: notification.pictureAttachments,
-        creatorId: notification.creatorId,
-        createdAt: notification.createdAt
-      };
-      // 清除表单验证
-      this.$nextTick(() => {
-        if (this.$refs.editForm) {
-          this.$refs.editForm.clearValidate();
-        }
-      });
-    },
 
     // 提交编辑通知
     submitEdit() {
@@ -956,140 +836,140 @@ export default {
 
     // 初始化图表
     initCharts() {
-      this.initActivityChart();
-      this.initCourseChart();
+      this.initStatsChart();
     },
 
-    // 初始化活动统计图表
-    initActivityChart() {
-      const chart = echarts.init(this.$refs.activityChart);
-      
-      // 准备数据
-      const data = [
-        { value: this.activityStats.pending, name: '未审核' },
-        { value: this.activityStats.approved, name: '已通过' },
-        { value: this.activityStats.rejected, name: '未通过' }
-      ];
+    // 初始化统计柱形图
+    initStatsChart() {
+      const chart = echarts.init(this.$refs.statsChart);
+
+      // 准备数据 - 按月份统计活动数量
+      const data = [];
+      const colors = ['#409EFF', '#67C23A', '#F56C6C', '#E6A23C', '#909399'];
+
+      // 检查是否有活动数据
+      if (this.monthlyActivityData && this.monthlyActivityData.length > 0) {
+        // 按月份统计活动数量
+        for (let month = 1; month <= 12; month++) {
+          const monthData = this.monthlyActivityData.find(m => parseInt(m.month.replace('月', '')) === month);
+          let activityCount = 0;
+          let totalParticipants = 0;
+          let activityNames = [];
+
+          if (monthData && monthData.activities) {
+            activityCount = monthData.activities.length;
+            monthData.activities.forEach(activity => {
+              totalParticipants += activity.participants || 0;
+              activityNames.push(activity.name);
+            });
+          }
+
+          data.push({
+            value: activityCount,
+            name: `${month}月`,
+            month: month,
+            activityCount: activityCount,
+            totalParticipants: totalParticipants,
+            activityNames: activityNames,
+            itemStyle: {
+              color: '#409EFF'
+            }
+          });
+        }
+      } else {
+        // 如果没有数据，生成空数据
+        for (let month = 1; month <= 12; month++) {
+          data.push({
+            value: 0,
+            name: `${month}月`,
+            month: month,
+            activityCount: 0,
+            totalParticipants: 0,
+            activityNames: [],
+            itemStyle: {
+              color: '#409EFF'
+            }
+          });
+        }
+      }
 
       const option = {
         backgroundColor: '#ffffff',
         tooltip: {
-          trigger: 'item',
-          formatter: '{b}: {c} ({d}%)',
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          textStyle: {
-            color: '#fff'
-          }
+          show: false
         },
-        legend: {
-          orient: 'vertical',
+        grid: {
+          left: '15%',
           right: '5%',
           bottom: '10%',
-          data: data.map(item => item.name),
-          textStyle: {
-            fontSize: 13,
-            color: '#333',
-            fontWeight: '500'
+          top: '10%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'value',
+          name: '活动数量',
+          nameLocation: 'middle',
+          nameGap: 30,
+          minInterval: 1,
+          axisLabel: {
+            fontSize: 12,
+            color: '#666',
+            formatter: function(value) {
+              return Math.floor(value);
+            }
           },
-          itemGap: 15,
-          itemWidth: 14,
-          itemHeight: 14
+          axisLine: {
+            lineStyle: {
+              color: '#e0e0e0'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#f0f0f0'
+            }
+          }
+        },
+        yAxis: {
+          type: 'category',
+          data: Array.from({length: 12}, (_, i) => (i + 1) + '月'),
+          name: '月份',
+          nameLocation: 'middle',
+          nameGap: 30,
+          axisLabel: {
+            fontSize: 11,
+            color: '#666',
+            formatter: function(value) {
+              return value;
+            }
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#e0e0e0'
+            }
+          }
         },
         series: [
           {
-            name: '活动统计',
-            type: 'pie',
-            radius: ['35%', '65%'],
-            center: ['50%', '50%'],
+            name: '活动数量',
+            type: 'bar',
             data: data,
+            barWidth: '60%',
+            label: {
+              show: true,
+              position: 'right',
+              formatter: function(params) {
+                return params.data.activityCount > 0 ? params.data.activityCount : '';
+              },
+              fontSize: 11,
+              color: '#333',
+              fontWeight: 'bold'
+            },
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
                 shadowOffsetX: 0,
                 shadowOffsetY: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'outside',
-              fontSize: 14.625,
-              color: '#000000',
-              formatter: '{b}\n{c} ({d}%)',
-              textStyle: {
-                fontWeight: '500',
-                lineHeight: 20.25
-              },
-              distance: 45,
-              avoidLabelOverlap: true,
-              minAngle: 10
-            },
-            labelLine: {
-              show: true,
-              length: 33.75,
-              length2: 18,
-              lineStyle: {
-                width: 1,
-                color: '#000000'
-              },
-              smooth: true,
-              smoothLength: 10
-            },
-            itemStyle: {
-              normal: {
-                borderWidth: 2,
-                borderColor: '#fff',
-                borderRadius: 3,
-                color: function (params) {
-                  const colors = ['#409EFF', '#67C23A', '#F56C6C'];
-                  return colors[params.dataIndex % colors.length];
-                }
-              }
-            },
-            animationType: 'scale',
-            animationEasing: 'elasticOut',
-            animationDuration: 1500
-          },
-          {
-            name: '总数',
-            type: 'pie',
-            radius: ['0%', '35%'],
-            center: ['50%', '50%'],
-            data: [{ value: 1, name: '' }],
-            label: {
-              show: true,
-              position: 'center',
-              formatter: () => {
-                const total = this.activityStats.pending + this.activityStats.approved + this.activityStats.rejected;
-                return `活动总数\n${total}`;
-              },
-              fontSize: 16,
-              fontWeight: 'bold',
-              color: '#2c3e50',
-              textStyle: {
-                fontSize: 16,
-                fontWeight: 'bold',
-                color: '#2c3e50'
-              },
-              rich: {
-                title: {
-                  fontSize: 14,
-                  color: '#7f8c8d',
-                  fontWeight: 'normal'
-                },
-                number: {
-                  fontSize: 18,
-                  color: '#2c3e50',
-                  fontWeight: 'bold'
-                }
-              }
-            },
-            itemStyle: {
-              color: 'transparent'
-            },
-            emphasis: {
-              itemStyle: {
-                color: 'transparent'
+                shadowColor: 'rgba(0, 0, 0, 0.3)'
               }
             }
           }
@@ -1100,144 +980,166 @@ export default {
 
       // 添加点击事件
       chart.on('click', (params) => {
-        this.handleActivityChartClick(params.name);
+        if (params.data && params.data.month) {
+          console.log('点击月份:', params.data);
+          // 跳转到活动管理页面，按月份筛选
+          this.$router.push({
+            path: '/Activity/ActivityManager',
+            query: {
+              filterMode: 'month',
+              month: params.data.month,
+              year: new Date().getFullYear()
+            }
+          });
+        }
       });
     },
 
     // 初始化课程统计图表
-    initCourseChart() {
-      const chart = echarts.init(this.$refs.courseChart);
-      const data = [
-        { value: this.courseStats.pending, name: '未考核' },
-        { value: this.courseStats.approved, name: '已通过' },
-        { value: this.courseStats.rejected, name: '未通过' }
-      ];
+    initCourseStatsChart() {
+      if (!this.$refs.courseStatsChart) return;
+
+      this.courseStatsChart = echarts.init(this.$refs.courseStatsChart);
+
+      // 准备数据 - 按月份统计课程数量
+      const data = [];
+
+      // 检查是否有课程数据
+      if (this.courseChartData && this.courseChartData.length > 0) {
+        // 使用处理好的课程数据
+        this.courseChartData.forEach(item => {
+          data.push({
+            value: item.courseCount,
+            name: `${item.month}月`,
+            month: item.month,
+            courseCount: item.courseCount,
+            totalCapacity: item.totalCapacity,
+            courseNames: item.courseNames,
+            itemStyle: {
+              color: '#67C23A' // 绿色表示课程
+            }
+          });
+        });
+      } else {
+        // 如果没有数据，生成空数据
+        for (let month = 1; month <= 12; month++) {
+          data.push({
+            value: 0,
+            name: `${month}月`,
+            month: month,
+            courseCount: 0,
+            totalCapacity: 0,
+            courseNames: [],
+            itemStyle: {
+              color: '#67C23A'
+            }
+          });
+        }
+      }
 
       const option = {
         backgroundColor: '#ffffff',
         tooltip: {
-          trigger: 'item',
-          formatter: '{b}: {c} ({d}%)',
-          backgroundColor: 'rgba(0,0,0,0.7)',
-          textStyle: {
-            color: '#fff'
-          }
+          show: false
         },
-        legend: {
-          orient: 'vertical',
+        grid: {
+          left: '15%',
           right: '5%',
           bottom: '10%',
-          data: data.map(item => item.name),
-          textStyle: {
-            fontSize: 13,
-            color: '#333',
-            fontWeight: '500'
+          top: '10%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'value',
+          name: '课程数量',
+          nameLocation: 'middle',
+          nameGap: 30,
+          minInterval: 1,
+          axisLabel: {
+            fontSize: 12,
+            color: '#666',
+            formatter: function(value) {
+              return Math.floor(value);
+            }
           },
-          itemGap: 15,
-          itemWidth: 14,
-          itemHeight: 14
+          axisLine: {
+            lineStyle: {
+              color: '#e0e0e0'
+            }
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#f0f0f0'
+            }
+          }
+        },
+        yAxis: {
+          type: 'category',
+          data: Array.from({length: 12}, (_, i) => (i + 1) + '月'),
+          name: '月份',
+          nameLocation: 'middle',
+          nameGap: 30,
+          axisLabel: {
+            fontSize: 11,
+            color: '#666',
+            formatter: function(value) {
+              return value;
+            }
+          },
+          axisLine: {
+            lineStyle: {
+              color: '#e0e0e0'
+            }
+          }
         },
         series: [
           {
-            name: '课程统计',
-            type: 'pie',
-            radius: ['35%', '65%'],
-            center: ['50%', '50%'],
+            name: '课程数量',
+            type: 'bar',
             data: data,
+            barWidth: '60%',
+            label: {
+              show: true,
+              position: 'right',
+              formatter: function(params) {
+                return params.data.courseCount > 0 ? params.data.courseCount : '';
+              },
+              fontSize: 11,
+              color: '#333',
+              fontWeight: 'bold'
+            },
             emphasis: {
               itemStyle: {
                 shadowBlur: 10,
                 shadowOffsetX: 0,
                 shadowOffsetY: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
-            },
-            label: {
-              show: true,
-              position: 'outside',
-              fontSize: 14.625,
-              color: '#000000',
-              formatter: '{b}\n{c} ({d}%)',
-              textStyle: {
-                lineHeight: 20.25
-              },
-              distance: 45,
-              avoidLabelOverlap: true,
-              minAngle: 10
-            },
-            labelLine: {
-              show: true,
-              length: 33.75,
-              length2: 18,
-              lineStyle: {
-                color: '#000000'
-              },
-              smooth: true,
-              smoothLength: 10
-            },
-            itemStyle: {
-              borderWidth: 2,
-              borderColor: '#fff',
-              borderRadius: 3,
-              color: function (params) {
-                const colors = ['#409EFF', '#67C23A', '#F56C6C'];
-                return colors[params.dataIndex % colors.length];
-              }
-            },
-            animationType: 'scale',
-            animationEasing: 'elasticOut',
-            animationDuration: 1500
-          },
-          {
-            name: '总数',
-            type: 'pie',
-            radius: ['0%', '35%'],
-            center: ['50%', '50%'],
-            data: [{ value: 1, name: '' }],
-            label: {
-              show: true,
-              position: 'center',
-              formatter: () => {
-                const total = this.courseStats.pending + this.courseStats.approved + this.courseStats.rejected;
-                return `课程总数\n${total}`;
-              },
-              fontSize: 16,
-              fontWeight: 'bold',
-              color: '#2c3e50',
-              textStyle: {
-                lineHeight: 24
-              },
-              rich: {
-                title: {
-                  fontSize: 14,
-                  color: '#7f8c8d',
-                  fontWeight: 'normal'
-                },
-                number: {
-                  fontSize: 18,
-                  color: '#2c3e50',
-                  fontWeight: 'bold'
-                }
-              }
-            },
-            itemStyle: {
-              color: 'transparent'
-            },
-            emphasis: {
-              itemStyle: {
-                color: 'transparent'
+                shadowColor: 'rgba(0, 0, 0, 0.3)'
               }
             }
           }
         ]
       };
-      chart.setOption(option);
+
+      this.courseStatsChart.setOption(option);
 
       // 添加点击事件
-      chart.on('click', (params) => {
-        this.handleCourseChartClick(params.name);
+      this.courseStatsChart.on('click', (params) => {
+        if (params.data && params.data.month) {
+          console.log('点击课程月份:', params.data);
+          // 跳转到课程管理页面，按月份筛选
+          this.$router.push({
+            path: '/Course/CourseManager',
+            query: {
+              filterMode: 'month',
+              month: params.data.month,
+              year: new Date().getFullYear()
+            }
+          });
+        }
       });
     },
+
+
 
     // 获取进度条颜色
     getProgressColor(percentage) {
@@ -1522,6 +1424,33 @@ export default {
       }
     },
 
+    // 跳转到通知管理页面
+    goToNoticeManager() {
+      this.$router.push('/Notice/index');
+    },
+
+    // 跳转到活动审核页面
+    goToActivityAudit(status) {
+      console.log('跳转到活动审核页面，状态:', status);
+      this.$router.push({
+        path: '/Activity/ActivityAudit',
+        query: {
+          status: status
+        }
+      });
+    },
+
+    // 跳转到课程审核页面
+    goToCourseAudit(status) {
+      console.log('跳转到课程审核页面，状态:', status);
+      this.$router.push({
+        path: '/Course/CourseAudit',
+        query: {
+          status: status
+        }
+      });
+    },
+
     // 处理活动统计图表点击事件
     handleActivityChartClick(statusName) {
       // 根据状态名称映射到活动审核页面的状态
@@ -1549,12 +1478,12 @@ export default {
         // 先获取组织者名称，与活动审核界面保持一致
         const nickName = await getNickName();
         const organizer = nickName.msg;
-        
+
         const response = await getAuditCount({ organizer });
         if (response.code === 200 && response.data) {
           this.activityStats = response.data;
           // 更新图表数据
-          this.updateActivityChart();
+          this.updateStatsChart();
         }
       } catch (error) {
         console.error('获取活动统计数据失败:', error);
@@ -1564,97 +1493,194 @@ export default {
           approved: 180,
           rejected: 0
         };
-        this.updateActivityChart();
-      }
-    },
-
-    // 更新活动统计图表
-    updateActivityChart() {
-      if (this.$refs.activityChart) {
-        const chart = echarts.getInstanceByDom(this.$refs.activityChart);
-        if (chart) {
-          const data = [
-            { value: this.activityStats.pending, name: '未审核' },
-            { value: this.activityStats.approved, name: '已通过' },
-            { value: this.activityStats.rejected, name: '未通过' }
-          ];
-
-          const option = {
-            series: [{
-              data: data,
-              itemStyle: {
-                normal: {
-                  color: function (params) {
-                    const colors = ['#409EFF', '#67C23A', '#F56C6C'];
-                    return colors[params.dataIndex % colors.length];
-                  }
-                }
-              }
-            }, {
-              label: {
-                formatter: () => {
-                  const total = this.activityStats.pending + this.activityStats.approved + this.activityStats.rejected;
-                  return `活动总数\n${total}`;
-                }
-              }
-            }]
-          };
-          chart.setOption(option);
-        }
+        this.updateStatsChart();
       }
     },
 
     // 获取课程统计数据
     async getCourseStats() {
       try {
-        const response = await getCourseAuditCount();
-        if (response.code === 200 && response.data) {
-          this.courseStats = response.data;
-          // 更新图表数据
-          this.updateCourseChart();
+        // 先获取组织者名称
+        const nickName = await getNickName();
+        const organizer = nickName.msg;
+
+        // 获取课程数据，与课程管理界面保持一致
+        const response = await listCourses({
+          organizer: organizer,
+          pageSize: 10000 // 获取所有数据
+        });
+
+        if (response.code === 200) {
+          const courses = response.rows || [];
+          this.processCourseStats(courses);
         }
       } catch (error) {
         console.error('获取课程统计数据失败:', error);
-        // 如果获取失败，使用默认数据
-        this.courseStats = {
-          pending: 30,
-          approved: 20,
-          rejected: 10
-        };
-        this.updateCourseChart();
+        this.$message.error('获取课程统计数据失败');
       }
     },
 
-    // 更新课程统计图表
-    updateCourseChart() {
-      if (this.$refs.courseChart) {
-        const chart = echarts.getInstanceByDom(this.$refs.courseChart);
+    // 处理课程统计数据
+    processCourseStats(courses) {
+      // 按月份分组统计课程数量
+      const monthlyData = {};
+
+      // 初始化12个月的数据
+      for (let i = 1; i <= 12; i++) {
+        monthlyData[i] = {
+          month: i,
+          courseCount: 0,
+          totalCapacity: 0,
+          courseNames: []
+        };
+      }
+
+      // 处理课程数据
+      courses.forEach(course => {
+        if (course.startTime) {
+          const startTime = new Date(course.startTime);
+          const month = startTime.getMonth() + 1; // getMonth() 返回 0-11，需要 +1
+
+          if (monthlyData[month]) {
+            monthlyData[month].courseCount++;
+            monthlyData[month].totalCapacity += (course.courseCapacity || 0);
+            monthlyData[month].courseNames.push(course.courseName || '未命名课程');
+          }
+        }
+      });
+
+      // 转换为数组格式
+      this.courseChartData = Object.values(monthlyData);
+
+      // 初始化课程统计图表
+      this.$nextTick(() => {
+        this.initCourseStatsChart();
+      });
+    },
+
+    // 更新统计图表
+    updateStatsChart() {
+      if (this.$refs.statsChart) {
+        const chart = echarts.getInstanceByDom(this.$refs.statsChart);
         if (chart) {
-          const data = [
-            { value: this.courseStats.pending, name: '未考核' },
-            { value: this.courseStats.approved, name: '已通过' },
-            { value: this.courseStats.rejected, name: '未通过' }
-          ];
-          const total = this.courseStats.pending + this.courseStats.approved + this.courseStats.rejected;
-          
-          const option = {
-            series: [
-              {
-                data: data
-              },
-              {
-                label: {
-                  formatter: () => {
-                    return `课程总数\n${total}`;
-                  }
-                }
-              }
-            ]
-          };
-          chart.setOption(option);
+          // 重新初始化图表以更新数据
+          this.initStatsChart();
         }
       }
     },
+
+
+    // 获取活动审核统计数据
+    async getActivityAuditStats() {
+      try {
+        // 先获取组织者名称
+        const nickName = await getNickName();
+        const organizer = nickName.msg;
+
+        const response = await getAuditCount({ organizer });
+        if (response.code === 200 && response.data) {
+          this.activityAuditStats = response.data;
+        }
+      } catch (error) {
+        console.error('获取活动审核统计数据失败:', error);
+        // 如果获取失败，使用默认数据
+        this.activityAuditStats = {
+          pending: 1,
+          approved: 181,
+          rejected: 0
+        };
+      }
+    },
+
+    // 获取课程考核统计数据
+    async getCourseAuditStats() {
+      try {
+        const response = await getCourseAuditCount();
+        if (response.code === 200 && response.data) {
+          this.courseAuditStats = response.data;
+        }
+      } catch (error) {
+        console.error('获取课程考核统计数据失败:', error);
+        // 如果获取失败，使用默认数据
+        this.courseAuditStats = {
+          pending: 0,
+          approved: 0,
+          rejected: 0
+        };
+      }
+    },
+
+    // 获取月度活动数据
+    async getMonthlyActivityData() {
+      try {
+        // 先获取组织者名称，与活动管理保持一致
+        const nickName = await getNickName();
+        const organizer = nickName.msg;
+
+        // 获取所有活动数据，与活动管理使用相同的查询方式
+        const response = await listActivities({
+          pageNum: 1,
+          pageSize: 10000, // 获取所有数据
+          organizer: organizer
+        });
+
+        if (response.code === 200 && response.rows) {
+          // 按月份分组活动数据
+          const monthlyGroups = {};
+
+          response.rows.forEach(activity => {
+            const startTime = new Date(activity.startTime);
+            const month = (startTime.getMonth() + 1) + '月';
+            const day = startTime.getDate() + '日';
+
+            if (!monthlyGroups[month]) {
+              monthlyGroups[month] = [];
+            }
+
+            // 获取报名人数，使用实际数据
+            const participants = activity.registrationCount || activity.participantCount || 0;
+
+            monthlyGroups[month].push({
+              name: activity.activityName,
+              date: day,
+              participants: participants,
+              activityId: activity.activityId,
+              location: activity.activityLocation,
+              organizer: activity.organizer,
+              startTime: activity.startTime,
+              endTime: activity.endTime,
+              activityType: activity.activityType,
+              activityDescription: activity.activityDescription
+            });
+          });
+
+          // 转换为数组格式并按月份排序
+          this.monthlyActivityData = Object.keys(monthlyGroups)
+            .sort((a, b) => {
+              const monthA = parseInt(a.replace('月', ''));
+              const monthB = parseInt(b.replace('月', ''));
+              return monthA - monthB;
+            })
+            .map(month => ({
+              month: month,
+              activities: monthlyGroups[month].sort((a, b) => {
+                const dayA = parseInt(a.date.replace('日', ''));
+                const dayB = parseInt(b.date.replace('日', ''));
+                return dayA - dayB;
+              })
+            }));
+
+          // 更新图表
+          this.updateStatsChart();
+        }
+      } catch (error) {
+        console.error('获取月度活动数据失败:', error);
+        // 如果获取失败，使用空数据
+        this.monthlyActivityData = [];
+        this.updateStatsChart();
+      }
+    },
+
 
     // 处理课程统计图表点击事件
     handleCourseChartClick(statusName) {
@@ -1725,10 +1751,6 @@ export default {
       });
     },
 
-    // 根据类型筛选通知
-    filterNotificationsByType(type) {
-      this.selectedNotificationType = type;
-    },
 
     // 格式化通知日期（用于显示在日期标签中）
     formatNotificationDate(date) {
@@ -1737,6 +1759,25 @@ export default {
       const day = d.getDate();
       const month = d.getMonth() + 1;
       return `${day} ${month}月`;
+    },
+
+    // 判断是否为新通知（3天内，精确到天数）
+    isNewNotification(notification) {
+      if (!notification.createdAt) return false;
+
+      const now = new Date();
+      const notificationDate = new Date(notification.createdAt);
+
+      // 将时间设置为当天的开始时间（00:00:00）进行比较
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const notificationDay = new Date(notificationDate.getFullYear(), notificationDate.getMonth(), notificationDate.getDate());
+
+      // 计算天数差
+      const diffTime = today - notificationDay;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      // 3天内（包括今天）
+      return diffDays >= 0 && diffDays <= 3;
     }
   }
 };
@@ -1752,7 +1793,7 @@ export default {
   padding: 20px;
   position: relative;
   width: calc(100% - 200px);
-  overflow: visible;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
@@ -1790,11 +1831,26 @@ export default {
 
 /* 主要内容区域 */
 .main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: calc(100vh - 120px);
+  max-height: none;
+}
+
+/* 审核统计card全宽容器 */
+.audit-card-full {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+/* 左右两列容器 */
+.columns-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  height: calc(100vh - 120px);
-  min-height: 600px;
+  flex: 1;
+  min-height: 0;
 }
 
 /* 左侧列 */
@@ -1802,6 +1858,9 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* 右侧列 */
@@ -1809,6 +1868,9 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* 卡片通用样式 */
@@ -1900,15 +1962,14 @@ export default {
 
 /* 书院通知面板 */
 .news-panel {
-  flex: 1;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e4e7ed;
-  overflow: hidden;
   height: 400px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* 面板头部 */
@@ -1953,35 +2014,6 @@ export default {
   flex-direction: column;
 }
 
-/* 通知类型标签页 */
-.notification-tabs {
-  display: flex;
-  border-bottom: 1px solid #e4e7ed;
-  margin-bottom: 12px;
-}
-
-.notification-tab {
-  flex: 1;
-  padding: 6px 12px;
-  text-align: center;
-  font-size: 14px;
-  color: #606266;
-  cursor: pointer;
-  transition: all 0.3s;
-  border-bottom: 2px solid transparent;
-}
-
-.notification-tab:hover {
-  color: #409EFF;
-  background: #f0f9ff;
-}
-
-.notification-tab.active {
-  color: #409EFF;
-  background: #f0f9ff;
-  border-bottom-color: #409EFF;
-  font-weight: 600;
-}
 
 .notification-content {
   padding: 16px 20px 20px 20px;
@@ -2079,18 +2111,33 @@ export default {
   margin: 0;
 }
 
+.notification-badges {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge {
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge.new {
+  background: #ff6b6b;
+  color: white;
+}
+
 .notification-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.3s ease;
   flex-shrink: 0;
   margin-left: auto;
-}
-
-.notification-item:hover .notification-actions {
-  opacity: 1;
 }
 
 .action-btn {
@@ -2162,30 +2209,6 @@ export default {
   flex: 1;
 }
 
-/* 通知类型标签 */
-.notification-type-tag {
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.type-system {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.type-activity {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.type-course {
-  background: #e8f5e8;
-  color: #388e3c;
-}
 
 .type-default {
   background: #f5f5f5;
@@ -2238,13 +2261,9 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.3s ease;
   flex-shrink: 0;
-}
-
-.notification-item:hover .notification-actions {
-  opacity: 1;
 }
 
 .action-btn {
@@ -2421,10 +2440,6 @@ export default {
   font-weight: 400;
 }
 
-.detail-type {
-  display: flex;
-  align-items: center;
-}
 
 .detail-time {
   display: flex;
@@ -2630,18 +2645,32 @@ export default {
 
 /* 图表容器 */
 .charts-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  display: flex;
   flex: 1;
 }
 
 .chart-card {
-  height: 600px;
+  height: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-content {
-  height: 550px;
+  height: 350px;
+  flex: 1;
+}
+
+
+.chart-subtitle {
+  font-size: 14px;
+  font-weight: bold;
+  color: #666;
+  text-align: center;
+  margin-bottom: 8px;
+  padding: 6px;
+  background: #f0f2f5;
+  border-radius: 4px;
 }
 
 .chart {
@@ -2649,14 +2678,166 @@ export default {
   height: 100%;
 }
 
-/* 近期活动卡片 */
-.activity-card {
+.chart-row {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-item .chart {
+  flex: 1;
+  height: 100%;
+}
+
+/* 审核统计卡片 */
+.audit-card {
+  width: 100%;
+  margin-bottom: 0;
+  padding: 15px 20px;
+}
+
+.audit-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.audit-row {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.audit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   flex: 1;
 }
 
+.audit-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.audit-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item:hover::after {
+  content: '点击查看详情';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+.stat-item.pending {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #90caf9;
+}
+
+.stat-item.approved {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border: 1px solid #a5d6a7;
+}
+
+.stat-item.rejected {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border: 1px solid #ef9a9a;
+}
+
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.stat-item.pending .stat-icon {
+  background: #409EFF;
+  color: white;
+}
+
+.stat-item.approved .stat-icon {
+  background: #67C23A;
+  color: white;
+}
+
+.stat-item.rejected .stat-icon {
+  background: #F56C6C;
+  color: white;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #909399;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #303133;
+}
+
+/* 近期活动卡片 */
+.activity-card {
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
 .activity-list {
-  max-height: 400px;
+  max-height: 320px;
   overflow-y: auto;
+  flex: 1;
   /* 隐藏滚动条 */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -2752,12 +2933,15 @@ export default {
 
 /* 本学期课程卡片 */
 .course-card {
-  flex: 1;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
 }
 
 .course-list {
-  max-height: 400px;
+  max-height: 320px;
   overflow-y: auto;
+  flex: 1;
   /* 隐藏滚动条 */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -2859,9 +3043,6 @@ export default {
     height: auto;
   }
 
-  .charts-container {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* 通知弹窗底部按钮样式 */
@@ -2905,17 +3086,17 @@ export default {
     width: 95% !important;
     margin: 0 auto;
   }
-  
+
   .notification-dialog .el-dialog__body {
     max-height: 70vh;
   }
-  
+
   .detail-header,
   .detail-content,
   .detail-attachments {
     padding: 16px;
   }
-  
+
   .detail-title {
     font-size: 16px;
   }
