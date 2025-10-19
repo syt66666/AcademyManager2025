@@ -8,6 +8,7 @@
           <div class="header-left">
             <i class="el-icon-bell"></i>
             <span>书院通知</span>
+            <span v-if="userCollege" class="college-name">({{ userCollege }})</span>
           </div>
           <el-button type="text" size="small" @click="goToAllNotifications" class="all-button">
             全部
@@ -317,6 +318,7 @@ export default {
     return {
       // 通知数据
       notifications: [],
+      userCollege: null, // 用户所属书院（来自stu_info表的academy字段）
 
       // 通知详情弹窗
       notificationDialogVisible: false,
@@ -495,9 +497,27 @@ export default {
         console.log('通知API响应:', response);
 
         if (response && response.code === 200) {
-          // 数据库查询已经按时间倒序排序，直接使用
-          this.notifications = response.rows || [];
-          console.log('成功加载通知数据（数据库已按时间倒序）:', this.notifications);
+          // 获取所有通知数据
+          const allNotifications = response.rows || [];
+          console.log('所有通知数据:', allNotifications);
+          
+          // 获取当前用户的书院信息（来自stu_info表的academy字段）
+          this.userCollege = this.$store.state.user.academy;
+          console.log('当前用户书院（academy字段）:', this.userCollege);
+          
+          // 根据用户书院过滤通知（匹配noti_type字段）
+          if (this.userCollege) {
+            this.notifications = allNotifications.filter(notification => {
+              // 如果通知的noti_type与用户academy匹配，则显示
+              const notificationCollege = notification.noti_type || notification.notiType;
+              return notificationCollege === this.userCollege;
+            });
+            console.log('过滤后的书院通知:', this.notifications);
+          } else {
+            // 如果没有书院信息，显示所有通知
+            this.notifications = allNotifications;
+            console.log('未找到用户书院信息（academy字段），显示所有通知');
+          }
         } else {
           console.log('API返回非200状态码:', response?.code, response?.msg);
           this.$message.error('加载通知失败: ' + (response?.msg || '服务器返回错误'));
@@ -1081,6 +1101,13 @@ export default {
 .header-left {
   display: flex;
   align-items: center;
+}
+
+.college-name {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b7280;
+  margin-left: 4px;
 }
 
 .all-button {
@@ -2056,9 +2083,16 @@ export default {
 .detail-meta {
   display: flex;
   align-items: center;
+  gap: 20px;
   font-size: 14px;
   color: #6b7280;
   font-weight: 400;
+  justify-content: flex-end;
+}
+
+.detail-type {
+  display: flex;
+  align-items: center;
 }
 
 
