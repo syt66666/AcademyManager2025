@@ -56,19 +56,6 @@
           <i class="el-icon-arrow-right"></i>
         </div>
       </div>
-
-      <div class="stat-card participants-card">
-        <div class="stat-icon">
-          <i class="el-icon-user"></i>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">总参与人数</div>
-          <div class="stat-value">{{ activityStats.totalParticipants }}</div>
-          <div class="stat-detail">
-            <span class="info">活动总参与</span>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- 各书院概览 -->
@@ -315,27 +302,46 @@ export default {
     },
     getStatusText(status) {
       const statusMap = {
-        'not-started': '未开始',
-        'ongoing': '进行中',
-        'completed': '已完成'
+        'not-started': '活动未开始',
+        'ongoing': '活动进行中',
+        'completed': '活动已完成',
+        'cancelled': '活动已取消'
       }
       return statusMap[status] || status
     },
     computeCourseStatus(course) {
       const now = new Date()
       const start = course.courseStart ? new Date(course.courseStart) : null
+      const end = course.courseEnd ? new Date(course.courseEnd) : null
       const deadline = course.courseDeadline ? new Date(course.courseDeadline) : null
 
+      // 如果课程已结束
+      if (end && now > end) {
+        return '课程已完成'
+      }
+      
+      // 如果课程正在进行
+      if (start && now >= start && end && now <= end) {
+        // 检查报名是否截止
+        if (deadline && now > deadline) {
+          return '课程进行中 · 报名已截止'
+        } else if (deadline && now <= deadline) {
+          return '课程进行中 · 报名进行中'
+        }
+        return '课程进行中'
+      }
+      
+      // 如果课程未开始，检查报名状态
       if (start && now < start) {
-        return '未开始'
+        if (deadline && now <= deadline) {
+          return '报名进行中'
+        } else if (deadline && now > deadline) {
+          return '报名已截止'
+        }
+        return '课程未开始'
       }
-      if (start && deadline && now >= start && now <= deadline) {
-        return '选课中'
-      }
-      if (deadline && now > deadline) {
-        return '已截止'
-      }
-      return '未开始'
+      
+      return '课程未开始'
     }
   },
   mounted() {

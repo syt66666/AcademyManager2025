@@ -81,59 +81,64 @@
         </div>
       </div>
 
-      <!-- 活动类型分布 -->
-      <div class="activity-type-section">
-        <h3 class="section-title">活动类型分布</h3>
-        <div class="type-distribution">
-          <div
-            v-for="(type, index) in activityTypes"
-            :key="type.key"
-            class="type-item"
-            :style="{ '--progress': type.percentage + '%' }"
-            @click="handleActivityTypeClick(type)"
-          >
-            <div class="type-header">
-              <span class="type-name">{{ type.name }}</span>
-              <span class="type-count">{{ type.count }}个</span>
+      <!-- 活动类型分布和最近活动 - 左右布局 -->
+      <div class="activity-content-row">
+        <!-- 活动类型分布 -->
+        <div class="activity-type-section">
+          <div class="section-header">
+            <h3 class="section-title">活动类型分布</h3>
+          </div>
+          <div class="type-distribution">
+            <div
+              v-for="(type, index) in activityTypes"
+              :key="type.key"
+              class="type-item"
+              :style="{ '--progress': type.percentage + '%' }"
+              @click="handleActivityTypeClick(type)"
+            >
+              <div class="type-header">
+                <span class="type-name">{{ type.name }}</span>
+                <span class="type-count">{{ type.count }}个</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: type.percentage + '%' }"></div>
+              </div>
+              <div class="type-percentage">{{ type.percentage }}%</div>
             </div>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: type.percentage + '%' }"></div>
-            </div>
-            <div class="type-percentage">{{ type.percentage }}%</div>
           </div>
         </div>
-      </div>
 
-      <!-- 最近活动列表 -->
-      <div class="recent-activities-section">
-        <div class="section-header">
-          <h3 class="section-title">最近活动</h3>
-          <el-button
-            type="text"
-            size="small"
-            @click="showAllActivities"
-            class="view-all-btn"
-          >
-            全部
-            <i class="el-icon-arrow-right"></i>
-          </el-button>
-        </div>
-        <div class="activities-list">
-          <div
-            v-for="activity in recentActivities"
-            :key="activity.id"
-            class="activity-item"
-          >
-            <div class="activity-info">
-              <div class="activity-name">{{ activity.name }}</div>
-              <div class="activity-meta">
-                <span class="activity-college">{{ activity.college }}</span>
-                <span class="activity-type">{{ activity.type }}</span>
-                <span class="activity-date">{{ formatDate(activity.startTime) }}</span>
+        <!-- 最近活动列表 -->
+        <div class="recent-activities-section">
+          <div class="section-header">
+            <h3 class="section-title">最近活动</h3>
+            <el-button
+              type="text"
+              size="small"
+              @click="showAllActivities"
+              class="view-all-btn"
+            >
+              全部
+              <i class="el-icon-arrow-right"></i>
+            </el-button>
+          </div>
+          <div class="activities-list">
+            <div
+              v-for="activity in recentActivities"
+              :key="activity.id"
+              class="activity-item"
+            >
+              <div class="activity-info">
+                <div class="activity-name">{{ activity.name }}</div>
+                <div class="activity-meta">
+                  <span class="activity-college">{{ activity.college }}</span>
+                  <span class="activity-type">{{ activity.type }}</span>
+                  <span class="activity-date">{{ formatDate(activity.startTime) }}</span>
+                </div>
               </div>
-            </div>
-            <div class="activity-status" :class="'status-' + activity.status">
-              {{ getStatusText(activity.status) }}
+              <div class="activity-status" :class="'status-' + activity.status">
+                {{ getStatusText(activity.status) }}
+              </div>
             </div>
           </div>
         </div>
@@ -866,7 +871,7 @@ export default {
           this.recentActivities = allActivities
             .filter(activity => activity.status === 'ongoing' || activity.status === 'completed')
             .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
-            .slice(0, 3)
+            .slice(0, 5)
         }
       } catch (error) {
         console.error('加载活动统计数据失败:', error)
@@ -894,7 +899,7 @@ export default {
             this.recentActivities = allActivities
               .filter(activity => activity.status === 'ongoing' || activity.status === 'completed')
               .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
-              .slice(0, 3)
+              .slice(0, 5)
           }
         }
       } catch (error) {

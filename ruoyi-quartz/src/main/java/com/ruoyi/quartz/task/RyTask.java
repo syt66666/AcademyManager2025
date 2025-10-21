@@ -2,6 +2,7 @@ package com.ruoyi.quartz.task;
 
 import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.system.mapper.ActivitiesMapper;
+import com.ruoyi.system.mapper.CoursesMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.ruoyi.common.utils.StringUtils;
@@ -16,6 +17,9 @@ public class RyTask
 {
     @Autowired
     ActivitiesMapper activityMapper;
+
+    @Autowired
+    CoursesMapper coursesMapper;
     public void ryMultipleParams(String s, Boolean b, Long l, Double d, Integer i)
     {
         System.out.println(StringUtils.format("执行多参方法： 字符串类型{}，布尔类型{}，长整型{}，浮点型{}，整形{}", s, b, l, d, i));
@@ -38,5 +42,17 @@ public class RyTask
         activityMapper.updateStatusToClosed(now);
         activityMapper.updateStatusToOngoing(now);
         activityMapper.updateStatusToEnded(now);
+    }
+
+    /**
+     * 更新课程状态定时任务
+     */
+    public void updateCourse()
+    {
+        String now = DateUtils.getTime();
+        coursesMapper.updateStatusToEnrolling(now);
+        coursesMapper.updateStatusToEnrollmentClosed(now);
+        coursesMapper.updateStatusToOngoing(now);
+        coursesMapper.updateStatusToCompleted(now);
     }
 }

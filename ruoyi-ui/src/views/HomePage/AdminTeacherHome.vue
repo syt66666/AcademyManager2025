@@ -2,7 +2,7 @@
   <div class="app-container">
     <!-- 仪表盘首页 -->
     <Dashboard />
-  </div>
+        </div>
 </template>
 
 <script>

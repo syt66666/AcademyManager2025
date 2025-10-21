@@ -5,28 +5,46 @@
   width: 100%;
 }
 
+/* 活动内容左右布局 */
+.activity-content-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 /* 活动类型样式 */
 .activity-type-section {
-  margin-bottom: 32px;
+  min-width: 0;
 }
 
 /* 最近活动列表 */
 .recent-activities-section {
-  margin-bottom: 32px;
+  min-width: 0;
+}
+
+/* 响应式：小屏幕时变为上下布局 */
+@media (max-width: 1200px) {
+  .activity-content-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .activities-list {
   background: white;
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
 }
 
 .activity-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 12px 16px;
   border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s ease;
 }

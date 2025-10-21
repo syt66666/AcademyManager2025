@@ -187,6 +187,24 @@ export default {
           completed: false,
           start_time: '2025-05-19T06:00:00',
           end_time: '2025-05-21T24:00:00'
+        },
+        {
+          id: 4,
+          title: '问卷4',
+          description: '大工书院育人导师工作评价问卷（学生版）',
+          type: '大工书院育人导师工作评价问卷',
+          completed: false,
+          start_time: '2025-10-21T00:00:00',
+          end_time: '2025-10-23T16:00:00'
+        },
+        {
+          id: 5,
+          title: '问卷5',
+          description: '大工书院育人导师工作评价问卷（辅导员/执行院长版）',
+          type: '大工书院育人导师工作评价问卷',
+          completed: false,
+          start_time: '2025-10-21T06:00:00',
+          end_time: '2025-10-23T24:00:00'
         }
       ],
       showDialog: false,
@@ -279,10 +297,20 @@ export default {
             questionnaire.start_time = startTime.toISOString();
             questionnaire.end_time = endTime.toISOString();
             questionnaire.isInTimeRange = now >= startTime && now <= endTime;
+          } else {
+            // 如果后端没有数据，使用前端定义的时间
+            const startTime = new Date(questionnaire.start_time);
+            const endTime = new Date(questionnaire.end_time);
+            const now = new Date();
+            questionnaire.isInTimeRange = now >= startTime && now <= endTime;
           }
         } catch (error) {
-          console.error('获取问卷时间失败:', error);
-          questionnaire.isInTimeRange = false;
+          console.warn(`问卷${questionnaire.id}暂未在后端配置，使用前端默认时间`);
+          // 使用前端定义的时间
+          const startTime = new Date(questionnaire.start_time);
+          const endTime = new Date(questionnaire.end_time);
+          const now = new Date();
+          questionnaire.isInTimeRange = now >= startTime && now <= endTime;
         }
       }
     },
@@ -290,8 +318,16 @@ export default {
 
     getStuInfo() {
       getStudent(this.userName).then(response => {
-        const studentInfo = response.studentInfo;
-        this.studentName = studentInfo.studentName;
+        if (response && response.studentInfo) {
+          const studentInfo = response.studentInfo;
+          this.studentName = studentInfo.studentName;
+        } else {
+          console.error('获取学生信息失败: studentInfo 为空');
+          this.studentName = this.userName; // 使用用户名作为备用
+        }
+      }).catch(error => {
+        console.error('获取学生信息失败:', error);
+        this.studentName = this.userName; // 使用用户名作为备用
       });
     },
     formatDate(dateString) {
