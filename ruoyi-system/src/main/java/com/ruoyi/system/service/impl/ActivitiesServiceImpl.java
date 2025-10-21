@@ -224,16 +224,16 @@ public class ActivitiesServiceImpl implements IActivitiesService {
             throw new ServiceException("活动不存在！");
         }
         
-        // 检查是否还有剩余容量
+        // 检查是否还有剩余容量（总容量 - 已选人数）
         int remainingCapacity = activitiesMapper.checkActivityCapacity(activityId);
         if (remainingCapacity <= 0) {
             throw new ServiceException("活动容量已满，无法报名！");
         }
         
-        // 基于实际预约人数更新容量
+        // 基于实际预约人数更新已选人数
         int result = activitiesMapper.updateCapacityByActualBookings(activityId, version);
         if (result == 0) {
-            throw new ServiceException("容量更新失败，请重试！");
+            throw new ServiceException("已选人数更新失败，请重试！");
         }
         
         return result;
@@ -248,7 +248,7 @@ public class ActivitiesServiceImpl implements IActivitiesService {
     }
 
     /**
-     * 检查活动剩余容量
+     * 检查活动剩余容量（总容量 - 已选人数）
      */
     @Override
     public int checkActivityCapacity(Integer activityId) {

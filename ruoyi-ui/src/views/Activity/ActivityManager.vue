@@ -180,7 +180,7 @@
               />
               <div class="count">
                 <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                  {{ scope.row.activityCapacity || 0 }}/{{ scope.row.activityTotalCapacity }}
                 </span>
               </div>
             </div>
@@ -319,13 +319,25 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item label="活动容量" prop="activityTotalCapacity">
+              <el-form-item label="活动总容量" prop="activityTotalCapacity">
                 <el-input-number
                   v-model="form.activityTotalCapacity"
                   :min="1"
                   :max="1000"
                   controls-position="right"
                   class="form-number">
+                </el-input-number>
+                <span class="capacity-tip">人</span>
+              </el-form-item>
+
+              <el-form-item label="当前已选人数" prop="activityCapacity" v-if="form.activityId">
+                <el-input-number
+                  v-model="form.activityCapacity"
+                  :min="0"
+                  :max="form.activityTotalCapacity || 1000"
+                  controls-position="right"
+                  class="form-number"
+                  :disabled="true">
                 </el-input-number>
                 <span class="capacity-tip">人</span>
               </el-form-item>
@@ -736,7 +748,22 @@ export default {
           {required: true, message: "活动地点不能为空", trigger: "blur"}
         ],
         activityTotalCapacity: [
-          { required: true, message: "活动容量不能为空", trigger: "blur" }
+          { required: true, message: "活动容量不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              // 只在编辑模式下进行容量检查
+              if (this.form.activityId && this.form.activityCapacity !== null && this.form.activityCapacity !== undefined) {
+                const selectedCount = parseInt(this.form.activityCapacity) || 0;
+                const totalCapacity = parseInt(value) || 0;
+                if (totalCapacity < selectedCount) {
+                  callback(new Error(`总容量不能小于当前已选人数(${selectedCount})，请先处理已报名或增大容量`));
+                  return;
+                }
+              }
+              callback();
+            },
+            trigger: ["blur", "change"]
+          }
         ],
         activityType: [
           { required: true, message: "请选择活动类型", trigger: "change" }
@@ -972,7 +999,7 @@ export default {
     /** 计算容量百分比 */
     calculateCapacityPercentage(row) {
       if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
-      const used = row.activityTotalCapacity - row.activityCapacity;
+      const used = row.activityCapacity || 0; // activityCapacity 现在是已选人数
       return Math.round((used / row.activityTotalCapacity) * 100);
     },
 
@@ -1396,6 +1423,17 @@ export default {
         if (!valid) {
           this.isSubmitting = false;
           return; // 验证不通过则停止
+        }
+
+        // 3.5. 额外的容量检查（编辑模式下）
+        if (this.form.activityId && this.form.activityCapacity !== null && this.form.activityCapacity !== undefined) {
+          const selectedCount = parseInt(this.form.activityCapacity) || 0;
+          const totalCapacity = parseInt(this.form.activityTotalCapacity) || 0;
+          if (totalCapacity < selectedCount) {
+            this.$message.error(`总容量不能小于当前已选人数(${selectedCount})，请先处理已报名或增大容量`);
+            this.isSubmitting = false;
+            return;
+          }
         }
 
         // 4. 计算活动状态
@@ -1873,24 +1911,18 @@ export default {
   watch: {
     'form.activityTotalCapacity'(newVal, oldVal) {
       if (!this.form.activityId) {
-        // 新增活动模式：剩余容量 = 总容量
-        this.form.activityCapacity = newVal;
+        // 新增活动模式：已选人数 = 0
+        this.form.activityCapacity = 0;
       } else {
-        // 编辑活动模式：需要重新计算剩余容量
+        // 编辑活动模式：检查新总容量是否小于当前已选人数
         if (oldVal && newVal && this.form.activityCapacity !== null) {
-          // 计算已选人数（基于旧的总容量）
-          const selectedCount = oldVal - this.form.activityCapacity;
-
-          // 计算新的剩余容量
-          const newRemainingCapacity = newVal - selectedCount;
-
-          // 确保剩余容量不为负数
-          if (newRemainingCapacity >= 0) {
-            this.form.activityCapacity = newRemainingCapacity;
-          } else {
-            // 如果新总容量小于已选人数，剩余容量设为0
-            this.form.activityCapacity = 0;
-            this.$message.warning(`新总容量(${newVal})小于已选人数(${selectedCount})，剩余容量已设为0`);
+          const selectedCount = this.form.activityCapacity || 0; // activityCapacity 现在是已选人数
+          if (newVal < selectedCount) {
+            // 直接阻止输入，重置为原来的值
+            this.$message.error(`总容量不能小于当前已选人数(${selectedCount})`);
+            this.$nextTick(() => {
+              this.form.activityTotalCapacity = oldVal;
+            });
           }
         }
       }
@@ -2786,7 +2818,7 @@ export default {
 /* 时间网格布局*/
 .time-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 改为单列布局 */
+  grid-template-columns: 1fr; /* 单列布局，每个时间字段占一行 */
   gap: 20px;
 
   .time-item {
@@ -2838,7 +2870,7 @@ export default {
 
 .form-datetime {
   width: 100%;
-  max-width: 350px; /* 设置最大宽度，让时间框不会过长 */
+  max-width: 450px; /* 增加最大宽度，让时间框更长 */
 
   .el-input__inner {
     border-radius: 8px;
@@ -3034,7 +3066,7 @@ export default {
 
     .time-item {
       .form-datetime {
-        min-width: 280px; /* 移动端调整最小宽度 */
+        min-width: 350px; /* 增加移动端最小宽度 */
       }
     }
   }
@@ -3054,7 +3086,7 @@ export default {
 .activity-form-dialog .time-grid {
   .time-item {
     .form-datetime {
-      max-width: 180px; /* 设置最大宽度，避免过长 */
+      max-width: 400px; /* 增加最大宽度，让时间框更长 */
 
       .el-input__inner {
         font-size: 15px; /* 稍微增大字体 */
@@ -3069,7 +3101,7 @@ export default {
   .activity-form-dialog .time-grid {
     .time-item {
       .form-datetime {
-        max-width: 350px;
+        max-width: 450px; /* 增加中等屏幕的最大宽度 */
       }
     }
   }

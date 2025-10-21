@@ -51,8 +51,8 @@ public class ActivitySubscription extends BaseEntity
     @Excel(name = "活动地点")
     private String activityLocation;
 
-    /** 活动剩余容量 */
-    @Excel(name = "活动剩余容量")
+    /** 活动当前已选人数 */
+    @Excel(name = "活动当前已选人数")
     private Integer activityCapacity;
     /** 报名开始时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -83,7 +83,7 @@ public class ActivitySubscription extends BaseEntity
     //乐观锁控制
     private Integer version;
 
-    /** 活动容量 */
-    @Excel(name = "活动容量")
+    /** 活动总容量 */
+    @Excel(name = "活动总容量")
     private Integer activityTotalCapacity;
 }

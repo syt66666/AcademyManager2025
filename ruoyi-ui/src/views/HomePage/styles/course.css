@@ -1,0 +1,534 @@
+/* 课程相关样式 */
+.college-course-container {
+  background: #f8fafc;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* 课程统计图表 */
+.course-charts-section {
+  margin-top: 24px;
+  margin-bottom: 32px;
+}
+
+.charts-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.chart-container {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart {
+  width: 100%;
+  height: 100%;
+}
+
+/* 课程状态统计 */
+.course-status-section {
+  margin-bottom: 32px;
+}
+
+.status-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.status-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.status-stat-card.not-started {
+  border-left: 4px solid #6b7280;
+}
+
+.status-stat-card.enrolling {
+  border-left: 4px solid #3b82f6;
+}
+
+.status-stat-card.ended {
+  border-left: 4px solid #10b981;
+}
+
+.status-stat-card.ongoing {
+  border-left: 4px solid #f59e0b;
+}
+
+.status-stat-card.completed {
+  border-left: 4px solid #8b5cf6;
+}
+
+.status-stat-card .status-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  font-size: 24px;
+  color: white;
+}
+
+.status-stat-card.not-started .status-icon {
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+}
+
+.status-stat-card.enrolling .status-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.status-stat-card.ended .status-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.status-stat-card.ongoing .status-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.status-stat-card.completed .status-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.status-content {
+  flex: 1;
+}
+
+.status-title {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.status-count {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* 课程类型样式 */
+.course-type-section {
+  margin-bottom: 32px;
+}
+
+/* 最近课程列表 */
+.recent-courses-section {
+  margin-bottom: 32px;
+}
+
+.courses-list {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.course-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s ease;
+}
+
+.course-item:hover {
+  background-color: #f8fafc;
+}
+
+.course-item:last-child {
+  border-bottom: none;
+}
+
+.course-info {
+  flex: 1;
+}
+
+.course-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.course-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.course-college {
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.course-type {
+  color: #10b981;
+}
+
+.course-date {
+  color: #6b7280;
+}
+
+.course-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 课程弹窗样式 */
+.college-courses-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.college-courses-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.college-courses-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.college-courses-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.college-courses-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+/* 课程统计信息样式 */
+.course-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.course-stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.course-stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+}
+
+.course-stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.course-stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* 课程学生列表弹窗样式 */
+.course-student-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.course-student-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.course-student-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.course-student-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.course-student-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+.course-student-dialog .el-dialog__body {
+  padding: 0;
+  background: #f8fafc;
+}
+
+/* 课程学生统计信息 */
+.course-student-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.course-student-stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.course-student-stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+}
+
+.course-student-stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.course-student-stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* 课程学生表格容器 */
+.course-student-table-container {
+  padding: 24px;
+}
+
+.course-student-table-container .enhanced-student-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 课程学生分页样式 */
+.course-student-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 课程类型弹窗样式 */
+.course-type-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.course-type-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.course-type-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.course-type-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.course-type-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+.course-type-dialog .el-dialog__body {
+  padding: 0;
+  background: #f8fafc;
+}
+
+/* 课程类型统计信息 */
+.course-type-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.course-type-stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.course-type-stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.course-type-stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.course-type-stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* 课程类型表格容器 */
+.course-type-table-container {
+  padding: 24px;
+}
+
+.course-type-table-container .course-type-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 所有课程弹窗样式 */
+.all-courses-dialog .el-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.all-courses-dialog .el-dialog__header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 20px 24px;
+  border-bottom: none;
+}
+
+.all-courses-dialog .el-dialog__title {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.all-courses-dialog .el-dialog__headerbtn .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.all-courses-dialog .el-dialog__headerbtn .el-dialog__close:hover {
+  color: #f0f0f0;
+}
+
+.all-courses-dialog .el-dialog__body {
+  padding: 0;
+  background: #f8fafc;
+}
+
+/* 所有课程统计信息 */
+.all-courses-stats {
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.all-courses-stats-card {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.all-courses-stats-card .stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 80px;
+}
+
+.all-courses-stats-card .stat-number {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.all-courses-stats-card .stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* 所有课程表格容器 */
+.all-courses-table-container {
+  padding: 24px;
+}
+
+.all-courses-table-container .all-courses-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+}
+
