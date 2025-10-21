@@ -55,4 +55,61 @@ export function submitQuestionnaireData(answer) {
     method: 'post',
     data: answer,  // 请求体中的数据
   });
+
 }
+
+// 查询问卷得分列表
+export function listScore(query) {
+  return request({
+    url: '/questionnaire/score/list',
+    method: 'get',
+    params: query
+  })
+}
+
+// 查询问卷得分详细信息
+export function getScore(id) {
+  return request({
+    url: '/questionnaire/score/' + id,
+    method: 'get'
+  })
+}
+
+// 新增问卷得分
+export function addScore(data) {
+  return request({
+    url: '/questionnaire/score',
+    method: 'post',
+    data: data
+  })
+}
+
+// 修改问卷得分
+export function updateScore(data) {
+  return request({
+    url: '/questionnaire/score',
+    method: 'put',
+    data: data
+  })
+}
+
+// 删除问卷得分
+export function delScore(id) {
+  return request({
+    url: '/questionnaire/score/' + id,
+    method: 'delete'
+  })
+}
+
+// 检查用户是否已完成问卷评价
+export function checkScoreCompleted(userName, quesType) {
+  return request({
+    url: '/questionnaire/score/checkCompleted',
+    method: 'get',
+    params: {
+      userName: userName,
+      quesType: quesType
+    }
+  })
+}
+

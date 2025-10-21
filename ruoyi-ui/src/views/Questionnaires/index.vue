@@ -142,13 +142,75 @@
         </div>
       </div>
     </div>
+
+    <!-- 签名弹窗（问卷4、5使用） -->
+    <div v-if="showSignatureDialog" class="dialog-overlay">
+      <div class="signature-dialog">
+        <div class="dialog-header-bar"></div>
+        <div class="dialog-content">
+          <div class="dialog-header">
+            <h3>请完成签名</h3>
+            <p class="subtitle">请选择签名方式并完成签名后进入问卷</p>
+          </div>
+
+          <!-- 签名方式选择 -->
+          <div class="signature-type-selector">
+            <el-radio-group v-model="signatureType">
+              <el-radio label="upload">上传签名图片</el-radio>
+              <el-radio label="draw">手写签名</el-radio>
+            </el-radio-group>
+          </div>
+
+          <!-- 上传签名图片 -->
+          <div v-if="signatureType === 'upload'" class="upload-signature">
+            <ImageUpload
+              :limit="1"
+              :file-size="5"
+              :file-type="['png', 'jpg', 'jpeg']"
+              v-model="signatureImg"
+            >
+              <template #default>
+                <div class="uploader-guide">
+                  <i class="el-icon-upload"></i>
+                  <p>点击上传签名图片</p>
+                  <p class="upload-tips">支持jpg、png格式，大小不超过5MB</p>
+                </div>
+              </template>
+            </ImageUpload>
+          </div>
+
+          <!-- 手写签名 -->
+          <div v-if="signatureType === 'draw'" class="canvas-signature">
+            <div class="canvas-container">
+              <canvas 
+                ref="signatureCanvas" 
+                width="500" 
+                height="200"
+                class="signature-canvas"
+              ></canvas>
+            </div>
+            <div class="canvas-actions">
+              <el-button size="small" @click="clearCanvas">清空重写</el-button>
+            </div>
+            <p class="canvas-tips">请在上方区域内手写签名</p>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="dialog-actions">
+            <el-button @click="cancelSignature">取消</el-button>
+            <el-button type="primary" @click="confirmSignature">确认并进入问卷</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
 import store from "../../store";
-import {getQuestionnaireTimes} from "@/api/system/questionnaire";
+import request from "@/utils/request";
+import {getQuestionnaireTimes, checkScoreCompleted} from "@/api/system/questionnaire";
 import {getStudent} from "../../api/system/student";
 import ImageUpload from "@/components/ImageUpload";
 
@@ -216,7 +278,12 @@ export default {
       countdown: 20,
       isCountdownActive: false,
       countdownTimer: null,
-      img: []
+      img: [],
+      // 签名弹窗相关
+      showSignatureDialog: false,
+      signatureImg: '', // 上传的签名图片（ImageUpload返回的是字符串）
+      canvasSignature: null, // canvas签名数据
+      signatureType: 'upload' // 签名方式：upload（上传）或 draw（手写）
     };
   },
   methods: {
@@ -224,10 +291,21 @@ export default {
       const questionnaire = this.questionnaires.find(q => q.id === questionnaireId);
       if (questionnaire.completed || !questionnaire.isInTimeRange) return;
 
+      this.selectedQuestionnaireId = questionnaireId;
+      
+      // 问卷4和5显示签名弹窗
+      if (questionnaireId === 4 || questionnaireId === 5) {
+        this.showSignatureDialog = true;
+        this.signatureImg = '';
+        this.canvasSignature = null;
+        this.signatureType = 'upload';
+        return;
+      }
+
+      // 其他问卷显示承诺书弹窗
       // 重置倒计时状态
       if (this.countdownTimer) clearInterval(this.countdownTimer);
 
-      this.selectedQuestionnaireId = questionnaireId;
       this.selectedQuestionnaireType = questionnaire.type;
       this.selectedStartTime = this.formatDate(questionnaire.start_time);
       this.selectedEndTime = this.formatDate(questionnaire.end_time);
@@ -268,16 +346,23 @@ export default {
     async checkQuestionnaireStatus() {
       try {
         for (const questionnaire of this.questionnaires) {
-          const response = await axios.get(
-            process.env.VUE_APP_BASE_API + '/system/questionnaire/checkCompleted',
-            {
-              params: {
-                userName: this.userName,
-                questionnaireId: questionnaire.id
+          // 问卷4和5使用评价问卷接口检查
+          if (questionnaire.id === 4 || questionnaire.id === 5) {
+            const response = await checkScoreCompleted(this.userName, questionnaire.id);
+            questionnaire.completed = response.data;
+          } else {
+            // 其他问卷使用原来的接口
+            const response = await axios.get(
+              process.env.VUE_APP_BASE_API + '/system/questionnaire/checkCompleted',
+              {
+                params: {
+                  userName: this.userName,
+                  questionnaireId: questionnaire.id
+                }
               }
-            }
-          );
-          questionnaire.completed = response.data;
+            );
+            questionnaire.completed = response.data;
+          }
         }
       } catch (error) {
         console.error('检查问卷状态失败:', error);
@@ -339,6 +424,167 @@ export default {
         hour: '2-digit',
         minute: '2-digit'
       }).replace(/\//g, '-');
+    },
+    
+    // 签名相关方法
+    initCanvas() {
+      this.$nextTick(() => {
+        const canvas = this.$refs.signatureCanvas;
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        
+        let drawing = false;
+        
+        const startDrawing = (e) => {
+          drawing = true;
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || e.touches[0].clientX) - rect.left;
+          const y = (e.clientY || e.touches[0].clientY) - rect.top;
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+        };
+        
+        const draw = (e) => {
+          if (!drawing) return;
+          e.preventDefault();
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX || e.touches[0].clientX) - rect.left;
+          const y = (e.clientY || e.touches[0].clientY) - rect.top;
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        };
+        
+        const stopDrawing = () => {
+          drawing = false;
+        };
+        
+        // 鼠标事件
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+        
+        // 触摸事件（移动端）
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+      });
+    },
+    
+    clearCanvas() {
+      const canvas = this.$refs.signatureCanvas;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      this.canvasSignature = null;
+    },
+    
+    async confirmSignature() {
+      let signatureUrl = '';
+      
+      if (this.signatureType === 'upload') {
+        if (!this.signatureImg || this.signatureImg.length === 0) {
+          this.$message.warning('请上传签名图片！');
+          return;
+        }
+        // ImageUpload组件v-model返回的是字符串，不是数组
+        signatureUrl = this.signatureImg;
+        console.log('上传模式 - 签名URL:', signatureUrl);
+      } else if (this.signatureType === 'draw') {
+        const canvas = this.$refs.signatureCanvas;
+        if (!canvas) return;
+        
+        // 检查canvas是否为空
+        const ctx = canvas.getContext('2d');
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        let isEmpty = true;
+        
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i + 3] > 0) {
+            isEmpty = false;
+            break;
+          }
+        }
+        
+        if (isEmpty) {
+          this.$message.warning('请先手写签名！');
+          return;
+        }
+        
+        // 将canvas转为Blob并上传
+        let loading = null;
+        try {
+          const blob = await new Promise(resolve => {
+            canvas.toBlob(resolve, 'image/png');
+          });
+          
+          // 创建FormData上传
+          const formData = new FormData();
+          const fileName = `${this.userName}_${Date.now()}.png`;
+          formData.append('file', blob, fileName);
+          
+          // 显示上传中提示
+          loading = this.$loading({
+            lock: true,
+            text: '正在上传签名...',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          });
+          
+          // 调用上传接口
+          const response = await request({
+            url: '/common/upload',
+            method: 'post',
+            data: formData,
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          
+          console.log('上传接口返回:', response);
+          
+          if (response.code === 200) {
+            signatureUrl = response.fileName; // 使用fileName而不是url
+            console.log('签名URL:', signatureUrl);
+            loading.close();
+            this.$message.success('签名上传成功！');
+          } else {
+            loading.close();
+            this.$message.error('签名上传失败：' + response.msg);
+            return;
+          }
+        } catch (error) {
+          if (loading) loading.close();
+          console.error('签名上传失败:', error);
+          this.$message.error('签名上传失败，请重试！');
+          return;
+        }
+      }
+      
+      // 关闭弹窗，进入问卷
+      this.showSignatureDialog = false;
+      
+      console.log('最终传递的签名URL:', signatureUrl);
+      
+      // 通过路由参数传递签名URL到问卷页面
+      this.$router.push({
+        path: `/Questionnaires/Questionnaire${this.selectedQuestionnaireId}`,
+        query: {
+          signature: signatureUrl
+        }
+      });
+    },
+    
+    cancelSignature() {
+      this.showSignatureDialog = false;
+      this.signatureImg = '';
+      this.canvasSignature = null;
     }
   },
   created() {
@@ -352,6 +598,16 @@ export default {
         clearInterval(this.countdownTimer);
         this.isCountdownActive = false;
         this.countdown = 20;
+      }
+    },
+    signatureType(newVal) {
+      if (newVal === 'draw') {
+        this.initCanvas();
+      }
+    },
+    showSignatureDialog(newVal) {
+      if (newVal && this.signatureType === 'draw') {
+        this.initCanvas();
       }
     }
   },
@@ -884,6 +1140,97 @@ export default {
     min-width: 68px !important;
   }
 }
+
+/* 签名弹窗样式 */
+.signature-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 600px;
+  max-width: 90%;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.signature-type-selector {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.upload-signature {
+  margin: 30px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.uploader-guide {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.uploader-guide .el-icon-upload {
+  font-size: 48px;
+  color: #395cdc;
+  margin-bottom: 16px;
+}
+
+.uploader-guide p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.upload-tips {
+  font-size: 13px;
+  color: #999;
+}
+
+.canvas-signature {
+  margin: 30px 0;
+}
+
+.canvas-container {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.signature-canvas {
+  border: 1px solid #e0e0e0;
+  cursor: crosshair;
+  background: white;
+  border-radius: 4px;
+  touch-action: none;
+}
+
+.canvas-actions {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.canvas-tips {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* 响应式 - 签名弹窗 */
+@media (max-width: 640px) {
+  .signature-dialog {
+    width: 95%;
+  }
+  
+  .signature-canvas {
+    width: 100%;
+    height: 150px;
+  }
+}
+
 .clause-content {
   /* 确保容器使用标准盒模型 */
   display: block;
