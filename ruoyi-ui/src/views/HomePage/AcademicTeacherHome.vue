@@ -57,7 +57,7 @@
                       <i class="el-icon-view"></i>
                     </div>
                     <div class="stat-info">
-                      <div class="stat-label">未审核</div>
+                      <div class="stat-label">未考核</div>
                       <div class="stat-value">{{ courseAuditStats.pending }}</div>
                     </div>
                   </div>
@@ -102,7 +102,6 @@
                 @click="goToNoticeManager"
                 class="refresh-btn"
               >
-                <i class="el-icon-view"></i>
                 查看全部
               </el-button>
             </div>
@@ -122,11 +121,9 @@
                 <div class="notification-date">
                   {{ formatNotificationDate(notification.createdAt) }}
                 </div>
+                <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
                 <div class="notification-info">
                   <div class="notification-title">{{ notification.notiTitle }}</div>
-                  <div class="notification-badges">
-                    <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -139,6 +136,7 @@
           <el-card class="chart-card" shadow="hover">
             <div slot="header" class="card-header">
               <span class="card-title">
+                <i class="el-icon-data-line"></i>
                 活动与课程统计
               </span>
             </div>
@@ -161,17 +159,17 @@
       <!-- 右侧列 -->
       <div class="right-column">
         <!-- 右侧上方：近期活动 -->
-        <el-card class="activity-card" shadow="hover">
-          <div slot="header" class="card-header">
-            <span class="card-title">
-              <i class="el-icon-calendar"></i>
-              近期活动
-            </span>
-            <el-button type="text" size="small" @click="goToActivityManager()">查看全部</el-button>
+        <div class="activity-panel">
+          <div class="panel-header">
+            <i class="el-icon-s-promotion"></i>
+            <span>近期活动</span>
+            <div class="card-actions">
+              <el-button type="text" size="small" @click="goToActivityManager()" class="refresh-btn">查看全部</el-button>
+            </div>
           </div>
           <div class="activity-list">
             <div v-for="(activity, index) in recentActivities.slice(0, 5)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
-              <div class="notification-date">{{ activity.day }} {{ activity.month }}</div>
+              <div class="notification-date">{{ activity.month }} {{ activity.day }}</div>
               <div class="notification-info">
                 <div class="notification-title-row">
                   <div class="notification-title">{{ activity.title }}</div>
@@ -179,33 +177,33 @@
               </div>
               <span class="activity-time-inline">
                 <i class="el-icon-time"></i>
-                {{ activity.time }}
+                活动时间：{{ activity.time }}
               </span>
               <div class="activity-status" :class="activity.status">
                 {{ activity.statusText }}
               </div>
             </div>
           </div>
-        </el-card>
+        </div>
 
-        <!-- 右侧下方：本学期课程 -->
-        <el-card class="course-card" shadow="hover">
-          <div slot="header" class="card-header">
-            <span class="card-title">
-              <i class="el-icon-reading"></i>
-              本学期课程
-            </span>
-            <el-button type="text" size="small" @click="goToCourseManager()">课程管理</el-button>
+        <!-- 右侧下方：近期课程 -->
+        <div class="course-panel">
+          <div class="panel-header">
+            <i class="el-icon-reading"></i>
+            <span>近期课程</span>
+            <div class="card-actions">
+              <el-button type="text" size="small" @click="goToCourseManager()" class="refresh-btn">查看全部</el-button>
+            </div>
           </div>
           <div class="course-list">
           <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
-            <div class="notification-date">{{ getCourseDay(course) }} {{ getCourseMonth(course) }}</div>
+            <div class="notification-date">{{ getCourseMonth(course) }} {{ getCourseDay(course) }}</div>
             <div class="course-content">
               <div class="course-title-row">
                 <h4 class="course-title">{{ course.name }}</h4>
                 <span class="course-time-inline">
                   <i class="el-icon-time"></i>
-                  {{ course.schedule }}
+                  课程时间：{{ course.schedule }}
                 </span>
               </div>
             </div>
@@ -214,7 +212,7 @@
             </div>
             </div>
           </div>
-        </el-card>
+        </div>
       </div>
       </div>
     </div>
@@ -316,7 +314,7 @@ export default {
       // 近期活动数据
       recentActivities: [],
 
-      // 本学期课程数据
+      // 近期课程数据
       currentCourses: [],
 
       // 活动统计数据
@@ -409,7 +407,7 @@ export default {
     this.loadNotifications();
     // 获取近期活动数据
     this.getRecentActivities();
-    // 获取本学期课程数据
+    // 获取近期课程数据
     this.getCurrentCourses();
     // 获取活动统计数据
     this.getActivityStats();
@@ -449,7 +447,7 @@ export default {
           // 获取所有通知数据
           const allNotifications = response.rows || response.data || [];
           console.log('所有通知数据:', allNotifications);
-          
+
           // 获取当前用户的书院信息
           let userCollege = '';
           try {
@@ -461,7 +459,7 @@ export default {
           } catch (error) {
             console.error('获取用户书院信息失败:', error);
           }
-          
+
           // 根据用户书院过滤通知（匹配noti_type字段）
           if (userCollege) {
             this.notifications = allNotifications.filter(notification => {
@@ -923,10 +921,14 @@ export default {
           name: '活动数量',
           nameLocation: 'middle',
           nameGap: 30,
+          nameTextStyle: {
+            color: '#000000',
+            fontSize: 14
+          },
           minInterval: 1,
           axisLabel: {
             fontSize: 12,
-            color: '#666',
+            color: '#000000',
             formatter: function(value) {
               return Math.floor(value);
             }
@@ -948,9 +950,13 @@ export default {
           name: '月份',
           nameLocation: 'middle',
           nameGap: 30,
+          nameTextStyle: {
+            color: '#000000',
+            fontSize: 14
+          },
           axisLabel: {
             fontSize: 11,
-            color: '#666',
+            color: '#000000',
             formatter: function(value) {
               return value;
             }
@@ -1067,10 +1073,14 @@ export default {
           name: '课程数量',
           nameLocation: 'middle',
           nameGap: 30,
+          nameTextStyle: {
+            color: '#000000',
+            fontSize: 14
+          },
           minInterval: 1,
           axisLabel: {
             fontSize: 12,
-            color: '#666',
+            color: '#000000',
             formatter: function(value) {
               return Math.floor(value);
             }
@@ -1092,9 +1102,13 @@ export default {
           name: '月份',
           nameLocation: 'middle',
           nameGap: 30,
+          nameTextStyle: {
+            color: '#000000',
+            fontSize: 14
+          },
           axisLabel: {
             fontSize: 11,
-            color: '#666',
+            color: '#000000',
             formatter: function(value) {
               return value;
             }
@@ -1284,7 +1298,7 @@ export default {
       }
     },
 
-    // 获取本学期课程数据
+    // 获取近期课程数据
     async getCurrentCourses() {
       try {
         const response = await listCourses({
@@ -1321,7 +1335,7 @@ export default {
           });
         }
       } catch (error) {
-        console.error('获取本学期课程失败:', error);
+        console.error('获取近期课程失败:', error);
         // 如果获取失败，使用默认数据
         this.currentCourses = [
           {
@@ -1427,11 +1441,11 @@ export default {
           }
         });
       } else {
-        // 如果点击了"课程管理"按钮，显示本学期课程（未结束的课程）
+        // 如果点击了"查看全部"按钮，显示近期课程（未结束的课程）
         this.$router.push({
           path: '/Course/CourseManager',
           query: {
-            filterMode: 'current' // 标记为本学期课程筛选模式
+            filterMode: 'current' // 标记为近期课程筛选模式
           }
         });
       }
@@ -1771,7 +1785,7 @@ export default {
       const d = new Date(date);
       const day = d.getDate();
       const month = d.getMonth() + 1;
-      return `${day} ${month}月`;
+      return `${month}月 ${day}`;
     },
 
     // 判断是否为新通知（3天内，精确到天数）
@@ -1797,27 +1811,33 @@ export default {
 </script>
 
 <style scoped>
+/* 整体布局 */
 .app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  margin-left: 200px;
-  background: #f5f7fa;
+  margin-left: 120px;
   padding: 20px;
-  position: relative;
-  width: calc(100% - 200px);
-  overflow-x: hidden;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
+}
+
+/* 首页模式样式 */
+.app-container.home-mode {
+  margin-left: 0 !important;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: calc(100vh - 84px);
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 }
 
 /* 欢迎头部 */
 .welcome-header {
-  background: white;
-  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
   padding: 30px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e4e7ed;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 .welcome-content {
@@ -1829,7 +1849,7 @@ export default {
   font-weight: 700;
   color: #303133;
   margin: 0 0 10px 0;
-  background: linear-gradient(135deg, #409EFF, #67C23A);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1837,7 +1857,7 @@ export default {
 
 .welcome-subtitle {
   font-size: 16px;
-  color: #606266;
+  color: #64748b;
   margin: 0;
   font-weight: 500;
 }
@@ -1896,7 +1916,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-weight: 600;
   font-size: 16px;
@@ -1975,11 +1995,11 @@ export default {
 
 /* 书院通知面板 */
 .news-panel {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e4e7ed;
-  height: 400px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  height: 350px; /* 从400px减少到350px，与近期活动保持一致 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1990,7 +2010,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-weight: 600;
   font-size: 16px;
@@ -2081,10 +2101,15 @@ export default {
 .notification-item {
   display: flex;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f2f5;
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 15px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  margin: 0 -10px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 
 .notification-item:last-child {
@@ -2092,21 +2117,23 @@ export default {
 }
 
 .notification-item:hover {
-  background: #f5f7fa;
-  transform: translateX(4px);
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .notification-date {
   min-width: 60px;
-  background: #409EFF;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   text-align: center;
   margin-right: 12px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .notification-info {
@@ -2136,11 +2163,14 @@ export default {
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
+  margin-right: 8px; /* 添加右边距，与标题保持距离 */
+  flex-shrink: 0; /* 防止标签被压缩 */
 }
 
 .badge.new {
-  background: #ff6b6b;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
   color: white;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
 }
 
 .notification-actions {
@@ -2782,18 +2812,21 @@ export default {
 }
 
 .stat-item.pending {
-  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-  border: 1px solid #90caf9;
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+  border: 1px solid #81d4fa;
+  box-shadow: 0 4px 16px rgba(3, 169, 244, 0.1);
 }
 
 .stat-item.approved {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   border: 1px solid #a5d6a7;
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.1);
 }
 
 .stat-item.rejected {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   border: 1px solid #ef9a9a;
+  box-shadow: 0 4px 16px rgba(244, 67, 54, 0.1);
 }
 
 .stat-icon {
@@ -2840,24 +2873,33 @@ export default {
   color: #303133;
 }
 
-/* 近期活动卡片 */
-.activity-card {
+/* 近期活动面板 */
+.activity-panel {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  height: 350px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 近期课程面板 */
+.course-panel {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   height: 400px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .activity-list {
-  max-height: 320px;
-  overflow-y: auto;
   flex: 1;
-  /* 隐藏滚动条 */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-}
-
-.activity-list::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+  padding: 12px 20px; /* 添加与news-content相同的padding */
 }
 
 .activity-item {
@@ -2869,9 +2911,9 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 8px;
-  margin: 0 -10px;
-  padding-left: 15px;
-  padding-right: 15px;
+  margin: 0; /* 移除负margin，因为activity-list现在有padding */
+  padding-left: 0; /* 移除额外的padding */
+  padding-right: 0; /* 移除额外的padding */
 }
 
 .activity-item:hover {
@@ -2935,29 +2977,26 @@ export default {
 }
 
 .activity-status.upcoming {
-  background: #f0f9ff;
-  color: #409EFF;
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+  color: #0369a1;
+  border: 1px solid #81d4fa;
 }
 
 .activity-status.ongoing {
-  background: #f0f9ff;
-  color: #67C23A;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
 }
 
 .activity-status.ended {
-  background: #fef0f0;
-  color: #F56C6C;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  color: #c62828;
+  border: 1px solid #ef9a9a;
 }
 
-/* 本学期课程卡片 */
-.course-card {
-  height: 400px; /* 与活动卡片统一高度 */
-  display: flex;
-  flex-direction: column;
-}
 
 .course-list {
-  max-height: 320px; /* 与活动列表一致 */
+  height: 100%;
   overflow-y: auto;
   flex: 1;
   scrollbar-width: none; /* Firefox */
@@ -2968,16 +3007,18 @@ export default {
 
 .course-item {
   display: flex;
-  padding: 15px 0;
+  padding: 20px 0;
   border-bottom: 1px solid #f0f0f0;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 8px;
-  margin: 0 -10px;
-  padding-left: 15px;
-  padding-right: 15px;
+  margin: 0;
+  padding-left: 20px;
+  padding-right: 20px;
+  width: 100%;
+  min-height: 60px;
 }
 
 .course-item:hover {
@@ -3009,6 +3050,11 @@ export default {
 
 .course-content {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
 }
 
 .course-title-row {
@@ -3016,13 +3062,20 @@ export default {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  width: 100%;
 }
 
 .course-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #303133;
-  margin: 0 0 8px 0;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
 }
 
 .course-teacher {
@@ -3035,11 +3088,14 @@ export default {
 }
 
 .course-time-inline {
-  font-size: 12px;
+  font-size: 13px;
   color: #606266;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+  min-width: 0;
+  font-weight: 500;
 }
 
 .course-status {
@@ -3050,18 +3106,21 @@ export default {
 }
 
 .course-status.status-not-started {
-  background: #f0f9ff;
-  color: #409EFF;
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+  color: #0369a1;
+  border: 1px solid #81d4fa;
 }
 
 .course-status.status-in-progress {
-  background: #f0f9ff;
-  color: #67C23A;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
 }
 
 .course-status.status-ended {
-  background: #fef0f0;
-  color: #F56C6C;
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  color: #c62828;
+  border: 1px solid #ef9a9a;
 }
 
 /* 响应式设计 */
