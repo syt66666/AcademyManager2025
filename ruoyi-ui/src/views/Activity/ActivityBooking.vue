@@ -241,7 +241,7 @@
               />
               <div class="count">
                 <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                  {{ scope.row.activityCapacity || 0 }}/{{ scope.row.activityTotalCapacity }}
                 </span>
               </div>
             </div>
@@ -347,7 +347,7 @@
             <div class="detail-label"><i class="el-icon-user"></i> 活动容量：</div>
             <div class="detail-value">
             <span :class="getCapacityClass(selectedActivity)">
-              {{ selectedActivity.activityTotalCapacity - selectedActivity.activityCapacity }}/{{ selectedActivity.activityTotalCapacity }}人
+              {{ selectedActivity.activityCapacity || 0 }}/{{ selectedActivity.activityTotalCapacity }}人
             </span>
             </div>
           </div>
@@ -523,7 +523,7 @@ export default {
       const d = new Date(this.calendarDate);
       return `${d.getFullYear()}年${(d.getMonth() + 1).toString().padStart(2, '0')}月`;
     },
-    
+
     // 修复计算属性
     exceedCancelLimit() {
       // 从数据中获取实际的取消限制状态
@@ -541,7 +541,7 @@ export default {
 
       return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
         !this.selectedActivity.isBooked &&
-        this.selectedActivity.activityCapacity > 0;
+        (this.selectedActivity.activityCapacity || 0) < this.selectedActivity.activityTotalCapacity;
     },
 
     // 显示报名已满提示的条件
@@ -549,7 +549,7 @@ export default {
       if (!this.selectedActivity) return false;
       return this.getActivityStatusText(this.selectedActivity) === "报名进行中" &&
         !this.selectedActivity.isBooked &&
-        this.selectedActivity.activityCapacity <= 0;
+        (this.selectedActivity.activityCapacity || 0) >= this.selectedActivity.activityTotalCapacity;
     },
 
     // 显示取消报名按钮的条件 - 不受取消次数限制
@@ -619,45 +619,45 @@ export default {
     /** 检查路由参数，处理从首页跳转过来的活动详情请求 */
     async checkRouteParams() {
       const { activityId, view, tab } = this.$route.query;
-      
+
       // 处理视图切换参数
       if (view === 'list' || tab === 'activity-list') {
         console.log('检测到活动列表视图参数，切换到活动列表标签页');
         this.activeView = 'list';
       }
-      
+
       if (activityId) {
         console.log('=== 开始处理路由参数 ===');
         console.log('检测到路由参数 activityId:', activityId, '类型:', typeof activityId);
-        
+
         try {
           // 直接通过API获取指定活动，不依赖当前页面的活动列表
           console.log('通过API直接获取活动详情...');
           const response = await this.getActivityById(activityId);
-          
+
           if (response && response.activityId) {
             console.log('通过API找到活动:', response.activityName);
-            
+
             // 等待一小段时间确保页面完全加载
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             // 自动打开活动详情弹窗
             this.handleDetail(response);
             console.log('成功打开活动详情弹窗');
           } else {
             console.error('=== API未返回活动数据 ===');
             console.error('查找的活动ID:', activityId);
-            
+
             // 如果API方式失败，尝试在当前活动列表中查找
             console.log('尝试在当前活动列表中查找...');
             if (this.activitiesList.length === 0) {
               await this.getList();
             }
-            
-            let targetActivity = this.activitiesList.find(activity => 
+
+            let targetActivity = this.activitiesList.find(activity =>
               activity.activityId == activityId
             );
-            
+
             if (targetActivity) {
               console.log('在当前列表中找到活动:', targetActivity.activityName);
               await new Promise(resolve => setTimeout(resolve, 1000));
@@ -666,18 +666,18 @@ export default {
               this.$message.warning(`未找到ID为 ${activityId} 的活动，请检查活动是否存在`);
             }
           }
-          
+
         } catch (error) {
           console.error('处理路由参数时出错:', error);
           this.$message.error('处理活动详情请求时出错，请刷新页面重试');
         }
-        
+
         // 清除路由参数，避免刷新页面时重复触发
         this.$router.replace({
           path: this.$route.path,
           query: {}
         });
-        
+
         console.log('=== 路由参数处理完成 ===');
       }
     },
@@ -832,7 +832,7 @@ export default {
         const isSignUpActive = status === "报名进行中";
 
         // 检查人数是否未满
-        const hasCapacity = activity.activityCapacity > 0;
+        const hasCapacity = (activity.activityCapacity || 0) < activity.activityTotalCapacity;
 
         const isAvailable = isSignUpActive && hasCapacity;
 
@@ -874,16 +874,16 @@ export default {
     async updateBookingStatusFromDatabase() {
       try {
         const response = await getBookedActivities(this.$store.state.user.name);
-        
+
         if (response.code === 200) {
           const bookedActivityIds = response.data || [];
-          
+
           // 更新所有活动的报名状态
           this.activitiesList.forEach(activity => {
             const isBooked = bookedActivityIds.includes(activity.activityId);
             this.$set(activity, 'isBooked', isBooked);
           });
-          
+
           // 如果当前有选中的活动，也更新其状态
           if (this.selectedActivity) {
             const isSelectedBooked = bookedActivityIds.includes(this.selectedActivity.activityId);
@@ -946,7 +946,7 @@ export default {
       }
 
       const status = this.getActivityStatusText(row);
-      const hasCapacity = row.activityCapacity > 0;
+      const hasCapacity = (row.activityCapacity || 0) < row.activityTotalCapacity;
 
       if (["报名进行中"].includes(status) && hasCapacity) {
         return "可报名";
@@ -958,8 +958,8 @@ export default {
     // 判断活动是否已满
     isActivityFull(row) {
       const status = this.getActivityStatusText(row);
-      // 只有在报名进行中且容量为0时才显示已满
-      return status === "报名进行中" && row.activityCapacity <= 0;
+      // 只有在报名进行中且已选人数>=总容量时才显示已满
+      return status === "报名进行中" && (row.activityCapacity || 0) >= row.activityTotalCapacity;
     },
 
     // 获取报名状态标签类型
@@ -982,7 +982,7 @@ export default {
     },
     // 获取容量样式
     getCapacityClass(activity) {
-      const percentage = (activity.activityTotalCapacity - activity.activityCapacity) / activity.activityTotalCapacity;
+      const percentage = (activity.activityCapacity || 0) / activity.activityTotalCapacity;
       if (percentage >= 0.8) return 'capacity-high';
       if (percentage >= 0.5) return 'capacity-medium';
       return 'capacity-low';
@@ -991,7 +991,7 @@ export default {
     // 计算容量百分比
     calculateCapacityPercentage(row) {
       if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
-      const used = row.activityTotalCapacity - row.activityCapacity;
+      const used = row.activityCapacity || 0; // activityCapacity 现在是已选人数
       return Math.round((used / row.activityTotalCapacity) * 100);
     },
 
@@ -1166,10 +1166,10 @@ export default {
           studentId: this.$store.state.user.name,
           version: latestActivity.version
         };
-        
-        
+
+
         const response = await signUpActivity(signUpData);
-        
+
         if (response.code === 200) {
           this.$message.success("报名成功！");
 
@@ -1180,8 +1180,8 @@ export default {
           // 等待数据库事务完成
           await new Promise(resolve => setTimeout(resolve, 300));
 
-          // 根据数据库中的实际报名记录更新所有活动状态
-          await this.updateBookingStatusFromDatabase();
+          // 重新获取活动列表以更新已选人数
+          await this.getList();
 
         } else {
           this.$message.error(response.msg || "报名失败");
@@ -1200,7 +1200,7 @@ export default {
         const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
         if (latestActivity) {
           activity.version = latestActivity.version;
-          activity.activityCapacity = latestActivity.activityCapacity;
+          activity.activityCapacity = latestActivity.activityCapacity; // 更新已选人数
         }
 
         // 使用原子性取消报名接口
@@ -1222,8 +1222,8 @@ export default {
           // 等待数据库事务完成
           await new Promise(resolve => setTimeout(resolve, 300));
 
-          // 根据数据库中的实际报名记录更新所有活动状态
-          await this.updateBookingStatusFromDatabase();
+          // 重新获取活动列表以更新已选人数
+          await this.getList();
 
           // 异步重新加载取消限制信息，但不影响当前UI状态
           setTimeout(async () => {
@@ -1324,7 +1324,7 @@ export default {
       if (activity.isBooked) {
         return "booked";
       }
-      
+
       // 使用服务器时间，如果服务器时间不可用则使用本地时间
       const now = this.serverTime || new Date();
       const deadline = new Date(activity.activityDeadline);
@@ -2724,7 +2724,7 @@ export default {
     width: 90%;
     max-width: 300px;
   }
-  
+
   .calendar-view {
     height: calc(100vh - 250px);
     padding: 10px;

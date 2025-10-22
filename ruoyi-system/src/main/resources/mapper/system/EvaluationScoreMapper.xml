@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.EvaluationScoreMapper">
+    
+    <resultMap type="EvaluationScore" id="EvaluationScoreResult">
+        <result property="id"    column="id"    />
+        <result property="userName"    column="user_name"    />
+        <result property="quesScore"    column="ques_score"    />
+        <result property="tutorId"    column="tutor_id"    />
+        <result property="quesType"    column="ques_type"    />
+        <result property="signature"    column="signature"    />
+    </resultMap>
+
+    <sql id="selectEvaluationScoreVo">
+        select id, user_name, ques_score, tutor_id, ques_type, signature from evaluation_score
+    </sql>
+
+    <select id="selectEvaluationScoreList" parameterType="EvaluationScore" resultMap="EvaluationScoreResult">
+        <include refid="selectEvaluationScoreVo"/>
+        <where>  
+            <if test="userName != null  and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
+            <if test="quesScore != null "> and ques_score = #{quesScore}</if>
+            <if test="tutorId != null "> and tutor_id = #{tutorId}</if>
+            <if test="quesType != null "> and ques_type = #{quesType}</if>
+        </where>
+    </select>
+    
+    <select id="selectEvaluationScoreById" parameterType="Long" resultMap="EvaluationScoreResult">
+        <include refid="selectEvaluationScoreVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertEvaluationScore" parameterType="EvaluationScore" useGeneratedKeys="true" keyProperty="id">
+        insert into evaluation_score
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="quesScore != null">ques_score,</if>
+            <if test="tutorId != null">tutor_id,</if>
+            <if test="quesType != null">ques_type,</if>
+            <if test="signature != null and signature != ''">signature,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="quesScore != null">#{quesScore},</if>
+            <if test="tutorId != null">#{tutorId},</if>
+            <if test="quesType != null">#{quesType},</if>
+            <if test="signature != null and signature != ''">#{signature},</if>
+         </trim>
+    </insert>
+
+    <update id="updateEvaluationScore" parameterType="EvaluationScore">
+        update evaluation_score
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="quesScore != null">ques_score = #{quesScore},</if>
+            <if test="tutorId != null">tutor_id = #{tutorId},</if>
+            <if test="quesType != null">ques_type = #{quesType},</if>
+            <if test="signature != null">signature = #{signature},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteEvaluationScoreById" parameterType="Long">
+        delete from evaluation_score where id = #{id}
+    </delete>
+
+    <delete id="deleteEvaluationScoreByIds" parameterType="String">
+        delete from evaluation_score where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
+

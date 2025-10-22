@@ -173,7 +173,7 @@ public class ActivitiesController extends BaseController {
      * 检查活动剩余容量
      *
      * @param activityId 活动ID
-     * @return 剩余容量
+     * @return 剩余容量（总容量 - 已选人数）
      */
     @GetMapping("/remainingCapacity/{activityId}")
     public AjaxResult getRemainingCapacity(@PathVariable Integer activityId) {

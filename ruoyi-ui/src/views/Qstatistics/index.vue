@@ -9,7 +9,7 @@
         </div>
       </el-card>
     </div>
-    
+
     <!-- 左侧部分 (echarts 图表部分) -->
     <div v-else class="left-container">
       <el-card class="custom-card">
@@ -67,7 +67,7 @@ export default {
       if (this.updateTimer) {
         clearTimeout(this.updateTimer);
       }
-      
+
       // 使用防抖处理
       this.updateTimer = setTimeout(() => {
         if(this.selected!==null){
@@ -75,8 +75,8 @@ export default {
           this.getEcharts3();
           this.renderChangeTypePieChart(this.academyChangeType[this.selected], 'echarts-container');
         }else {
-          // 如果 selected 为 null，隐藏图表
-          this.hideCharts();
+          // 如果 selected 为 null，显示所有学生的专业分流类型分布
+          this.showAllStudentsChangeTypeChart();
         }
       }, 100); // 100ms防抖延迟
     }
@@ -86,7 +86,7 @@ export default {
     if (this.updateTimer) {
       clearTimeout(this.updateTimer);
     }
-    
+
     // 销毁图表实例
     Object.values(this.chartInstances).forEach(chart => {
       if (chart) {
@@ -100,7 +100,7 @@ export default {
       if (this.chartData) {
         return this.chartData; // 使用缓存数据
       }
-      
+
       try {
         const response = await fetchEchartsData2(3);
         if (response.code === 200) {
@@ -145,15 +145,199 @@ export default {
         chartContainer3.style.display = 'none';
       }
     },
+
+    // 显示所有学生的专业分流类型分布
+    showAllStudentsChangeTypeChart() {
+      console.log('showAllStudentsChangeTypeChart 被调用');
+      console.log('academyChangeType 数据:', this.academyChangeType);
+
+      // 隐藏其他图表
+      const chartContainer = document.getElementById('echarts3');
+      if (chartContainer) {
+        chartContainer.style.display = 'none';
+      }
+      const chartContainer2 = document.getElementById('changeTypeChart');
+      if (chartContainer2) {
+        chartContainer2.style.display = 'none';
+      }
+
+      // 显示专业分流类型分布图表
+      const chartContainer3 = document.getElementById('echarts-container');
+      if (chartContainer3) {
+        chartContainer3.style.display = 'block';
+        console.log('echarts-container 容器已显示');
+      } else {
+        console.error('echarts-container 容器不存在');
+      }
+
+      // 计算所有学生的专业分流类型分布
+      const allStudentsChangeType = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+
+      // 遍历所有书院的数据
+      if (this.academyChangeType && Object.keys(this.academyChangeType).length > 0) {
+        Object.values(this.academyChangeType).forEach(academyData => {
+          Object.entries(academyData).forEach(([type, count]) => {
+            if (type !== 'Unknown') {
+              allStudentsChangeType[type] = (allStudentsChangeType[type] || 0) + count;
+            }
+          });
+        });
+        console.log('计算后的所有学生专业分流类型数据:', allStudentsChangeType);
+      } else {
+        console.warn('academyChangeType 数据为空或未初始化');
+      }
+
+      // 渲染所有学生的专业分流类型分布图
+      this.renderAllStudentsChangeTypePieChart(allStudentsChangeType, 'echarts-container');
+    },
+
+    // 渲染所有学生的专业分流类型分布饼图
+    renderAllStudentsChangeTypePieChart(allStudentsChangeTypeData, chartDomId) {
+      // 检查数据
+      console.log('renderAllStudentsChangeTypePieChart 被调用');
+      console.log('所有学生专业分流类型数据:', allStudentsChangeTypeData);
+      console.log('图表容器ID:', chartDomId);
+
+      const chartData = Object.entries(allStudentsChangeTypeData)
+        .filter(([changeType, count]) => changeType !== 'Unknown' && count > 0)
+        .map(([changeType, count]) => ({
+          name: this.getChangeTypeName(changeType),
+          value: count
+        }));
+
+      console.log('处理后的图表数据:', chartData);
+
+      const option = {
+        backgroundColor: '#ffffff',
+        title: {
+          text: '所有学生专业分流类型分布',
+          left: 'center',
+          textStyle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: '#333'
+          }
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{b}: {c} ({d}%)',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          textStyle: {
+            color: '#fff'
+          }
+        },
+        legend: {
+          orient: 'vertical',
+          right: 'right',
+          top: 'center',
+          data: chartData.map(item => item.name),
+          textStyle: {
+            fontSize: 14,
+            color: '#555'
+          }
+        },
+        series: [
+          {
+            name: '专业分流类型',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            data: chartData,
+            emphasis: {
+              itemStyle: {
+                color: '#f77f00',
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowOffsetY: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            },
+            label: {
+              show: true,
+              position: 'outside',
+              fontSize: 14,
+              color: '#333',
+              formatter: '{b}: {c} ({d}%)',
+              textStyle: {
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: true,
+              length: 15,
+              lineStyle: {
+                width: 2,
+                color: '#aaa'
+              }
+            },
+            itemStyle: {
+              normal: {
+                borderWidth: 2,
+                borderColor: '#fff',
+                borderRadius: 5,
+                color: function (params) {
+                  const colors = [
+                    '#ff7f50', '#87cefa', '#32cd32', '#ff6347', '#7b68ee', '#ffa07a',
+                    '#3cb371', '#f0e68c', '#dda0dd', '#ff69b4'
+                  ];
+                  return colors[params.dataIndex % colors.length];
+                }
+              }
+            },
+            animationType: 'scale',
+            animationEasing: 'elasticOut',
+            animationDuration: 1500
+          }
+        ]
+      };
+
+      // 获取 DOM 容器并渲染图表
+      const chartDom = document.getElementById(chartDomId);
+      if (!chartDom) {
+        console.error(`Chart container with ID ${chartDomId} not found!`);
+        return;
+      }
+
+      console.log('找到图表容器:', chartDom);
+      console.log('容器尺寸:', chartDom.offsetWidth, 'x', chartDom.offsetHeight);
+
+      // 销毁已存在的图表实例
+      if (this.chartInstances[chartDomId]) {
+        this.chartInstances[chartDomId].dispose();
+      }
+
+      // 创建新的图表实例
+      const myChart = echarts.init(chartDom);
+      this.chartInstances[chartDomId] = myChart;
+
+      console.log('图表实例已创建:', myChart);
+
+      // 设置图表配置
+      myChart.setOption(option);
+      console.log('图表配置已设置');
+
+      // 添加点击事件
+      myChart.on('click', (params) => {
+        console.log('Clicked on:', params.name, 'with value:', params.value);
+        let type = null;
+        switch (params.name) {
+          case '保持当前专业': type = 1; break;
+          case '域内任选专业': type = 2; break;
+          case '类内任选专业': type = 3; break;
+          case '拔尖/创新班政策内任选专业': type = 4; break;
+          case '转专业': type = 5; break;
+        }
+        this.$refs.student.type = type;
+      });
+    },
     echarts1(data) {
       var chartDom = document.getElementById('echarts1');
-      
+
       // 检查DOM元素是否存在
       if (!chartDom) {
         console.error('图表容器不存在: echarts1');
         return;
       }
-      
+
       // 使用缓存的图表实例或创建新的
       if (this.chartInstances.echarts1) {
         this.chartInstances.echarts1.dispose();
@@ -303,6 +487,13 @@ export default {
           const academy = xData[xIndex];
           that.$refs.student.academy = academy;
           that.selected = academy;
+        }
+      });
+
+      // 在数据初始化完成后，如果没有选择书院，显示所有学生的专业分流类型分布
+      this.$nextTick(() => {
+        if (this.selected === null) {
+          this.showAllStudentsChangeTypeChart();
         }
       });
     },
@@ -464,13 +655,13 @@ export default {
 
     echarts3(data, academy) {
       var chartDom = document.getElementById('echarts3');
-      
+
       // 检查DOM元素是否存在
       if (!chartDom) {
         console.error('图表容器不存在: echarts3');
         return;
       }
-      
+
       // 使用缓存的图表实例或创建新的
       if (this.chartInstances.echarts3) {
         this.chartInstances.echarts3.dispose();
@@ -478,7 +669,7 @@ export default {
       var myChart = echarts.init(chartDom);
       this.chartInstances.echarts3 = myChart;
       let allMajors;
-      
+
       // 固定使用分流后数据
       allMajors = data.afterCnt1 && data.afterCnt1[academy]
         ? Object.keys(data.afterCnt1[academy])
@@ -486,7 +677,7 @@ export default {
 
       let xData = allMajors;
       let yData = new Array(allMajors.length).fill(0); // 初始化所有专业的人数为 0
-      
+
       // 固定使用分流后数据填充
       if (data.afterCnt1 && data.afterCnt1[academy]) {
         for (let [k2, v2] of Object.entries(data.afterCnt1[academy])) {
@@ -605,7 +796,7 @@ export default {
       // 获取该专业的转专业类型分布
       function getChangeMajorTypeForMajor(data, academy, major) {
         const afterMajorChangeType = {};  // 统计该专业的转专业类型
-        
+
         // 固定使用分流后数据
         if (data.changeMajorType && data.changeMajorType[academy] && data.changeMajorType[academy][major]) {
           for (let [changeType, count] of Object.entries(data.changeMajorType[academy][major])) {

@@ -156,4 +156,47 @@
           AND version = #{version}
           AND course_capacity &lt; course_total_capacity
     </update>
+
+    <!-- 更新为选课中状态 -->
+    <update id="updateStatusToEnrolling" parameterType="String">
+        <![CDATA[
+        UPDATE courses
+        SET status = '选课中'
+        WHERE status IN ('未开始', '已截止')
+          AND #{now} >= course_start
+          AND #{now} <= course_deadline
+        ]]>
+    </update>
+
+    <!-- 更新为已截止状态 -->
+    <update id="updateStatusToEnrollmentClosed" parameterType="String">
+        <![CDATA[
+        UPDATE courses
+        SET status = '已截止'
+        WHERE status IN ('未开始', '选课中')
+          AND #{now} > course_deadline
+          AND #{now} < start_time
+        ]]>
+    </update>
+
+    <!-- 更新为进行中状态 -->
+    <update id="updateStatusToOngoing" parameterType="String">
+        <![CDATA[
+        UPDATE courses
+        SET status = '进行中'
+        WHERE status IN ('未开始', '选课中', '已截止')
+          AND #{now} >= start_time
+          AND #{now} <= end_time
+        ]]>
+    </update>
+
+    <!-- 更新为已结束状态 -->
+    <update id="updateStatusToCompleted" parameterType="String">
+        <![CDATA[
+        UPDATE courses
+        SET status = '已结束'
+        WHERE status != '已结束'
+          AND #{now} > end_time
+        ]]>
+    </update>
 </mapper>

@@ -184,15 +184,15 @@
         </foreach>
     </delete>
 
-    <!-- 基于实际预约人数更新活动容量 -->
+    <!-- 基于实际预约人数更新活动已选人数 -->
     <update id="updateCapacityByActualBookings" parameterType="Integer">
         UPDATE activities 
-        SET activity_capacity = GREATEST(0, activity_total_capacity - (
+        SET activity_capacity = (
             SELECT COALESCE(COUNT(*), 0)
             FROM bookings 
             WHERE activity_id = #{activityId}
             AND status IN ('approved', 'submitted', '未提交')
-        )),
+        ),
         version = version + 1
         WHERE activity_id = #{activityId}
         AND version = #{version}

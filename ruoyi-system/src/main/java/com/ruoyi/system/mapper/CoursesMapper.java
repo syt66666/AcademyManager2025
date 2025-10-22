@@ -79,4 +79,32 @@ public interface CoursesMapper
      * @return 结果
      */
     public int increaseCapacity(@Param("courseId") Long courseId, @Param("version") Integer version);
+
+    /**
+     * 更新为选课中状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToEnrolling(@Param("now") String now);
+
+    /**
+     * 更新为选课截止状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToEnrollmentClosed(@Param("now") String now);
+
+    /**
+     * 更新为课程进行中状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToOngoing(@Param("now") String now);
+
+    /**
+     * 更新为课程已完成状态
+     * @param now 当前时间
+     * @return 更新行数
+     */
+    int updateStatusToCompleted(@Param("now") String now);
 }

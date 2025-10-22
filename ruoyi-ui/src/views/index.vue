@@ -31,13 +31,9 @@ export default {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  margin-left: 200px;
   background: #f5f7fa;
   padding: 0;
   position: relative;
-  width: calc(100% - 200px);
-  overflow: visible;
-  box-sizing: border-box;
 }
 
 /* 欢迎页面样式 */
@@ -113,15 +109,15 @@ export default {
     padding: 40px 30px;
     margin: 20px;
   }
-  
+
   .welcome-title {
     font-size: 28px;
   }
-  
+
   .welcome-subtitle {
     font-size: 16px;
   }
-  
+
   .welcome-icon i {
     font-size: 60px;
   }

@@ -180,7 +180,7 @@
               />
               <div class="count">
                 <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.activityTotalCapacity - scope.row.activityCapacity }}/{{ scope.row.activityTotalCapacity }}
+                  {{ scope.row.activityCapacity || 0 }}/{{ scope.row.activityTotalCapacity }}
                 </span>
               </div>
             </div>
@@ -319,13 +319,25 @@
                 </el-input>
               </el-form-item>
 
-              <el-form-item label="活动容量" prop="activityTotalCapacity">
+              <el-form-item label="活动总容量" prop="activityTotalCapacity">
                 <el-input-number
                   v-model="form.activityTotalCapacity"
                   :min="1"
                   :max="1000"
                   controls-position="right"
                   class="form-number">
+                </el-input-number>
+                <span class="capacity-tip">人</span>
+              </el-form-item>
+
+              <el-form-item label="当前已选人数" prop="activityCapacity" v-if="form.activityId">
+                <el-input-number
+                  v-model="form.activityCapacity"
+                  :min="0"
+                  :max="form.activityTotalCapacity || 1000"
+                  controls-position="right"
+                  class="form-number"
+                  :disabled="true">
                 </el-input-number>
                 <span class="capacity-tip">人</span>
               </el-form-item>
@@ -736,7 +748,22 @@ export default {
           {required: true, message: "活动地点不能为空", trigger: "blur"}
         ],
         activityTotalCapacity: [
-          { required: true, message: "活动容量不能为空", trigger: "blur" }
+          { required: true, message: "活动容量不能为空", trigger: "blur" },
+          {
+            validator: (rule, value, callback) => {
+              // 只在编辑模式下进行容量检查
+              if (this.form.activityId && this.form.activityCapacity !== null && this.form.activityCapacity !== undefined) {
+                const selectedCount = parseInt(this.form.activityCapacity) || 0;
+                const totalCapacity = parseInt(value) || 0;
+                if (totalCapacity < selectedCount) {
+                  callback(new Error(`总容量不能小于当前已选人数(${selectedCount})，请先处理已报名或增大容量`));
+                  return;
+                }
+              }
+              callback();
+            },
+            trigger: ["blur", "change"]
+          }
         ],
         activityType: [
           { required: true, message: "请选择活动类型", trigger: "change" }
@@ -862,28 +889,48 @@ export default {
 
     /** 检查路由参数，处理从首页跳转过来的编辑请求 */
     async checkRouteParams() {
-      const { activityId, filterMode } = this.$route.query;
-      
+      const { activityId, filterMode, month, year } = this.$route.query;
+
       if (activityId && filterMode === 'single') {
-        // 查找对应的活动
-        const targetActivity = this.activitiesList.find(activity => 
-          activity.activityId == activityId
-        );
-        
-        if (targetActivity) {
-          // 自动打开编辑弹窗
-          await this.handleUpdate(targetActivity);
-        } else {
-          // 如果列表中没有找到，显示错误信息
-          this.$message.error('未找到指定的活动，请刷新页面重试');
-        }
-        
+        // 根据活动ID筛选活动
+        this.queryParams.activityId = activityId;
+        this.handleQuery();
+
+        // 显示筛选成功消息
+        this.$message.success('已筛选出指定活动');
+
+        // 清除路由参数，避免刷新页面时重复触发
+        this.$router.replace({
+          path: this.$route.path,
+          query: {}
+        });
+      } else if (filterMode === 'month' && month) {
+        // 处理月份筛选
+        this.applyMonthFilter(parseInt(month), parseInt(year) || new Date().getFullYear());
+
         // 清除路由参数，避免刷新页面时重复触发
         this.$router.replace({
           path: this.$route.path,
           query: {}
         });
       }
+    },
+
+    /** 应用月份筛选 */
+    applyMonthFilter(month, year) {
+      // 设置查询参数中的时间范围
+      const startDate = new Date(year, month - 1, 1); // 月份从0开始，所以减1
+      const endDate = new Date(year, month, 0); // 下个月的第0天就是本月的最后一天
+
+      // 设置开始时间和结束时间
+      this.queryParams.startTime = startDate.toISOString().split('T')[0];
+      this.queryParams.endTime = endDate.toISOString().split('T')[0];
+
+      // 显示筛选提示
+      this.$message.success(`已筛选${year}年${month}月的活动`);
+
+      // 重新加载数据
+      this.handleQuery();
     },
 
     statusTagType(status) {
@@ -952,7 +999,7 @@ export default {
     /** 计算容量百分比 */
     calculateCapacityPercentage(row) {
       if (!row.activityTotalCapacity || row.activityTotalCapacity <= 0) return 0;
-      const used = row.activityTotalCapacity - row.activityCapacity;
+      const used = row.activityCapacity || 0; // activityCapacity 现在是已选人数
       return Math.round((used / row.activityTotalCapacity) * 100);
     },
 
@@ -1140,6 +1187,25 @@ export default {
             });
           }
 
+          // 如果有时间范围筛选条件，进行前端筛选
+          if (this.queryParams.startTime && this.queryParams.endTime) {
+            const startTime = new Date(this.queryParams.startTime).getTime();
+            const endTime = new Date(this.queryParams.endTime).getTime();
+
+            allActivities = allActivities.filter(activity => {
+              if (!activity.startTime) return false;
+              const activityTime = new Date(activity.startTime).getTime();
+              return activityTime >= startTime && activityTime <= endTime;
+            });
+          }
+
+          // 如果有活动ID筛选条件，进行前端筛选
+          if (this.queryParams.activityId) {
+            allActivities = allActivities.filter(activity =>
+              activity.activityId == this.queryParams.activityId
+            );
+          }
+
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
 
@@ -1171,6 +1237,25 @@ export default {
               const status = this.getActivityStatusText(activity);
               return status === this.queryParams.activityStatus;
             });
+          }
+
+          // 如果有时间范围筛选条件，进行前端筛选
+          if (this.queryParams.startTime && this.queryParams.endTime) {
+            const startTime = new Date(this.queryParams.startTime).getTime();
+            const endTime = new Date(this.queryParams.endTime).getTime();
+
+            allActivities = allActivities.filter(activity => {
+              if (!activity.startTime) return false;
+              const activityTime = new Date(activity.startTime).getTime();
+              return activityTime >= startTime && activityTime <= endTime;
+            });
+          }
+
+          // 如果有活动ID筛选条件，进行前端筛选
+          if (this.queryParams.activityId) {
+            allActivities = allActivities.filter(activity =>
+              activity.activityId == this.queryParams.activityId
+            );
           }
 
           // 按活动开始时间排序（从晚到早）
@@ -1230,7 +1315,9 @@ export default {
         pictureUrl: null,
         version: 0
       };
-      this.resetForm("form");
+      if (this.$refs.form) {
+        this.$refs.form.resetFields();
+      }
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -1239,10 +1326,26 @@ export default {
     },
     /** 重置按钮操作 */
     resetQuery() {
-      // 手动重置查询参数，确保活动状态被清空
+      // 手动重置所有查询参数，确保所有筛选条件被清空
       this.queryParams.activityStatus = null;
-      this.resetForm("queryForm");
-      this.handleQuery();
+      this.queryParams.activityId = null;
+      this.queryParams.activityName = null;
+      this.queryParams.startTime = null;
+      this.queryParams.endTime = null;
+      this.queryParams.activityType = null;
+      this.queryParams.activityLocation = null;
+      // 注意：不重置organizer，因为需要保持当前用户的组织者身份
+
+      // 重置表单显示
+      if (this.$refs.queryForm) {
+        this.$refs.queryForm.resetFields();
+      }
+
+      // 重置页码到第一页
+      this.queryParams.pageNum = 1;
+
+      // 重新获取列表
+      this.getList();
     },
     // 多选框选中数据
     handleSelectionChange(selection) {
@@ -1265,28 +1368,28 @@ export default {
         this.$message.warning('活动已结束，不允许编辑活动信息');
         return;
       }
-      
+
       const activityId = row.activityId || this.ids;
       this.loading = true;
-      
+
       try {
         const response = await getActivities(activityId);
         const activityData = response.data;
-        
+
         // 直接将获取的数据设置到 form
         this.form = activityData;
-        
+
         // 确保活动描述字段有值
         if (!this.form.activityDescription) {
           this.form.activityDescription = '';
         }
-        
+
         this.open = true;
         this.title = "修改活动信息";
-        
+
         // 等待对话框和编辑器完全渲染
         await this.$nextTick();
-        
+
       } catch (error) {
         this.$message.error('获取活动详情失败');
       } finally {
@@ -1320,6 +1423,17 @@ export default {
         if (!valid) {
           this.isSubmitting = false;
           return; // 验证不通过则停止
+        }
+
+        // 3.5. 额外的容量检查（编辑模式下）
+        if (this.form.activityId && this.form.activityCapacity !== null && this.form.activityCapacity !== undefined) {
+          const selectedCount = parseInt(this.form.activityCapacity) || 0;
+          const totalCapacity = parseInt(this.form.activityTotalCapacity) || 0;
+          if (totalCapacity < selectedCount) {
+            this.$message.error(`总容量不能小于当前已选人数(${selectedCount})，请先处理已报名或增大容量`);
+            this.isSubmitting = false;
+            return;
+          }
         }
 
         // 4. 计算活动状态
@@ -1797,24 +1911,18 @@ export default {
   watch: {
     'form.activityTotalCapacity'(newVal, oldVal) {
       if (!this.form.activityId) {
-        // 新增活动模式：剩余容量 = 总容量
-        this.form.activityCapacity = newVal;
+        // 新增活动模式：已选人数 = 0
+        this.form.activityCapacity = 0;
       } else {
-        // 编辑活动模式：需要重新计算剩余容量
+        // 编辑活动模式：检查新总容量是否小于当前已选人数
         if (oldVal && newVal && this.form.activityCapacity !== null) {
-          // 计算已选人数（基于旧的总容量）
-          const selectedCount = oldVal - this.form.activityCapacity;
-          
-          // 计算新的剩余容量
-          const newRemainingCapacity = newVal - selectedCount;
-          
-          // 确保剩余容量不为负数
-          if (newRemainingCapacity >= 0) {
-            this.form.activityCapacity = newRemainingCapacity;
-          } else {
-            // 如果新总容量小于已选人数，剩余容量设为0
-            this.form.activityCapacity = 0;
-            this.$message.warning(`新总容量(${newVal})小于已选人数(${selectedCount})，剩余容量已设为0`);
+          const selectedCount = this.form.activityCapacity || 0; // activityCapacity 现在是已选人数
+          if (newVal < selectedCount) {
+            // 直接阻止输入，重置为原来的值
+            this.$message.error(`总容量不能小于当前已选人数(${selectedCount})`);
+            this.$nextTick(() => {
+              this.form.activityTotalCapacity = oldVal;
+            });
           }
         }
       }
@@ -2710,12 +2818,12 @@ export default {
 /* 时间网格布局*/
 .time-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 改为单列布局 */
+  grid-template-columns: 1fr; /* 单列布局，每个时间字段占一行 */
   gap: 20px;
 
   .time-item {
     margin-bottom: 0;
-    
+
     /* 确保时间选择框有足够的宽度 */
     .el-form-item__content {
       width: 100%;
@@ -2762,8 +2870,8 @@ export default {
 
 .form-datetime {
   width: 100%;
-  max-width: 350px; /* 设置最大宽度，让时间框不会过长 */
-  
+  max-width: 450px; /* 增加最大宽度，让时间框更长 */
+
   .el-input__inner {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
@@ -2955,10 +3063,10 @@ export default {
 
   .time-grid {
     gap: 16px;
-    
+
     .time-item {
       .form-datetime {
-        min-width: 280px; /* 移动端调整最小宽度 */
+        min-width: 350px; /* 增加移动端最小宽度 */
       }
     }
   }
@@ -2978,8 +3086,8 @@ export default {
 .activity-form-dialog .time-grid {
   .time-item {
     .form-datetime {
-      max-width: 180px; /* 设置最大宽度，避免过长 */
-      
+      max-width: 400px; /* 增加最大宽度，让时间框更长 */
+
       .el-input__inner {
         font-size: 15px; /* 稍微增大字体 */
         padding: 0 30px; /* 增加左右内边距 */
@@ -2993,7 +3101,7 @@ export default {
   .activity-form-dialog .time-grid {
     .time-item {
       .form-datetime {
-        max-width: 350px;
+        max-width: 450px; /* 增加中等屏幕的最大宽度 */
       }
     }
   }
