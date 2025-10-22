@@ -1068,15 +1068,11 @@ export default {
 
     // 跳转到所有通知页面
     goToAllNotifications() {
-      console.log('跳转到通知展示页面');
-      this.$router.push({
-        path: '/system/notice/index'
-      }).then(() => {
-        console.log('成功跳转到通知展示页面');
-      }).catch(error => {
-        console.error('跳转到通知展示页面失败:', error);
-        this.$message.error('跳转到通知展示页面失败，请检查路由配置');
-      });
+      this.goToNoticeManager();
+    },
+
+    goToNoticeManager() {
+      this.$router.push('/Notice/index');
     },
 
     // 跳转到所有活动页面（活动预约界面）
