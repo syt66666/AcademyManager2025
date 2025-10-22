@@ -8,7 +8,6 @@
           <div class="header-left">
             <i class="el-icon-bell"></i>
             <span>书院通知</span>
-            <span v-if="userCollege" class="college-name">({{ userCollege }})</span>
           </div>
           <el-button type="text" size="small" @click="goToAllNotifications" class="all-button">
             全部
@@ -29,11 +28,11 @@
             >
               <div class="notification-date">
                 {{ formatNotificationDate(notification.createdAt) }}
+                <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
               </div>
               <div class="notification-info">
                 <div class="notification-title">{{ notification.notiTitle }}</div>
                 <div class="notification-badges">
-                  <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
                   <span v-if="isTopNotification(notification)" class="badge top">TOP</span>
                 </div>
               </div>
@@ -310,6 +309,7 @@ import { listActivities } from "@/api/system/activities";
 import { listActivity } from "@/api/system/activity";
 import { listBookingsWithActivity } from "@/api/system/bookings";
 import { listBookingsWithCourse } from "@/api/system/courseBookings";
+import { getStudent } from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
 
 export default {
@@ -398,7 +398,9 @@ export default {
       return Math.max(availableWidth, 600) + 'px'; // 最小宽度600px
     }
   },
-  created() {
+     async created() {
+    // 先获取学生书院信息，然后加载数据
+    await this.initUserCollege();
     this.loadData();
     // 设置自动刷新，每5分钟刷新一次数据
     this.refreshTimer = setInterval(() => {
@@ -412,6 +414,30 @@ export default {
     }
   },
   methods: {
+    // 初始化用户书院信息
+    async initUserCollege() {
+      try {
+        console.log('=== 开始获取学生书院信息 ===');
+        console.log('当前登录用户:', this.$store.state.user.name);
+        
+        // 直接调用获取学生信息的API
+        const response = await getStudent(this.$store.state.user.name);
+        console.log('学生信息API响应:', response);
+        
+        if (response && response.studentInfo && response.studentInfo.academy) {
+          this.userCollege = response.studentInfo.academy;
+          console.log('✅ 学生书院信息获取成功:', this.userCollege);
+        } else {
+          console.warn('⚠️ 未找到学生书院信息:', response);
+          this.userCollege = null;
+        }
+      } catch (error) {
+        console.error('❌ 获取学生书院信息失败:', error);
+        this.userCollege = null;
+        this.$message.warning('获取书院信息失败，请联系管理员');
+      }
+    },
+
     // 显示通知详情
     showNotificationDetail(notification) {
       this.currentNotification = notification;
@@ -500,23 +526,35 @@ export default {
           // 获取所有通知数据
           const allNotifications = response.rows || [];
           console.log('所有通知数据:', allNotifications);
-          
-          // 获取当前用户的书院信息（来自stu_info表的academy字段）
-          this.userCollege = this.$store.state.user.academy;
-          console.log('当前用户书院（academy字段）:', this.userCollege);
+          console.log('当前用户书院（已获取）:', this.userCollege);
           
           // 根据用户书院过滤通知（匹配noti_type字段）
           if (this.userCollege) {
-            this.notifications = allNotifications.filter(notification => {
-              // 如果通知的noti_type与用户academy匹配，则显示
+            const filteredNotifications = allNotifications.filter(notification => {
+              // 检查通知的noti_type字段
               const notificationCollege = notification.noti_type || notification.notiType;
-              return notificationCollege === this.userCollege;
+              const isMatch = notificationCollege === this.userCollege;
+              
+              console.log('通知过滤检查:', {
+                title: notification.notiTitle,
+                noti_type: notification.noti_type,
+                notiType: notification.notiType,
+                userCollege: this.userCollege,
+                isMatch: isMatch
+              });
+              
+              return isMatch;
             });
-            console.log('过滤后的书院通知:', this.notifications);
+            
+            // 限制显示数量为6条，比近期活动多显示2条
+            this.notifications = filteredNotifications.slice(0, 8);
+            console.log(`✅ 过滤后的书院通知 (${this.userCollege}):`, this.notifications);
+            console.log(`原始通知数: ${allNotifications.length}, 过滤后通知数: ${filteredNotifications.length}, 显示数量: ${this.notifications.length}`);
           } else {
-            // 如果没有书院信息，显示所有通知
-            this.notifications = allNotifications;
-            console.log('未找到用户书院信息（academy字段），显示所有通知');
+            // 如果没有书院信息，不显示任何通知（安全考虑）
+            this.notifications = [];
+            console.warn('⚠️ 未找到用户书院信息，不显示任何通知');
+            this.$message.warning('未找到您的书院信息，请联系管理员');
           }
         } else {
           console.log('API返回非200状态码:', response?.code, response?.msg);
@@ -571,8 +609,8 @@ export default {
             .filter(activity => activity.activityStart) // 过滤掉没有activity_start时间的活动
             .sort((a, b) => new Date(b.activityStart) - new Date(a.activityStart));
 
-          // 取前5个活动
-          this.recentActivities = sortedActivities.slice(0, 5);
+          // 取前4个活动
+          this.recentActivities = sortedActivities.slice(0, 4);
 
           console.log('按activity_start时间倒序排列的近期活动:', this.recentActivities);
         } else {
@@ -1180,29 +1218,8 @@ export default {
 
 /* 通知列表 */
 .notification-list {
-  max-height: 240px;  /* 与活动列表保持一致的高度 */
-  overflow-y: auto;
-  overflow-x: hidden;  /* 隐藏水平滚动条 */
-  min-height: 240px;  /* 设置最小高度，保持与活动列表对齐 */
-}
-
-/* 自定义滚动条样式 - 类似近期活动 */
-.notification-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.notification-list::-webkit-scrollbar-track {
-  background: #f5f5f5;
-  border-radius: 3px;
-}
-
-.notification-list::-webkit-scrollbar-thumb {
-  background: #c0c4cc;
-  border-radius: 3px;
-}
-
-.notification-list::-webkit-scrollbar-thumb:hover {
-  background: #a8abb2;
+  /* 移除高度限制和滚动条，让内容自适应 */
+  min-height: auto;
 }
 
 .notification-item {
@@ -1234,6 +1251,11 @@ export default {
   text-align: center;
   margin-right: 12px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .notification-info {
@@ -1272,6 +1294,17 @@ export default {
   color: white;
 }
 
+/* 时间标签内的NEW标签样式 */
+.notification-date .badge.new {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  font-size: 8px;
+  padding: 1px 3px;
+  margin: 0;
+  line-height: 1;
+}
+
 .badge.top {
   background: #409EFF;
   color: white;
@@ -1279,9 +1312,8 @@ export default {
 
 /* 活动列表 */
 .activity-list {
-  max-height: 240px;  /* 限制高度，确保只显示3条活动 */
-  overflow-y: auto;
-  min-height: auto;  /* 移除固定最小高度，让内容自适应 */
+  /* 移除高度限制，让内容自适应 */
+  min-height: auto;
 }
 
 .activity-item {
@@ -1742,33 +1774,12 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  max-height: 120px; /* 调整高度以只显示一行（2个课程） */
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* 移除高度限制和滚动条 */
   padding-right: 8px;
 }
 
-/* 自定义滚动条样式 */
-.course-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.course-list::-webkit-scrollbar-track {
-  background: #f5f5f5;
-  border-radius: 3px;
-}
-
-.course-list::-webkit-scrollbar-thumb {
-  background: #c0c4cc;
-  border-radius: 3px;
-}
-
-.course-list::-webkit-scrollbar-thumb:hover {
-  background: #a8abb2;
-}
-
 .course-item {
-  padding: 12px; /* 减少内边距以适应单行显示 */
+  padding: 12px;
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   background: #fff;
@@ -1777,10 +1788,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px; /* 减少间距 */
+  gap: 12px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: relative;
-  height: 100px; /* 设置固定高度，确保单行显示 */
+  /* 移除固定高度限制 */
 }
 
 .course-item::before {
