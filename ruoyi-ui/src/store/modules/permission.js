@@ -70,6 +70,12 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
         route.component = loadView(route.component)
       }
     }
+    
+    // 为特定菜单添加动态标题支持
+    if (route.meta && (route.meta.title === '通知公告' || route.meta.title === '通知管理')) {
+      route.meta.dynamicTitle = true;
+    }
+    
     if (route.children != null && route.children && route.children.length) {
       route.children = filterAsyncRouter(route.children, route, type)
     } else {

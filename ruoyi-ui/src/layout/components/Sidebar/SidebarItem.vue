@@ -62,6 +62,17 @@ export default {
         if (meta.title === '首页') {
           return '首页';
         }
+        
+        // 根据用户身份动态调整通知管理菜单标题
+        if (meta.title === '通知公告' || meta.title === '通知管理') {
+          // 检查用户角色，如果是学生则显示"通知展示"，否则显示"通知管理"
+          const userInfo = this.$store.state.user;
+          if (userInfo && userInfo.roles && userInfo.roles.includes('student')) {
+            return '通知展示';
+          } else {
+            return '通知管理';
+          }
+        }
       }
       return meta ? meta.title : '';
     },

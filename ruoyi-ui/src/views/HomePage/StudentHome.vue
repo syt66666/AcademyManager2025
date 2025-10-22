@@ -28,10 +28,12 @@
             >
               <div class="notification-date">
                 {{ formatNotificationDate(notification.createdAt) }}
-                <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
               </div>
               <div class="notification-info">
-                <div class="notification-title">{{ notification.notiTitle }}</div>
+                <div class="notification-title">
+                  <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
+                  {{ notification.notiTitle }}
+                </div>
                 <div class="notification-badges">
                   <span v-if="isTopNotification(notification)" class="badge top">TOP</span>
                 </div>
@@ -45,7 +47,7 @@
       <div class="recent-activities-panel">
         <div class="panel-header">
           <div class="header-left">
-            <i class="el-icon-calendar"></i>
+            <i class="el-icon-s-promotion"></i>
             <span>近期活动</span>
           </div>
           <el-button type="text" size="small" @click="goToAllActivities" class="all-button">
@@ -64,12 +66,20 @@
               class="activity-item"
               @click="goToActivityBooking(activity)"
             >
+              <div class="activity-date">
+                {{ formatActivityDate(activity.activityStart) }}
+              </div>
               <div class="activity-content">
-                <div class="activity-name">{{ activity.activityName }}</div>
-                <div class="activity-times">
-                  <span class="time-info">报名截止：{{ formatDateTime(activity.activityDeadline) }}</span>
-                  <span class="time-info">活动结束：{{ formatDateTime(activity.endTime) }}</span>
+                <div class="activity-name">
+                  {{ activity.activityName }}
                 </div>
+              </div>
+              <div class="activity-time-section">
+                <span class="activity-time-label">活动时间：</span>
+                <span class="time-info">
+                  <i class="el-icon-time"></i>
+                  {{ formatActivityTimeRange(activity.startTime, activity.endTime) }}
+                </span>
               </div>
               <div class="activity-status">
                 <el-tag :type="getActivityStatusTag(activity)" size="mini">
@@ -87,7 +97,10 @@
       <!-- 左边活动完成情况 -->
       <div class="activity-completion-panel">
         <div class="panel-header">
-          <span>活动完成进度</span>
+          <div class="header-left">
+            <i class="el-icon-data-line"></i>
+            <span>活动完成进度</span>
+          </div>
         </div>
         <div class="completion-content">
           <div class="progress-categories">
@@ -122,36 +135,60 @@
       <!-- 右边活动状态筛选 -->
       <div class="activity-status-panel">
         <div class="panel-header">
-          <span>活动状态筛选</span>
+          <div class="header-left">
+            <i class="el-icon-s-operation"></i>
+            <span>活动状态筛选</span>
+          </div>
         </div>
         <div class="status-content">
           <div class="status-filters">
-            <div
-              v-for="status in activityStatusFilters"
-              :key="status.value"
-              class="status-filter-item"
-              :class="{ active: selectedStatus === status.value }"
-              @click="filterByStatus(status.value)"
-            >
-              <div class="status-icon" :class="status.iconClass">
-                <i :class="status.icon"></i>
-              </div>
-              <div class="status-info">
-                <div class="status-count">{{ status.count }}</div>
-                <div class="status-label">{{ status.label }}</div>
+            <!-- 第一行：前三个状态 -->
+            <div class="status-filters-row">
+              <div
+                v-for="status in activityStatusFilters.slice(0, 3)"
+                :key="status.value"
+                class="status-filter-item"
+                :class="{ active: selectedStatus === status.value }"
+                @click="filterByStatus(status.value)"
+              >
+                <div class="status-icon" :class="status.iconClass">
+                  <i :class="status.icon"></i>
+                </div>
+                <div class="status-info">
+                  <div class="status-count">{{ status.count }}</div>
+                  <div class="status-label">{{ status.label }}</div>
+                </div>
               </div>
             </div>
-            <div
-              class="status-filter-item clear-filter"
-              :class="{ active: selectedStatus === null }"
-              @click="clearStatusFilter"
-            >
-              <div class="status-icon all">
-                <i class="el-icon-view"></i>
+            <!-- 第二行：后两个状态 -->
+            <div class="status-filters-row">
+              <div
+                v-for="status in activityStatusFilters.slice(3)"
+                :key="status.value"
+                class="status-filter-item"
+                :class="{ active: selectedStatus === status.value }"
+                @click="filterByStatus(status.value)"
+              >
+                <div class="status-icon" :class="status.iconClass">
+                  <i :class="status.icon"></i>
+                </div>
+                <div class="status-info">
+                  <div class="status-count">{{ status.count }}</div>
+                  <div class="status-label">{{ status.label }}</div>
+                </div>
               </div>
-              <div class="status-info">
-                <div class="status-count">{{ totalAll }}</div>
-                <div class="status-label">全部</div>
+              <div
+                class="status-filter-item clear-filter"
+                :class="{ active: selectedStatus === null }"
+                @click="clearStatusFilter"
+              >
+                <div class="status-icon all">
+                  <i class="el-icon-view"></i>
+                </div>
+                <div class="status-info">
+                  <div class="status-count">{{ totalAll }}</div>
+                  <div class="status-label">全部</div>
+                </div>
               </div>
             </div>
           </div>
@@ -163,8 +200,10 @@
     <div class="bottom-section">
       <div class="selected-courses-panel">
         <div class="panel-header">
-          <i class="el-icon-reading"></i>
-          <span>我的选课记录</span>
+          <div class="header-left">
+            <i class="el-icon-reading"></i>
+            <span>我的选课记录</span>
+          </div>
           <div class="header-right">
             <span class="record-count">共 {{ totalCourses }} 条记录</span>
             <el-button type="text" size="small" @click="goToAllCourses" class="all-button">
@@ -184,43 +223,21 @@
               class="course-item"
               @click="goToCourseParticipate(course)"
             >
+              <div class="course-date">{{ formatCourseDate(course.courseStart) }}</div>
               <div class="course-content">
-                <div class="course-header">
-                  <div class="course-name">{{ course.courseName }}</div>
-                  <div class="course-status">
-                    <el-tag :type="getCourseStatusTag(course.status)" size="mini">
-                      {{ course.status }}
-                    </el-tag>
-                  </div>
+                <div class="course-title-row">
+                  <h4 class="course-title">{{ course.courseName }}</h4>
                 </div>
-                <div class="course-info-layout">
-                  <div class="info-row">
-                    <div class="left-info">
-                      <span class="info-label">课程开始时间：</span>
-                      <span class="info-value">{{ formatDateTime(course.courseStart) }}</span>
-                    </div>
-                    <div class="right-info">
-                      <span class="info-label">
-                        <i class="el-icon-location"></i>
-                        地点：
-                      </span>
-                      <span class="info-value">{{ course.courseLocation || '未设置地点' }}</span>
-                    </div>
-                  </div>
-                  <div class="info-row">
-                    <div class="left-info">
-                      <span class="info-label">课程结束时间：</span>
-                      <span class="info-value">{{ formatDateTime(course.courseDeadline) }}</span>
-                    </div>
-                    <div class="right-info">
-                      <span class="info-label">
-                        <i class="el-icon-trophy"></i>
-                        成绩：
-                      </span>
-                      <span class="info-value">{{ course.scoreType || '暂无成绩' }}</span>
-                    </div>
-                  </div>
-                </div>
+              </div>
+              <div class="course-time-section">
+                <span class="course-time-label">课程时间：</span>
+                <span class="course-time-inline">
+                  <i class="el-icon-time"></i>
+                  {{ formatCourseTimeRange(course.courseStart, course.courseDeadline) }}
+                </span>
+              </div>
+              <div class="course-status" :class="getCourseStatusClass(course.status)">
+                {{ course.status }}
               </div>
             </div>
           </div>
@@ -419,11 +436,11 @@ export default {
       try {
         console.log('=== 开始获取学生书院信息 ===');
         console.log('当前登录用户:', this.$store.state.user.name);
-        
+
         // 直接调用获取学生信息的API
         const response = await getStudent(this.$store.state.user.name);
         console.log('学生信息API响应:', response);
-        
+
         if (response && response.studentInfo && response.studentInfo.academy) {
           this.userCollege = response.studentInfo.academy;
           console.log('✅ 学生书院信息获取成功:', this.userCollege);
@@ -527,14 +544,14 @@ export default {
           const allNotifications = response.rows || [];
           console.log('所有通知数据:', allNotifications);
           console.log('当前用户书院（已获取）:', this.userCollege);
-          
+
           // 根据用户书院过滤通知（匹配noti_type字段）
           if (this.userCollege) {
             const filteredNotifications = allNotifications.filter(notification => {
               // 检查通知的noti_type字段
               const notificationCollege = notification.noti_type || notification.notiType;
               const isMatch = notificationCollege === this.userCollege;
-              
+
               console.log('通知过滤检查:', {
                 title: notification.notiTitle,
                 noti_type: notification.noti_type,
@@ -542,12 +559,12 @@ export default {
                 userCollege: this.userCollege,
                 isMatch: isMatch
               });
-              
+
               return isMatch;
             });
-            
-            // 限制显示数量为6条，比近期活动多显示2条
-            this.notifications = filteredNotifications.slice(0, 8);
+
+            // 限制显示数量为5条，与近期活动保持一致
+            this.notifications = filteredNotifications.slice(0, 5);
             console.log(`✅ 过滤后的书院通知 (${this.userCollege}):`, this.notifications);
             console.log(`原始通知数: ${allNotifications.length}, 过滤后通知数: ${filteredNotifications.length}, 显示数量: ${this.notifications.length}`);
           } else {
@@ -609,8 +626,8 @@ export default {
             .filter(activity => activity.activityStart) // 过滤掉没有activity_start时间的活动
             .sort((a, b) => new Date(b.activityStart) - new Date(a.activityStart));
 
-          // 取前4个活动
-          this.recentActivities = sortedActivities.slice(0, 4);
+          // 取前5个活动
+          this.recentActivities = sortedActivities.slice(0, 5);
 
           console.log('按activity_start时间倒序排列的近期活动:', this.recentActivities);
         } else {
@@ -671,11 +688,11 @@ export default {
             const completedRecords = categoryRecords.filter(record =>
               record.status === '已通过'
             );
-            
+
             category.completed = completedRecords.length;
             category.total = Math.max(categoryRecords.length, 8); // 至少显示8个
             category.progress = category.total > 0 ? Math.round((category.completed / category.total) * 100) : 0;
-            
+
             // 添加已完成活动的详细信息
             category.completedActivities = completedRecords.map(record => ({
               name: record.activityName,
@@ -713,14 +730,14 @@ export default {
         });
         if (response.code === 200) {
           const allCourses = response.rows || [];
-          
+
           // 按course_start时间倒序排列选课记录
           this.selectedCourses = allCourses
             .filter(course => course.courseStart) // 过滤掉没有course_start时间的课程
             .sort((a, b) => new Date(b.courseStart) - new Date(a.courseStart));
-          
+
           this.totalCourses = this.selectedCourses.length;
-          
+
           console.log('按course_start时间倒序排列的选课记录:', this.selectedCourses);
         } else {
           this.$message.error('加载选课记录失败');
@@ -741,6 +758,70 @@ export default {
     // 格式化日期时间
     formatDateTime(date) {
       return parseTime(date, '{y}-{m}-{d} {h}:{i}:{s}');
+    },
+
+    // 格式化活动日期（显示为"月 日"格式）
+    formatActivityDate(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+      return `${month}月${day}`;
+    },
+
+    // 格式化活动时间范围（显示为"HH:MM-HH:MM"格式）
+    formatActivityTimeRange(startTime, endTime) {
+      if (!startTime || !endTime) return '00:00-00:00';
+      
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      
+      const startHour = start.getHours().toString().padStart(2, '0');
+      const startMinute = start.getMinutes().toString().padStart(2, '0');
+      const endHour = end.getHours().toString().padStart(2, '0');
+      const endMinute = end.getMinutes().toString().padStart(2, '0');
+      
+      return `${startHour}:${startMinute}-${endHour}:${endMinute}`;
+    },
+
+    // 格式化课程日期（显示为"月 日"格式）
+    formatCourseDate(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+      return `${month}月${day}`;
+    },
+
+    // 格式化课程时间范围（显示为"MM/DD HH:MM - MM/DD HH:MM"格式）
+    formatCourseTimeRange(startTime, endTime) {
+      if (!startTime || !endTime) return '00/00 00:00 - 00/00 00:00';
+      
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      
+      const startMonth = (start.getMonth() + 1).toString().padStart(2, '0');
+      const startDay = start.getDate().toString().padStart(2, '0');
+      const startHour = start.getHours().toString().padStart(2, '0');
+      const startMinute = start.getMinutes().toString().padStart(2, '0');
+      
+      const endMonth = (end.getMonth() + 1).toString().padStart(2, '0');
+      const endDay = end.getDate().toString().padStart(2, '0');
+      const endHour = end.getHours().toString().padStart(2, '0');
+      const endMinute = end.getMinutes().toString().padStart(2, '0');
+      
+      return `${startMonth}/${startDay} ${startHour}:${startMinute} - ${endMonth}/${endDay} ${endHour}:${endMinute}`;
+    },
+
+    // 获取课程状态样式类
+    getCourseStatusClass(status) {
+      switch (status) {
+        case '已通过': return 'status-approved';
+        case '未审核': return 'status-pending';
+        case '未通过': return 'status-rejected';
+        case '未提交': return 'status-not-submitted';
+        default: return 'status-pending';
+      }
     },
 
     // 获取活动状态标签类型
@@ -955,7 +1036,7 @@ export default {
       const d = new Date(date);
       const day = d.getDate();
       const month = d.getMonth() + 1;
-      return `${day} ${month}月`;
+      return `${month}月${day}`;
     },
 
     // 判断是否为新通知（3天内）
@@ -980,17 +1061,22 @@ export default {
       if (!category.completedActivities || category.completedActivities.length === 0) {
         return '暂无已完成的活动';
       }
-      
+
       const activityNames = category.completedActivities.map(activity => activity.name);
       return `已完成的活动：\n${activityNames.join('\n')}`;
     },
 
     // 跳转到所有通知页面
     goToAllNotifications() {
-      console.log('跳转到所有通知页面');
-      this.$message.info('跳转到通知管理页面');
-      // 这里可以添加跳转到通知管理页面的逻辑
-      // this.$router.push({ path: '/system/notice' });
+      console.log('跳转到通知展示页面');
+      this.$router.push({
+        path: '/system/notice/index'
+      }).then(() => {
+        console.log('成功跳转到通知展示页面');
+      }).catch(error => {
+        console.error('跳转到通知展示页面失败:', error);
+        this.$message.error('跳转到通知展示页面失败，请检查路由配置');
+      });
     },
 
     // 跳转到所有活动页面（活动预约界面）
@@ -998,7 +1084,7 @@ export default {
       console.log('跳转到活动预约界面 - 活动列表视图');
       this.$router.push({
         path: '/Activity/ActivityBooking',
-        query: { 
+        query: {
           view: 'list',  // 指定跳转到活动列表视图
           tab: 'activity-list'  // 指定活动列表标签页
         }
@@ -1013,7 +1099,7 @@ export default {
     // 根据活动类型跳转到活动参与界面
     goToActivityParticipateByType(activityType) {
       console.log('准备跳转到活动参与界面，活动类型:', activityType);
-      
+
       // 将类型映射为数字
       const typeMap = {
         'personality': '1',  // 人格塑造与价值引领活动类
@@ -1021,9 +1107,9 @@ export default {
         'ability': '3',      // 能力锻造与实践创新活动类
         'social': '4'        // 社会责任与领军意识活动类
       };
-      
+
       const typeValue = typeMap[activityType] || activityType;
-      
+
       this.$router.push({
         path: '/Activity/ActivityParticipate',
         query: {
@@ -1041,7 +1127,7 @@ export default {
     // 跳转到课程参与界面
     goToCourseParticipate(course) {
       console.log('准备跳转到课程参与界面，课程信息:', course);
-      
+
       this.$router.push({
         path: '/Course/CourseParticipate',
         query: {
@@ -1130,7 +1216,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  background: linear-gradient(135deg, #6a5acd, #8a2be2);
   color: white;
   font-weight: 600;
   font-size: 16px;
@@ -1139,6 +1225,18 @@ export default {
 .header-left {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.header-left i {
+  font-size: 16px;
+  color: white;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .college-name {
@@ -1205,7 +1303,7 @@ export default {
 
 .completion-content,
 .status-content {
-  padding: 12px 16px; /* 减少内边距，让内容更紧凑 */
+  padding: 8px 12px; /* 减少内边距，让面板更紧凑 */
 }
 
 /* 通知类型标签页 */
@@ -1224,11 +1322,13 @@ export default {
 
 .notification-item {
   display: flex;
-  align-items: flex-start;
-  padding: 12px 0;
+  align-items: center;
+  padding: 14px 0;
   border-bottom: 1px solid #f0f2f5;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  min-height: auto;
+  gap: 12px;
 }
 
 .notification-item:last-child {
@@ -1236,26 +1336,21 @@ export default {
 }
 
 .notification-item:hover {
-  background: #f5f7fa;
-  transform: translateX(4px);
+  background: #f8f9fa;
+  padding-left: 8px;
+  border-radius: 6px;
 }
 
 .notification-date {
   min-width: 60px;
-  background: #409EFF;
+  background: linear-gradient(135deg, #6a5acd, #8a2be2);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
   text-align: center;
-  margin-right: 12px;
   flex-shrink: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
 }
 
 .notification-info {
@@ -1266,13 +1361,16 @@ export default {
 }
 
 .notification-title {
-  font-weight: 500;
+  font-weight: 700;
   color: #303133;
   font-size: 14px;
   line-height: 1.4;
   margin: 0;
   word-wrap: break-word;  /* 允许长文本换行，避免水平滚动 */
   overflow-wrap: break-word;  /* 兼容性更好的换行 */
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .notification-badges {
@@ -1294,17 +1392,6 @@ export default {
   color: white;
 }
 
-/* 时间标签内的NEW标签样式 */
-.notification-date .badge.new {
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  font-size: 8px;
-  padding: 1px 3px;
-  margin: 0;
-  line-height: 1;
-}
-
 .badge.top {
   background: #409EFF;
   color: white;
@@ -1324,8 +1411,19 @@ export default {
   min-height: auto;  /* 移除固定最小高度，让内容自适应 */
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
+}
+
+.activity-date {
+  min-width: 60px;
+  background: linear-gradient(135deg, #6a5acd, #8a2be2);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .activity-item:last-child {
@@ -1344,12 +1442,21 @@ export default {
   flex-direction: column;
 }
 
+.activity-status {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
 .activity-name {
-  font-weight: 500;
+  font-weight: 700;
   color: #303133;
   margin-bottom: 6px;
   font-size: 14px;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .activity-times {
@@ -1357,15 +1464,34 @@ export default {
 }
 
 .time-info {
-  display: block;
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
   color: #909399;
-  margin-bottom: 2px;
   line-height: 1.4;
+  gap: 4px;
+}
+
+.time-info i {
+  font-size: 12px;
+  color: #909399;
 }
 
 .time-info:last-child {
   margin-bottom: 0;
+}
+
+.activity-time-section {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.activity-time-label {
+  font-size: 12px;
+  color: #909399;
+  font-weight: 500;
 }
 
 .activity-status {
@@ -1378,16 +1504,16 @@ export default {
 .progress-categories {
   display: flex;
   flex-direction: column;
-  gap: px; /* 减少间距，让内容更紧凑 */
+  gap: 8px; /* 减少类别间距 */
 }
 
 .progress-category {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px; /* 减少元素间距 */
   cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 8px 12px; /* 减少内边距 */
+  border-radius: 8px; /* 减少圆角 */
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
@@ -1395,15 +1521,15 @@ export default {
 .progress-category:hover {
   background: #f0f9ff;
   border-color: #bae6fd;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px); /* 减少悬停移动距离 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* 减少阴影 */
 }
 
 .category-label {
-  min-width: 200px;
-  font-size: 14px;
+  min-width: 180px; /* 减少最小宽度 */
+  font-size: 14px; /* 减少字体大小 */
   color: #303133;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .progress-bar-container {
@@ -1414,9 +1540,9 @@ export default {
 
 .progress-bar {
   width: 100%;
-  height: 6px; /* 减少进度条高度，让内容更紧凑 */
+  height: 6px; /* 减少进度条高度 */
   background: #f0f2f5;
-  border-radius: 3px;
+  border-radius: 3px; /* 减少圆角 */
   overflow: hidden;
 }
 
@@ -1428,9 +1554,9 @@ export default {
 }
 
 .progress-text {
-  min-width: 40px;
+  min-width: 35px; /* 减少最小宽度 */
   text-align: right;
-  font-size: 14px;
+  font-size: 14px; /* 减少字体大小 */
   color: #606266;
   font-weight: 500;
 }
@@ -1438,36 +1564,46 @@ export default {
 /* 状态筛选 */
 .status-filters {
   display: flex;
-  gap: 10px; /* 增加间距，让内容更舒适 */
-  flex-wrap: nowrap; /* 不换行，确保在一行显示 */
-  justify-content: space-between; /* 平均分布 */
+  flex-direction: column; /* 垂直排列 */
+  gap: 12px; /* 减少行间距 */
+  align-items: center; /* 垂直居中 */
+  justify-content: center; /* 水平居中 */
+}
+
+.status-filters-row {
+  display: flex;
+  gap: 12px; /* 减少状态项间距 */
+  justify-content: center; /* 行内居中 */
 }
 
 .status-filter-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px; /* 增加内边距，让内容更饱满 */
+  padding: 12px 16px; /* 减少内边距 */
   background: #f8fafc;
-  border-radius: 8px;
+  border-radius: 8px; /* 减少圆角 */
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.3s ease;
   flex: 1; /* 让每个项目平均分配宽度 */
   min-width: 0; /* 允许flex收缩 */
+  min-height: 70px; /* 减少最小高度 */
+  min-width: 100px; /* 减少最小宽度 */
+  white-space: nowrap; /* 防止文字换行 */
 }
 
 .status-filter-item:hover {
   background: #f0f9ff;
   border-color: #bae6fd;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px); /* 减少悬停移动距离 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* 减少阴影 */
 }
 
 .status-filter-item.active {
   background: linear-gradient(135deg, #409EFF, #64b5ff);
   border-color: #409EFF;
   color: white;
-  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.4);
+  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
 }
 
 .status-filter-item.clear-filter {
@@ -1482,23 +1618,18 @@ export default {
 }
 
 .status-icon {
-  width: 32px; /* 增加图标大小 */
-  height: 32px;
+  width: 36px; /* 减少图标大小 */
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 10px; /* 增加右边距 */
-  font-size: 16px; /* 增加字体大小 */
+  margin-right: 12px; /* 减少右边距 */
+  font-size: 16px; /* 减少字体大小 */
 }
 
 .status-icon.unsubmitted {
   background: linear-gradient(135deg, #f39c12, #f1c40f);
-  color: white;
-}
-
-.status-icon.rejected {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
 }
 
@@ -1512,6 +1643,11 @@ export default {
   color: white;
 }
 
+.status-icon.rejected {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: white;
+}
+
 .status-icon.all {
   background: linear-gradient(135deg, #6c757d, #495057);
   color: white;
@@ -1520,17 +1656,21 @@ export default {
 .status-info {
   display: flex;
   flex-direction: column;
+  min-width: 0; /* 允许收缩 */
+  flex-shrink: 0; /* 防止收缩 */
 }
 
 .status-count {
-  font-size: 18px; /* 增加数字大小 */
+  font-size: 20px; /* 减少数字大小 */
   font-weight: 700;
   line-height: 1;
 }
 
 .status-label {
-  font-size: 13px; /* 增加标签字体大小 */
-  margin-top: 2px;
+  font-size: 14px; /* 减少标签字体大小 */
+  margin-top: 4px; /* 减少顶部间距 */
+  font-weight: 700;
+  white-space: nowrap; /* 防止标签文字换行 */
 }
 
 .status-filter-item.active .status-count,
@@ -1774,126 +1914,117 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  /* 移除高度限制和滚动条 */
-  padding-right: 8px;
+  max-height: none;
+  overflow-y: visible;
+  flex: 1;
 }
 
 .course-item {
+  display: flex;
   padding: 12px;
   border: 1px solid #e4e7ed;
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
   transition: all 0.3s ease;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
   gap: 12px;
+  align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: relative;
-  /* 移除固定高度限制 */
-}
-
-.course-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(64, 158, 255, 0.05), rgba(64, 158, 255, 0.02));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
 }
 
 .course-item:hover {
-  background: #f8f9fa;
+  background-color: #f8f9fa;
   border-color: #409EFF;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
 }
 
-.course-item:hover::before {
-  opacity: 1;
+.course-item:last-child {
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.course-date {
+  min-width: 60px;
+  background: linear-gradient(135deg, #6a5acd, #8a2be2);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .course-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.course-header {
+.course-title-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
+  flex-direction: column;
 }
 
-.course-name {
+.course-title {
+  font-size: 14px;
   font-weight: 600;
   color: #303133;
-  font-size: 14px; /* 稍微减少字体大小 */
+  margin: 0 0 4px 0;
   line-height: 1.3;
-  flex: 1;
 }
 
-.course-info-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 4px; /* 减少间距以适应固定高度 */
-  margin-top: 4px;
-  flex: 1;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px; /* 减少间距以适应固定高度 */
-}
-
-.left-info,
-.right-info {
+.course-time-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.left-info {
-  justify-content: flex-start;
-}
-
-.right-info {
-  justify-content: flex-end;
-}
-
-.info-label {
-  font-size: 11px; /* 减少字体大小 */
+.course-time-label {
+  font-size: 12px;
   color: #909399;
-  min-width: 50px; /* 减少最小宽度 */
-  display: flex;
-  align-items: center;
-  gap: 3px;
+  font-weight: 500;
 }
 
-.info-label i {
-  color: #909399;
-  font-size: 11px; /* 减少图标大小 */
-}
-
-.info-value {
-  font-size: 11px; /* 减少字体大小 */
+.course-time-inline {
+  font-size: 12px;
   color: #606266;
-  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .course-status {
-  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.course-status.status-approved {
+  background: #f0f9ff;
+  color: #67C23A;
+}
+
+.course-status.status-pending {
+  background: #f0f9ff;
+  color: #409EFF;
+}
+
+.course-status.status-rejected {
+  background: #fef0f0;
+  color: #F56C6C;
+}
+
+.course-status.status-not-submitted {
+  background: #f4f4f5;
+  color: #909399;
 }
 
 /* 响应式设计 */
@@ -1944,25 +2075,10 @@ export default {
     align-items: stretch;
   }
 
-  .course-header {
+  .course-title-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
-  }
-
-  .info-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .left-info,
-  .right-info {
-    justify-content: flex-start;
-  }
-
-  .info-label {
-    min-width: 50px;
   }
 }
 
@@ -2250,17 +2366,6 @@ export default {
 .image-overlay i {
   color: white;
   font-size: 24px;
-}
-
-/* 通知项点击效果 */
-.notification-item {
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.notification-item:hover {
-  background: #f5f7fa;
-  transform: translateX(4px);
 }
 
 /* 图片预览弹窗样式 */
