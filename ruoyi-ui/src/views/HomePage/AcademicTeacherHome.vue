@@ -171,21 +171,16 @@
           </div>
           <div class="activity-list">
             <div v-for="(activity, index) in recentActivities.slice(0, 5)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
-              <div class="activity-time">
-                <div class="time-day">{{ activity.day }}</div>
-                <div class="time-month">{{ activity.month }}</div>
+              <div class="notification-date">{{ activity.day }} {{ activity.month }}</div>
+              <div class="notification-info">
+                <div class="notification-title-row">
+                  <div class="notification-title">{{ activity.title }}</div>
+                </div>
               </div>
-              <div class="activity-content">
-                <h4 class="activity-title">{{ activity.title }}</h4>
-                <p class="activity-location">
-                  <i class="el-icon-location"></i>
-                  {{ activity.location }}
-                </p>
-                <p class="activity-time-text">
-                  <i class="el-icon-time"></i>
-                  {{ activity.time }}
-                </p>
-              </div>
+              <span class="activity-time-inline">
+                <i class="el-icon-time"></i>
+                {{ activity.time }}
+              </span>
               <div class="activity-status" :class="activity.status">
                 {{ activity.statusText }}
               </div>
@@ -203,29 +198,20 @@
             <el-button type="text" size="small" @click="goToCourseManager()">课程管理</el-button>
           </div>
           <div class="course-list">
-            <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
-              <div class="course-time">
-                <div class="time-day">{{ getCourseDay(course) }}</div>
-                <div class="time-month">{{ getCourseMonth(course) }}</div>
-              </div>
-              <div class="course-content">
+          <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
+            <div class="notification-date">{{ getCourseDay(course) }} {{ getCourseMonth(course) }}</div>
+            <div class="course-content">
+              <div class="course-title-row">
                 <h4 class="course-title">{{ course.name }}</h4>
-                <p class="course-teacher">
-                  <i class="el-icon-user"></i>
-                  {{ course.teacher }}
-                </p>
-                <p class="course-schedule">
+                <span class="course-time-inline">
                   <i class="el-icon-time"></i>
                   {{ course.schedule }}
-                </p>
-                <p class="course-location">
-                  <i class="el-icon-location"></i>
-                  {{ course.location }}
-                </p>
+                </span>
               </div>
-              <div class="course-status" :class="getCourseStatusClass(course.status)">
-                {{ course.status }}
-              </div>
+            </div>
+            <div class="course-status" :class="getCourseStatusClass(course.status)">
+              {{ course.status }}
+            </div>
             </div>
           </div>
         </el-card>
@@ -1307,10 +1293,10 @@ export default {
         });
 
         if (response.code === 200 && response.rows) {
-          // 按课程开始时间降序排序，获取最近的4个课程
+          // 按课程开始时间降序排序，获取最近的5个课程
           const sortedCourses = response.rows
             .sort((a, b) => new Date(b.courseStart) - new Date(a.courseStart))
-            .slice(0, 4);
+            .slice(0, 5);
 
           this.currentCourses = sortedCourses.map(course => {
             return {
@@ -2919,6 +2905,13 @@ export default {
   flex: 1;
 }
 
+.activity-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .activity-title {
   font-size: 14px;
   font-weight: 600;
@@ -2926,12 +2919,10 @@ export default {
   margin: 0 0 8px 0;
 }
 
-.activity-location,
-.activity-time-text {
+.activity-time-inline {
   font-size: 12px;
   color: #606266;
-  margin: 0 0 4px 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
 }
@@ -2960,23 +2951,20 @@ export default {
 
 /* 本学期课程卡片 */
 .course-card {
-  height: 400px;
+  height: 400px; /* 与活动卡片统一高度 */
   display: flex;
   flex-direction: column;
 }
 
 .course-list {
-  max-height: 320px;
+  max-height: 320px; /* 与活动列表一致 */
   overflow-y: auto;
   flex: 1;
-  /* 隐藏滚动条 */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
 
-.course-list::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
-}
+.course-list::-webkit-scrollbar { display: none; }
 
 .course-item {
   display: flex;
@@ -3023,6 +3011,13 @@ export default {
   flex: 1;
 }
 
+.course-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .course-title {
   font-size: 14px;
   font-weight: 600;
@@ -3030,13 +3025,19 @@ export default {
   margin: 0 0 8px 0;
 }
 
-.course-teacher,
-.course-schedule,
-.course-location {
+.course-teacher {
   font-size: 12px;
   color: #606266;
   margin: 0 0 4px 0;
   display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-time-inline {
+  font-size: 12px;
+  color: #606266;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
 }
