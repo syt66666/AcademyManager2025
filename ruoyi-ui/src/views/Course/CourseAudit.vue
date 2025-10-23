@@ -227,10 +227,10 @@
         <el-table-column label="考核状态" prop="status" align="center" width="100">
           <template slot-scope="scope">
             <el-tag
-              v-if="scope.row.status === '未考核'"
+              v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
               type="warning"
               effect="dark"
-            >未考核</el-tag>
+            >{{ scope.row.status === '未审核' ? '未考核' : scope.row.status }}</el-tag>
             <el-tag
               v-else-if="scope.row.status === '已通过'"
               type="success"
@@ -246,14 +246,14 @@
         <el-table-column label="操作" align="center" width="150">
           <template slot-scope="scope">
             <div class="action-buttons">
-              <!-- 只有未考核状态才显示审核按钮 -->
+              <!-- 未考核或未审核状态才显示审核按钮 -->
               <el-button
-                v-if="scope.row.status === '未考核'"
+                v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
                 size="mini"
                 type="text"
                 @click="openAuditDialog(scope.row)"
                 class="action-button audit-button"
-                :disabled="scope.row.status !== '未考核'">
+                :disabled="scope.row.status !== '未考核' && scope.row.status !== '未审核'">
                 考核
               </el-button>
               <!-- 已审核或未通过状态显示灰色文字 -->
@@ -286,7 +286,7 @@
           <div class="header-left">
             <div class="title-row">
               <span class="student-name">{{ currentBooking.studentName || '-' }}</span>
-              <el-tag size="mini" :type="getStatusTagType(currentBooking.status)">{{ currentBooking.status || '-' }}</el-tag>
+              <el-tag size="mini" :type="getStatusTagType(currentBooking.status)">{{ currentBooking.status === '未审核' ? '未考核' : (currentBooking.status || '-') }}</el-tag>
             </div>
             <div class="sub-row">
               <span>学号：{{ currentBooking.studentId || '-' }}</span>
@@ -904,7 +904,8 @@ export default {
       const statusMap = {
         '已通过': 'success',
         '未通过': 'danger',
-        '未考核': 'warning'
+        '未考核': 'warning',
+        '未审核': 'warning'  // 未审核状态映射为未考核，使用相同的警告样式
       };
       return statusMap[status] || 'info';
     },
