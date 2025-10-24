@@ -3,7 +3,12 @@
     <!-- 问卷标题 -->
     <div class="questionnaire-header">
       <h1 class="questionnaire-title">大工书院育人导师工作评价问卷</h1>
-      <p class="questionnaire-subtitle">（学生版）</p>
+      <!-- 导师信息显示 -->
+      <div class="tutor-info" v-if="tutorInfo">
+        <span class="tutor-label">我的导师：</span>
+        <span class="tutor-name">{{ tutorInfo.tutorName }}</span>
+       
+      </div>
     </div>
 
     <!-- 问卷内容 -->
@@ -85,7 +90,6 @@
         </div>
         <h3 class="success-title">提交成功！</h3>
         <p class="success-text">感谢您的评价，您的反馈对我们非常重要</p>
-        <p class="success-score">本次评分：{{ totalScore }} 分</p>
         <button @click="goBack" class="back-button">返回问卷列表</button>
       </div>
     </div>
@@ -95,12 +99,16 @@
 <script>
 import store from "@/store";
 import { addScore } from "@/api/system/questionnaire";
+import { listRelation } from "@/api/system/relation";
+import { getTutors } from "@/api/student/tutor";
 
 export default {
   name: "Questionnaire4",
   data() {
     return {
       userName: store.state.user.name,
+      studentId: store.state.user.userId, // 当前学生ID
+      tutorInfo: null, // 导师信息
       selectedAnswers: [], // 存储用户选择的答案（1-5分）
       showConfirmDialogFlag: false,
       showEndMessage: false,
@@ -244,6 +252,29 @@ export default {
     }
   },
   methods: {
+    // 加载导师信息
+    loadTutorInfo() {
+      // 使用 listRelation API 查询该学生的导师关系
+      listRelation({ studentId: this.studentId })
+        .then(response => {
+          if (response.rows && response.rows.length > 0) {
+            const tutorId = response.rows[0].tutorId;
+            // 根据导师ID获取导师详细信息
+            return getTutors(tutorId);
+          } else {
+            return null;
+          }
+        })
+        .then(response => {
+          if (response && response.data) {
+            this.tutorInfo = response.data;
+          }
+        })
+        .catch(error => {
+          this.$message.error('获取导师信息失败，请刷新页面重试');
+        });
+    },
+    
     // 选择选项
     selectOption(questionIndex, value) {
       this.$set(this.selectedAnswers, questionIndex, value);
@@ -260,25 +291,27 @@ export default {
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false;
       
+      // 检查是否已获取导师信息
+      if (!this.tutorInfo || !this.tutorInfo.tutorId) {
+        this.$message.error('未获取到导师信息，无法提交问卷！');
+        return;
+      }
+      
       // 准备提交数据到 evaluation_score 表
       const submitData = {
         userName: this.userName, // 使用 data 中定义的 userName
         quesScore: this.totalScore, // 总得分（1-50分）
-        tutorId: 1, // 导师ID，先统一设置为1（对应导师A）
+        tutorId: this.tutorInfo.tutorId, // 使用实际获取到的导师ID
         quesType: 4, // 问卷类型：4表示问卷4（学生版评价问卷）
         signature: this.signature // 签名数据（图片URL或base64）
       };
-
-      console.log('提交评价数据：', submitData);
       
       // 调用后端API提交数据
       addScore(submitData)
         .then(response => {
-          console.log('提交成功:', response);
           this.showEndMessage = true;
         })
         .catch(error => {
-          console.error('提交失败:', error);
           this.$message.error('提交失败，请重试！' + (error.msg || ''));
           // 即使失败也关闭确认弹窗
           this.showConfirmDialogFlag = false;
@@ -287,7 +320,7 @@ export default {
 
     // 返回问卷列表
     goBack() {
-      this.$router.push('/Questionnaires');
+      this.$router.push('/Questionnaires/index');
     },
     
     // 取消提交
@@ -302,8 +335,10 @@ export default {
     // 从路由参数获取签名数据
     if (this.$route.query.signature) {
       this.signature = this.$route.query.signature;
-      console.log('接收到的签名数据:', this.signature);
     }
+
+    // 获取导师信息
+    this.loadTutorInfo();
   }
 };
 </script>
@@ -338,7 +373,37 @@ export default {
 .questionnaire-subtitle {
   font-size: 16px;
   color: #7f8c8d;
-  margin: 0;
+  margin: 0 0 15px 0;
+}
+
+/* 导师信息 */
+.tutor-info {
+  margin-top: 15px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 8px;
+  border: 1px solid #667eea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tutor-label {
+  font-size: 14px;
+  color: #7f8c8d;
+  font-weight: 500;
+}
+
+.tutor-name {
+  font-size: 16px;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.tutor-title {
+  font-size: 14px;
+  color: #95a5a6;
 }
 
 /* 问卷内容 */

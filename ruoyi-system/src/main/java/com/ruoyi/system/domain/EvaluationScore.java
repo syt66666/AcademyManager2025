@@ -28,7 +28,7 @@ public class EvaluationScore extends BaseEntity
 
     /** 教师id */
     @Excel(name = "教师id")
-    private Long tutorId;
+    private String tutorId;
 
     /** 问卷类型 */
     @Excel(name = "问卷类型")
@@ -65,12 +65,12 @@ public class EvaluationScore extends BaseEntity
     {
         return quesScore;
     }
-    public void setTutorId(Long tutorId) 
+    public void setTutorId(String tutorId) 
     {
         this.tutorId = tutorId;
     }
 
-    public Long getTutorId() 
+    public String getTutorId() 
     {
         return tutorId;
     }

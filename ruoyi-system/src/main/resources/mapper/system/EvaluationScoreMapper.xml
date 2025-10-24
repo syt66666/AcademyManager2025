@@ -22,7 +22,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <where>  
             <if test="userName != null  and userName != ''"> and user_name like concat('%', #{userName}, '%')</if>
             <if test="quesScore != null "> and ques_score = #{quesScore}</if>
-            <if test="tutorId != null "> and tutor_id = #{tutorId}</if>
+            <if test="tutorId != null and tutorId != ''"> and tutor_id = #{tutorId}</if>
             <if test="quesType != null "> and ques_type = #{quesType}</if>
         </where>
     </select>
@@ -37,14 +37,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="userName != null and userName != ''">user_name,</if>
             <if test="quesScore != null">ques_score,</if>
-            <if test="tutorId != null">tutor_id,</if>
+            <if test="tutorId != null and tutorId != ''">tutor_id,</if>
             <if test="quesType != null">ques_type,</if>
             <if test="signature != null and signature != ''">signature,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="userName != null and userName != ''">#{userName},</if>
             <if test="quesScore != null">#{quesScore},</if>
-            <if test="tutorId != null">#{tutorId},</if>
+            <if test="tutorId != null and tutorId != ''">#{tutorId},</if>
             <if test="quesType != null">#{quesType},</if>
             <if test="signature != null and signature != ''">#{signature},</if>
          </trim>
@@ -55,7 +55,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <trim prefix="SET" suffixOverrides=",">
             <if test="userName != null and userName != ''">user_name = #{userName},</if>
             <if test="quesScore != null">ques_score = #{quesScore},</if>
-            <if test="tutorId != null">tutor_id = #{tutorId},</if>
+            <if test="tutorId != null and tutorId != ''">tutor_id = #{tutorId},</if>
             <if test="quesType != null">ques_type = #{quesType},</if>
             <if test="signature != null">signature = #{signature},</if>
         </trim>

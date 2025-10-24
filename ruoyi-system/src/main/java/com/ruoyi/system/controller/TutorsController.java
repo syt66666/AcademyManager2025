@@ -37,7 +37,7 @@ public class TutorsController extends BaseController
     /**
      * 查询导师信息列表
      */
-    @PreAuthorize("@ss.hasPermi('system:tutors:list')")
+    // @PreAuthorize("@ss.hasPermi('system:tutors:list')")
     @GetMapping("/list")
     public TableDataInfo list(Tutors tutors)
     {

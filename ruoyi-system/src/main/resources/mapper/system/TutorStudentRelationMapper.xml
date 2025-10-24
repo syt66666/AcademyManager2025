@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.TutorStudentRelationMapper">
+
+    <resultMap type="TutorStudentRelation" id="TutorStudentRelationResult">
+        <result property="relationId"    column="relation_id"    />
+        <result property="tutorId"    column="tutor_id"    />
+        <result property="studentId"    column="student_id"    />
+        <result property="year"    column="year"    />
+        <result property="createdAt"    column="created_at"    />
+        <result property="updatedAt"    column="updated_at"    />
+    </resultMap>
+
+    <sql id="selectTutorStudentRelationVo">
+        select relation_id, tutor_id, student_id, year, created_at, updated_at from tutor_student_relation
+    </sql>
+
+    <select id="selectTutorStudentRelationList" parameterType="TutorStudentRelation" resultMap="TutorStudentRelationResult">
+        <include refid="selectTutorStudentRelationVo"/>
+        <where>
+            <if test="tutorId != null  and tutorId != ''"> and tutor_id = #{tutorId}</if>
+            <if test="studentId != null  and studentId != ''"> and student_id = #{studentId}</if>
+            <if test="year != null  and year != ''"> and year = #{year}</if>
+            <if test="createdAt != null "> and created_at = #{createdAt}</if>
+            <if test="updatedAt != null "> and updated_at = #{updatedAt}</if>
+        </where>
+    </select>
+
+    <select id="selectTutorStudentRelationByRelationId" parameterType="Long" resultMap="TutorStudentRelationResult">
+        <include refid="selectTutorStudentRelationVo"/>
+        where relation_id = #{relationId}
+    </select>
+
+    <insert id="insertTutorStudentRelation" parameterType="TutorStudentRelation" useGeneratedKeys="true" keyProperty="relationId">
+        insert into tutor_student_relation
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="tutorId != null and tutorId != ''">tutor_id,</if>
+            <if test="studentId != null and studentId != ''">student_id,</if>
+            <if test="year != null and year != ''">year,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="tutorId != null and tutorId != ''">#{tutorId},</if>
+            <if test="studentId != null and studentId != ''">#{studentId},</if>
+            <if test="year != null and year != ''">#{year},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+        </trim>
+    </insert>
+
+    <update id="updateTutorStudentRelation" parameterType="TutorStudentRelation">
+        update tutor_student_relation
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="tutorId != null and tutorId != ''">tutor_id = #{tutorId},</if>
+            <if test="studentId != null and studentId != ''">student_id = #{studentId},</if>
+            <if test="year != null and year != ''">year = #{year},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+        </trim>
+        where relation_id = #{relationId}
+    </update>
+
+    <delete id="deleteTutorStudentRelationByRelationId" parameterType="Long">
+        delete from tutor_student_relation where relation_id = #{relationId}
+    </delete>
+
+    <delete id="deleteTutorStudentRelationByRelationIds" parameterType="String">
+        delete from tutor_student_relation where relation_id in
+        <foreach item="relationId" collection="array" open="(" separator="," close=")">
+            #{relationId}
+        </foreach>
+    </delete>
+</mapper>
