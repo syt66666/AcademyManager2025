@@ -210,8 +210,9 @@
 import axios from 'axios';
 import store from "../../store";
 import request from "@/utils/request";
-import {getQuestionnaireTimes, checkScoreCompleted} from "@/api/system/questionnaire";
-import {getStudent} from "../../api/system/student";
+import {getQuestionnaireTimes, checkScoreCompleted, listScore} from "@/api/system/questionnaire";
+import {getStudent, getNickName} from "../../api/system/student";
+import {listTutors} from "@/api/student/tutor";
 import ImageUpload from "@/components/ImageUpload";
 
 export default {
@@ -346,8 +347,11 @@ export default {
     async checkQuestionnaireStatus() {
       try {
         for (const questionnaire of this.questionnaires) {
-          // 问卷4和5使用评价问卷接口检查
-          if (questionnaire.id === 4 || questionnaire.id === 5) {
+          // 问卷5需要特殊处理：检查是否评价了所有导师
+          if (questionnaire.id === 5) {
+            questionnaire.completed = await this.checkQuestionnaire5Status();
+          } else if (questionnaire.id === 4) {
+            // 问卷4使用评价问卷接口检查
             const response = await checkScoreCompleted(this.userName, questionnaire.id);
             questionnaire.completed = response.data;
           } else {
@@ -366,6 +370,40 @@ export default {
         }
       } catch (error) {
         console.error('检查问卷状态失败:', error);
+      }
+    },
+
+    // 检查问卷5状态：是否评价了所有导师
+    async checkQuestionnaire5Status() {
+      try {
+        // 1. 获取当前用户所属书院
+        const academyResponse = await getNickName();
+        if (!academyResponse || !academyResponse.msg) {
+          return false;
+        }
+        const currentAcademy = academyResponse.msg;
+
+        // 2. 查询该书院的所有导师
+        const tutorResponse = await listTutors({
+          tutorDepartment: currentAcademy
+        });
+        if (!tutorResponse || !tutorResponse.rows) {
+          return false;
+        }
+        const totalTutors = tutorResponse.rows.length;
+
+        // 3. 查询该用户对问卷5的所有评价记录
+        const scoreResponse = await listScore({
+          userName: this.userName,
+          quesType: 5
+        });
+        const evaluatedCount = scoreResponse && scoreResponse.rows ? scoreResponse.rows.length : 0;
+
+        // 4. 只有评价数量等于导师总数时，才算完成
+        return evaluatedCount >= totalTutors && totalTutors > 0;
+      } catch (error) {
+        console.error('检查问卷5状态失败:', error);
+        return false;
       }
     },
 

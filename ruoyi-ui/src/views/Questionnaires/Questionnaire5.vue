@@ -19,8 +19,13 @@
           v-for="tutor in tutorList" 
           :key="tutor.tutorId" 
           class="tutor-grid-item"
+          :class="{ 'evaluated': isEvaluated(tutor.tutorId) }"
           @click="selectTutor(tutor)"
         >
+          <!-- 已评价标记 -->
+          <div v-if="isEvaluated(tutor.tutorId)" class="evaluated-badge">
+            <i class="el-icon-check"></i>
+          </div>
           <div class="tutor-name">{{ tutor.tutorName }}</div>
           <div class="tutor-id">{{ tutor.tutorId }}</div>
         </div>
@@ -150,7 +155,7 @@
 
 <script>
 import store from "@/store";
-import { addScore } from "@/api/system/questionnaire";
+import { addScore, listScore } from "@/api/system/questionnaire";
 import { getNickName } from "@/api/system/student";
 import { listTutors } from "@/api/student/tutor";
 
@@ -163,6 +168,7 @@ export default {
       tutorList: [], // 可评价的导师列表
       selectedTutor: null, // 当前选择的导师
       loadingTutors: false, // 加载状态
+      evaluatedTutorIds: [], // 已评价的导师ID列表
       selectedAnswers: [], // 存储用户选择的答案（1-5分）
       showConfirmDialogFlag: false,
       showEndMessage: false,
@@ -339,11 +345,31 @@ export default {
         
         if (response && response.rows) {
           this.tutorList = response.rows;
+          // 加载已评价记录
+          await this.loadEvaluatedRecords();
         }
       } catch (error) {
         this.$message.error('加载导师列表失败');
       } finally {
         this.loadingTutors = false;
+      }
+    },
+
+    // 加载已评价记录
+    async loadEvaluatedRecords() {
+      try {
+        // 查询当前用户在问卷5中的所有评价记录
+        const response = await listScore({
+          userName: this.userName,
+          quesType: 5 // 问卷类型5
+        });
+        
+        if (response && response.rows) {
+          // 提取已评价的导师ID列表
+          this.evaluatedTutorIds = response.rows.map(record => record.tutorId);
+        }
+      } catch (error) {
+        console.error('加载已评价记录失败:', error);
       }
     },
 
@@ -357,11 +383,18 @@ export default {
     },
 
     // 返回导师选择界面
-    backToSelection() {
+    async backToSelection() {
       this.selectedTutor = null;
       this.selectedAnswers = new Array(this.questions.length).fill(null);
       this.showConfirmDialogFlag = false;
       this.showEndMessage = false;
+      // 重新加载已评价记录，确保显示最新状态
+      await this.loadEvaluatedRecords();
+    },
+
+    // 判断导师是否已被评价
+    isEvaluated(tutorId) {
+      return this.evaluatedTutorIds.includes(tutorId);
     },
     
     // 选择选项
@@ -398,6 +431,10 @@ export default {
       // 调用后端API提交数据
       addScore(submitData)
         .then(response => {
+          // 标记该导师已被评价
+          if (!this.evaluatedTutorIds.includes(this.selectedTutor.tutorId)) {
+            this.evaluatedTutorIds.push(this.selectedTutor.tutorId);
+          }
           this.showEndMessage = true;
         })
         .catch(error => {
@@ -912,12 +949,54 @@ export default {
   padding: 16px;
   text-align: center;
   border: 2px solid transparent;
+  position: relative;
 }
 
 .tutor-grid-item:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
   border-color: #667eea;
+}
+
+/* 已评价状态 */
+.tutor-grid-item.evaluated {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #52c41a;
+}
+
+.tutor-grid-item.evaluated:hover {
+  border-color: #52c41a;
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.25);
+}
+
+/* 已评价徽章 */
+.evaluated-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.4);
+  animation: checkBounce 0.5s ease;
+}
+
+@keyframes checkBounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .tutor-name {
