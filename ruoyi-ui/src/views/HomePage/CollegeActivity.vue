@@ -1,8 +1,17 @@
 <template>
   <div class="app-container">
-    <div class="content-wrapper">
+    <!-- 加载动画 -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-spinner">
+        <i class="el-icon-loading"></i>
+        <p>加载中...</p>
+      </div>
+    </div>
+
+    <!-- 主内容 -->
+    <div v-show="!loading" class="content-wrapper fade-in-content">
       <!-- 统计概览卡片 -->
-      <div class="stats-overview">
+      <!-- <div class="stats-overview fade-in" style="animation-delay: 0.1s">
         <div class="overview-card">
           <div class="card-icon">
             <i class="el-icon-s-promotion"></i>
@@ -39,10 +48,28 @@
             <div class="card-value">{{ activityStats.totalParticipants }}</div>
           </div>
         </div>
+      </div> -->
+
+      <!-- 活动统计图表 -->
+      <div class="activity-charts-section fade-in" style="animation-delay: 0.15s">
+        <div class="charts-container">
+          <div class="chart-card">
+            <h4 class="chart-title">各书院活动数统计</h4>
+            <div class="chart-container">
+              <div ref="activityCountChart" class="chart"></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h4 class="chart-title">各书院参与人数统计</h4>
+            <div class="chart-container">
+              <div ref="participantCountChart" class="chart"></div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- 各书院活动统计 -->
-      <div class="college-stats-section">
+      <div class="college-stats-section fade-in" style="animation-delay: 0.2s">
         <h3 class="section-title">各书院活动统计</h3>
         <div class="college-stats-grid">
           <div
@@ -82,7 +109,7 @@
       </div>
 
       <!-- 活动类型分布和最近活动 - 左右布局 -->
-      <div class="activity-content-row">
+      <div class="activity-content-row fade-in" style="animation-delay: 0.3s">
         <!-- 活动类型分布 -->
         <div class="activity-type-section">
           <div class="section-header">
@@ -165,8 +192,12 @@
             <span class="stat-value ongoing">{{ getOngoingCount() }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">活动已完成</span>
+            <span class="stat-label">活动已结束</span>
             <span class="stat-value completed">{{ getCompletedCount() }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">参与人数</span>
+            <span class="stat-value">{{ getTotalParticipants() }}</span>
           </div>
         </div>
 
@@ -196,7 +227,7 @@
               </template>
             </el-table-column>
             <el-table-column prop="location" label="活动地点" min-width="150" show-overflow-tooltip />
-            <el-table-column label="参与情况" min-width="120">
+            <el-table-column label="参与情况" min-width="140">
               <template slot-scope="scope">
                 <span>{{ scope.row.participants }}/{{ scope.row.capacity }}</span>
               </template>
@@ -394,11 +425,11 @@
             </div>
             <div class="stat-item">
               <div class="stat-number">{{ activityTypeStats.completed }}</div>
-              <div class="stat-label">活动已完成</div>
+              <div class="stat-label">活动已结束</div>
             </div>
             <div class="stat-item">
               <div class="stat-number">{{ activityTypeStats.participants }}</div>
-              <div class="stat-label">总参与人数</div>
+              <div class="stat-label">参与人数</div>
             </div>
           </div>
         </div>
@@ -470,11 +501,12 @@
             </el-table-column>
             <el-table-column
               label="参与情况"
-              min-width="120"
+              min-width="140"
               align="center"
             >
               <template slot-scope="scope">
                 <span>{{ scope.row.activityCapacity || 0 }}/{{ scope.row.activityTotalCapacity || 0 }}</span>
+
               </template>
             </el-table-column>
             <el-table-column
@@ -527,7 +559,7 @@
 
     <!-- 所有活动列表弹窗 -->
     <el-dialog
-      title="所有活动列表"
+      :title="getAllActivitiesDialogTitle()"
       :visible.sync="allActivitiesDialogVisible"
       width="80%"
       :before-close="handleAllActivitiesDialogClose"
@@ -547,11 +579,11 @@
             </div>
             <div class="stat-item">
               <div class="stat-number">{{ allActivitiesStats.completed }}</div>
-              <div class="stat-label">活动已完成</div>
+              <div class="stat-label">活动已结束</div>
             </div>
             <div class="stat-item">
               <div class="stat-number">{{ allActivitiesStats.participants }}</div>
-              <div class="stat-label">总参与人数</div>
+              <div class="stat-label">参与人数</div>
             </div>
           </div>
         </div>
@@ -635,11 +667,12 @@
             </el-table-column>
             <el-table-column
               label="参与情况"
-              min-width="120"
+              min-width="140"
               align="center"
             >
               <template slot-scope="scope">
                 <span>{{ scope.row.activityCapacity || 0 }}/{{ scope.row.activityTotalCapacity || 0 }}</span>
+          
               </template>
             </el-table-column>
             <el-table-column
@@ -703,11 +736,13 @@ import {
 } from '@/api/system/activityStatistics'
 import { listActivities } from '@/api/system/activities'
 import { listBookingsWithActivity } from '@/api/system/bookings'
+import * as echarts from 'echarts'
 
 export default {
   name: 'CollegeActivity',
   data() {
     return {
+      loading: true,
       selectedCollege: 'all',
       collegeList: [
         { key: 'dayu', name: '大煜书院', icon: 'el-icon-school' },
@@ -732,6 +767,8 @@ export default {
         { key: '4', name: '社会责任与领军意识活动类', count: 0, percentage: 0 }
       ],
       recentActivities: [],
+      activityCountChart: null,
+      participantCountChart: null,
       dialogVisible: false,
       selectedCollegeForDetail: '',
       collegeNameForDetail: '',
@@ -782,13 +819,21 @@ export default {
       allActivitiesTotal: 0,
       allActivitiesQueryParams: {
         pageNum: 1,
-        pageSize: 10
+        pageSize: 10,
+        organizer: null  // 书院筛选参数
       },
       allActivitiesStats: {
         total: 0,
         ongoing: 0,
         completed: 0,
         participants: 0
+      },
+      // 缓存全部书院的初始数据
+      cachedAllData: {
+        activityStats: null,
+        collegeActivityData: null,
+        activityTypes: null,
+        recentActivities: null
       }
     }
   },
@@ -801,8 +846,15 @@ export default {
   },
   methods: {
     async handleCollegeFilter(collegeKey) {
-      this.selectedCollege = collegeKey
-      await this.loadActivityStatsByCollege(collegeKey)
+      // 如果点击的是已选中的书院，则恢复为显示全部
+      if (this.selectedCollege === collegeKey) {
+        this.selectedCollege = 'all'
+        // 直接使用缓存的数据，不重新加载
+        this.restoreCachedAllData()
+      } else {
+        this.selectedCollege = collegeKey
+        await this.loadActivityStatsByCollege(collegeKey)
+      }
     },
     getCollegeName(collegeKey) {
       if (collegeKey === 'all') return '全部书院'
@@ -819,18 +871,28 @@ export default {
     },
     getCollegeParticipantCount(collegeKey) {
       if (collegeKey === 'all') return this.activityStats.totalParticipants
-      return this.collegeActivityData[collegeKey]?.participants || 0
+      return this.collegeActivityData[collegeKey]?.totalParticipants || 0
     },
     getStatusText(status) {
       const statusMap = {
-        'not-started': '未开始',
-        'ongoing': '进行中',
-        'completed': '已完成',
+        // 数据库存储值 -> 前端显示文本
+        '未开始': '报名未开始',
+        '可报名': '活动报名中',
+        '已截止': '报名已截止',
+        '进行中': '活动进行中',
+        '已结束': '活动已结束',
+        // 兼容旧值
+        'not-started': '报名未开始',
+        'enrolling': '活动报名中',
+        'enroll-ended': '报名已截止',
+        'ongoing': '活动进行中',
+        'completed': '活动已结束',
         'cancelled': '已取消'
       }
       return statusMap[status] || status
     },
     async loadActivityStats() {
+      this.loading = true
       try {
         const overviewResponse = await getActivityOverview()
         if (overviewResponse.code === 200) {
@@ -873,15 +935,31 @@ export default {
             .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
             .slice(0, 5)
         }
+
+        // 缓存全部数据
+        this.cacheAllData()
       } catch (error) {
         console.error('加载活动统计数据失败:', error)
         this.$message.error('加载活动统计数据失败')
+      } finally {
+        setTimeout(() => {
+          this.loading = false
+          // 等待 DOM 更新后再初始化图表
+          this.$nextTick(() => {
+            this.initActivityCharts()
+          })
+        }, 300)
       }
     },
     async loadActivityStatsByCollege(collegeKey) {
       try {
         if (collegeKey === 'all') {
-          await this.loadActivityStats()
+          // 如果有缓存，使用缓存数据；否则重新加载
+          if (this.cachedAllData.activityStats) {
+            this.restoreCachedAllData()
+          } else {
+            await this.loadActivityStats()
+          }
           return
         }
 
@@ -901,11 +979,258 @@ export default {
               .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
               .slice(0, 5)
           }
+          // 更新图表
+          this.$nextTick(() => {
+            this.initActivityCharts()
+          })
         }
       } catch (error) {
         console.error('加载书院活动统计数据失败:', error)
         this.$message.error('加载书院活动统计数据失败')
       }
+    },
+    // 缓存全部书院数据
+    cacheAllData() {
+      this.cachedAllData = {
+        activityStats: JSON.parse(JSON.stringify(this.activityStats)),
+        collegeActivityData: JSON.parse(JSON.stringify(this.collegeActivityData)),
+        activityTypes: JSON.parse(JSON.stringify(this.activityTypes)),
+        recentActivities: JSON.parse(JSON.stringify(this.recentActivities))
+      }
+    },
+    // 恢复缓存的全部书院数据
+    restoreCachedAllData() {
+      if (this.cachedAllData.activityStats) {
+        this.activityStats = JSON.parse(JSON.stringify(this.cachedAllData.activityStats))
+        this.collegeActivityData = JSON.parse(JSON.stringify(this.cachedAllData.collegeActivityData))
+        this.activityTypes = JSON.parse(JSON.stringify(this.cachedAllData.activityTypes))
+        this.recentActivities = JSON.parse(JSON.stringify(this.cachedAllData.recentActivities))
+        
+        // 更新图表
+        this.$nextTick(() => {
+          this.initActivityCharts()
+        })
+      }
+    },
+    initActivityCharts() {
+      this.$nextTick(() => {
+        this.initActivityCountChart()
+        this.initParticipantCountChart()
+      })
+    },
+    initActivityCountChart() {
+      if (this.activityCountChart) {
+        this.activityCountChart.dispose()
+      }
+
+      const chartDom = this.$refs.activityCountChart
+      if (!chartDom) return
+
+      this.activityCountChart = echarts.init(chartDom)
+
+      const allColleges = [
+        { key: 'dayu', name: '大煜书院' },
+        { key: 'bochuan', name: '伯川书院' },
+        { key: 'lingxi', name: '令希书院' },
+        { key: 'houde', name: '厚德书院' },
+        { key: 'zhixing', name: '知行书院' },
+        { key: 'duxue', name: '笃学书院' },
+        { key: 'qiushi', name: '求实书院' }
+      ]
+
+      const collegeData = this.collegeActivityData || {}
+      const data = allColleges.map(college => ({
+        name: college.name,
+        value: collegeData[college.key]?.totalActivities || 0
+      }))
+
+      const totalActivities = this.activityStats.totalActivities || 0
+
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          left: '5%',
+          top: 'middle',
+          width: '20%',
+          textStyle: {
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: '#374151'
+          }
+        },
+        graphic: [
+          {
+            type: 'text',
+            left: 'center',
+            top: '42%',
+            style: {
+              text: '总活动数',
+              textAlign: 'center',
+              fill: '#6b7280',
+              fontSize: 14,
+              fontWeight: 'normal'
+            }
+          },
+          {
+            type: 'text',
+            left: 'center',
+            top: '52%',
+            style: {
+              text: totalActivities.toString(),
+              textAlign: 'center',
+              fill: '#111827',
+              fontSize: 28,
+              fontWeight: 'bold'
+            }
+          }
+        ],
+        series: [
+          {
+            name: '活动数',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '50%'],
+            avoidLabelOverlap: true,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'],
+            label: {
+              show: true,
+              position: 'outside',
+              formatter: '{b}：{c}',
+              fontSize: 12,
+              color: '#374151',
+              fontWeight: 'bold'
+            },
+            labelLine: {
+              show: true,
+              length: 15,
+              length2: 10,
+              smooth: true,
+              lineStyle: {
+                color: '#999'
+              }
+            },
+            data: data
+          }
+        ]
+      }
+
+      this.activityCountChart.setOption(option)
+    },
+    initParticipantCountChart() {
+      if (this.participantCountChart) {
+        this.participantCountChart.dispose()
+      }
+
+      const chartDom = this.$refs.participantCountChart
+      if (!chartDom) return
+
+      this.participantCountChart = echarts.init(chartDom)
+
+      const allColleges = [
+        { key: 'dayu', name: '大煜书院' },
+        { key: 'bochuan', name: '伯川书院' },
+        { key: 'lingxi', name: '令希书院' },
+        { key: 'houde', name: '厚德书院' },
+        { key: 'zhixing', name: '知行书院' },
+        { key: 'duxue', name: '笃学书院' },
+        { key: 'qiushi', name: '求实书院' }
+      ]
+
+      const collegeData = this.collegeActivityData || {}
+      const data = allColleges.map(college => ({
+        name: college.name,
+        value: collegeData[college.key]?.totalParticipants || 0
+      }))
+
+      const totalParticipants = this.activityStats.totalParticipants || 0
+
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          left: '5%',
+          top: 'middle',
+          width: '20%',
+          textStyle: {
+            fontSize: 12,
+            fontWeight: 'bold',
+            color: '#374151'
+          }
+        },
+        graphic: [
+          {
+            type: 'text',
+            left: 'center',
+            top: '42%',
+            style: {
+              text: '总参与人数',
+              textAlign: 'center',
+              fill: '#6b7280',
+              fontSize: 14,
+              fontWeight: 'normal'
+            }
+          },
+          {
+            type: 'text',
+            left: 'center',
+            top: '52%',
+            style: {
+              text: totalParticipants.toString(),
+              textAlign: 'center',
+              fill: '#111827',
+              fontSize: 28,
+              fontWeight: 'bold'
+            }
+          }
+        ],
+        series: [
+          {
+            name: '参与人数',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '50%'],
+            avoidLabelOverlap: true,
+            itemStyle: {
+              borderRadius: 10,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'],
+            label: {
+              show: true,
+              position: 'outside',
+              formatter: '{b}：{c}',
+              fontSize: 12,
+              color: '#374151',
+              fontWeight: 'bold'
+            },
+            labelLine: {
+              show: true,
+              length: 15,
+              length2: 10,
+              smooth: true,
+              lineStyle: {
+                color: '#999'
+              }
+            },
+            data: data
+          }
+        ]
+      }
+
+      this.participantCountChart.setOption(option)
     },
     viewCollegeActivities(collegeKey, collegeName) {
       this.selectedCollegeForDetail = collegeKey
@@ -935,17 +1260,51 @@ export default {
         this.loading = false
       }
     },
+    // 获取活动进行中的数量（包含报名未开始、报名进行中、报名已截止、活动进行中）
     getOngoingCount() {
-      return this.collegeActivities.filter(activity => activity.status === 'ongoing').length
+      return this.collegeActivities.filter(activity => {
+        const status = activity.status
+        return status === 'not-started' || status === '未开始' || status === '报名未开始' ||
+               status === 'enrolling' || status === '报名中' || status === '报名进行中' || status === '可报名' ||
+               status === 'enroll-ended' || status === '报名已截止' || status === '已截止' ||
+               status === 'ongoing' || status === '进行中' || status === '活动进行中'
+      }).length
     },
+    // 获取活动已结束的数量
     getCompletedCount() {
-      return this.collegeActivities.filter(activity => activity.status === 'completed').length
+      return this.collegeActivities.filter(activity => {
+        const status = activity.status
+        return status === 'completed' || status === '已完成' || status === '活动已结束' || status === '已结束'
+      }).length
+    },
+    // 获取总参与人数
+    getTotalParticipants() {
+      return this.collegeActivities.reduce((total, activity) => {
+        return total + (activity.participants || 0)
+      }, 0)
     },
     getStatusTagType(status) {
       const typeMap = {
+        // 数据库存储值 -> 标签颜色
+        '未开始': 'info',          // 报名未开始 - 灰色
+        '可报名': 'success',       // 活动报名中 - 绿色
+        '已截止': 'warning',       // 报名已截止 - 黄色
+        '进行中': 'warning',       // 活动进行中 - 黄色
+        '已结束': 'info',          // 活动已结束 - 灰色
+        // 兼容旧值
+        'not-started': 'info',
+        'enrolling': 'success',
+        'enroll-ended': 'warning',
         'ongoing': 'warning',
-        'completed': 'success',
-        'not-started': 'info'
+        'completed': 'info',
+        '报名未开始': 'info',
+        '报名中': 'success',
+        '报名进行中': 'success',
+        '活动报名中': 'success',
+        '报名已截止': 'warning',
+        '活动进行中': 'warning',
+        '已完成': 'info',
+        '活动已结束': 'info'
       }
       return typeMap[status] || 'info'
     },
@@ -1195,9 +1554,14 @@ export default {
       }
 
       activities.forEach(activity => {
-        if (activity.status === 'ongoing') {
+        const status = activity.status
+        // 活动进行中（包含报名未开始、报名进行中、报名已截止、活动进行中）
+        if (status === 'not-started' || status === '未开始' || status === '报名未开始' ||
+            status === 'enrolling' || status === '报名中' || status === '报名进行中' || status === '可报名' ||
+            status === 'enroll-ended' || status === '报名已截止' || status === '已截止' ||
+            status === 'ongoing' || status === '进行中' || status === '活动进行中') {
           this.activityTypeStats.ongoing++
-        } else if (activity.status === 'completed') {
+        } else if (status === 'completed' || status === '已完成' || status === '活动已结束' || status === '已结束') {
           this.activityTypeStats.completed++
         }
         const participants = activity.activityCapacity || 0
@@ -1221,6 +1585,12 @@ export default {
       this.allActivitiesDialogVisible = true
       this.allActivitiesQueryParams.pageNum = 1
       this.allActivitiesQueryParams.pageSize = 10
+      // 根据当前筛选的书院设置书院参数
+      if (this.selectedCollege === 'all') {
+        this.allActivitiesQueryParams.organizer = null  // 显示所有书院的活动
+      } else {
+        this.allActivitiesQueryParams.organizer = this.getCollegeName(this.selectedCollege)
+      }
       this.loadAllActivitiesList()
     },
     async loadAllActivitiesList() {
@@ -1251,6 +1621,11 @@ export default {
           pageNum: params.pageNum,
           pageSize: params.pageSize
         }
+        
+        // 如果有书院筛选，添加 organizer 参数
+        if (params.organizer) {
+          queryParams.organizer = params.organizer
+        }
 
         const response = await listActivities(queryParams)
         return response
@@ -1268,9 +1643,14 @@ export default {
       }
 
       activities.forEach(activity => {
-        if (activity.status === 'ongoing') {
+        const status = activity.status
+        // 活动进行中（包含报名未开始、报名进行中、报名已截止、活动进行中）
+        if (status === 'not-started' || status === '未开始' || status === '报名未开始' ||
+            status === 'enrolling' || status === '报名中' || status === '报名进行中' || status === '可报名' ||
+            status === 'enroll-ended' || status === '报名已截止' || status === '已截止' ||
+            status === 'ongoing' || status === '进行中' || status === '活动进行中') {
           this.allActivitiesStats.ongoing++
-        } else if (activity.status === 'completed') {
+        } else if (status === 'completed' || status === '已完成' || status === '活动已结束' || status === '已结束') {
           this.allActivitiesStats.completed++
         }
         const participants = activity.activityCapacity || 0
@@ -1289,6 +1669,12 @@ export default {
     handleAllActivitiesDialogClose(done) {
       this.allActivitiesDialogVisible = false
       done()
+    },
+    getAllActivitiesDialogTitle() {
+      if (this.selectedCollege === 'all') {
+        return '所有活动列表'
+      }
+      return `${this.getCollegeName(this.selectedCollege)}活动列表`
     },
     getActivityTypeName(type) {
       const typeMap = {
@@ -1317,4 +1703,8 @@ export default {
 
 <style scoped src="./styles/common.css"></style>
 <style scoped src="./styles/activity.css"></style>
+
+<style scoped>
+/* 本页面特殊样式 */
+</style>
 

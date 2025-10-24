@@ -52,7 +52,7 @@ public class ActivitySubscription extends BaseEntity
     private String activityLocation;
 
     /** 活动当前已选人数 */
-    @Excel(name = "活动当前已选人数")
+    @Excel(name = "已选人数")
     private Integer activityCapacity;
     /** 报名开始时间 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

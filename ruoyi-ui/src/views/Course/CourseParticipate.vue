@@ -140,10 +140,10 @@
         <!-- 成绩来源于列 -->
         <el-table-column label="课程成绩" align="center" width="120">
           <template slot-scope="scope">
-            <el-tag 
-              v-if="scope.row.scoreType" 
-              :type="getScoreTypeTagType(scope.row.scoreType)" 
-              effect="plain" 
+            <el-tag
+              v-if="scope.row.scoreType"
+              :type="getScoreTypeTagType(scope.row.scoreType)"
+              effect="plain"
               class="score-type-tag"
             >
               {{ scope.row.scoreType }}
@@ -320,8 +320,8 @@
               <i class="el-icon-folder file-icon"></i>
               <span class="file-name">{{ getFileNameOnly(file.name) }}</span>
               <div class="file-progress" v-if="file.uploading">
-                <el-progress 
-                  :percentage="file.progress" 
+                <el-progress
+                  :percentage="file.progress"
                   :status="file.progress === 100 ? 'success' : ''"
                   :stroke-width="6"
                   :show-text="true"
@@ -556,10 +556,10 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
       const typeMap = {
-        '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
-        '3': '能力锻造与实践创新活动类',
-        '4': '社会责任与领军意识活动类'
+        '1': '人格塑造与价值引领课程类',
+        '2': '知识融合与思维进阶课程类',
+        '3': '能力锻造与实践创新课程类',
+        '4': '社会责任与领军意识课程类'
       };
       return typeMap[courseType] || courseType;
     },
@@ -626,13 +626,13 @@ export default {
       }
 
       const baseUrl = process.env.VUE_APP_BASE_API || '';
-      
+
       // 检查文件名是否已经包含了baseUrl前缀
       if (fileName.startsWith(baseUrl)) {
         // 如果已经包含了baseUrl，直接返回
         return fileName;
       }
-      
+
       // 确保路径格式正确
       let normalizedPath = fileName;
       if (!normalizedPath.startsWith('/')) {

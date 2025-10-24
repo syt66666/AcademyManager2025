@@ -200,7 +200,7 @@
               <el-button
                 size="mini"
                 :type="scope.row.isEnrolled ? 'info' : 'success'"
-                :disabled="scope.row.isEnrolled || scope.row.enrolledStudent >= scope.row.courseCapacity"
+                :disabled="scope.row.isEnrolled || scope.row.enrolledStudent >= scope.row.courseTotalCapacity"
                 @click="showModeDialog(scope.row)"
                 class="action-btn enroll-btn"
               >

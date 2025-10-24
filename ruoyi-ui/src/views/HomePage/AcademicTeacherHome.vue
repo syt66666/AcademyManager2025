@@ -1325,8 +1325,8 @@ export default {
               credit: course.courseCredit || 0,
               courseHours: 0, // Courses实体中没有此字段
               courseCapacity: course.courseTotalCapacity || 0,
-              enrolledStudent: course.courseTotalCapacity && course.courseCapacity ?
-                (course.courseTotalCapacity - course.courseCapacity) : 0,
+              // courseCapacity 就是已选人数
+              enrolledStudent: course.courseCapacity || 0,
               status: this.computeCourseStatus(course),
               // 保留原始时间字段用于日期显示
               courseStart: course.courseStart,
@@ -1384,8 +1384,8 @@ export default {
     // 计算课程进度（选课人数/总容量）
     calculateCourseProgress(course) {
       if (!course.courseTotalCapacity || course.courseTotalCapacity <= 0) return 0;
-      if (!course.courseCapacity) return 0;
-      const enrolledStudent = course.courseTotalCapacity - course.courseCapacity;
+      // courseCapacity 就是已选人数
+      const enrolledStudent = course.courseCapacity || 0;
       const progress = Math.round((enrolledStudent / course.courseTotalCapacity) * 100);
       return Math.min(progress, 100); // 确保不超过100%
     },

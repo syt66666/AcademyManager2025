@@ -540,12 +540,12 @@ export default {
       ],
       // 可用的课程类型列表
       availableCourseTypes: [],
-      // 预定义的课程类型（与活动类型相同）
+      // 预定义的课程类型
       predefinedCourseTypes: [
-        { value: '1', label: '人格塑造与价值引领活动类' },
-        { value: '2', label: '知识融合与思维进阶活动类' },
-        { value: '3', label: '能力锻造与实践创新活动类' },
-        { value: '4', label: '社会责任与领军意识活动类' }
+        { value: '1', label: '人格塑造与价值引领课程类' },
+        { value: '2', label: '知识融合与思维进阶课程类' },
+        { value: '3', label: '能力锻造与实践创新课程类' },
+        { value: '4', label: '社会责任与领军意识课程类' }
       ],
 
       // 审核弹窗
@@ -929,20 +929,20 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
       const typeMap = {
-        '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
-        '3': '能力锻造与实践创新活动类',
-        '4': '社会责任与领军意识活动类'
+        '1': '人格塑造与价值引领课程类',
+        '2': '知识融合与思维进阶课程类',
+        '3': '能力锻造与实践创新课程类',
+        '4': '社会责任与领军意识课程类'
       };
       return typeMap[courseType] || courseType;
     },
 
     getCourseTypeTagType(courseType) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'info'       // 社会责任与领军意识活动类 - 灰色
+        '1': 'primary',   // 人格塑造与价值引领课程类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶课程类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新课程类 - 橙色
+        '4': 'info'       // 社会责任与领军意识课程类 - 灰色
       };
       return map[courseType] || 'info';
     },

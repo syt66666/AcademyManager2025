@@ -52,12 +52,12 @@ public class Courses extends BaseEntity
     @Excel(name = "课程结束时间", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date endTime;
 
-    /** 课程容量 */
-    @Excel(name = "课程容量")
+    /** 课程总容量 */
+    @Excel(name = "课程总容量")
     private Long courseTotalCapacity;
 
-    /** 课程剩余容量 */
-    @Excel(name = "课程剩余容量")
+    /** 已选课人数 */
+    @Excel(name = "已选课人数")
     private Long courseCapacity;
 
     /** $column.columnComment */

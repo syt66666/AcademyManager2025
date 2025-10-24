@@ -31,10 +31,10 @@
               class="search-select"
               @change="handleQuery"
             >
-              <el-option label="人格塑造与价值引领活动类" value="1" />
-              <el-option label="知识融合与思维进阶活动类" value="2" />
-              <el-option label="能力锻造与实践创新活动类" value="3" />
-              <el-option label="社会责任与领军意识活动类" value="4" />
+              <el-option label="人格塑造与价值引领课程类" value="1" />
+              <el-option label="知识融合与思维进阶课程类" value="2" />
+              <el-option label="能力锻造与实践创新课程类" value="3" />
+              <el-option label="社会责任与领军意识课程类" value="4" />
             </el-select>
           </el-form-item>
           <el-form-item prop="availableOnly">
@@ -161,7 +161,7 @@
               />
               <div class="count">
                 <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}/{{ scope.row.courseTotalCapacity }}
+                  {{ scope.row.courseCapacity || 0 }}/{{ scope.row.courseTotalCapacity }}
                 </span>
               </div>
             </div>
@@ -272,7 +272,7 @@
             <div class="detail-label"><i class="el-icon-user"></i> 课程容量：</div>
             <div class="detail-value">
             <span :class="getCapacityClass(selectedCourse)">
-              {{ selectedCourse.courseTotalCapacity - selectedCourse.courseCapacity }}/{{ selectedCourse.courseTotalCapacity }}人
+              {{ selectedCourse.courseCapacity || 0 }}/{{ selectedCourse.courseTotalCapacity }}人
             </span>
             </div>
           </div>
@@ -483,7 +483,7 @@ export default {
 
       return this.getCourseStatusText(this.selectedCourse) === "选课进行中" &&
         !this.selectedCourse.isBooked &&
-        this.selectedCourse.courseCapacity > 0;
+        this.selectedCourse.courseCapacity < this.selectedCourse.courseTotalCapacity;
     },
 
     // 显示选课已满提示的条件
@@ -491,7 +491,7 @@ export default {
       if (!this.selectedCourse) return false;
       return this.getCourseStatusText(this.selectedCourse) === "选课进行中" &&
         !this.selectedCourse.isBooked &&
-        this.selectedCourse.courseCapacity <= 0;
+        this.selectedCourse.courseCapacity >= this.selectedCourse.courseTotalCapacity;
     },
 
     // 显示取消选课按钮的条件
@@ -687,7 +687,8 @@ export default {
     },
     // 获取容量样式
     getCapacityClass(course) {
-      const percentage = (course.courseTotalCapacity - course.courseCapacity) / course.courseTotalCapacity;
+      // courseCapacity 是已选人数
+      const percentage = (course.courseCapacity || 0) / course.courseTotalCapacity;
       if (percentage >= 0.8) return 'capacity-high';
       if (percentage >= 0.5) return 'capacity-medium';
       return 'capacity-low';
@@ -696,7 +697,8 @@ export default {
     // 计算容量百分比
     calculateCapacityPercentage(row) {
       if (!row.courseTotalCapacity || row.courseTotalCapacity <= 0) return 0;
-      const used = row.courseTotalCapacity - row.courseCapacity;
+      // courseCapacity 是已选人数
+      const used = row.courseCapacity || 0;
       return Math.round((used / row.courseTotalCapacity) * 100);
     },
 
@@ -709,10 +711,10 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
       const typeMap = {
-        '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
-        '3': '能力锻造与实践创新活动类',
-        '4': '社会责任与领军意识活动类'
+        '1': '人格塑造与价值引领课程类',
+        '2': '知识融合与思维进阶课程类',
+        '3': '能力锻造与实践创新课程类',
+        '4': '社会责任与领军意识课程类'
       };
       return typeMap[courseType] || courseType;
     },
@@ -720,10 +722,10 @@ export default {
     // 获取课程类型标签颜色
     getCourseTypeTagType(courseType) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
+        '1': 'primary',   // 人格塑造与价值引领课程类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶课程类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新课程类 - 橙色
+        '4': 'danger',    // 社会责任与领军意识课程类 - 红色
         '其他': ''        // 默认蓝色
       }
       return map[courseType] || 'info';
@@ -769,8 +771,8 @@ export default {
     // 判断课程是否已满
     isCourseFull(row) {
       const status = this.getCourseStatusText(row);
-      // 只有在选课进行中且容量为0时才显示已满
-      return status === "选课进行中" && row.courseCapacity <= 0;
+      // 只有在选课进行中且已选人数达到总容量时才显示已满
+      return status === "选课进行中" && row.courseCapacity >= row.courseTotalCapacity;
     },
     // 修复：处理详情
     async handleDetail(row) {
@@ -786,7 +788,8 @@ export default {
       }
 
       const status = this.getCourseStatusText(row);
-      const hasCapacity = row.courseCapacity > 0;
+      // courseCapacity 是已选人数，判断是否还有剩余容量
+      const hasCapacity = row.courseCapacity < row.courseTotalCapacity;
 
       if (["选课进行中"].includes(status) && hasCapacity) {
         return "可选课";
@@ -818,8 +821,8 @@ export default {
               return false;
             }
 
-            // 检查是否有剩余容量
-            if (course.courseCapacity <= 0) {
+            // 检查是否有剩余容量（courseCapacity 是已选人数）
+            if (course.courseCapacity >= course.courseTotalCapacity) {
               return false;
             }
 
@@ -988,7 +991,7 @@ export default {
             if (status !== "选课进行中") {
               return false;
             }
-            if (course.courseCapacity <= 0) {
+            if (course.courseCapacity >= course.courseTotalCapacity) {
               return false;
             }
             return !course.isBooked;

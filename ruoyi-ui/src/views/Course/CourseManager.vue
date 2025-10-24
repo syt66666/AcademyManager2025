@@ -196,7 +196,7 @@
               />
               <div class="count">
                 <span :class="getCapacityClass(scope.row)">
-                  {{ scope.row.courseTotalCapacity - scope.row.courseCapacity }}/{{ scope.row.courseTotalCapacity }}
+                  {{ scope.row.courseCapacity || 0 }}/{{ scope.row.courseTotalCapacity }}
                 </span>
               </div>
             </div>
@@ -546,12 +546,16 @@
             <div class="stat-label">总报名人数</div>
           </div>
           <div class="stat-item">
-            <div class="stat-number">{{ studentStats.approved }}</div>
-            <div class="stat-label">已通过</div>
+            <div class="stat-number">{{ studentStats.notSubmitted }}</div>
+            <div class="stat-label">未提交</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ studentStats.pending }}</div>
             <div class="stat-label">未考核</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ studentStats.approved }}</div>
+            <div class="stat-label">已通过</div>
           </div>
           <div class="stat-item">
             <div class="stat-number">{{ studentStats.rejected }}</div>
@@ -583,20 +587,12 @@
               @keyup.enter.native="handleStudentFilter"
             />
           </el-form-item>
-          <el-form-item label="所属书院" prop="college">
-            <el-input
-              v-model="studentFilterParams.college"
-              placeholder="请输入所属书院"
-              clearable
-              prefix-icon="el-icon-search"
-              class="filter-input"
-              @keyup.enter.native="handleStudentFilter"
-            />
-          </el-form-item>
+
           <el-form-item label="考核状态" prop="status">
             <el-select v-model="studentFilterParams.status" clearable placeholder="请选择考核状态" class="filter-input">
-              <el-option label="已通过" value="approved"></el-option>
+              <el-option label="未提交" value="notSubmitted"></el-option>
               <el-option label="未考核" value="pending"></el-option>
+              <el-option label="已通过" value="approved"></el-option>
               <el-option label="未通过" value="rejected"></el-option>
             </el-select>
           </el-form-item>
@@ -654,11 +650,12 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="预约时间" prop="bookAt" min-width="160" align="center">
+          <el-table-column label="课程成绩" prop="score" min-width="100" align="center">
             <template slot-scope="scope">
-              <div class="booked_at">
-                <i class="el-icon-time"></i>
-                <span class="time-text">{{ parseTime(scope.row.bookAt, '{y}-{m}-{d} {h}:{i}') }}</span>
+              <div class="score-container">
+                <span class="score-text" :class="getScoreClass(scope.row.score)">
+                  {{ scope.row.score !== null && scope.row.score !== undefined ? scope.row.score : '-' }}
+                </span>
               </div>
             </template>
           </el-table-column>
@@ -752,10 +749,10 @@ export default {
       ],
       // 课程类型选项
       courseTypeOptions: [
-        { value: '1', label: '人格塑造与价值引领活动类' },
-        { value: '2', label: '知识融合与思维进阶活动类' },
-        { value: '3', label: '能力锻造与实践创新活动类' },
-        { value: '4', label: '社会责任与领军意识活动类' }
+        { value: '1', label: '人格塑造与价值引领课程类' },
+        { value: '2', label: '知识融合与思维进阶课程类' },
+        { value: '3', label: '能力锻造与实践创新课程类' },
+        { value: '4', label: '社会责任与领军意识课程类' }
       ],
       // 课程种类选项
       courseCategoryOptions: [
@@ -780,8 +777,9 @@ export default {
       },
       studentStats: {
         total: 0,
-        approved: 0,
+        notSubmitted: 0,
         pending: 0,
+        approved: 0,
         rejected: 0
       },
       // 表单校验
@@ -843,16 +841,11 @@ export default {
   watch: {
     // 🔥 新增：监听总容量变化
     'form.courseTotalCapacity'(newVal, oldVal) {
-      // 只有在编辑模式下才处理
+      // 当修改总容量时，检查是否小于已选人数
       if (this.form.courseId && newVal && this.initialBookedCount >= 0) {
-        // 计算新的剩余容量
-        const newRemainingCapacity = newVal - this.initialBookedCount;
-        // 确保剩余容量不为负数
-        if (newRemainingCapacity >= 0) {
-          this.form.courseCapacity = newRemainingCapacity;
-          console.log('✅ 更新剩余容量为:', this.form.courseCapacity);
-        } else {
-          // 如果新总容量小于已选人数，恢复原值并提示
+        // courseCapacity 是已选人数，保持不变
+        // 只需要确保总容量不小于已选人数
+        if (newVal < this.initialBookedCount) {
           this.$nextTick(() => {
             this.form.courseTotalCapacity = oldVal;
           });
@@ -1118,8 +1111,9 @@ export default {
     // 计算学生统计信息
     calculateStudentStats() {
       this.studentStats.total = this.studentList.length;
+      this.studentStats.notSubmitted = this.studentList.filter(s => s.status === 'notSubmitted' || s.status === '未提交').length;
+      this.studentStats.pending = this.studentList.filter(s => s.status === 'pending' || s.status === '未考核' || s.status === '未审核').length;
       this.studentStats.approved = this.studentList.filter(s => s.status === 'approved' || s.status === '已通过').length;
-      this.studentStats.pending = this.studentList.filter(s => s.status === 'pending' || s.status === '未考核' || s.status === '未考核').length;
       this.studentStats.rejected = this.studentList.filter(s => s.status === 'rejected' || s.status === '未通过').length;
     },
     // 学生筛选
@@ -1150,11 +1144,14 @@ export default {
     // 获取学生状态标签类型
     getStudentStatusTagType(status) {
       const statusMap = {
-        'approved': 'success',
+        'notSubmitted': 'info',
         'pending': 'warning',
+        'approved': 'success',
         'rejected': 'danger',
-        '已通过': 'success',
+        '未提交': 'info',
+        '未审核': 'warning',
         '未考核': 'warning',
+        '已通过': 'success',
         '未通过': 'danger'
       };
       return statusMap[status] || 'info';
@@ -1162,14 +1159,26 @@ export default {
     // 获取学生状态文本
     getStudentStatusText(status) {
       const statusMap = {
-        'approved': '已通过',
+        'notSubmitted': '未提交',
         'pending': '未考核',
+        'approved': '已通过',
         'rejected': '未通过',
-        '已通过': '已通过',
+        '未提交': '未提交',
+        '未审核': '未考核',
         '未考核': '未考核',
+        '已通过': '已通过',
         '未通过': '未通过'
       };
       return statusMap[status] || '未知';
+    },
+    // 获取成绩样式类
+    getScoreClass(score) {
+      if (score === null || score === undefined) return '';
+      if (score >= 90) return 'score-excellent';
+      if (score >= 80) return 'score-good';
+      if (score >= 70) return 'score-medium';
+      if (score >= 60) return 'score-pass';
+      return 'score-fail';
     },
     // 复制学号
     copyStudentId(studentId) {
@@ -1388,8 +1397,8 @@ export default {
       if (!row.courseTotalCapacity || row.courseTotalCapacity <= 0) {
         return 0;
       }
-      // 计算已报名人数 = 总容量 - 剩余容量
-      const enrolled = row.courseTotalCapacity - row.courseCapacity;
+      // courseCapacity 就是已选人数
+      const enrolled = row.courseCapacity || 0;
       // 计算占比并取整（确保在0-100之间）
       const percentage = Math.round((enrolled / row.courseTotalCapacity) * 100);
       return Math.max(0, Math.min(100, percentage));
@@ -1429,10 +1438,10 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(coursetype) {
       const typeMap = {
-        '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
-        '3': '能力锻造与实践创新活动类',
-        '4': '社会责任与领军意识活动类'
+        '1': '人格塑造与价值引领课程类',
+        '2': '知识融合与思维进阶课程类',
+        '3': '能力锻造与实践创新课程类',
+        '4': '社会责任与领军意识课程类'
       };
       return typeMap[coursetype] || coursetype;
     },
@@ -1454,10 +1463,10 @@ export default {
 
     getCourseTypeTagType(coursetype) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
+        '1': 'primary',   // 人格塑造与价值引领课程类 - 蓝色
+        '2': 'success',   // 知识融合与思维进阶课程类 - 绿色
+        '3': 'warning',   // 能力锻造与实践创新课程类 - 橙色
+        '4': 'danger',    // 社会责任与领军意识课程类 - 红色
         '其他': ''        // 默认蓝色
       }
       return map[coursetype] || 'info';
@@ -1549,8 +1558,8 @@ export default {
       const courseId = row.courseId || this.ids
       getCourses(courseId).then(response => {
         this.form = response.data;
-        // 🔥 保存初始已选人数
-        this.initialBookedCount = this.form.courseTotalCapacity - this.form.courseCapacity;
+        // 🔥 保存初始已选人数（courseCapacity 就是已选人数）
+        this.initialBookedCount = this.form.courseCapacity || 0;
         console.log('💾 保存初始已选人数:', this.initialBookedCount);
         // 确保课程类型是字符串格式，以匹配选项值
         if (this.form.courseType) {
@@ -1558,9 +1567,9 @@ export default {
         }
         // 设置组织单位为当前用户昵称（不可修改）
         this.form.organizer = this.getCurrentUserNickName();
-        // 保持原有的已报名人数，不重置剩余容量
+        // 新增课程时，初始已选人数为0
         if (!this.form.courseCapacity || this.form.courseCapacity < 0) {
-          this.form.courseCapacity = this.form.courseTotalCapacity || 0;
+          this.form.courseCapacity = 0;
         }
         this.open = true;
         this.title = "修改书院选课";
@@ -1676,18 +1685,12 @@ export default {
     },
     /** 处理容量变化 */
     handleCapacityChange(value) {
-      // 当总容量变化时，根据当前已报名人数计算剩余容量
-      if (value && value > 0) {
-        // 计算当前已报名人数
-        const currentEnrolled = this.form.courseTotalCapacity && this.form.courseCapacity
-          ? this.form.courseTotalCapacity - this.form.courseCapacity
-          : 0;
-
-        // 新的剩余容量 = 新总容量 - 当前已报名人数
-        const newRemainingCapacity = value - currentEnrolled;
-
-        // 确保剩余容量不为负数
-        this.form.courseCapacity = Math.max(0, newRemainingCapacity);
+      // 当修改总容量时，保持已选人数不变
+      // courseCapacity 是已选人数，不需要重新计算
+      // 只需要确保总容量不小于已选人数
+      if (value && value > 0 && this.form.courseCapacity && value < this.form.courseCapacity) {
+        this.$message.warning(`课程总容量不能小于已选人数(${this.form.courseCapacity})！`);
+        this.form.courseTotalCapacity = this.form.courseCapacity;
       }
     },
     // 获取表格行样式类名
@@ -2886,6 +2889,7 @@ export default {
   .student-id-container {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 
     .student-id {
@@ -2909,6 +2913,7 @@ export default {
   .student-name-container {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
 
     .student-name {
@@ -2918,6 +2923,10 @@ export default {
   }
 
   .major-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
     .major-name {
       display: block;
       font-size: 14px;
@@ -2939,19 +2948,35 @@ export default {
     }
   }
 
-  .booked_at {
+  .score-container {
     display: flex;
+    justify-content: center;
     align-items: center;
-    color: #606266;
-    font-size: 13px;
 
-    i {
-      margin-right: 6px;
+    .score-text {
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    .score-excellent {
+      color: #67C23A;
+    }
+
+    .score-good {
+      color: #409EFF;
+    }
+
+    .score-medium {
+      color: #E6A23C;
+    }
+
+    .score-pass {
       color: #909399;
     }
 
-    .time-text {
-      font-family: monospace;
+    .score-fail {
+      color: #F56C6C;
     }
   }
 

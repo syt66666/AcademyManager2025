@@ -1,12 +1,22 @@
 <template>
   <div class="dashboard-container">
-    <div class="dashboard-header">
-      <h1 class="dashboard-title">书院管理系统 - 数据概览</h1>
-      <p class="dashboard-subtitle">实时监控各书院运营数据</p>
+    <!-- 加载动画 -->
+    <div v-if="loading" class="loading-overlay">
+      <div class="loading-spinner">
+        <i class="el-icon-loading"></i>
+        <p>加载中...</p>
+      </div>
     </div>
 
-    <!-- 快速统计卡片 -->
-    <div class="quick-stats">
+    <!-- 主内容 -->
+    <div v-show="!loading" class="dashboard-content">
+      <div class="dashboard-header fade-in">
+        <h1 class="dashboard-title">书院学生管理系统</h1>
+        <p class="dashboard-subtitle">实时显示各书院运营数据</p>
+      </div>
+
+      <!-- 快速统计卡片 -->
+      <div class="quick-stats fade-in" style="animation-delay: 0.1s">
       <div class="stat-card activity-card clickable" @click="navigateTo('activity')">
         <div class="stat-icon">
           <i class="el-icon-s-promotion"></i>
@@ -47,9 +57,9 @@
         </div>
         <div class="stat-content">
           <div class="stat-label">专业分流</div>
-          <div class="stat-value">{{ majorStats.totalStudents }}</div>
+          <div class="stat-value">{{ majorStats.statusText }}</div>
           <div class="stat-detail">
-            <span class="info">{{ majorStats.totalStudents }} 学生</span>
+            <span class="info">{{ majorStats.description }}</span>
           </div>
         </div>
         <div class="stat-arrow">
@@ -58,8 +68,8 @@
       </div>
     </div>
 
-    <!-- 各书院概览 -->
-    <div class="colleges-overview">
+      <!-- 各书院概览 -->
+      <div class="colleges-overview fade-in" style="animation-delay: 0.2s">
       <h2 class="section-title">各书院数据一览</h2>
       <div class="colleges-grid">
         <div
@@ -89,8 +99,8 @@
       </div>
     </div>
 
-    <!-- 最近动态 -->
-    <div class="recent-updates">
+      <!-- 最近动态 -->
+      <div class="recent-updates fade-in" style="animation-delay: 0.3s">
       <div class="updates-section">
         <div class="section-header">
           <h2 class="section-title">最近活动</h2>
@@ -108,10 +118,10 @@
               <div class="update-title">{{ activity.name }}</div>
               <div class="update-meta">
                 <span>{{ activity.college }}</span>
-                <span>{{ formatDate(activity.startTime) }}</span>
+                <span>{{ formatActivityTime(activity.startTime, activity.endTime) }}</span>
               </div>
             </div>
-            <div class="update-status" :class="activity.status">
+            <div class="update-status" :class="getActivityStatusClass(activity.status)">
               {{ getStatusText(activity.status) }}
             </div>
           </div>
@@ -135,14 +145,15 @@
               <div class="update-title">{{ course.courseName }}</div>
               <div class="update-meta">
                 <span>{{ course.organizer }}</span>
-                <span>{{ formatDate(course.startTime) }}</span>
+                <span>{{ formatDate(course.startTime) }} - {{ formatDate(course.endTime) }}</span>
               </div>
             </div>
-            <div class="update-status enrolling">
+            <div class="update-status" :class="getCourseStatusClass(course.status)">
               {{ computeCourseStatus(course) }}
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -164,6 +175,7 @@ export default {
   name: 'Dashboard',
   data() {
     return {
+      loading: true,
       collegeList: [
         { key: 'dayu', name: '大煜书院', icon: 'el-icon-school' },
         { key: 'bochuan', name: '伯川书院', icon: 'el-icon-school' },
@@ -185,7 +197,8 @@ export default {
         completedCourses: 0
       },
       majorStats: {
-        totalStudents: 0
+        statusText: '已完成',
+        description: '2024-2025学年'
       },
       collegeActivityData: {},
       collegeCourseData: {},
@@ -207,6 +220,7 @@ export default {
       }
     },
     async loadData() {
+      this.loading = true
       try {
         // 加载活动数据
         const activityOverview = await getActivityOverview()
@@ -277,10 +291,18 @@ export default {
         }
 
         // 模拟专业分流数据（如果有真实API，替换这里）
-        this.majorStats.totalStudents = 1200
+        // 可以根据实际情况设置状态，比如：
+        // this.majorStats.statusText = '未开始' / '进行中' / '已完成'
+        // this.majorStats.description = '截止时间：12月31日'
 
       } catch (error) {
         console.error('加载数据失败:', error)
+        this.$message.error('数据加载失败，请刷新重试')
+      } finally {
+        // 延迟隐藏加载动画，让过渡更自然
+        setTimeout(() => {
+          this.loading = false
+        }, 300)
       }
     },
     getCollegeActivityCount(collegeKey) {
@@ -296,52 +318,122 @@ export default {
       if (!dateTime) return '-'
       const date = new Date(dateTime)
       return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
         month: '2-digit',
         day: '2-digit'
       })
     },
+    formatDateTime(dateTime) {
+      if (!dateTime) return '-'
+      const date = new Date(dateTime)
+      const dateStr = date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      })
+      const timeStr = date.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      })
+      return `${dateStr} ${timeStr}`
+    },
+    formatActivityTime(startTime, endTime) {
+      // 如果都没有，返回待定
+      if (!startTime && !endTime) {
+        return '时间待定'
+      }
+
+      // 如果有完整的开始和结束时间
+      if (startTime && endTime) {
+        const startDate = new Date(startTime)
+        const endDate = new Date(endTime)
+
+        const dateStr = startDate.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        })
+        const startTimeStr = startDate.toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        })
+        const endTimeStr = endDate.toLocaleTimeString('zh-CN', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        })
+
+        return `${dateStr} ${startTimeStr}-${endTimeStr}`
+      }
+
+      // 如果只有开始时间
+      if (startTime) {
+        return this.formatDateTime(startTime)
+      }
+
+      return '时间待定'
+    },
     getStatusText(status) {
       const statusMap = {
-        'not-started': '活动未开始',
+        // 数据库存储值 -> 前端显示文本
+        '未开始': '报名未开始',
+        '可报名': '活动报名中',
+        '已截止': '报名已截止',
+        '进行中': '活动进行中',
+        '已结束': '活动已结束',
+        // 兼容旧值
+        'not-started': '报名未开始',
+        'enrolling': '活动报名中',
+        'enroll-ended': '报名已截止',
         'ongoing': '活动进行中',
-        'completed': '活动已完成',
-        'cancelled': '活动已取消'
+        'completed': '活动已结束',
+        'cancelled': '已取消'
       }
       return statusMap[status] || status
     },
+    getActivityStatusClass(status) {
+      // 将数据库状态值映射到 CSS class
+      const classMap = {
+        '未开始': 'status-not-started',
+        '可报名': 'status-enrolling',
+        '已截止': 'status-deadline',
+        '进行中': 'status-ongoing',
+        '已结束': 'status-ended',
+        // 兼容旧值
+        'not-started': 'status-not-started',
+        'enrolling': 'status-enrolling',
+        'enroll-ended': 'status-deadline',
+        'ongoing': 'status-ongoing',
+        'completed': 'status-ended'
+      }
+      return classMap[status] || 'status-not-started'
+    },
     computeCourseStatus(course) {
-      const now = new Date()
-      const start = course.courseStart ? new Date(course.courseStart) : null
-      const end = course.courseEnd ? new Date(course.courseEnd) : null
-      const deadline = course.courseDeadline ? new Date(course.courseDeadline) : null
-
-      // 如果课程已结束
-      if (end && now > end) {
-        return '课程已完成'
+      // 状态映射：数据库状态 -> 前端显示
+      const statusMap = {
+        '未开始': '选课未开始',
+        '选课中': '选课进行中',
+        '已截止': '选课已截止',
+        '进行中': '课程进行中',
+        '已结束': '课程已结束'
       }
-      
-      // 如果课程正在进行
-      if (start && now >= start && end && now <= end) {
-        // 检查报名是否截止
-        if (deadline && now > deadline) {
-          return '课程进行中 · 报名已截止'
-        } else if (deadline && now <= deadline) {
-          return '课程进行中 · 报名进行中'
-        }
-        return '课程进行中'
+      return statusMap[course.status] || course.status || '选课未开始'
+    },
+    getCourseStatusClass(status) {
+      // 根据课程状态返回对应的CSS类名
+      const classMap = {
+        '未开始': 'status-not-started',
+        '选课中': 'status-enrolling',
+        '已截止': 'status-deadline',
+        '进行中': 'status-ongoing',
+        '已结束': 'status-ended'
       }
-      
-      // 如果课程未开始，检查报名状态
-      if (start && now < start) {
-        if (deadline && now <= deadline) {
-          return '报名进行中'
-        } else if (deadline && now > deadline) {
-          return '报名已截止'
-        }
-        return '课程未开始'
-      }
-      
-      return '课程未开始'
+      return classMap[status] || 'status-not-started'
     }
   },
   mounted() {
@@ -349,6 +441,8 @@ export default {
   }
 }
 </script>
+
+<style scoped src="./styles/common.css"></style>
 
 <style scoped>
 * {
@@ -363,6 +457,21 @@ export default {
   width: 100%;
   box-sizing: border-box;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* 主内容区域 */
+.dashboard-content {
+  animation: contentFadeIn 0.4s ease;
+}
+
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .dashboard-header {
@@ -401,13 +510,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
+  will-change: transform;
 }
 
 .stat-card.clickable {
@@ -415,8 +525,8 @@ export default {
 }
 
 .stat-card.clickable:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
   border-color: currentColor;
 }
 
@@ -506,7 +616,7 @@ export default {
   font-weight: 700;
   color: #111827;
   margin-bottom: 4px;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 .stat-detail {
@@ -557,16 +667,17 @@ export default {
   border-radius: 8px;
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
   overflow: hidden;
+  will-change: transform;
 }
 
 .college-overview-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 .college-header {
@@ -659,11 +770,13 @@ export default {
   gap: 16px;
   padding: 12px;
   border-radius: 8px;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .update-item:hover {
   background-color: #f8fafc;
+  transform: translateX(4px);
 }
 
 .update-icon {
@@ -730,6 +843,32 @@ export default {
 .update-status.enrolling {
   background: #dbeafe;
   color: #1d4ed8;
+}
+
+/* 课程状态颜色 - 与活动状态颜色对应 */
+.update-status.status-not-started {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.update-status.status-enrolling {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.update-status.status-deadline {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.update-status.status-ongoing {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.update-status.status-ended {
+  background: #d1fae5;
+  color: #059669;
 }
 
 /* 响应式设计 */

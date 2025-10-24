@@ -2,7 +2,6 @@ package com.ruoyi.system.service.impl;
 
 import com.ruoyi.system.domain.Courses;
 import com.ruoyi.system.mapper.CoursesMapper;
-import com.ruoyi.system.mapper.CourseBookingsMapper;
 import com.ruoyi.system.service.ICourseStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,9 +16,6 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
 
     @Autowired
     private CoursesMapper coursesMapper;
-
-    @Autowired
-    private CourseBookingsMapper courseBookingsMapper;
 
     @Override
     public Map<String, Object> getCourseOverview() {
@@ -37,6 +33,7 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
         int enrollmentEndedCourses = 0;
         int ongoingCourses = 0;
         int completedCourses = 0;
+        int totalEnrollments = 0;
         
         for (Courses course : allCourses) {
             String status = getCourseStatus(course, now);
@@ -57,10 +54,10 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
                     completedCourses++;
                     break;
             }
+            // courseCapacity 就是选课人数
+            Long enrollments = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
+            totalEnrollments += enrollments.intValue();
         }
-        
-        // 获取总选课人数
-        int totalEnrollments = courseBookingsMapper.countTotalCourseBookings();
         
         result.put("totalCourses", totalCourses);
         result.put("notStartedCourses", notStartedCourses);
@@ -106,10 +103,8 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
                 if ("enrolling".equals(status)) {
                     enrollingCourses++;
                 }
-                // 计算选课人数 = courseCapacity - courseTotalCapacity，添加安全检查
-                Long courseCapacity = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
-                Long totalCapacity = course.getCourseTotalCapacity() != null ? course.getCourseTotalCapacity() : 0L;
-                Long enrollments = Math.max(0L, courseCapacity - totalCapacity);
+                // courseCapacity 就是选课人数
+                Long enrollments = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
                 totalEnrollments += enrollments.intValue();
             }
             
@@ -174,10 +169,8 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
             courseItem.put("college", course.getOrganizer());
             courseItem.put("type", course.getCourseCategory());
             courseItem.put("date", course.getCreatedAt());
-            // 计算选课人数 = courseCapacity - courseTotalCapacity，添加安全检查
-            Long courseCapacity = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
-            Long totalCapacity = course.getCourseTotalCapacity() != null ? course.getCourseTotalCapacity() : 0L;
-            Long enrollments = Math.max(0L, courseCapacity - totalCapacity);
+            // courseCapacity 就是选课人数
+            Long enrollments = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
             courseItem.put("enrollments", enrollments);
             courseItem.put("status", getCourseStatus(course, new Date()));
             
@@ -225,10 +218,8 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
                     completedCourses++;
                     break;
             }
-            // 计算选课人数 = courseCapacity - courseTotalCapacity，添加安全检查
-            Long courseCapacity = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
-            Long totalCapacity = course.getCourseTotalCapacity() != null ? course.getCourseTotalCapacity() : 0L;
-            Long enrollments = Math.max(0L, courseCapacity - totalCapacity);
+            // courseCapacity 就是选课人数
+            Long enrollments = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
             totalEnrollments += enrollments.intValue();
         }
         
@@ -269,10 +260,8 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
             courseItem.put("college", course.getOrganizer());
             courseItem.put("type", course.getCourseCategory());
             courseItem.put("date", course.getCreatedAt());
-            // 计算选课人数 = courseCapacity - courseTotalCapacity，添加安全检查
-            Long courseCapacity = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
-            Long totalCapacity = course.getCourseTotalCapacity() != null ? course.getCourseTotalCapacity() : 0L;
-            Long enrollments = Math.max(0L, courseCapacity - totalCapacity);
+            // courseCapacity 就是选课人数
+            Long enrollments = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
             courseItem.put("enrollments", enrollments);
             courseItem.put("status", getCourseStatus(course, now));
             
@@ -302,10 +291,8 @@ public class CourseStatisticsServiceImpl implements ICourseStatisticsService {
             courseItem.put("type", course.getCourseCategory());
             courseItem.put("location", course.getCourseLocation());
             courseItem.put("capacity", course.getCourseTotalCapacity());
-            // 计算选课人数 = courseCapacity - courseTotalCapacity，添加安全检查
-            Long courseCapacity = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
-            Long totalCapacity = course.getCourseTotalCapacity() != null ? course.getCourseTotalCapacity() : 0L;
-            Long enrollments = Math.max(0L, courseCapacity - totalCapacity);
+            // courseCapacity 就是选课人数
+            Long enrollments = course.getCourseCapacity() != null ? course.getCourseCapacity() : 0L;
             courseItem.put("enrollments", enrollments);
             courseItem.put("status", getCourseStatus(course, now));
             courseItem.put("startTime", course.getStartTime());

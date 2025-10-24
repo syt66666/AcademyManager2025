@@ -2,7 +2,6 @@ package com.ruoyi.system.service.impl;
 
 import com.ruoyi.system.domain.Activities;
 import com.ruoyi.system.mapper.ActivitiesMapper;
-import com.ruoyi.system.mapper.BookingsMapper;
 import com.ruoyi.system.service.IActivityStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,9 +17,6 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
     @Autowired
     private ActivitiesMapper activitiesMapper;
 
-    @Autowired
-    private BookingsMapper bookingsMapper;
-
     @Override
     public Map<String, Object> getActivityOverview() {
         Map<String, Object> result = new HashMap<>();
@@ -30,10 +26,11 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
         List<Activities> allActivities = activitiesMapper.selectActivityList(queryActivity);
         int totalActivities = allActivities.size();
         
-        // 计算进行中的活动数（当前时间在报名开始和活动结束之间）
+        // 计算进行中的活动数（当前时间在报名开始和活动结束之间）、已完成活动数和总参与人数
         Date now = new Date();
         int ongoingActivities = 0;
         int completedActivities = 0;
+        int totalParticipants = 0;
         
         for (Activities activity : allActivities) {
             if (activity.getActivityStart() != null && activity.getEndTime() != null) {
@@ -43,10 +40,9 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
                     completedActivities++;
                 }
             }
+            // 累加参与人数（activityCapacity = 已选人数）
+            totalParticipants += (activity.getActivityCapacity() != null ? activity.getActivityCapacity() : 0);
         }
-        
-        // 获取总参与人数
-        int totalParticipants = bookingsMapper.countTotalParticipants();
         
         result.put("totalActivities", totalActivities);
         result.put("ongoingActivities", ongoingActivities);
@@ -75,23 +71,24 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
             List<Activities> collegeActivities = activitiesMapper.selectActivityList(queryActivity);
             int totalActivities = collegeActivities.size();
             
-            // 计算进行中的活动数
+            // 计算进行中的活动数和参与人数
             Date now = new Date();
             int ongoingActivities = 0;
+            int participants = 0;
             for (Activities activity : collegeActivities) {
+                // 统计进行中的活动
                 if (activity.getActivityStart() != null && activity.getEndTime() != null) {
                     if (now.after(activity.getActivityStart()) && now.before(activity.getEndTime())) {
                         ongoingActivities++;
                     }
                 }
+                // 累加参与人数（activityCapacity = 已选人数）
+                participants += (activity.getActivityCapacity() != null ? activity.getActivityCapacity() : 0);
             }
-            
-            // 获取该书院的参与人数
-            int participants = bookingsMapper.countParticipantsByOrganizer(college);
             
             collegeStats.put("totalActivities", totalActivities);
             collegeStats.put("ongoingActivities", ongoingActivities);
-            collegeStats.put("participants", participants);
+            collegeStats.put("totalParticipants", participants);
             
             collegeData.put(college, collegeStats);
         }
@@ -172,6 +169,7 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
             activityItem.put("type", getActivityTypeName(activity.getActivityType()));
             activityItem.put("date", activity.getCreatedAt());
             activityItem.put("startTime", activity.getStartTime());
+            activityItem.put("endTime", activity.getEndTime());
             
             // 判断活动状态
             String status = getActivityStatus(activity);
@@ -200,10 +198,11 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
         
         int totalActivities = collegeActivities.size();
         
-        // 计算进行中的活动数
+        // 计算进行中的活动数、已完成活动数和参与人数
         Date now = new Date();
         int ongoingActivities = 0;
         int completedActivities = 0;
+        int totalParticipants = 0;
         
         for (Activities activity : collegeActivities) {
             if (activity.getActivityStart() != null && activity.getEndTime() != null) {
@@ -213,10 +212,9 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
                     completedActivities++;
                 }
             }
+            // 累加参与人数（activityCapacity = 已选人数）
+            totalParticipants += (activity.getActivityCapacity() != null ? activity.getActivityCapacity() : 0);
         }
-        
-        // 获取该书院的参与人数
-        int totalParticipants = bookingsMapper.countParticipantsByOrganizer(college);
         
         result.put("totalActivities", totalActivities);
         result.put("ongoingActivities", ongoingActivities);
@@ -338,6 +336,7 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
             activityItem.put("type", getActivityTypeName(activity.getActivityType()));
             activityItem.put("date", activity.getCreatedAt());
             activityItem.put("startTime", activity.getStartTime());
+            activityItem.put("endTime", activity.getEndTime());
             
             // 判断活动状态
             String status = getActivityStatus(activity);
@@ -372,7 +371,7 @@ public class ActivityStatisticsServiceImpl implements IActivityStatisticsService
             activityItem.put("endTime", activity.getEndTime());
             activityItem.put("location", activity.getActivityLocation());
             activityItem.put("capacity", activity.getActivityTotalCapacity());
-            activityItem.put("participants", activity.getActivityTotalCapacity() - activity.getActivityCapacity());
+            activityItem.put("participants", activity.getActivityCapacity() != null ? activity.getActivityCapacity() : 0);
             activityItem.put("status", getActivityStatus(activity));
             activityItem.put("description", activity.getActivityDescription());
             activityItem.put("organizer", activity.getOrganizer());

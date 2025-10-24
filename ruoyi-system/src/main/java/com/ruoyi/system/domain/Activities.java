@@ -47,6 +47,7 @@ public class Activities extends BaseEntity {
     private String activityLocation;
 
     /** 活动当前已选人数 */
+    @Excel(name = "已选人数")
     private Integer activityCapacity;
 
     /** 组织单位 */
