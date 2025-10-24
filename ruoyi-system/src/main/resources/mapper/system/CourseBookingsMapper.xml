@@ -182,7 +182,7 @@
     <select id="selectCourseBookingsListAudit" parameterType="CourseBookingDTO" resultMap="CourseBookingDTOResult">
         <include refid="selectCourseBookingsWithCourseVo"/>
         <where>
-            cb.status IN ('未考核', '已通过', '未通过')
+            cb.status IN ('未考核', '未审核', '已通过', '未通过')
             <if test="studentId != null  and studentId != ''"> and cb.student_id = #{studentId}</if>
             <if test="studentName != null  and studentName != ''"> and s.student_name = #{studentName}</if>
             <if test="courseName != null  and courseName != ''"> and c.course_name like concat('%', #{courseName}, '%')</if>
@@ -257,7 +257,7 @@
 
     <select id="countCourseBookingAuditStatus" parameterType="String" resultType="Map">
         SELECT 
-            COUNT(CASE WHEN cb.status = '未考核' THEN 1 END) as pending,
+            COUNT(CASE WHEN cb.status IN ('未考核', '未审核') THEN 1 END) as pending,
             COUNT(CASE WHEN cb.status = '已通过' THEN 1 END) as approved,
             COUNT(CASE WHEN cb.status = '未通过' THEN 1 END) as rejected,
             COUNT(*) as total

@@ -90,130 +90,130 @@
       <div class="columns-container">
         <!-- 左侧列 -->
         <div class="left-column">
-          <!-- 左侧上方：书院通知 -->
-          <div class="news-panel">
-          <div class="panel-header">
-            <i class="el-icon-bell"></i>
-            <span>书院通知</span>
-            <div class="card-actions">
-              <el-button
-                type="text"
-                size="small"
-                @click="goToNoticeManager"
-                class="refresh-btn"
-              >
-                查看全部
-              </el-button>
+          <!-- 左侧上方：近期活动 -->
+          <div class="activity-panel">
+            <div class="panel-header">
+              <i class="el-icon-s-promotion"></i>
+              <span>近期活动</span>
+              <div class="card-actions">
+                <el-button type="text" size="small" @click="goToActivityManager()" class="refresh-btn">查看全部</el-button>
+              </div>
             </div>
-          </div>
-          <div class="news-content">
-            <div v-if="notifications.length === 0" class="no-notification">
-              <i class="el-icon-info"></i>
-              <span>暂无通知</span>
-            </div>
-            <div v-else class="notification-list" ref="notificationList">
-              <div
-                v-for="notification in notifications.slice(0, 5)"
-                :key="notification.notiId"
-                class="notification-item"
-                @click="showNotificationDetail(notification)"
-              >
-                <div class="notification-date">
-                  {{ formatNotificationDate(notification.createdAt) }}
-                </div>
-                <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
+            <div class="activity-list">
+              <div v-for="(activity, index) in recentActivities.slice(0, 5)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
+                <div class="notification-date">{{ activity.month }} {{ activity.day }}</div>
                 <div class="notification-info">
-                  <div class="notification-title">{{ notification.notiTitle }}</div>
+                  <div class="notification-title-row">
+                    <div class="notification-title">{{ activity.title }}</div>
+                  </div>
+                </div>
+                <span class="activity-time-inline">
+                  <i class="el-icon-time"></i>
+                  活动时间：{{ activity.time }}
+                </span>
+                <div class="activity-status" :class="activity.status">
+                  {{ activity.statusText }}
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- 左侧下方：统计图表 -->
+          <div class="charts-container">
+            <!-- 统计图表 -->
+            <el-card class="chart-card" shadow="hover">
+              <div slot="header" class="card-header">
+                <span class="card-title">
+                  <i class="el-icon-data-line"></i>
+                  活动与课程统计
+                </span>
+              </div>
+              <div class="chart-content">
+                <div class="chart-row">
+                  <div class="chart-item">
+                    <div class="chart-subtitle">活动统计</div>
+                    <div ref="statsChart" class="chart"></div>
+                  </div>
+                  <div class="chart-item">
+                    <div class="chart-subtitle">课程统计</div>
+                    <div ref="courseStatsChart" class="chart"></div>
+                  </div>
+                </div>
+              </div>
+            </el-card>
           </div>
         </div>
 
-        <!-- 左侧下方：统计图表 -->
-        <div class="charts-container">
-          <!-- 统计图表 -->
-          <el-card class="chart-card" shadow="hover">
-            <div slot="header" class="card-header">
-              <span class="card-title">
-                <i class="el-icon-data-line"></i>
-                活动与课程统计
-              </span>
-            </div>
-            <div class="chart-content">
-              <div class="chart-row">
-                <div class="chart-item">
-                  <div class="chart-subtitle">活动统计</div>
-                  <div ref="statsChart" class="chart"></div>
-                </div>
-                <div class="chart-item">
-                  <div class="chart-subtitle">课程统计</div>
-                  <div ref="courseStatsChart" class="chart"></div>
-                </div>
+        <!-- 右侧列 -->
+        <div class="right-column">
+          <!-- 右侧上方：近期课程 -->
+          <div class="course-panel">
+            <div class="panel-header">
+              <i class="el-icon-reading"></i>
+              <span>近期课程</span>
+              <div class="card-actions">
+                <el-button type="text" size="small" @click="goToCourseManager()" class="refresh-btn">查看全部</el-button>
               </div>
             </div>
-          </el-card>
-        </div>
-      </div>
-
-      <!-- 右侧列 -->
-      <div class="right-column">
-        <!-- 右侧上方：近期活动 -->
-        <div class="activity-panel">
-          <div class="panel-header">
-            <i class="el-icon-s-promotion"></i>
-            <span>近期活动</span>
-            <div class="card-actions">
-              <el-button type="text" size="small" @click="goToActivityManager()" class="refresh-btn">查看全部</el-button>
-            </div>
-          </div>
-          <div class="activity-list">
-            <div v-for="(activity, index) in recentActivities.slice(0, 5)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
-              <div class="notification-date">{{ activity.month }} {{ activity.day }}</div>
-              <div class="notification-info">
-                <div class="notification-title-row">
-                  <div class="notification-title">{{ activity.title }}</div>
+            <div class="course-list">
+              <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
+                <div class="notification-date">{{ getCourseMonth(course) }} {{ getCourseDay(course) }}</div>
+                <div class="notification-info">
+                  <div class="notification-title-row">
+                    <div class="notification-title">{{ course.name }}</div>
+                  </div>
                 </div>
-              </div>
-              <span class="activity-time-inline">
-                <i class="el-icon-time"></i>
-                活动时间：{{ activity.time }}
-              </span>
-              <div class="activity-status" :class="activity.status">
-                {{ activity.statusText }}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 右侧下方：近期课程 -->
-        <div class="course-panel">
-          <div class="panel-header">
-            <i class="el-icon-reading"></i>
-            <span>近期课程</span>
-            <div class="card-actions">
-              <el-button type="text" size="small" @click="goToCourseManager()" class="refresh-btn">查看全部</el-button>
-            </div>
-          </div>
-          <div class="course-list">
-          <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
-            <div class="notification-date">{{ getCourseMonth(course) }} {{ getCourseDay(course) }}</div>
-            <div class="course-content">
-              <div class="course-title-row">
-                <h4 class="course-title">{{ course.name }}</h4>
                 <span class="course-time-inline">
                   <i class="el-icon-time"></i>
                   课程时间：{{ course.schedule }}
                 </span>
+                <div class="course-status" :class="getCourseStatusClass(course.status)">
+                  {{ course.status }}
+                </div>
               </div>
             </div>
-            <div class="course-status" :class="getCourseStatusClass(course.status)">
-              {{ course.status }}
+          </div>
+
+          <!-- 右侧下方：书院通知 -->
+          <div class="news-panel">
+            <div class="panel-header">
+              <i class="el-icon-bell"></i>
+              <span>书院通知</span>
+              <div class="card-actions">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="goToNoticeManager"
+                  class="refresh-btn"
+                >
+                  查看全部
+                </el-button>
+              </div>
             </div>
+            <div class="news-content">
+              <div v-if="notifications.length === 0" class="no-notification">
+                <i class="el-icon-info"></i>
+                <span>暂无通知</span>
+              </div>
+              <div v-else class="notification-list" ref="notificationList">
+                <div
+                  v-for="notification in notifications.slice(0, 5)"
+                  :key="notification.notiId"
+                  class="notification-item"
+                  @click="showNotificationDetail(notification)"
+                >
+                  <div class="notification-date">
+                    {{ formatNotificationDate(notification.createdAt) }}
+                  </div>
+                  <span v-if="isNewNotification(notification)" class="badge new">NEW</span>
+                  <div class="notification-info">
+                    <div class="notification-title">{{ notification.notiTitle }}</div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
 
@@ -1178,10 +1178,32 @@ export default {
     // 获取近期活动数据
     async getRecentActivities() {
       try {
-        const response = await listActivities({
+        // 获取当前用户的学院信息
+        let userCollege = '';
+        try {
+          const nickNameResponse = await getNickName();
+          if (nickNameResponse && nickNameResponse.msg) {
+            userCollege = nickNameResponse.msg;
+            console.log('当前用户书院（活动筛选）:', userCollege);
+          }
+        } catch (error) {
+          console.error('获取用户书院信息失败:', error);
+        }
+
+        // 构建查询参数，如果获取到学院信息则按学院筛选
+        const queryParams = {
           pageNum: 1,
           pageSize: 10
-        });
+        };
+        
+        if (userCollege) {
+          queryParams.organizer = userCollege;
+          console.log('按学院筛选活动:', userCollege);
+        } else {
+          console.log('未获取到学院信息，显示所有活动');
+        }
+
+        const response = await listActivities(queryParams);
 
         if (response.code === 200 && response.rows) {
           // 按活动开始时间降序排序，获取最近的5个活动
@@ -1207,6 +1229,8 @@ export default {
               description: activity.activityDescription
             };
           });
+          
+          console.log('筛选后的活动数据:', this.recentActivities);
         }
       } catch (error) {
         console.error('获取近期活动失败:', error);
@@ -1301,10 +1325,32 @@ export default {
     // 获取近期课程数据
     async getCurrentCourses() {
       try {
-        const response = await listCourses({
+        // 获取当前用户的学院信息
+        let userCollege = '';
+        try {
+          const nickNameResponse = await getNickName();
+          if (nickNameResponse && nickNameResponse.msg) {
+            userCollege = nickNameResponse.msg;
+            console.log('当前用户书院（课程筛选）:', userCollege);
+          }
+        } catch (error) {
+          console.error('获取用户书院信息失败:', error);
+        }
+
+        // 构建查询参数，如果获取到学院信息则按学院筛选
+        const queryParams = {
           pageNum: 1,
           pageSize: 10
-        });
+        };
+        
+        if (userCollege) {
+          queryParams.organizer = userCollege;
+          console.log('按学院筛选课程:', userCollege);
+        } else {
+          console.log('未获取到学院信息，显示所有课程');
+        }
+
+        const response = await listCourses(queryParams);
 
         if (response.code === 200 && response.rows) {
           // 按课程开始时间降序排序，获取最近的5个课程
@@ -1333,6 +1379,8 @@ export default {
               courseDeadline: course.courseDeadline
             };
           });
+          
+          console.log('筛选后的课程数据:', this.currentCourses);
         }
       } catch (error) {
         console.error('获取近期课程失败:', error);
@@ -1999,7 +2047,7 @@ export default {
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  height: 350px; /* 从400px减少到350px，与近期活动保持一致 */
+  height: 400px; /* 从350px改为400px，与课程面板互换 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2041,7 +2089,7 @@ export default {
 
 /* 面板内容 */
 .news-content {
-  padding: 12px 20px;
+  padding: 16px 20px; /* 增加上下padding，减少左右padding */
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -2083,7 +2131,7 @@ export default {
 
 /* 通知列表 */
 .notification-list {
-  max-height: 300px;
+  max-height: none; /* 移除高度限制，让内容自适应 */
   overflow-y: auto;
   flex: 1;
   min-height: 0;
@@ -2101,15 +2149,16 @@ export default {
 .notification-item {
   display: flex;
   align-items: center;
-  padding: 15px 0;
+  padding: 20px 0; /* 增加上下padding，让每个通知项更高 */
   border-bottom: 1px solid #f0f0f0;
   gap: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 8px;
-  margin: 0 -10px;
-  padding-left: 15px;
-  padding-right: 15px;
+  margin: 0; /* 移除负margin，让内容更好地占据空间 */
+  padding-left: 0; /* 移除额外的padding */
+  padding-right: 0; /* 移除额外的padding */
+  min-height: 60px; /* 设置最小高度，确保每个通知项有足够空间 */
 }
 
 .notification-item:last-child {
@@ -2123,12 +2172,12 @@ export default {
 }
 
 .notification-date {
-  min-width: 60px;
+  min-width: 70px; /* 稍微增加最小宽度 */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 4px 8px;
+  padding: 6px 10px; /* 增加内边距 */
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px; /* 稍微增大字体 */
   font-weight: 600;
   text-align: center;
   margin-right: 12px;
@@ -2146,9 +2195,17 @@ export default {
 .notification-title {
   font-weight: 500;
   color: #303133;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 15px; /* 稍微增大字体 */
+  line-height: 1.5; /* 增加行高，让文本更舒展 */
   margin: 0;
+  flex: 1; /* 占据剩余空间 */
+  word-wrap: break-word; /* 允许长文本换行 */
+  overflow-wrap: break-word; /* 兼容性更好的换行 */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .notification-badges {
@@ -2158,12 +2215,12 @@ export default {
 }
 
 .badge {
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 10px;
+  padding: 3px 8px; /* 稍微增加内边距 */
+  border-radius: 4px; /* 稍微增加圆角 */
+  font-size: 11px; /* 稍微增大字体 */
   font-weight: 600;
   text-transform: uppercase;
-  margin-right: 8px; /* 添加右边距，与标题保持距离 */
+  margin: 0 8px; /* 左右边距，在日期和标题之间 */
   flex-shrink: 0; /* 防止标签被压缩 */
 }
 
@@ -2891,7 +2948,7 @@ export default {
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.8);
-  height: 400px;
+  height: 350px; /* 从400px改为350px，与通知面板互换 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2996,35 +3053,37 @@ export default {
 
 
 .course-list {
-  height: 100%;
-  overflow-y: auto;
   flex: 1;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  padding: 12px 20px; /* 与activity-list保持一致 */
 }
-
-.course-list::-webkit-scrollbar { display: none; }
 
 .course-item {
   display: flex;
-  padding: 20px 0;
+  padding: 15px 0;
   border-bottom: 1px solid #f0f0f0;
-  gap: 12px;
+  gap: 15px;
   align-items: center;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 8px;
-  margin: 0;
-  padding-left: 20px;
-  padding-right: 20px;
+  margin: 0; /* 移除负margin，因为course-list现在有padding */
+  padding-left: 0; /* 移除额外的padding */
+  padding-right: 0; /* 移除额外的padding */
   width: 100%;
-  min-height: 60px;
 }
 
 .course-item:hover {
   background-color: #f8f9fa;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.course-time-inline {
+  font-size: 12px;
+  color: #606266;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .course-item:last-child {
