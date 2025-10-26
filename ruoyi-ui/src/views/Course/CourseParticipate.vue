@@ -137,18 +137,10 @@
         </el-table-column>
         <el-table-column label="课程地点" align="center" prop="courseLocation" />
         <el-table-column label="组织单位" align="center" prop="organizer" />
-        <!-- 成绩来源于列 -->
-        <el-table-column label="课程成绩" align="center" width="120">
+        <el-table-column label="课程成绩" align="center" prop="scoreValue" width="100">
           <template slot-scope="scope">
-            <el-tag
-              v-if="scope.row.scoreType"
-              :type="getScoreTypeTagType(scope.row.scoreType)"
-              effect="plain"
-              class="score-type-tag"
-            >
-              {{ scope.row.scoreType }}
-            </el-tag>
-            <span v-else class="no-score-type">-</span>
+            <span v-if="scope.row.scoreValue" class="score-text">{{ scope.row.scoreValue }}</span>
+            <span v-else class="no-score">-</span>
           </template>
         </el-table-column>
         <el-table-column label="课程开始时间" align="center" prop="startTime" >
@@ -1772,6 +1764,18 @@ export default {
   font-size: 12px;
 }
 
+/* 可点击标签样式 */
+.clickable-tag {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clickable-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.8;
+}
+
 /* 重新提交标签样式 */
 .status-tag.reupload-tag {
   cursor: pointer;
@@ -2864,18 +2868,16 @@ export default {
   font-weight: 500;
 }
 
-/* 成绩来源于列样式 */
-.score-type-tag {
-  font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 500;
+/* 成绩显示样式 */
+.score-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
 }
 
-.no-score-type {
-  color: #909399;
-  font-size: 12px;
-  font-style: italic;
+.no-score {
+  color: #c0c4cc;
+  font-size: 14px;
 }
 
 </style>

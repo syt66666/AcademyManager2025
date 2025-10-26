@@ -107,4 +107,16 @@ public interface CoursesMapper
      * @return 更新行数
      */
     int updateStatusToCompleted(@Param("now") String now);
+
+    /**
+     * 检查课程名称和组织单位的唯一性
+     *
+     * @param courseName 课程名称
+     * @param organizer 组织单位
+     * @param courseId 课程ID（编辑时排除自身）
+     * @return 重复数量
+     */
+    int checkCourseUnique(@Param("courseName") String courseName, 
+                          @Param("organizer") String organizer, 
+                          @Param("courseId") Long courseId);
 }

@@ -199,4 +199,14 @@
           AND #{now} > end_time
         ]]>
     </update>
+
+    <!-- 检查课程名称和组织单位的唯一性 -->
+    <select id="checkCourseUnique" resultType="int">
+        SELECT COUNT(*) FROM courses
+        WHERE course_name = #{courseName}
+        AND organizer = #{organizer}
+        <if test="courseId != null">
+            AND course_id != #{courseId}
+        </if>
+    </select>
 </mapper>

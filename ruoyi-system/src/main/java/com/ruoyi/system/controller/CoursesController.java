@@ -165,4 +165,18 @@ public class CoursesController extends BaseController
             return AjaxResult.error("取消选课失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 检查课程名称和组织单位的唯一性
+     */
+    @PostMapping("/checkUnique")
+    public AjaxResult checkUnique(@RequestBody Map<String, Object> params) {
+        String courseName = (String) params.get("courseName");
+        String organizer = (String) params.get("organizer");
+        Long courseId = params.get("courseId") != null ? 
+            Long.valueOf(params.get("courseId").toString()) : null;
+        
+        boolean isUnique = coursesService.checkCourseUnique(courseName, organizer, courseId);
+        return AjaxResult.success(isUnique);
+    }
 }

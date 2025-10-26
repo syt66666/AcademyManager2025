@@ -2121,6 +2121,18 @@ export default {
   font-size: 12px;
 }
 
+/* 可点击标签样式 */
+.clickable-tag {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clickable-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.8;
+}
+
 /* 重新提交标签样式 */
 .status-tag.reupload-tag {
   cursor: pointer;

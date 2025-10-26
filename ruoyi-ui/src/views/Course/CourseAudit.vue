@@ -101,16 +101,6 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="课程种类" prop="courseCategory">
-            <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程种类" class="search-input">
-              <el-option
-                v-for="category in predefinedCourseCategories"
-                :key="category.value"
-                :label="category.label"
-                :value="category.value"
-              />
-            </el-select>
-          </el-form-item>
           <el-form-item label="课程类型" prop="courseType">
             <el-select v-model="queryParams.courseType" clearable placeholder="请选择课程类型" class="search-input">
               <el-option
@@ -208,20 +198,10 @@
           </template>
         </el-table-column>
         <el-table-column label="课程地点" align="center" prop="courseLocation"/>
-        <el-table-column label="组织单位" align="center" prop="organizer"/>
-        <!-- 新增：成绩列 -->
-        <el-table-column label="成绩" align="center" prop="scoreValue" width="100">
+        <el-table-column label="课程成绩" align="center" prop="scoreValue" width="100">
           <template slot-scope="scope">
-	      <span v-if="scope.row.scoreValue">
-	        <el-tag
-            :type="getScoreTagType(scope.row.scoreValue)"
-            effect="plain"
-            class="score-tag"
-          >
-	          {{ scope.row.scoreValue }}
-	        </el-tag>
-	      </span>
-            <span v-else class="text-muted">-</span>
+            <span v-if="scope.row.scoreValue" class="score-text">{{ scope.row.scoreValue }}</span>
+            <span v-else class="no-score">-</span>
           </template>
         </el-table-column>
         <el-table-column label="考核状态" prop="status" align="center" width="100">
@@ -243,24 +223,20 @@
             >未通过</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="150">
+        <el-table-column label="操作" align="center" width="100">
           <template slot-scope="scope">
-            <div class="action-buttons">
-              <!-- 未考核或未审核状态才显示审核按钮 -->
-              <el-button
-                v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
-                size="mini"
-                type="text"
-                @click="openAuditDialog(scope.row)"
-                class="action-button audit-button"
-                :disabled="scope.row.status !== '未考核' && scope.row.status !== '未审核'">
-                考核
-              </el-button>
-              <!-- 已审核或未通过状态显示灰色文字 -->
-              <span v-else class="text-muted">
-	        {{ scope.row.status === '已通过' ? '已通过' : '未通过' }}
-	      </span>
-            </div>
+            <!-- 未考核状态：显示考核按钮 -->
+            <el-button
+              v-if="scope.row.status === '未考核' || scope.row.status === '未审核'"
+              type="primary"
+              size="mini"
+              icon="el-icon-edit"
+              @click="openAuditDialog(scope.row)"
+              class="audit-btn"
+            >考核</el-button>
+            
+            <!-- 已考核状态：显示已考核文字 -->
+            <span v-else class="audited-text">已考核</span>
           </template>
         </el-table-column>
       </el-table>
@@ -278,7 +254,7 @@
     <el-dialog
       :visible.sync="auditDialogVisible"
       :title="auditDialogTitle"
-      width="70%"
+      width="45%"
       append-to-body
     >
       <div v-if="currentBooking" class="audit-content">
@@ -313,9 +289,6 @@
               <div class="section">
                 <h3>审核材料</h3>
                 <div v-if="auditMaterials && auditMaterials.length" class="materials-list">
-                  <div class="debug-info" style="background: #f0f9ff; padding: 10px; margin-bottom: 10px; border-radius: 4px; font-size: 12px; color: #0369a1;">
-                    <strong>🔍 调试信息:</strong> 检测到 {{ auditMaterials.length }} 个材料文件
-                  </div>
                   <div
                     v-for="(material, idx) in auditMaterials"
                     :key="idx"
@@ -327,10 +300,6 @@
                         <div class="material-name" :title="material.name">{{ material.name }}</div>
                         <div class="material-meta">
                           <el-tag size="mini" type="info">{{ getFileExtension(material.name).toUpperCase() }}</el-tag>
-                          <span class="material-size">{{ formatFileSize(material.size) }}</span>
-                        </div>
-                        <div class="debug-url" style="font-size: 10px; color: #6b7280; margin-top: 2px; word-break: break-all;">
-                          URL: {{ material.url }}
                         </div>
                       </div>
                     </div>
@@ -535,8 +504,8 @@ export default {
       availableCourseCategories: [],
       // 预定义的课程分类
       predefinedCourseCategories: [
-        { value: '必修', label: '必修课' },
-        { value: '选修', label: '选修课' }
+        { value: '必修', label: '必修' },
+        { value: '选修', label: '选修' }
       ],
       // 可用的课程类型列表
       availableCourseTypes: [],
@@ -637,6 +606,18 @@ export default {
       }
       return 'info';  // 其他情况
     },
+
+    // 成绩类型标签颜色（正考、补考等）
+    getScoreTypeTagType(scoreType) {
+      const map = {
+        '正考': 'success',     // 正考 - 绿色
+        '补考': 'warning',     // 补考 - 橙色
+        '重修': 'danger',      // 重修 - 红色
+        '免修': 'info',        // 免修 - 蓝色
+        '缓考': 'primary'      // 缓考 - 紫色
+      }
+      return map[scoreType] || 'info';
+    },
     async openAuditDialog(row) {
       this.currentBooking = row;
       this.auditDialogTitle = `审核材料`;
@@ -644,48 +625,33 @@ export default {
       // 拉取材料详情
       try {
         this.auditLoading = true;
-        console.log('🔍 开始获取审核材料详情，bookingId:', row.bookingId);
-
         const res = await getBookingsDetails(row.bookingId);
-        console.log('📡 API响应原始数据:', res);
-
         const data = res && res.data ? res.data : {};
-        console.log('📋 解析后的数据:', data);
-        console.log('📎 proof字段值:', data.proof);
-        console.log('📎 proof字段类型:', typeof data.proof);
-        console.log('📎 proof是否为数组:', Array.isArray(data.proof));
 
         // 处理审核材料（压缩包）- 使用proof字段
         this.auditMaterials = [];
         if (data.proof && Array.isArray(data.proof) && data.proof.length > 0) {
-          console.log('✅ 检测到proof为数组，长度:', data.proof.length);
           this.auditMaterials = data.proof.map((proofPath, index) => {
-            console.log(`📁 处理第${index + 1}个材料:`, proofPath);
+            // 从URL中提取文件名
+            const fileName = this.extractFileNameFromUrl(proofPath) || `审核材料_${index + 1}.zip`;
             return {
-              name: `审核材料_${index + 1}.zip`,
+              name: fileName,
               url: proofPath,
-              size: 0, // 后端可能不提供文件大小
+              size: 0,
               type: 'application/zip'
             };
           });
-          console.log('📦 最终材料列表:', this.auditMaterials);
         } else if (data.proof && typeof data.proof === 'string') {
-          console.log('✅ 检测到proof为字符串:', data.proof);
           // 单个材料文件
+          const fileName = this.extractFileNameFromUrl(data.proof) || '审核材料.zip';
           this.auditMaterials = [{
-            name: '审核材料.zip',
+            name: fileName,
             url: data.proof,
             size: 0,
             type: 'application/zip'
           }];
-          console.log('📦 单个材料对象:', this.auditMaterials);
-        } else {
-          console.warn('⚠️ proof字段为空或格式不正确:', data.proof);
-          console.log('🔍 完整数据对象:', JSON.stringify(data, null, 2));
         }
       } catch (e) {
-        console.error('❌ 获取审核材料失败:', e);
-        console.error('❌ 错误详情:', e.message);
         this.auditMaterials = [];
       } finally {
         this.auditLoading = false;
@@ -694,10 +660,7 @@ export default {
 
     // 下载审核材料
     downloadMaterial(material) {
-      console.log('📥 开始下载材料:', material);
-
       if (!material.url) {
-        console.error('❌ 材料URL不存在:', material);
         this.$message.error('文件路径不存在');
         return;
       }
@@ -706,8 +669,6 @@ export default {
         const link = document.createElement('a');
         // 处理proof字段的路径，确保以正确的API前缀开头
         let downloadUrl = material.url;
-        console.log('🔗 原始URL:', downloadUrl);
-        console.log('🌐 API基础地址:', process.env.VUE_APP_BASE_API);
 
         if (!downloadUrl.startsWith('http')) {
           // 如果路径不是以http开头，添加API前缀
@@ -716,21 +677,29 @@ export default {
             : `${process.env.VUE_APP_BASE_API}/${downloadUrl}`;
         }
 
-        console.log('🔗 最终下载URL:', downloadUrl);
-        console.log('📁 文件名:', material.name);
-
         link.href = downloadUrl;
         link.download = material.name;
         link.target = '_blank';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log('✅ 下载链接已触发');
         this.$message.success('开始下载文件');
       } catch (error) {
-        console.error('❌ 下载失败:', error);
-        console.error('❌ 错误详情:', error.message);
         this.$message.error('下载失败，请重试');
+      }
+    },
+
+    // 从URL中提取文件名
+    extractFileNameFromUrl(url) {
+      if (!url) return '';
+      
+      try {
+        // 移除URL参数和查询字符串
+        const cleanUrl = url.split('?')[0].split('#')[0];
+        const fileName = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
+        return fileName || '';
+      } catch (e) {
+        return '';
       }
     },
 
@@ -913,8 +882,8 @@ export default {
     // 课程分类映射函数：将分类值转换为对应的分类名称
     getCourseCategoryName(courseCategory) {
       const categoryMap = {
-        '必修': '必修课',
-        '选修': '选修课'
+        '必修': '必修',
+        '选修': '选修'
       };
       return categoryMap[courseCategory] || courseCategory;
     },
@@ -2017,5 +1986,65 @@ export default {
 
 .preview-container {
   position: relative;
+}
+
+/* ============ 操作列样式 ============ */
+
+/* 考核按钮 */
+.audit-btn {
+  background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+  border: none;
+  color: white;
+  font-weight: 500;
+  padding: 6px 15px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(64, 158, 255, 0.3);
+}
+
+.audit-btn:hover {
+  background: linear-gradient(135deg, #66b1ff 0%, #409EFF 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(64, 158, 255, 0.4);
+}
+
+.audit-btn:active {
+  transform: translateY(0);
+}
+
+.audit-btn i {
+  margin-right: 3px;
+}
+
+/* 已考核文字 */
+.audited-text {
+  color: #909399;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f5f7fa;
+  transition: all 0.3s ease;
+}
+
+.audited-text:hover {
+  background: #e9ecef;
+  color: #606266;
+}
+
+/* ============ 成绩显示样式 ============ */
+
+/* 成绩文字 */
+.score-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+/* 无成绩显示 */
+.no-score {
+  color: #c0c4cc;
+  font-size: 14px;
 }
 </style>

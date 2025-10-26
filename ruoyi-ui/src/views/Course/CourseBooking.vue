@@ -379,16 +379,19 @@
 </template>
 
 <script>
-import { listCourses, getCourses, delCourses, addCourses, updateCourses, signUpCapacity, cancelSignUpCapacity, checkCourseUnique, signUpCourse, cancelSignUpCourse } from "@/api/system/courses";
+import { listCourses, getCourses, delCourses, addCourses, updateCourses, signUpCourse, cancelSignUpCourse } from "@/api/system/courses";
 import {parseTime} from "@/utils/ruoyi";
 import {addBooking, checkCourseBookingSimple, deleteBookingsByCourseAndStudent} from "@/api/system/courseBookings";
 import {getStudent} from "@/api/system/student";
+import { getServerTime } from "@/api/common/time";
 
 export default {
   name: "Courses",
   data() {
     return {
       selectedCourse: null,
+      // 服务器时间
+      serverTime: null,
       // 详情弹窗相关
       detailDialogVisible: false,
       // 遮罩层
@@ -503,15 +506,31 @@ export default {
     },
   },
   async created() {
+    // 获取服务器时间
+    await this.getServerTime();
     // 先获取学生信息
     await this.getCurrentStudentInfo();
   },
   methods: {
+    /** 获取服务器时间 */
+    async getServerTime() {
+      try {
+        const response = await getServerTime();
+        if (response.code === 200) {
+          this.serverTime = new Date(response.data);
+        } else {
+          // 如果获取服务器时间失败，使用本地时间作为备用
+          this.serverTime = new Date();
+        }
+      } catch (error) {
+        // 如果获取服务器时间失败，使用本地时间作为备用
+        this.serverTime = new Date();
+      }
+    },
+
     // 修复：提交取消报名
     async submitCancelSignUp(course) {
       try {
-        console.log('开始取消选课流程，课程ID:', course.courseId);
-
         // 使用原子性取消选课操作
         const cancelData = {
           courseId: Number(course.courseId),
@@ -519,9 +538,7 @@ export default {
           version: Number(course.version) || 0
         };
 
-        console.log('原子性取消选课数据:', cancelData);
         const response = await cancelSignUpCourse(cancelData);
-        console.log('原子性取消选课响应:', response);
 
         if (response.code === 200) {
           this.$message.success("取消选课成功！");
@@ -543,11 +560,9 @@ export default {
     async getCurrentStudentInfo() {
       try {
         const response = await getStudent(this.$store.state.user.name);
-        console.log('学生信息API响应:', response);
 
         if (response && response.studentInfo) {
           this.currentAcademy = response.studentInfo.academy;
-          console.log('当前学生书院:', this.currentAcademy);
           // 设置书院过滤参数
           this.queryParams.academy = this.currentAcademy;
           // 获取学生信息后，根据书院获取课程
@@ -570,8 +585,6 @@ export default {
     // 修复：提交选课
     async submitSignUp(course) {
       try {
-        console.log('开始选课流程，课程ID:', course.courseId);
-
         // 检查必要参数
         if (!course || !course.courseId) {
           this.$message.error('课程信息不完整，无法选课');
@@ -585,9 +598,7 @@ export default {
           version: Number(course.version) || 0
         };
 
-        console.log('原子性选课数据:', signUpData);
         const response = await signUpCourse(signUpData);
-        console.log('原子性选课响应:', response);
 
         if (response.code === 200) {
           this.$message.success("选课成功！");
@@ -617,8 +628,6 @@ export default {
             courseId: Number(course.courseId),  // 转换为数字
             studentId: this.$store.state.user.name
           };
-
-          console.log('检查选课状态参数:', params);
 
           return checkCourseBookingSimple(
             Number(course.courseId),
@@ -809,7 +818,6 @@ export default {
             // 检查课程的组织者是否包含学生的书院
             return course.organizer && course.organizer.includes(this.queryParams.academy);
           });
-          console.log(`按书院 ${this.queryParams.academy} 过滤后，剩余课程数量:`, courses.length);
         }
 
         // 如果选择了"只显示可选课课程"，则进行前端过滤
@@ -948,7 +956,8 @@ export default {
 
     // 获取课程状态文本
     getCourseStatusText(course) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const deadline = new Date(course.courseDeadline);
       const courseStart = new Date(course.courseStart);
 
@@ -972,7 +981,6 @@ export default {
     // 同步课程数据（在选课操作后调用）
     async syncCourseData() {
       try {
-        console.log('同步课程数据...');
         // 静默获取最新数据，不显示loading状态
         const response = await listCourses(this.queryParams);
         let courses = response.rows;
@@ -1001,10 +1009,7 @@ export default {
         // 更新课程列表数据
         this.coursesList = courses;
         this.total = response.total;
-
-        console.log('课程数据已同步，当前课程数量:', courses.length);
       } catch (error) {
-        console.error('同步课程数据失败:', error);
         // 同步失败，不显示错误信息给用户
       }
     }

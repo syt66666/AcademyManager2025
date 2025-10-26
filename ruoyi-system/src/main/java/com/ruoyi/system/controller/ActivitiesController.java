@@ -75,6 +75,7 @@ public class ActivitiesController extends BaseController {
      * 修改活动
      */
     @Log(title = "活动信息", businessType = BusinessType.UPDATE)
+    @PostMapping("/update")
     public AjaxResult edit(@RequestBody Activities activity) {
         return toAjax(activityService.updateActivity(activity));
     }

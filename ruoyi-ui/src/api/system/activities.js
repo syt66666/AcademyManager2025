@@ -29,8 +29,8 @@ export function addActivities(data) {
 // 修改活动信息
 export function updateActivities(data) {
   return request({
-    url: '/system/activities',
-    method: 'put',
+    url: '/system/activities/update',
+    method: 'post',
     data: data
   })
 }

@@ -1063,8 +1063,7 @@ export default {
         }).then(() => {
           this.submitCancelSignUp(row);
         }).catch(() => {
-          this.$message.info('已取消取消报名操作');
-        });handleCancelSignUp
+        });
       } catch (error) {
 
       }

@@ -2,6 +2,7 @@ package com.ruoyi.system.controller;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.system.domain.CourseBookings;
 import com.ruoyi.system.domain.CourseBookingDTO;
+import com.ruoyi.system.domain.CourseAuditExportDTO;
 import com.ruoyi.system.service.ICourseBookingsService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
@@ -202,8 +204,27 @@ public class CourseBookingsController extends BaseController
     @PostMapping("/exportAudit")
     public void exportAudit(HttpServletResponse response, CourseBookingDTO courseBookingDTO)
     {
+        // 查询完整数据
         List<CourseBookingDTO> list = courseBookingsService.selectCourseBookingsListAudit(courseBookingDTO);
-        ExcelUtil<CourseBookingDTO> util = new ExcelUtil<CourseBookingDTO>(CourseBookingDTO.class);
-        util.exportExcel(response, list, "课程选课审核数据");
+        
+        // 转换为导出DTO（只包含需要的字段）
+        List<CourseAuditExportDTO> exportList = list.stream().map(dto -> {
+            CourseAuditExportDTO exportDto = new CourseAuditExportDTO();
+            exportDto.setStudentId(dto.getStudentId());
+            exportDto.setStudentName(dto.getStudentName());
+            // 优先使用academy字段，如果为空则使用college字段
+            exportDto.setAcademy(dto.getAcademy() != null ? dto.getAcademy() : dto.getCollege());
+            exportDto.setCourseName(dto.getCourseName());
+            exportDto.setCourseCategory(dto.getCourseCategory());
+            // 将课程类型Long转换为String
+            exportDto.setCourseType(dto.getCourseType() != null ? dto.getCourseType().toString() : "");
+            exportDto.setScoreValue(dto.getScoreValue());
+            exportDto.setStatus(dto.getStatus());
+            return exportDto;
+        }).collect(Collectors.toList());
+        
+        // 导出Excel
+        ExcelUtil<CourseAuditExportDTO> util = new ExcelUtil<CourseAuditExportDTO>(CourseAuditExportDTO.class);
+        util.exportExcel(response, exportList, "课程审核数据");
     }
 }

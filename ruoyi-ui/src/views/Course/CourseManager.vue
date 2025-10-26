@@ -695,8 +695,9 @@
 </template>
 
 <script>
-import { listCourses, getCourses, delCourses, addCourses, updateCourses, getCourseBookings, exportCourseStudents } from "@/api/system/courses";
+import { listCourses, getCourses, delCourses, addCourses, updateCourses, getCourseBookings, exportCourseStudents, checkCourseUnique } from "@/api/system/courses";
 import { getNickName } from "@/api/system/student";
+import { getServerTime } from "@/api/common/time";
 import RightToolbar from '@/components/RightToolbar';
 import Pagination from '@/components/Pagination';
 
@@ -709,6 +710,8 @@ export default {
   data() {
     return {
       initialBookedCount: 0, // 🔥 新增：保存初始已选人数
+      // 服务器时间
+      serverTime: null,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -829,7 +832,9 @@ export default {
       );
     }
   },
-  created() {
+  async created() {
+    // 获取服务器时间
+    await this.getServerTime();
     this.getCurrentUserAcademy();
     // 测试状态计算逻辑
     this.testStatusComputation();
@@ -855,13 +860,28 @@ export default {
     }
   },
   methods: {
+    /** 获取服务器时间 */
+    async getServerTime() {
+      try {
+        const response = await getServerTime();
+        if (response.code === 200) {
+          this.serverTime = new Date(response.data);
+        } else {
+          // 如果获取服务器时间失败，使用本地时间作为备用
+          this.serverTime = new Date();
+        }
+      } catch (error) {
+        // 如果获取服务器时间失败，使用本地时间作为备用
+        this.serverTime = new Date();
+      }
+    },
+
     // 获取当前用户所属书院
     getCurrentUserAcademy() {
       getNickName()
         .then(response => {
           if (response && response.msg) {
             this.currentUserAcademy = response.msg;
-            console.log('当前用户所属书院:', this.currentUserAcademy);
             // 设置查询参数中的organizer字段
             this.queryParams.organizer = this.currentUserAcademy;
             // 强制刷新课程列表
@@ -888,7 +908,6 @@ export default {
         courseDeadline: '2025-09-28 11:15:00'
       };
       const status = this.computeCourseStatus(testData);
-      console.log('测试状态计算:', status);
       return status;
     },
     // 检查课程是否已开始选课
@@ -896,7 +915,8 @@ export default {
       if (!course || !course.courseStart) {
         return false;
       }
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const courseStart = new Date(course.courseStart);
       return now >= courseStart;
     },
@@ -908,32 +928,47 @@ export default {
     indexMethod(index) {
       return (this.queryParams.pageNum - 1) * this.queryParams.pageSize + index + 1;
     },
-    // 验证课程名称唯一性（同一组织单位的同一活动只能有一个）
-    validateCourseUniqueness(rule, value, callback) {
+    // 验证课程名称唯一性（同一组织单位的同一课程只能有一个）
+    async validateCourseUniqueness(rule, value, callback) {
       if (!value || !this.form.organizer) {
         callback();
         return;
       }
 
-      // 检查是否存在相同的组织单位+课程名称组合
-      const existingCourse = this.coursesList.find(course =>
-        course.courseName === value &&
-        course.organizer === this.form.organizer &&
-        course.courseId !== this.form.courseId // 排除当前编辑的课程
-      );
-
-      if (existingCourse) {
-        // 使用红色悬浮窗提示
-        this.$message({
-          message: `⚠️ 课程重复！该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`,
-          type: 'error',
-          duration: 5000,
-          showClose: true,
-          customClass: 'course-duplicate-error'
+      try {
+        // 调用后端API检查唯一性
+        const response = await checkCourseUnique({
+          courseName: value,
+          organizer: this.form.organizer,
+          courseId: this.form.courseId || null
         });
-        callback(new Error(`该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`));
-      } else {
-        callback();
+
+        if (response.code === 200 && response.data === false) {
+          // 不唯一，显示错误
+          this.$message({
+            message: `⚠️ 课程重复！该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`,
+            type: 'error',
+            duration: 5000,
+            showClose: true,
+            customClass: 'course-duplicate-error'
+          });
+          callback(new Error(`该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`));
+        } else {
+          callback();
+        }
+      } catch (error) {
+        // API调用失败时，回退到前端检查
+        const existingCourse = this.coursesList.find(course =>
+          course.courseName === value &&
+          course.organizer === this.form.organizer &&
+          course.courseId !== this.form.courseId
+        );
+
+        if (existingCourse) {
+          callback(new Error(`该组织单位已存在名为"${value}"的课程，请使用不同的课程名称`));
+        } else {
+          callback();
+        }
       }
     },
     // 时间顺序验证
@@ -1250,11 +1285,8 @@ export default {
     /** 查询书院选课列表 */
     getList() {
       this.loading = true;
-      console.log('查询课程列表参数:', this.queryParams);
       return listCourses(this.queryParams).then(response => {
-        console.log('课程列表查询响应:', response);
         const rows = response.rows || [];
-        console.log('原始课程数据:', rows);
         // 若后端未按状态过滤，则在前端按需过滤
         const selectedStatus = (this.queryParams.status || '').trim();
         const selectedType = (this.queryParams.courseType || '').trim();
@@ -1262,11 +1294,6 @@ export default {
 
         const withStatus = rows.map(item => {
           const computedStatus = this.computeCourseStatus(item);
-          console.log('处理课程状态:', {
-            courseName: item.courseName,
-            originalStatus: item.status,
-            computedStatus: computedStatus
-          });
           return {
             ...item,
             status: computedStatus // 强制使用计算的状态
@@ -1311,37 +1338,27 @@ export default {
     },
     // 兜底：根据时间推导课程状态
     computeCourseStatus(item) {
-      const now = new Date();
+      // 使用服务器时间，如果服务器时间不可用则使用本地时间
+      const now = this.serverTime || new Date();
       const start = item.courseStart ? new Date(item.courseStart) : null;
       const deadline = item.courseDeadline ? new Date(item.courseDeadline) : null;
 
-      console.log('计算课程状态:', {
-        courseName: item.courseName,
-        now: now.toISOString(),
-        start: start ? start.toISOString() : null,
-        deadline: deadline ? deadline.toISOString() : null
-      });
-
       // 如果当前时间在选课开始时间之前，显示"选课未开始"
       if (start && now < start) {
-        console.log('状态判断: 选课未开始');
         return '选课未开始';
       }
 
       // 如果当前时间在选课开始时间和截止时间之间，显示"选课进行中"
       if (start && deadline && now >= start && now <= deadline) {
-        console.log('状态判断: 选课进行中');
         return '选课进行中';
       }
 
       // 如果当前时间超过选课截止时间，显示"选课已截止"
       if (deadline && now > deadline) {
-        console.log('状态判断: 选课已截止');
         return '选课已截止';
       }
 
       // 默认状态
-      console.log('状态判断: 默认状态');
       return item.status || '选课未开始';
     },
     // 取消按钮
@@ -1560,7 +1577,6 @@ export default {
         this.form = response.data;
         // 🔥 保存初始已选人数（courseCapacity 就是已选人数）
         this.initialBookedCount = this.form.courseCapacity || 0;
-        console.log('💾 保存初始已选人数:', this.initialBookedCount);
         // 确保课程类型是字符串格式，以匹配选项值
         if (this.form.courseType) {
           this.form.courseType = String(this.form.courseType);

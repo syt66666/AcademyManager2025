@@ -59,6 +59,10 @@ public class CoursesServiceImpl implements ICoursesService
     @Override
     public int insertCourses(Courses courses)
     {
+        // 检查课程名称和组织单位的唯一性
+        if (!checkCourseUnique(courses.getCourseName(), courses.getOrganizer(), null)) {
+            throw new ServiceException("课程名称和组织单位组合已存在，不能重复添加！");
+        }
         return coursesMapper.insertCourses(courses);
     }
 
@@ -226,5 +230,19 @@ public class CoursesServiceImpl implements ICoursesService
             System.err.println("事务性取消选课失败: " + e.getMessage());
             throw new ServiceException("取消选课失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 检查课程名称和组织单位的唯一性
+     *
+     * @param courseName 课程名称
+     * @param organizer 组织单位
+     * @param courseId 课程ID（编辑时排除自身）
+     * @return 是否唯一
+     */
+    @Override
+    public boolean checkCourseUnique(String courseName, String organizer, Long courseId) {
+        int count = coursesMapper.checkCourseUnique(courseName, organizer, courseId);
+        return count == 0;
     }
 }

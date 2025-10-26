@@ -104,4 +104,14 @@ public interface ICoursesService
      * @return 操作结果
      */
     public int cancelSignUpWithTransaction(Long courseId, String studentId, Integer version);
+
+    /**
+     * 检查课程名称和组织单位的唯一性
+     *
+     * @param courseName 课程名称
+     * @param organizer 组织单位
+     * @param courseId 课程ID（编辑时排除自身）
+     * @return 是否唯一
+     */
+    boolean checkCourseUnique(String courseName, String organizer, Long courseId);
 }
