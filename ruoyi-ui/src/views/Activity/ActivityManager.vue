@@ -95,9 +95,6 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
-        <el-tooltip v-if="hasEndedActivities" content="选中的活动中包含已结束的活动，点击删除时会提示无法删除" placement="top">
-          <i class="el-icon-warning" style="color: #E6A23C; margin-left: 8px; font-size: 16px;"></i>
-        </el-tooltip>
       </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </div>
@@ -851,16 +848,6 @@ export default {
     // 学生列表（直接显示当前页的学生）
     filteredStudents() {
       return this.selectedStudents;
-    },
-
-    // 检查选中的活动中是否有已结束的活动
-    hasEndedActivities() {
-      if (!this.ids || this.ids.length === 0) {
-        return false;
-      }
-      return this.activitiesList.some(activity =>
-        this.ids.includes(activity.activityId) && this.isActivityEnded(activity)
-      );
     }
   },
   created() {

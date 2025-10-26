@@ -1,5 +1,44 @@
 <template>
   <div class="app-container">
+    <!-- 欢迎横幅 -->
+    <div class="welcome-banner">
+      <div class="welcome-content">
+        <div class="welcome-text">
+          <h1 class="welcome-title">
+            <i class="el-icon-sunny"></i>
+            {{ getGreeting() }}，书院教务员！
+          </h1>
+          <p class="welcome-subtitle">{{ getCurrentDate() }}</p>
+        </div>
+        <div class="quick-actions">
+          <div class="action-item" @click="goToActivityManager()">
+            <div class="action-icon activity">
+              <i class="el-icon-s-promotion"></i>
+            </div>
+            <span>活动管理</span>
+          </div>
+          <div class="action-item" @click="goToCourseManager()">
+            <div class="action-icon course">
+              <i class="el-icon-reading"></i>
+            </div>
+            <span>课程管理</span>
+          </div>
+          <div class="action-item" @click="goToActivityAudit()">
+            <div class="action-icon audit">
+              <i class="el-icon-s-check"></i>
+            </div>
+            <span>活动审核</span>
+          </div>
+          <div class="action-item" @click="goToCourseAudit()">
+            <div class="action-icon course-audit">
+              <i class="el-icon-document-checked"></i>
+            </div>
+            <span>课程考核</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 主要内容区域 -->
     <div class="main-content">
       <!-- 审核统计card - 横跨左右两列 -->
@@ -8,7 +47,7 @@
           <div slot="header" class="card-header">
             <span class="card-title">
               <i class="el-icon-s-check"></i>
-              审核统计
+              审核统计概览
             </span>
           </div>
           <div class="audit-content">
@@ -100,7 +139,11 @@
               </div>
             </div>
             <div class="activity-list">
-              <div v-for="(activity, index) in recentActivities.slice(0, 5)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
+              <div v-if="recentActivities.length === 0" class="no-activity">
+                <i class="el-icon-info"></i>
+                <span>暂无活动</span>
+              </div>
+              <div v-else v-for="(activity, index) in recentActivities.slice(0, 3)" :key="index" class="activity-item" @click="goToActivityManager(activity)">
                 <div class="notification-date">{{ activity.month }} {{ activity.day }}</div>
                 <div class="notification-info">
                   <div class="notification-title-row">
@@ -156,7 +199,11 @@
               </div>
             </div>
             <div class="course-list">
-              <div v-for="(course, index) in currentCourses.slice(0, 5)" :key="index" class="course-item" @click="goToCourseManager(course)">
+              <div v-if="currentCourses.length === 0" class="no-course">
+                <i class="el-icon-info"></i>
+                <span>暂无课程</span>
+              </div>
+              <div v-else v-for="(course, index) in currentCourses.slice(0, 3)" :key="index" class="course-item" @click="goToCourseManager(course)">
                 <div class="notification-date">{{ getCourseMonth(course) }} {{ getCourseDay(course) }}</div>
                 <div class="notification-info">
                   <div class="notification-title-row">
@@ -287,7 +334,7 @@
 </template>
 
 <script>
-import { getStudent, getNickName } from "@/api/system/student";
+import { getNickName } from "@/api/system/student";
 import { listActivities } from "@/api/system/activities";
 import { listCourses } from "@/api/system/courses";
 import { getAuditCount } from "@/api/system/bookings";
@@ -300,16 +347,11 @@ export default {
   name: "AcademicTeacherHome",
   data() {
     return {
-      // 当前学生书院信息
-      currentAcademy: '',
-
       // 通知数据
       notifications: [],
       notificationsLoading: false,
       notificationDialogVisible: false,
       currentNotification: null,
-
-
 
       // 近期活动数据
       recentActivities: [],
@@ -377,20 +419,6 @@ export default {
       return ['system-admin', 'super-admin', 'academy-admin'].includes(this.userRole);
     },
 
-    // 欢迎信息
-    welcomeMessage() {
-      switch (this.userRole) {
-        case 'system-admin':
-          return '你好，系统管理员';
-        case 'super-admin':
-          return '你好，总管理员';
-        case 'academy-admin':
-          return '你好，书院教务员';
-        default:
-          return '你好，学生';
-      }
-    },
-
 
   },
   mounted() {
@@ -401,8 +429,6 @@ export default {
     });
   },
   created() {
-    // 初始化学生信息
-    this.getCurrentStudentInfo();
     // 获取通知数据
     this.loadNotifications();
     // 获取近期活动数据
@@ -421,6 +447,26 @@ export default {
     this.getMonthlyActivityData();
   },
   methods: {
+    // 获取问候语
+    getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 6) return '凌晨好';
+      if (hour < 9) return '早上好';
+      if (hour < 12) return '上午好';
+      if (hour < 14) return '中午好';
+      if (hour < 17) return '下午好';
+      if (hour < 19) return '傍晚好';
+      if (hour < 22) return '晚上好';
+      return '夜深了';
+    },
+
+    // 获取当前日期
+    getCurrentDate() {
+      const date = new Date();
+      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${weekDays[date.getDay()]}`;
+    },
+
     // 加载通知数据
     async loadNotifications() {
       this.notificationsLoading = true;
@@ -826,25 +872,6 @@ export default {
       });
     },
 
-    // 获取当前学生信息
-    async getCurrentStudentInfo() {
-      try {
-        const response = await getStudent(this.$store.state.user.name);
-        console.log('学生信息API响应:', response);
-
-        if (response && response.studentInfo) {
-          this.currentAcademy = response.studentInfo.academy;
-          console.log('当前学生书院:', this.currentAcademy);
-        } else {
-          console.error('获取学生信息失败，响应中没有studentInfo:', response);
-          this.currentAcademy = '未知';
-        }
-      } catch (error) {
-        console.error('获取学生信息异常:', error);
-        this.currentAcademy = '未知';
-      }
-    },
-
     // 初始化图表
     initCharts() {
       this.initStatsChart();
@@ -905,74 +932,95 @@ export default {
       }
 
       const option = {
-        backgroundColor: '#ffffff',
+        backgroundColor: 'transparent',
         tooltip: {
-          show: false
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow',
+            shadowStyle: {
+              color: 'rgba(59, 130, 246, 0.1)'
+            }
+          },
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#3b82f6',
+          borderWidth: 1,
+          textStyle: {
+            color: '#333',
+            fontSize: 12
+          },
+          padding: 12,
+          formatter: function(params) {
+            const data = params[0].data;
+            return `
+              <div style="font-weight: 600; margin-bottom: 8px; color: #3b82f6;">${data.name}</div>
+              <div style="margin-bottom: 4px;">活动数量: <strong>${data.activityCount}</strong></div>
+              <div>参与人次: <strong>${data.totalParticipants}</strong></div>
+            `;
+          }
         },
         grid: {
-          left: '15%',
-          right: '5%',
-          bottom: '10%',
-          top: '10%',
+          left: '12%',
+          right: '8%',
+          bottom: '8%',
+          top: '8%',
           containLabel: true
         },
         xAxis: {
           type: 'value',
-          name: '活动数量',
-          nameLocation: 'middle',
-          nameGap: 30,
-          nameTextStyle: {
-            color: '#000000',
-            fontSize: 14
-          },
           minInterval: 1,
           axisLabel: {
-            fontSize: 12,
-            color: '#000000',
+            fontSize: 11,
+            color: '#64748b',
+            fontWeight: 500,
             formatter: function(value) {
               return Math.floor(value);
             }
           },
           axisLine: {
-            lineStyle: {
-              color: '#e0e0e0'
-            }
+            show: false
+          },
+          axisTick: {
+            show: false
           },
           splitLine: {
             lineStyle: {
-              color: '#f0f0f0'
+              color: '#e2e8f0',
+              type: 'dashed'
             }
           }
         },
         yAxis: {
           type: 'category',
           data: Array.from({length: 12}, (_, i) => (i + 1) + '月'),
-          name: '月份',
-          nameLocation: 'middle',
-          nameGap: 30,
-          nameTextStyle: {
-            color: '#000000',
-            fontSize: 14
-          },
           axisLabel: {
             fontSize: 11,
-            color: '#000000',
-            formatter: function(value) {
-              return value;
-            }
+            color: '#64748b',
+            fontWeight: 500
           },
           axisLine: {
             lineStyle: {
-              color: '#e0e0e0'
+              color: '#cbd5e1'
             }
+          },
+          axisTick: {
+            show: false
           }
         },
         series: [
           {
             name: '活动数量',
             type: 'bar',
-            data: data,
-            barWidth: '60%',
+            data: data.map(item => ({
+              ...item,
+              itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#60a5fa' },
+                  { offset: 1, color: '#3b82f6' }
+                ]),
+                borderRadius: [0, 6, 6, 0]
+              }
+            })),
+            barWidth: '50%',
             label: {
               show: true,
               position: 'right',
@@ -980,19 +1028,28 @@ export default {
                 return params.data.activityCount > 0 ? params.data.activityCount : '';
               },
               fontSize: 11,
-              color: '#333',
-              fontWeight: 'bold'
+              color: '#1e293b',
+              fontWeight: 600
             },
             emphasis: {
               itemStyle: {
-                shadowBlur: 10,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#3b82f6' },
+                  { offset: 1, color: '#2563eb' }
+                ]),
+                shadowBlur: 15,
                 shadowOffsetX: 0,
-                shadowOffsetY: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                shadowOffsetY: 3,
+                shadowColor: 'rgba(59, 130, 246, 0.4)'
               }
+            },
+            animationDelay: function (idx) {
+              return idx * 50;
             }
           }
-        ]
+        ],
+        animationEasing: 'cubicOut',
+        animationDuration: 1000
       };
 
       chart.setOption(option);
@@ -1057,74 +1114,95 @@ export default {
       }
 
       const option = {
-        backgroundColor: '#ffffff',
+        backgroundColor: 'transparent',
         tooltip: {
-          show: false
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow',
+            shadowStyle: {
+              color: 'rgba(16, 185, 129, 0.1)'
+            }
+          },
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#10b981',
+          borderWidth: 1,
+          textStyle: {
+            color: '#333',
+            fontSize: 12
+          },
+          padding: 12,
+          formatter: function(params) {
+            const data = params[0].data;
+            return `
+              <div style="font-weight: 600; margin-bottom: 8px; color: #10b981;">${data.name}</div>
+              <div style="margin-bottom: 4px;">课程数量: <strong>${data.courseCount}</strong></div>
+              <div>课程容量: <strong>${data.totalCapacity}</strong></div>
+            `;
+          }
         },
         grid: {
-          left: '15%',
-          right: '5%',
-          bottom: '10%',
-          top: '10%',
+          left: '12%',
+          right: '8%',
+          bottom: '8%',
+          top: '8%',
           containLabel: true
         },
         xAxis: {
           type: 'value',
-          name: '课程数量',
-          nameLocation: 'middle',
-          nameGap: 30,
-          nameTextStyle: {
-            color: '#000000',
-            fontSize: 14
-          },
           minInterval: 1,
           axisLabel: {
-            fontSize: 12,
-            color: '#000000',
+            fontSize: 11,
+            color: '#64748b',
+            fontWeight: 500,
             formatter: function(value) {
               return Math.floor(value);
             }
           },
           axisLine: {
-            lineStyle: {
-              color: '#e0e0e0'
-            }
+            show: false
+          },
+          axisTick: {
+            show: false
           },
           splitLine: {
             lineStyle: {
-              color: '#f0f0f0'
+              color: '#e2e8f0',
+              type: 'dashed'
             }
           }
         },
         yAxis: {
           type: 'category',
           data: Array.from({length: 12}, (_, i) => (i + 1) + '月'),
-          name: '月份',
-          nameLocation: 'middle',
-          nameGap: 30,
-          nameTextStyle: {
-            color: '#000000',
-            fontSize: 14
-          },
           axisLabel: {
             fontSize: 11,
-            color: '#000000',
-            formatter: function(value) {
-              return value;
-            }
+            color: '#64748b',
+            fontWeight: 500
           },
           axisLine: {
             lineStyle: {
-              color: '#e0e0e0'
+              color: '#cbd5e1'
             }
+          },
+          axisTick: {
+            show: false
           }
         },
         series: [
           {
             name: '课程数量',
             type: 'bar',
-            data: data,
-            barWidth: '60%',
+            data: data.map(item => ({
+              ...item,
+              itemStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#34d399' },
+                  { offset: 1, color: '#10b981' }
+                ]),
+                borderRadius: [0, 6, 6, 0]
+              }
+            })),
+            barWidth: '50%',
             label: {
               show: true,
               position: 'right',
@@ -1132,19 +1210,28 @@ export default {
                 return params.data.courseCount > 0 ? params.data.courseCount : '';
               },
               fontSize: 11,
-              color: '#333',
-              fontWeight: 'bold'
+              color: '#1e293b',
+              fontWeight: 600
             },
             emphasis: {
               itemStyle: {
-                shadowBlur: 10,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: '#10b981' },
+                  { offset: 1, color: '#059669' }
+                ]),
+                shadowBlur: 15,
                 shadowOffsetX: 0,
-                shadowOffsetY: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.3)'
+                shadowOffsetY: 3,
+                shadowColor: 'rgba(16, 185, 129, 0.4)'
               }
+            },
+            animationDelay: function (idx) {
+              return idx * 50;
             }
           }
-        ]
+        ],
+        animationEasing: 'cubicOut',
+        animationDuration: 1000
       };
 
       this.courseStatsChart.setOption(option);
@@ -1507,23 +1594,35 @@ export default {
     // 跳转到活动审核页面
     goToActivityAudit(status) {
       console.log('跳转到活动审核页面，状态:', status);
-      this.$router.push({
-        path: '/Activity/ActivityAudit',
-        query: {
-          status: status
-        }
-      });
+      if (status) {
+        this.$router.push({
+          path: '/Activity/ActivityAudit',
+          query: {
+            status: status
+          }
+        });
+      } else {
+        this.$router.push({
+          path: '/Activity/ActivityAudit'
+        });
+      }
     },
 
     // 跳转到课程审核页面
     goToCourseAudit(status) {
       console.log('跳转到课程审核页面，状态:', status);
-      this.$router.push({
-        path: '/Course/CourseAudit',
-        query: {
-          status: status
-        }
-      });
+      if (status) {
+        this.$router.push({
+          path: '/Course/CourseAudit',
+          query: {
+            status: status
+          }
+        });
+      } else {
+        this.$router.push({
+          path: '/Course/CourseAudit'
+        });
+      }
     },
 
     // 处理活动统计图表点击事件
@@ -1863,8 +1962,123 @@ export default {
 .app-container {
   margin-left: 120px;
   padding: 20px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
   min-height: 100vh;
+}
+
+/* 欢迎横幅 */
+.welcome-banner {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(96, 165, 250, 0.3);
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+
+.welcome-text {
+  flex: 1;
+}
+
+.welcome-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeInLeft 0.8s ease-out;
+}
+
+.welcome-title i {
+  font-size: 36px;
+  animation: rotate 3s linear infinite;
+}
+
+.welcome-subtitle {
+  margin: 8px 0 0 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  animation: fadeInLeft 1s ease-out;
+}
+
+/* 快捷操作 */
+.quick-actions {
+  display: flex;
+  gap: 16px;
+  animation: fadeInRight 0.8s ease-out;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.action-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-icon.activity {
+  color: #60a5fa;
+}
+
+.action-icon.course {
+  color: #10b981;
+}
+
+.action-icon.audit {
+  color: #8b5cf6;
+}
+
+.action-icon.course-audit {
+  color: #f59e0b;
+}
+
+.action-item:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.action-item span {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
 }
 
 /* 首页模式样式 */
@@ -1888,27 +2102,6 @@ export default {
   border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-.welcome-content {
-  text-align: center;
-}
-
-.welcome-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #303133;
-  margin: 0 0 10px 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.welcome-subtitle {
-  font-size: 16px;
-  color: #64748b;
-  margin: 0;
-  font-weight: 500;
-}
 
 /* 主要内容区域 */
 .main-content {
@@ -1964,13 +2157,36 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
   color: white;
   font-weight: 600;
   font-size: 16px;
   padding: 16px 20px;
   margin: -20px -20px 0 -20px;
   border-radius: 12px 12px 0 0;
+}
+
+.header-summary {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.summary-item i {
+  font-size: 16px;
 }
 
 /* 卡片头部按钮样式 */
@@ -2046,11 +2262,18 @@ export default {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  height: 400px; /* 从350px改为400px，与课程面板互换 */
+  border: 1px solid #e4e7ed;
+  height: 400px; /* 与统计图表保持一致 */
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.news-panel:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 /* 面板头部 */
@@ -2058,7 +2281,7 @@ export default {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
   color: white;
   font-weight: 600;
   font-size: 16px;
@@ -2129,6 +2352,52 @@ export default {
   color: #909399;
 }
 
+/* 无活动状态 */
+.no-activity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #909399;
+  min-height: 200px;
+  padding: 40px 20px;
+}
+
+.no-activity i {
+  font-size: 48px;
+  margin-bottom: 12px;
+  color: #c0c4cc;
+}
+
+.no-activity span {
+  font-size: 14px;
+  color: #909399;
+}
+
+/* 无课程状态 */
+.no-course {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #909399;
+  min-height: 200px;
+  padding: 40px 20px;
+}
+
+.no-course i {
+  font-size: 48px;
+  margin-bottom: 12px;
+  color: #c0c4cc;
+}
+
+.no-course span {
+  font-size: 14px;
+  color: #909399;
+}
+
 /* 通知列表 */
 .notification-list {
   max-height: none; /* 移除高度限制，让内容自适应 */
@@ -2149,31 +2418,31 @@ export default {
 .notification-item {
   display: flex;
   align-items: center;
-  padding: 20px 0; /* 增加上下padding，让每个通知项更高 */
-  border-bottom: 1px solid #f0f0f0;
-  gap: 15px;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  gap: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin: 0; /* 移除负margin，让内容更好地占据空间 */
-  padding-left: 0; /* 移除额外的padding */
-  padding-right: 0; /* 移除额外的padding */
-  min-height: 60px; /* 设置最小高度，确保每个通知项有足够空间 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .notification-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .notification-item:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #60a5fa;
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(96, 165, 250, 0.15);
 }
 
 .notification-date {
   min-width: 70px; /* 稍微增加最小宽度 */
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
   color: white;
   padding: 6px 10px; /* 增加内边距 */
   border-radius: 6px;
@@ -2182,7 +2451,7 @@ export default {
   text-align: center;
   margin-right: 12px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
 }
 
 .notification-info {
@@ -2200,9 +2469,10 @@ export default {
   margin: 0;
   flex: 1; /* 占据剩余空间 */
   word-wrap: break-word; /* 允许长文本换行 */
-  overflow-wrap: break-word; /* 兼容性更好的换行 */
+  overflow-wrap: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 最多显示2行 */
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2303,6 +2573,7 @@ export default {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2352,6 +2623,7 @@ export default {
   color: #606266;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2420,14 +2692,14 @@ export default {
 
 .notification-dialog .el-dialog__header,
 .notification-dialog.el-dialog .el-dialog__header {
-  background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%) !important;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
   color: white !important;
   padding: 20px 24px !important;
   border-bottom: none !important;
   border-radius: 8px 8px 0 0 !important;
   position: relative !important;
   overflow: hidden !important;
-  box-shadow: 0 2px 8px rgba(66, 165, 245, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3) !important;
 }
 
 .notification-dialog .el-dialog__header::before,
@@ -2721,6 +2993,7 @@ export default {
   line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -2754,6 +3027,14 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
+  transition: all 0.3s ease;
+  border: 1px solid #e4e7ed;
+  animation: fadeInUp 1s ease-out;
+}
+
+.chart-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .chart-content {
@@ -2801,6 +3082,12 @@ export default {
   width: 100%;
   margin-bottom: 0;
   padding: 15px 20px;
+  transition: all 0.3s ease;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.audit-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 .audit-content {
@@ -2840,75 +3127,105 @@ export default {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
+  overflow: hidden;
+}
+
+.stat-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .stat-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.stat-item:hover::after {
-  content: '点击查看详情';
+.stat-item:hover::before {
+  opacity: 1;
+}
+
+.stat-item::after {
+  content: '点击查看';
   position: absolute;
-  top: -30px;
+  top: -32px;
   left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
+  transform: translateX(-50%) scale(0);
+  background: rgba(0, 0, 0, 0.85);
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-size: 12px;
   white-space: nowrap;
   z-index: 1000;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.stat-item:hover::after {
+  transform: translateX(-50%) scale(1);
 }
 
 .stat-item.pending {
-  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-  border: 1px solid #81d4fa;
-  box-shadow: 0 4px 16px rgba(3, 169, 244, 0.1);
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid #93c5fd;
+  box-shadow: 0 4px 16px rgba(96, 165, 250, 0.15);
 }
 
 .stat-item.approved {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  border: 1px solid #a5d6a7;
-  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.1);
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border: 1px solid #6ee7b7;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
 }
 
 .stat-item.rejected {
-  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-  border: 1px solid #ef9a9a;
-  box-shadow: 0 4px 16px rgba(244, 67, 54, 0.1);
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid #93c5fd;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
 }
 
 .stat-icon {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 20px;
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.stat-item:hover .stat-icon {
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 .stat-item.pending .stat-icon {
-  background: #409EFF;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
 }
 
 .stat-item.approved .stat-icon {
-  background: #67C23A;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
 }
 
 .stat-item.rejected .stat-icon {
-  background: #F56C6C;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
 }
 
@@ -2916,18 +3233,27 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .stat-label {
-  font-size: 11px;
-  color: #909399;
-  font-weight: 500;
+  font-size: 12px;
+  color: #606266;
+  font-weight: 600;
 }
 
 .stat-value {
-  font-size: 18px;
+  font-size: 28px;
   font-weight: 700;
   color: #303133;
+  line-height: 1;
+  transition: all 0.3s ease;
+}
+
+.stat-item:hover .stat-value {
+  transform: scale(1.1);
+  color: #1d4ed8;
 }
 
 /* 近期活动面板 */
@@ -2935,11 +3261,17 @@ export default {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  height: 350px;
+  border: 1px solid #e4e7ed;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeInLeft 0.8s ease-out;
+}
+
+.activity-panel:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 /* 近期课程面板 */
@@ -2947,11 +3279,17 @@ export default {
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  height: 350px; /* 从400px改为350px，与通知面板互换 */
+  border: 1px solid #e4e7ed;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: all 0.3s ease;
+  animation: fadeInRight 0.8s ease-out;
+}
+
+.course-panel:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .activity-list {
@@ -2961,22 +3299,27 @@ export default {
 
 .activity-item {
   display: flex;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-  gap: 15px;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  gap: 16px;
   align-items: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin: 0; /* 移除负margin，因为activity-list现在有padding */
-  padding-left: 0; /* 移除额外的padding */
-  padding-right: 0; /* 移除额外的padding */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.activity-item:last-child {
+  margin-bottom: 0;
 }
 
 .activity-item:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(245, 158, 11, 0.15);
 }
 
 .activity-item:last-child {
@@ -3034,21 +3377,21 @@ export default {
 }
 
 .activity-status.upcoming {
-  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-  color: #0369a1;
-  border: 1px solid #81d4fa;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
 }
 
 .activity-status.ongoing {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  color: #2e7d32;
-  border: 1px solid #a5d6a7;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+  border: 1px solid #6ee7b7;
 }
 
 .activity-status.ended {
-  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-  color: #c62828;
-  border: 1px solid #ef9a9a;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #4338ca;
+  border: 1px solid #a5b4fc;
 }
 
 
@@ -3059,23 +3402,45 @@ export default {
 
 .course-item {
   display: flex;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-  gap: 15px;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
+  gap: 16px;
   align-items: center;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin: 0; /* 移除负margin，因为course-list现在有padding */
-  padding-left: 0; /* 移除额外的padding */
-  padding-right: 0; /* 移除额外的padding */
-  width: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.course-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
+}
+
+.course-item:last-child {
+  margin-bottom: 0;
 }
 
 .course-item:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(16, 185, 129, 0.15);
+}
+
+.course-item:hover::before {
+  transform: scaleY(1);
 }
 
 .course-time-inline {
@@ -3165,21 +3530,21 @@ export default {
 }
 
 .course-status.status-not-started {
-  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
-  color: #0369a1;
-  border: 1px solid #81d4fa;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
 }
 
 .course-status.status-in-progress {
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  color: #2e7d32;
-  border: 1px solid #a5d6a7;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #047857;
+  border: 1px solid #6ee7b7;
 }
 
 .course-status.status-ended {
-  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-  color: #c62828;
-  border: 1px solid #ef9a9a;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+  color: #4338ca;
+  border: 1px solid #a5b4fc;
 }
 
 /* 响应式设计 */
@@ -3226,8 +3591,37 @@ export default {
   border-color: #9ca3af;
 }
 
-/* 响应式设计 - 通知弹窗 */
+/* 响应式设计 - 移动端 */
 @media (max-width: 768px) {
+  .app-container {
+    margin-left: 0;
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* 欢迎横幅 */
+  .welcome-banner {
+    padding: 20px;
+  }
+
+  .welcome-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .welcome-title {
+    font-size: 24px;
+  }
+
+  .welcome-title i {
+    font-size: 28px;
+  }
+
+  .welcome-subtitle {
+    font-size: 14px;
+  }
+
+  /* 通知弹窗 */
   .notification-dialog {
     width: 95% !important;
     margin: 0 auto;
@@ -3246,21 +3640,96 @@ export default {
   .detail-title {
     font-size: 16px;
   }
-}
 
-@media (max-width: 768px) {
-  .app-container {
-    margin-left: 0;
+  .quick-actions {
     width: 100%;
-    padding: 10px;
+    justify-content: space-around;
   }
 
-  .welcome-title {
+  .action-item {
+    min-width: 70px;
+    padding: 12px 8px;
+  }
+
+  .action-icon {
+    width: 48px;
+    height: 48px;
     font-size: 24px;
   }
 
-  .welcome-subtitle {
-    font-size: 14px;
+  .action-item span {
+    font-size: 12px;
+  }
+
+  .columns-container {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-row {
+    flex-direction: column;
+  }
+}
+
+/* 动画定义 */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 </style>

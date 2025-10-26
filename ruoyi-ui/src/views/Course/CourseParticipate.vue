@@ -549,6 +549,20 @@ export default {
     console.log('当前用户信息:', this.$store.state.user);
     console.log('用户ID:', this.$store.state.user.id);
     console.log('用户名:', this.$store.state.user.name);
+    
+    // 检查URL参数,如果有状态筛选则自动应用
+    if (this.$route.query.status && this.$route.query.autoFilter === 'true') {
+      const status = this.$route.query.status;
+      console.log('从URL参数获取状态筛选:', status);
+      this.selectedStatus = status;
+      // 如果选择"未考核"或"未审核",则查询"未审核"状态
+      if (status === '未考核' || status === '未审核') {
+        this.queryParams.status = '未审核';
+      } else {
+        this.queryParams.status = status;
+      }
+    }
+    
     this.getAllCoursesForStats();
     this.getList();
   },

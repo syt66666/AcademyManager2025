@@ -1,5 +1,44 @@
 <template>
   <div class="student-home-container" v-loading="loading">
+    <!-- 欢迎横幅 -->
+    <div class="welcome-banner">
+      <div class="welcome-content">
+        <div class="welcome-text">
+          <h1 class="welcome-title">
+            <i class="el-icon-sunny"></i>
+            {{ getGreeting() }}，{{ $store.state.user.nickName || $store.state.user.name }}！
+          </h1>
+          <p class="welcome-subtitle">{{ getCurrentDate() }}</p>
+        </div>
+        <div class="quick-actions">
+          <div class="action-item" @click="goToActivityBookingPage">
+            <div class="action-icon activity">
+              <i class="el-icon-tickets"></i>
+            </div>
+            <span>活动预约</span>
+          </div>
+          <div class="action-item" @click="goToCourseBookingPage">
+            <div class="action-icon course">
+              <i class="el-icon-notebook-2"></i>
+            </div>
+            <span>课程选课</span>
+          </div>
+          <div class="action-item" @click="goToActivityParticipatePage">
+            <div class="action-icon participate">
+              <i class="el-icon-folder-opened"></i>
+            </div>
+            <span>我的活动</span>
+          </div>
+          <div class="action-item" @click="goToCourseParticipatePage">
+            <div class="action-icon my-course">
+              <i class="el-icon-document"></i>
+            </div>
+            <span>我的课程</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 顶部通知栏和近期活动 -->
     <div class="top-section">
       <!-- 左上角通知栏 -->
@@ -21,7 +60,7 @@
           </div>
           <div v-else class="notification-list">
             <div
-              v-for="notification in notifications"
+              v-for="notification in notifications.slice(0, 3)"
               :key="notification.notiId"
               class="notification-item"
               @click="showNotificationDetail(notification)"
@@ -61,7 +100,7 @@
           </div>
           <div v-else class="activity-list">
             <div
-              v-for="activity in recentActivities"
+              v-for="activity in recentActivities.slice(0, 3)"
               :key="activity.activityId"
               class="activity-item"
               @click="goToActivityBooking(activity)"
@@ -132,62 +171,92 @@
         </div>
       </div>
 
-      <!-- 右边活动状态筛选 -->
-      <div class="activity-status-panel">
-        <div class="panel-header">
-          <div class="header-left">
-            <i class="el-icon-s-operation"></i>
-            <span>活动状态筛选</span>
+      <!-- 状态筛选区域 -->
+      <div class="status-filters-section">
+        <!-- 活动状态筛选 -->
+        <div class="activity-status-panel">
+          <div class="panel-header">
+            <div class="header-left">
+              <i class="el-icon-s-operation"></i>
+              <span>活动状态筛选</span>
+            </div>
           </div>
-        </div>
-        <div class="status-content">
-          <div class="status-filters">
-            <!-- 第一行：前三个状态 -->
-            <div class="status-filters-row">
-              <div
-                v-for="status in activityStatusFilters.slice(0, 3)"
-                :key="status.value"
-                class="status-filter-item"
-                :class="{ active: selectedStatus === status.value }"
-                @click="filterByStatus(status.value)"
-              >
-                <div class="status-icon" :class="status.iconClass">
-                  <i :class="status.icon"></i>
+          <div class="status-content">
+            <div class="status-filters">
+              <!-- 所有状态在一行显示 -->
+              <div class="status-filters-row">
+                <div
+                  v-for="status in activityStatusFilters"
+                  :key="status.value"
+                  class="status-filter-item"
+                  :class="{ active: selectedStatus === status.value }"
+                  @click="filterByStatus(status.value)"
+                >
+                  <div class="status-icon" :class="status.iconClass">
+                    <i :class="status.icon"></i>
+                  </div>
+                  <div class="status-info">
+                    <div class="status-count">{{ status.count }}</div>
+                    <div class="status-label">{{ status.label }}</div>
+                  </div>
                 </div>
-                <div class="status-info">
-                  <div class="status-count">{{ status.count }}</div>
-                  <div class="status-label">{{ status.label }}</div>
+                <div
+                  class="status-filter-item clear-filter"
+                  :class="{ active: selectedStatus === null }"
+                  @click="clearStatusFilter"
+                >
+                  <div class="status-icon all">
+                    <i class="el-icon-view"></i>
+                  </div>
+                  <div class="status-info">
+                    <div class="status-count">{{ totalAll }}</div>
+                    <div class="status-label">全部</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <!-- 第二行：后两个状态 -->
-            <div class="status-filters-row">
-              <div
-                v-for="status in activityStatusFilters.slice(3)"
-                :key="status.value"
-                class="status-filter-item"
-                :class="{ active: selectedStatus === status.value }"
-                @click="filterByStatus(status.value)"
-              >
-                <div class="status-icon" :class="status.iconClass">
-                  <i :class="status.icon"></i>
+          </div>
+        </div>
+
+        <!-- 课程状态筛选 -->
+        <div class="course-status-panel">
+          <div class="panel-header">
+            <div class="header-left">
+              <i class="el-icon-s-grid"></i>
+              <span>课程状态筛选</span>
+            </div>
+          </div>
+          <div class="status-content">
+            <div class="status-filters">
+              <!-- 所有状态在一行显示 -->
+              <div class="status-filters-row">
+                <div
+                  v-for="status in courseStatusFilters"
+                  :key="status.value"
+                  class="status-filter-item"
+                  :class="{ active: selectedCourseStatus === status.value }"
+                  @click="filterByCourseStatus(status.value)"
+                >
+                  <div class="status-icon" :class="status.iconClass">
+                    <i :class="status.icon"></i>
+                  </div>
+                  <div class="status-info">
+                    <div class="status-count">{{ status.count }}</div>
+                    <div class="status-label">{{ status.label }}</div>
+                  </div>
                 </div>
-                <div class="status-info">
-                  <div class="status-count">{{ status.count }}</div>
-                  <div class="status-label">{{ status.label }}</div>
-                </div>
-              </div>
-              <div
-                class="status-filter-item clear-filter"
-                :class="{ active: selectedStatus === null }"
-                @click="clearStatusFilter"
-              >
-                <div class="status-icon all">
-                  <i class="el-icon-view"></i>
-                </div>
-                <div class="status-info">
-                  <div class="status-count">{{ totalAll }}</div>
-                  <div class="status-label">全部</div>
+                <div
+                  class="status-filter-item clear-filter"
+                  :class="{ active: selectedCourseStatus === null }"
+                  @click="clearCourseStatusFilter"
+                >
+                  <div class="status-icon all">
+                    <i class="el-icon-view"></i>
+                  </div>
+                  <div class="status-info">
+                    <div class="status-count">{{ totalCourseAll }}</div>
+                    <div class="status-label">全部</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -205,7 +274,6 @@
             <span>我的选课记录</span>
           </div>
           <div class="header-right">
-            <span class="record-count">共 {{ totalCourses }} 条记录</span>
             <el-button type="text" size="small" @click="goToAllCourses" class="all-button">
               全部
             </el-button>
@@ -333,9 +401,9 @@ export default {
   name: "StudentHome",
   data() {
     return {
-      // 通知数据
-      notifications: [],
-      userCollege: null, // 用户所属书院（来自stu_info表的academy字段）
+       // 通知数据
+       notifications: [],
+       userCollege: null, // 用户所属书院（来自stu_info表的academy字段）
 
       // 通知详情弹窗
       notificationDialogVisible: false,
@@ -385,6 +453,15 @@ export default {
         { value: '已通过', label: '已通过', icon: 'el-icon-check', iconClass: 'approved', count: 0 }
       ],
 
+      // 课程状态筛选
+      selectedCourseStatus: null,
+      courseStatusFilters: [
+        { value: '未提交', label: '未提交', icon: 'el-icon-upload2', iconClass: 'unsubmitted', count: 0 },
+        { value: '未通过', label: '未通过', icon: 'el-icon-close', iconClass: 'rejected', count: 0 },
+        { value: '未考核', label: '未考核', icon: 'el-icon-time', iconClass: 'pending', count: 0 },
+        { value: '已通过', label: '已通过', icon: 'el-icon-check', iconClass: 'approved', count: 0 }
+      ],
+
       // 已选课程数据
       selectedCourses: [],
       totalCourses: 0,
@@ -406,6 +483,11 @@ export default {
       return this.activityStatusFilters.reduce((sum, filter) => sum + filter.count, 0);
     },
 
+    // 计算总课程数
+    totalCourseAll() {
+      return this.courseStatusFilters.reduce((sum, filter) => sum + filter.count, 0);
+    },
+
     // 计算弹窗宽度
     dialogWidth() {
       // 根据屏幕宽度和侧边栏宽度计算弹窗宽度
@@ -415,15 +497,15 @@ export default {
       return Math.max(availableWidth, 600) + 'px'; // 最小宽度600px
     }
   },
-     async created() {
-    // 先获取学生书院信息，然后加载数据
-    await this.initUserCollege();
-    this.loadData();
-    // 设置自动刷新，每5分钟刷新一次数据
-    this.refreshTimer = setInterval(() => {
-      this.loadData();
-    }, 5 * 60 * 1000);
-  },
+      async created() {
+     // 先获取学生书院信息，然后加载数据
+     await this.initUserCollege();
+     this.loadData();
+     // 设置自动刷新，每5分钟刷新一次数据
+     this.refreshTimer = setInterval(() => {
+       this.loadData();
+     }, 5 * 60 * 1000);
+   },
   beforeDestroy() {
     // 清理定时器
     if (this.refreshTimer) {
@@ -431,31 +513,32 @@ export default {
     }
   },
   methods: {
-    // 初始化用户书院信息
-    async initUserCollege() {
-      try {
-        console.log('=== 开始获取学生书院信息 ===');
-        console.log('当前登录用户:', this.$store.state.user.name);
 
-        // 直接调用获取学生信息的API
-        const response = await getStudent(this.$store.state.user.name);
-        console.log('学生信息API响应:', response);
+     // 初始化用户书院信息
+     async initUserCollege() {
+       try {
+         console.log('=== 开始获取学生书院信息 ===');
+         console.log('当前登录用户:', this.$store.state.user.name);
 
-        if (response && response.studentInfo && response.studentInfo.academy) {
-          this.userCollege = response.studentInfo.academy;
-          console.log('✅ 学生书院信息获取成功:', this.userCollege);
-        } else {
-          console.warn('⚠️ 未找到学生书院信息:', response);
-          this.userCollege = null;
-        }
-      } catch (error) {
-        console.error('❌ 获取学生书院信息失败:', error);
-        this.userCollege = null;
-        this.$message.warning('获取书院信息失败，请联系管理员');
-      }
-    },
+         // 直接调用获取学生信息的API
+         const response = await getStudent(this.$store.state.user.name);
+         console.log('学生信息API响应:', response);
 
-    // 显示通知详情
+         if (response && response.studentInfo && response.studentInfo.academy) {
+           this.userCollege = response.studentInfo.academy;
+           console.log('✅ 学生书院信息获取成功:', this.userCollege);
+         } else {
+           console.warn('⚠️ 未找到学生书院信息:', response);
+           this.userCollege = null;
+         }
+       } catch (error) {
+         console.error('❌ 获取学生书院信息失败:', error);
+         this.userCollege = null;
+         this.$message.warning('获取书院信息失败，请联系管理员');
+       }
+     },
+
+     // 显示通知详情
     showNotificationDetail(notification) {
       this.currentNotification = notification;
       this.notificationDialogVisible = true;
@@ -522,125 +605,167 @@ export default {
       }
     },
 
-    // 加载通知数据
-    async loadNotifications() {
-      this.notificationsLoading = true;
-      try {
-        console.log('=== 开始加载通知数据 ===');
-        console.log('当前用户信息:', this.$store.state.user);
-        console.log('API基础URL:', process.env.VUE_APP_BASE_API);
-        console.log('请求URL:', '/system/notifications/public/list');
+     // 加载通知数据
+     async loadNotifications() {
+       this.notificationsLoading = true;
+       try {
+         console.log('=== 开始加载通知数据 ===');
+         console.log('当前用户信息:', this.$store.state.user);
+         console.log('当前用户书院（已获取）:', this.userCollege);
 
-        // 使用公开接口，获取所有通知
-        const response = await listNotificationsPublic({
-          pageNum: 1,
-          pageSize: 10  // 增加页面大小以显示所有通知
-        });
+         // 使用公开接口，获取所有通知
+         const response = await listNotificationsPublic({
+           pageNum: 1,
+           pageSize: 10  // 增加页面大小以显示所有通知
+         });
 
-        console.log('通知API响应:', response);
+         console.log('通知API响应:', response);
 
-        if (response && response.code === 200) {
-          // 获取所有通知数据
-          const allNotifications = response.rows || [];
-          console.log('所有通知数据:', allNotifications);
-          console.log('当前用户书院（已获取）:', this.userCollege);
+         if (response && response.code === 200) {
+           // 获取所有通知数据
+           const allNotifications = response.rows || [];
+           console.log('所有通知数据:', allNotifications);
 
-          // 根据用户书院过滤通知（匹配noti_type字段）
-          if (this.userCollege) {
-            const filteredNotifications = allNotifications.filter(notification => {
-              // 检查通知的noti_type字段
-              const notificationCollege = notification.noti_type || notification.notiType;
-              const isMatch = notificationCollege === this.userCollege;
+           // 根据用户书院过滤通知（匹配noti_type字段）
+           if (this.userCollege) {
+             const filteredNotifications = allNotifications.filter(notification => {
+               // 检查通知的noti_type字段
+               const notificationCollege = notification.noti_type || notification.notiType;
+               const isMatch = notificationCollege === this.userCollege;
 
-              console.log('通知过滤检查:', {
-                title: notification.notiTitle,
-                noti_type: notification.noti_type,
-                notiType: notification.notiType,
-                userCollege: this.userCollege,
-                isMatch: isMatch
-              });
+               console.log('通知过滤检查:', {
+                 title: notification.notiTitle,
+                 noti_type: notification.noti_type,
+                 notiType: notification.notiType,
+                 userCollege: this.userCollege,
+                 isMatch: isMatch
+               });
 
-              return isMatch;
-            });
+               return isMatch;
+             });
 
-            // 限制显示数量为5条，与近期活动保持一致
-            this.notifications = filteredNotifications.slice(0, 5);
-            console.log(`✅ 过滤后的书院通知 (${this.userCollege}):`, this.notifications);
-            console.log(`原始通知数: ${allNotifications.length}, 过滤后通知数: ${filteredNotifications.length}, 显示数量: ${this.notifications.length}`);
-          } else {
-            // 如果没有书院信息，不显示任何通知（安全考虑）
-            this.notifications = [];
-            console.warn('⚠️ 未找到用户书院信息，不显示任何通知');
-            this.$message.warning('未找到您的书院信息，请联系管理员');
-          }
-        } else {
-          console.log('API返回非200状态码:', response?.code, response?.msg);
-          this.$message.error('加载通知失败: ' + (response?.msg || '服务器返回错误'));
-        }
+             // 限制显示数量为5条，与近期活动保持一致
+             this.notifications = filteredNotifications.slice(0, 5);
+             console.log(`✅ 过滤后的书院通知 (${this.userCollege}):`, this.notifications);
+             console.log(`原始通知数: ${allNotifications.length}, 过滤后通知数: ${filteredNotifications.length}, 显示数量: ${this.notifications.length}`);
+           } else {
+             // 如果没有书院信息，不显示任何通知（安全考虑）
+             this.notifications = [];
+             console.warn('⚠️ 未找到用户书院信息，不显示任何通知');
+             this.$message.warning('未找到您的书院信息，请联系管理员');
+           }
+         } else {
+           console.log('API返回非200状态码:', response?.code, response?.msg);
+           this.$message.error('加载通知失败: ' + (response?.msg || '服务器返回错误'));
+         }
 
-      } catch (error) {
-        console.error('=== 通知加载失败 ===');
-        console.error('错误对象:', error);
-        console.error('错误类型:', typeof error);
-        console.error('错误值:', error);
+       } catch (error) {
+         console.error('=== 通知加载失败 ===');
+         console.error('错误对象:', error);
+         console.error('错误类型:', typeof error);
+         console.error('错误值:', error);
 
-        if (error.response) {
-          console.error('HTTP响应错误:');
-          console.error('状态码:', error.response.status);
-          console.error('状态文本:', error.response.statusText);
-          console.error('响应数据:', error.response.data);
-          console.error('响应头:', error.response.headers);
+         if (error.response) {
+           console.error('HTTP响应错误:');
+           console.error('状态码:', error.response.status);
+           console.error('状态文本:', error.response.statusText);
+           console.error('响应数据:', error.response.data);
+           console.error('响应头:', error.response.headers);
 
-          this.$message.error(`加载通知失败: HTTP ${error.response.status} - ${error.response.statusText}`);
-        } else if (error.request) {
-          console.error('网络请求错误:');
-          console.error('请求对象:', error.request);
-          this.$message.error('加载通知失败: 网络请求失败，请检查网络连接');
-        } else {
-          console.error('其他错误:', error.message);
-          this.$message.error('加载通知失败: ' + error.message);
-        }
-      } finally {
-        this.notificationsLoading = false;
-      }
-    },
+           this.$message.error(`加载通知失败: HTTP ${error.response.status} - ${error.response.statusText}`);
+         } else if (error.request) {
+           console.error('网络请求错误:');
+           console.error('请求对象:', error.request);
+           this.$message.error('加载通知失败: 网络请求失败，请检查网络连接');
+         } else {
+           console.error('其他错误:', error.message);
+           this.$message.error('加载通知失败: ' + error.message);
+         }
+       } finally {
+         this.notificationsLoading = false;
+       }
+     },
 
-    // 加载近期活动数据
-    async loadRecentActivities() {
-      this.activitiesLoading = true;
-      try {
-        // 获取所有活动
-        const response = await listActivities({
-          pageNum: 1,
-          pageSize: 1000 // 获取所有数据
-        });
+     // 加载近期活动数据（保持原来的书院筛选方法，但使用与AcademicTeacherHome.vue一致的其他逻辑）
+     async loadRecentActivities() {
+       this.activitiesLoading = true;
+       try {
+         console.log('=== 开始加载近期活动数据 ===');
+         console.log('当前用户书院（已获取）:', this.userCollege);
 
-        console.log('活动API响应:', response);
+         // 获取所有活动
+         const response = await listActivities({
+           pageNum: 1,
+           pageSize: 1000 // 获取所有数据
+         });
 
-        if (response.code === 200) {
-          const allActivities = response.rows || [];
-          console.log('所有活动数据:', allActivities);
+         console.log('活动API响应:', response);
 
-          // 按activity_start时间倒序排列所有活动
-          const sortedActivities = allActivities
-            .filter(activity => activity.activityStart) // 过滤掉没有activity_start时间的活动
-            .sort((a, b) => new Date(b.activityStart) - new Date(a.activityStart));
+         if (response.code === 200) {
+           const allActivities = response.rows || [];
+           console.log('所有活动数据:', allActivities);
 
-          // 取前5个活动
-          this.recentActivities = sortedActivities.slice(0, 5);
+           // 根据用户书院过滤活动（匹配organizer字段）
+           let filteredActivities = allActivities;
+           if (this.userCollege) {
+             filteredActivities = allActivities.filter(activity => {
+               // 检查活动的organizer字段
+               const activityOrganizer = activity.organizer;
+               const isMatch = activityOrganizer === this.userCollege;
 
-          console.log('按activity_start时间倒序排列的近期活动:', this.recentActivities);
-        } else {
-          console.error('API响应错误:', response);
-          this.$message.error('加载近期活动失败');
-        }
-      } catch (error) {
-        console.error('加载近期活动失败:', error);
-        this.$message.error('加载近期活动失败');
-      } finally {
-        this.activitiesLoading = false;
-      }
-    },
+               console.log('活动过滤检查:', {
+                 activityName: activity.activityName,
+                 organizer: activity.organizer,
+                 userCollege: this.userCollege,
+                 isMatch: isMatch
+               });
+
+               return isMatch;
+             });
+
+             console.log(`✅ 过滤后的书院活动 (${this.userCollege}):`, filteredActivities);
+             console.log(`原始活动数: ${allActivities.length}, 过滤后活动数: ${filteredActivities.length}`);
+           } else {
+             console.warn('⚠️ 未找到用户书院信息，显示所有活动');
+           }
+
+           // 按活动开始时间降序排序，获取最近的5个活动（与AcademicTeacherHome.vue保持一致）
+           const sortedActivities = filteredActivities
+             .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
+             .slice(0, 5);
+
+           this.recentActivities = sortedActivities.map(activity => {
+             const startTime = new Date(activity.startTime);
+             const endTime = new Date(activity.endTime);
+
+             return {
+               activityId: activity.activityId,
+               activityName: activity.activityName,
+               activityLocation: activity.activityLocation,
+               startTime: activity.startTime,
+               endTime: activity.endTime,
+               activityStart: activity.activityStart,
+               activityDeadline: activity.activityDeadline,
+               organizer: activity.organizer,
+               activityType: activity.activityType,
+               activityDescription: activity.activityDescription,
+               status: this.getActivityStatus(activity),
+               statusText: this.getActivityStatusText(activity)
+             };
+           });
+           
+           console.log('筛选后的活动数据:', this.recentActivities);
+         } else {
+           console.error('API响应错误:', response);
+           this.$message.error('加载近期活动失败');
+         }
+       } catch (error) {
+         console.error('获取近期活动失败:', error);
+         this.$message.error('加载近期活动失败');
+       } finally {
+         this.activitiesLoading = false;
+       }
+     },
 
     // 加载活动完成进度数据
     async loadActivityProgress() {
@@ -738,6 +863,9 @@ export default {
 
           this.totalCourses = this.selectedCourses.length;
 
+          // 更新课程状态筛选的计数
+          this.updateCourseStatusCounts(allCourses);
+
           console.log('按course_start时间倒序排列的选课记录:', this.selectedCourses);
         } else {
           this.$message.error('加载选课记录失败');
@@ -824,43 +952,47 @@ export default {
       }
     },
 
-    // 获取活动状态标签类型
-    getActivityStatusTag(activity) {
-      const status = this.getActivityStatusText(activity);
-      switch (status) {
-        case "报名未开始": return "info";
-        case "报名进行中": return "success";
-        case "报名已截止": return "danger";
-        case "活动进行中": return "warning";
-        case "活动已结束": return "";
-        default: return "danger";
-      }
-    },
+     // 获取活动状态（用于CSS类名）
+     getActivityStatus(activity) {
+       const status = this.getActivityStatusText(activity);
+       switch (status) {
+         case '报名未开始': return 'upcoming';
+         case '报名进行中': return 'upcoming';
+         case '报名已截止': return 'upcoming';
+         case '活动进行中': return 'ongoing';
+         case '活动已结束': return 'ended';
+         default: return 'upcoming';
+       }
+     },
 
-    // 获取活动状态文本
-    getActivityStatusText(activity) {
-      const now = new Date();
-      const start = new Date(activity.startTime);
-      const end = new Date(activity.endTime);
-      const deadline = new Date(activity.activityDeadline);
-      const activityStart = new Date(activity.activityStart);
+     // 获取活动状态标签类型
+     getActivityStatusTag(activity) {
+       const status = this.getActivityStatusText(activity);
+       switch (status) {
+         case "报名未开始": return "info";
+         case "报名进行中": return "success";
+         case "报名已截止": return "danger";
+         case "活动进行中": return "warning";
+         case "活动已结束": return "";
+         default: return "danger";
+       }
+     },
 
-      console.log('活动状态判断:', {
-        activityName: activity.activityName,
-        now: now,
-        activityStart: activityStart,
-        deadline: deadline,
-        start: start,
-        end: end
-      });
+     // 获取活动状态文本（与活动管理保持一致）
+     getActivityStatusText(activity) {
+       const now = new Date();
+       const start = new Date(activity.startTime);
+       const end = new Date(activity.endTime);
+       const deadline = new Date(activity.activityDeadline);
+       const activityStart = new Date(activity.activityStart);
 
-      if (now < activityStart) return "报名未开始";
-      if (now < deadline && now >= activityStart) return "报名进行中";
-      if (now >= deadline && now < start) return "报名已截止";
-      if (now >= start && now <= end) return "活动进行中";
-      if (now > end) return "活动已结束";
-      return activity.status || "未知";
-    },
+       if (now < activityStart) return "报名未开始";
+       if (now < deadline && now >= activityStart) return "报名进行中";
+       if (now >= deadline && now < start) return "报名已截止";
+       if (now >= start && now <= end) return "活动进行中";
+       if (now > end) return "活动已结束";
+       return activity.status || "未知";
+     },
 
     // 获取活动类型（基于activityType字段）
     getActivityType(activityType) {
@@ -993,6 +1125,30 @@ export default {
       });
     },
 
+    // 根据课程状态筛选
+    filterByCourseStatus(status) {
+      this.$router.push({
+        path: '/Course/CourseParticipate',
+        query: {
+          status: status,
+          autoFilter: 'true'
+        }
+      }).catch(error => {
+        console.error('跳转到课程参与页面失败:', error);
+        this.$message.error('跳转到课程参与页面失败，请检查路由配置');
+      });
+    },
+
+    // 清除课程状态筛选
+    clearCourseStatusFilter() {
+      this.$router.push({
+        path: '/Course/CourseParticipate'
+      }).catch(error => {
+        console.error('跳转到课程参与页面失败:', error);
+        this.$message.error('跳转到课程参与页面失败，请检查路由配置');
+      });
+    },
+
     // 跳转到活动预约界面
     goToActivityBooking(activity) {
       console.log('准备跳转到活动预约界面，活动ID:', activity.activityId);
@@ -1016,6 +1172,19 @@ export default {
         filter.count = bookingRecords.filter(record =>
           record.status === filter.value
         ).length;
+      });
+    },
+
+    // 更新课程状态筛选的计数
+    updateCourseStatusCounts(courseRecords) {
+      this.courseStatusFilters.forEach(filter => {
+        filter.count = courseRecords.filter(record => {
+          // "未考核"和"未审核"视为同一状态
+          if (filter.value === '未考核') {
+            return record.status === '未考核' || record.status === '未审核';
+          }
+          return record.status === filter.value;
+        }).length;
       });
     },
 
@@ -1064,6 +1233,46 @@ export default {
 
       const activityNames = category.completedActivities.map(activity => activity.name);
       return `已完成的活动：\n${activityNames.join('\n')}`;
+    },
+
+    // 获取问候语
+    getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 6) return '凌晨好';
+      if (hour < 9) return '早上好';
+      if (hour < 12) return '上午好';
+      if (hour < 14) return '中午好';
+      if (hour < 17) return '下午好';
+      if (hour < 19) return '傍晚好';
+      if (hour < 22) return '晚上好';
+      return '夜深了';
+    },
+
+    // 获取当前日期
+    getCurrentDate() {
+      const date = new Date();
+      const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${weekDays[date.getDay()]}`;
+    },
+
+    // 快捷入口 - 活动预约
+    goToActivityBookingPage() {
+      this.$router.push('/Activity/ActivityBooking');
+    },
+
+    // 快捷入口 - 课程选课
+    goToCourseBookingPage() {
+      this.$router.push('/Course/CourseBooking');
+    },
+
+    // 快捷入口 - 我的活动
+    goToActivityParticipatePage() {
+      this.$router.push('/Activity/ActivityParticipate');
+    },
+
+    // 快捷入口 - 我的课程
+    goToCourseParticipatePage() {
+      this.$router.push('/Course/CourseParticipate');
     },
 
     // 跳转到所有通知页面
@@ -1159,8 +1368,123 @@ export default {
 .student-home-container {
   margin-left: 100px;
   padding: 20px;
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
   min-height: 100vh;
+}
+
+/* 欢迎横幅 */
+.welcome-banner {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 32px rgba(96, 165, 250, 0.3);
+  animation: fadeInDown 0.6s ease-out;
+}
+
+.welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+
+.welcome-text {
+  flex: 1;
+}
+
+.welcome-title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: fadeInLeft 0.8s ease-out;
+}
+
+.welcome-title i {
+  font-size: 36px;
+  animation: rotate 3s linear infinite;
+}
+
+.welcome-subtitle {
+  margin: 8px 0 0 0;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  animation: fadeInLeft 1s ease-out;
+}
+
+/* 快捷操作 */
+.quick-actions {
+  display: flex;
+  gap: 16px;
+  animation: fadeInRight 0.8s ease-out;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.action-item:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.action-icon.activity {
+  color: #60a5fa;
+}
+
+.action-icon.course {
+  color: #8b5cf6;
+}
+
+.action-icon.participate {
+  color: #10b981;
+}
+
+.action-icon.my-course {
+  color: #f59e0b;
+}
+
+.action-item:hover .action-icon {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.action-item span {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
 }
 
 /* 顶部区域 */
@@ -1187,9 +1511,24 @@ export default {
   margin-bottom: 20px;
 }
 
-.activity-completion-panel,
-.activity-status-panel {
+.status-filters-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
   flex: 1;
+}
+
+.activity-completion-panel {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e4e7ed;
+  overflow: hidden;
+}
+
+.activity-status-panel,
+.course-status-panel {
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -1212,7 +1551,7 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #6a5acd, #8a2be2);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
   font-weight: 600;
   font-size: 16px;
@@ -1319,27 +1658,31 @@ export default {
 .notification-item {
   display: flex;
   align-items: center;
-  padding: 14px 0;
-  border-bottom: 1px solid #f0f2f5;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-height: auto;
-  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .notification-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .notification-item:hover {
-  background: #f8f9fa;
-  padding-left: 8px;
-  border-radius: 6px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #60a5fa;
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(96, 165, 250, 0.15);
 }
 
 .notification-date {
   min-width: 60px;
-  background: linear-gradient(135deg, #6a5acd, #8a2be2);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
@@ -1400,19 +1743,33 @@ export default {
 }
 
 .activity-item {
-  padding: 14px 0;
-  border-bottom: 1px solid #f0f2f5;
+  padding: 16px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  border: 1px solid #e4e7ed;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-height: auto;  /* 移除固定最小高度，让内容自适应 */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.activity-item:last-child {
+  margin-bottom: 0;
+}
+
+.activity-item:hover {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  transform: translateX(4px);
+  box-shadow: 0 8px 16px rgba(245, 158, 11, 0.15);
 }
 
 .activity-date {
   min-width: 60px;
-  background: linear-gradient(135deg, #6a5acd, #8a2be2);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
@@ -1544,7 +1901,7 @@ export default {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #409EFF, #64b5ff);
+  background: linear-gradient(90deg, #60a5fa, #3b82f6);
   border-radius: 3px; /* 与进度条圆角保持一致 */
   transition: width 0.3s ease;
 }
@@ -1560,32 +1917,33 @@ export default {
 /* 状态筛选 */
 .status-filters {
   display: flex;
-  flex-direction: column; /* 垂直排列 */
-  gap: 12px; /* 减少行间距 */
-  align-items: center; /* 垂直居中 */
-  justify-content: center; /* 水平居中 */
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
 }
 
 .status-filters-row {
   display: flex;
-  gap: 12px; /* 减少状态项间距 */
-  justify-content: center; /* 行内居中 */
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .status-filter-item {
   display: flex;
   align-items: center;
-  padding: 12px 16px; /* 减少内边距 */
+  padding: 8px 10px;
   background: #f8fafc;
-  border-radius: 8px; /* 减少圆角 */
+  border-radius: 6px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: all 0.3s ease;
-  flex: 1; /* 让每个项目平均分配宽度 */
-  min-width: 0; /* 允许flex收缩 */
-  min-height: 70px; /* 减少最小高度 */
-  min-width: 100px; /* 减少最小宽度 */
-  white-space: nowrap; /* 防止文字换行 */
+  min-width: 70px;
+  min-height: 50px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .status-filter-item:hover {
@@ -1596,10 +1954,10 @@ export default {
 }
 
 .status-filter-item.active {
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
-  border-color: #409EFF;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  border-color: #60a5fa;
   color: white;
-  box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
 }
 
 .status-filter-item.clear-filter {
@@ -1608,44 +1966,44 @@ export default {
 }
 
 .status-filter-item.clear-filter.active {
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
-  border-color: #409EFF;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  border-color: #60a5fa;
   color: white;
 }
 
 .status-icon {
-  width: 36px; /* 减少图标大小 */
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 12px; /* 减少右边距 */
-  font-size: 16px; /* 减少字体大小 */
+  margin-right: 6px;
+  font-size: 12px;
 }
 
 .status-icon.unsubmitted {
-  background: linear-gradient(135deg, #f39c12, #f1c40f);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
 }
 
 .status-icon.pending {
-  background: linear-gradient(135deg, #f39c12, #e67e22);
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
   color: white;
 }
 
 .status-icon.approved {
-  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
 }
 
 .status-icon.rejected {
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
 }
 
 .status-icon.all {
-  background: linear-gradient(135deg, #6c757d, #495057);
+  background: linear-gradient(135deg, #64748b, #475569);
   color: white;
 }
 
@@ -1657,16 +2015,16 @@ export default {
 }
 
 .status-count {
-  font-size: 20px; /* 减少数字大小 */
+  font-size: 14px;
   font-weight: 700;
   line-height: 1;
 }
 
 .status-label {
-  font-size: 14px; /* 减少标签字体大小 */
-  margin-top: 4px; /* 减少顶部间距 */
-  font-weight: 700;
-  white-space: nowrap; /* 防止标签文字换行 */
+  font-size: 11px;
+  margin-top: 2px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .status-filter-item.active .status-count,
@@ -1759,11 +2117,11 @@ export default {
   line-height: 36px;
   text-align: center;
   border-radius: 50%;
-  background: linear-gradient(135deg, #409EFF, #64b5ff);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
   font-weight: 600;
   font-size: 14px;
-  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(96, 165, 250, 0.3);
 }
 
 /* 未通过状态的红色序号徽章 */
@@ -1868,7 +2226,7 @@ export default {
 
 .pagination-container .el-pagination .el-pager li.active {
   background: #409EFF;
-  border-color: #409EFF;
+  border-color: #60a5fa;
   color: #ffffff;
 }
 
@@ -1892,17 +2250,29 @@ export default {
 .no-notification,
 .no-activity,
 .no-course {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: #909399;
-  padding: 20px 0;  /* 减少内边距，避免大块空白 */
+  min-height: 200px;
+  padding: 40px 20px;
 }
 
 .no-notification i,
 .no-activity i,
 .no-course i {
-  font-size: 32px;
-  margin-bottom: 8px;
-  display: block;
+  font-size: 48px;
+  margin-bottom: 12px;
+  color: #c0c4cc;
+}
+
+.no-notification span,
+.no-activity span,
+.no-course span {
+  font-size: 14px;
+  color: #909399;
 }
 
 /* 课程列表样式 */
@@ -1917,21 +2287,41 @@ export default {
 
 .course-item {
   display: flex;
-  padding: 12px;
+  padding: 20px;
   border: 1px solid #e4e7ed;
-  border-radius: 8px;
-  background: #fff;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
   cursor: pointer;
-  transition: all 0.3s ease;
-  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 16px;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   position: relative;
+  overflow: hidden;
+}
+
+.course-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
 .course-item:hover {
-  background-color: #f8f9fa;
-  border-color: #409EFF;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #60a5fa;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(96, 165, 250, 0.2);
+}
+
+.course-item:hover::before {
+  transform: scaleY(1);
+  border-color: #60a5fa;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
 }
@@ -1942,7 +2332,7 @@ export default {
 
 .course-date {
   min-width: 60px;
-  background: linear-gradient(135deg, #6a5acd, #8a2be2);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
   color: white;
   padding: 4px 8px;
   border-radius: 4px;
@@ -2051,6 +2441,57 @@ export default {
     padding: 10px;
   }
 
+  /* 欢迎横幅响应式 */
+  .welcome-banner {
+    padding: 20px;
+  }
+
+  .welcome-content {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .welcome-title {
+    font-size: 24px;
+  }
+
+  .welcome-title i {
+    font-size: 28px;
+  }
+
+  .welcome-subtitle {
+    font-size: 14px;
+  }
+
+  .quick-actions {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .action-item {
+    min-width: 70px;
+    padding: 12px 8px;
+  }
+
+  .action-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 24px;
+  }
+
+  .action-item span {
+    font-size: 12px;
+  }
+
+  /* 顶部区域响应式 */
+  .top-section {
+    flex-direction: column;
+  }
+
+  .middle-section {
+    flex-direction: column;
+  }
+
   .status-filters {
     flex-direction: column;
   }
@@ -2066,7 +2507,7 @@ export default {
   }
 
   .course-item {
-    padding: 12px;
+    padding: 16px;
     flex-direction: column;
     align-items: stretch;
   }
@@ -2092,7 +2533,7 @@ export default {
 
 .notification-dialog .el-dialog__header,
 .notification-dialog.el-dialog .el-dialog__header {
-  background: linear-gradient(135deg, #42A5F5 0%, #64B5F6 100%) !important;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%) !important;
   color: white !important;
   padding: 20px 24px !important;
   border-bottom: none !important;
@@ -2428,6 +2869,58 @@ export default {
 
   .detail-title {
     font-size: 16px;
+  }
+}
+
+/* 动画定义 */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 </style>
