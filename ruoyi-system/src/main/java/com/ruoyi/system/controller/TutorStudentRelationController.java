@@ -72,7 +72,7 @@ public class TutorStudentRelationController extends BaseController
     /**
      * 新增导师学生关联
      */
-    @PreAuthorize("@ss.hasPermi('system:relation:add')")
+    // @PreAuthorize("@ss.hasPermi('system:relation:add')")
     @Log(title = "导师学生关联", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody TutorStudentRelation tutorStudentRelation)
@@ -83,7 +83,7 @@ public class TutorStudentRelationController extends BaseController
     /**
      * 修改导师学生关联
      */
-    @PreAuthorize("@ss.hasPermi('system:relation:edit')")
+    // @PreAuthorize("@ss.hasPermi('system:relation:edit')")
     @Log(title = "导师学生关联", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody TutorStudentRelation tutorStudentRelation)

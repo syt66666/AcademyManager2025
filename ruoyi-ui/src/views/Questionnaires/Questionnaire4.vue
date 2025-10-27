@@ -300,7 +300,7 @@ export default {
       // 准备提交数据到 evaluation_score 表
       const submitData = {
         userName: this.userName, // 使用 data 中定义的 userName
-        quesScore: this.totalScore, // 总得分（1-50分）
+        quesScore: this.totalScore * 2, // 总得分×2（满分100分）
         tutorId: this.tutorInfo.tutorId, // 使用实际获取到的导师ID
         quesType: 4, // 问卷类型：4表示问卷4（学生版评价问卷）
         signature: this.signature // 签名数据（图片URL或base64）

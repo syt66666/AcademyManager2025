@@ -12,7 +12,7 @@
     <div v-show="!loading" class="dashboard-content">
       <div class="dashboard-header fade-in">
         <h1 class="dashboard-title">书院学生管理系统</h1>
-        <p class="dashboard-subtitle">实时显示各书院运营数据</p>
+        <p class="dashboard-subtitle">实时显示各书院数据</p>
       </div>
 
       <!-- 快速统计卡片 -->
@@ -110,6 +110,7 @@
             v-for="activity in recentActivities"
             :key="activity.id"
             class="update-item"
+            @click="showActivityDetail(activity)"
           >
             <div class="update-icon activity">
               <i class="el-icon-s-promotion"></i>
@@ -156,6 +157,89 @@
       </div>
       </div>
     </div>
+
+    <!-- 活动详情弹窗 -->
+    <el-dialog
+      title="活动详情"
+      :visible.sync="activityDetailVisible"
+      width="800px"
+      :before-close="handleDetailClose"
+      class="activity-detail-dialog"
+    >
+      <div class="activity-detail" v-if="selectedActivity">
+        <!-- 活动详情展示 -->
+        <div class="detail-header">
+          <h2>{{ selectedActivity.name || selectedActivity.activityName }}</h2>
+          <div class="status-tags">
+            <el-tag :type="getActivityDetailStatusTag(selectedActivity)" size="medium" class="status-tag">
+              {{ getStatusText(selectedActivity.status) }}
+            </el-tag>
+          </div>
+        </div>
+        <el-divider></el-divider>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
+            <div class="detail-value">{{ selectedActivity.location || selectedActivity.activityLocation }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 活动类型：</div>
+            <div class="detail-value">{{ getActivityTypeName(selectedActivity.type || selectedActivity.activityType) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
+            <div class="detail-value">{{ selectedActivity.college || selectedActivity.organizer }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-user"></i> 活动容量：</div>
+            <div class="detail-value">
+              <span class="capacity-info">
+                {{ selectedActivity.capacity || selectedActivity.activityCapacity || 0 }}/{{ selectedActivity.totalCapacity || selectedActivity.activityTotalCapacity }}人
+              </span>
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.signupStartTime || selectedActivity.activityStart) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名截止：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.signupDeadline || selectedActivity.activityDeadline) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 活动开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.startTime) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 活动结束：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.endTime) }}</div>
+          </div>
+        </div>
+        <el-divider></el-divider>
+        <div class="detail-section-content">
+          <h4 class="section-title"><i class="el-icon-document"></i> 活动描述</h4>
+          <div class="section-content">
+            <!-- 使用 v-html 渲染富文本内容 -->
+            <div class="rich-text-content" v-html="selectedActivity.description || selectedActivity.activityDescription || '暂无描述信息'"></div>
+          </div>
+        </div>
+
+        <!-- 活动图片展示 -->
+        <div class="detail-section-content" v-if="selectedActivity.imageUrl || selectedActivity.pictureUrl">
+          <h4 class="section-title"><i class="el-icon-picture"></i> 活动图片</h4>
+          <div class="section-content">
+            <div class="activity-image-container">
+              <el-image
+                :src="getActivityImageUrl(selectedActivity.imageUrl || selectedActivity.pictureUrl)"
+                :preview-src-list="[getActivityImageUrl(selectedActivity.imageUrl || selectedActivity.pictureUrl)]"
+                fit="cover"
+                class="activity-image"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -170,6 +254,7 @@ import {
   getCollegeCourseStats
 } from '@/api/system/courseStatistics'
 import { listCourses } from '@/api/system/courses'
+import { getActivities } from '@/api/system/activities'
 
 export default {
   name: 'Dashboard',
@@ -203,7 +288,10 @@ export default {
       collegeActivityData: {},
       collegeCourseData: {},
       recentActivities: [],
-      recentCourses: []
+      recentCourses: [],
+      // 活动详情弹窗相关
+      activityDetailVisible: false,
+      selectedActivity: null
     }
   },
   methods: {
@@ -231,6 +319,8 @@ export default {
         const collegeActivityStats = await getCollegeActivityStats()
         if (collegeActivityStats.code === 200) {
           const backendCollegeData = collegeActivityStats.data.collegeData
+          console.log('=== 活动统计数据 ===')
+          console.log('后端返回的书院活动数据:', backendCollegeData)
           this.collegeActivityData = {}
 
           const collegeNameToKey = {
@@ -247,13 +337,20 @@ export default {
             const collegeKey = collegeNameToKey[collegeName]
             if (collegeKey) {
               this.collegeActivityData[collegeKey] = stats
+              console.log(`${collegeName} (${collegeKey}):`, stats)
             }
           }
+          console.log('处理后的 collegeActivityData:', this.collegeActivityData)
         }
 
         const recentActivitiesResponse = await getRecentActivities(5)
         if (recentActivitiesResponse.code === 200) {
           this.recentActivities = (recentActivitiesResponse.data.recentActivities || []).slice(0, 5)
+          console.log('=== 最近活动数据 ===')
+          console.log('最近活动列表:', this.recentActivities)
+          if (this.recentActivities.length > 0) {
+            console.log('第一个活动的完整数据:', this.recentActivities[0])
+          }
         }
 
         // 加载课程数据
@@ -265,6 +362,8 @@ export default {
         const collegeCourseStats = await getCollegeCourseStats()
         if (collegeCourseStats.code === 200) {
           const backendCollegeData = collegeCourseStats.data.collegeData
+          console.log('=== 课程统计数据 ===')
+          console.log('后端返回的书院课程数据:', backendCollegeData)
           this.collegeCourseData = {}
 
           const collegeNameToKey = {
@@ -281,8 +380,10 @@ export default {
             const collegeKey = collegeNameToKey[collegeName]
             if (collegeKey) {
               this.collegeCourseData[collegeKey] = stats
+              console.log(`${collegeName} (${collegeKey}):`, stats)
             }
           }
+          console.log('处理后的 collegeCourseData:', this.collegeCourseData)
         }
 
         const recentCoursesResponse = await listCourses({ pageNum: 1, pageSize: 5 })
@@ -312,7 +413,19 @@ export default {
       return this.collegeCourseData[collegeKey]?.totalCourses || 0
     },
     getCollegeParticipantCount(collegeKey) {
-      return this.collegeActivityData[collegeKey]?.participants || 0
+      // 活动参与人数（后端返回的字段名是 totalParticipants）
+      const activityParticipants = this.collegeActivityData[collegeKey]?.totalParticipants || 0
+      // 课程参与人数（后端返回的字段名是 enrollments）
+      const courseParticipants = this.collegeCourseData[collegeKey]?.enrollments || 0
+      // 返回总参与人数（活动 + 课程）
+      const total = activityParticipants + courseParticipants
+      
+      // 调试日志
+      if (total > 0) {
+        console.log(`${collegeKey} 参与人数: 活动=${activityParticipants}, 课程=${courseParticipants}, 总计=${total}`)
+      }
+      
+      return total
     },
     formatDate(dateTime) {
       if (!dateTime) return '-'
@@ -434,6 +547,106 @@ export default {
         '已结束': 'status-ended'
       }
       return classMap[status] || 'status-not-started'
+    },
+    
+    // 显示活动详情
+    async showActivityDetail(activity) {
+      try {
+        console.log('=== 点击的活动对象 ===')
+        console.log('活动数据:', activity)
+        
+        // 通过活动ID获取完整的活动详情
+        const activityId = activity.id || activity.activityId
+        console.log('活动ID:', activityId)
+        
+        if (!activityId) {
+          this.$message.error('活动ID不存在')
+          return
+        }
+        
+        // 显示加载提示
+        const loading = this.$loading({
+          lock: true,
+          text: '加载活动详情...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        })
+        
+        const response = await getActivities(activityId)
+        console.log('=== API返回的活动详情 ===')
+        console.log('完整响应:', response)
+        console.log('活动详情数据:', response.data)
+        
+        loading.close()
+        
+        if (response && response.code === 200 && response.data) {
+          this.selectedActivity = response.data
+          this.activityDetailVisible = true
+        } else {
+          this.$message.error('获取活动详情失败')
+        }
+      } catch (error) {
+        console.error('获取活动详情失败:', error)
+        this.$message.error('获取活动详情失败，请重试')
+      }
+    },
+    
+    // 关闭活动详情弹窗
+    handleDetailClose(done) {
+      this.activityDetailVisible = false
+      this.selectedActivity = null
+      if (done) done()
+    },
+    
+    // 获取活动状态标签类型
+    getActivityDetailStatusTag(activity) {
+      const status = activity.status || ''
+      const statusMap = {
+        '未开始': 'info',
+        '报名未开始': 'info',
+        'not-started': 'info',
+        '可报名': 'success',
+        '报名进行中': 'success',
+        'enrolling': 'success',
+        '已截止': 'danger',
+        '报名已截止': 'danger',
+        'enroll-ended': 'danger',
+        '进行中': 'warning',
+        '活动进行中': 'warning',
+        'ongoing': 'warning',
+        '已结束': '',
+        '活动已结束': '',
+        'completed': ''
+      }
+      return statusMap[status] || 'danger'
+    },
+    
+    // 获取活动类型名称
+    getActivityTypeName(activityType) {
+      const typeMap = {
+        '1': '人格塑造与价值引领活动类',
+        '2': '知识融合与思维进阶活动类',
+        '3': '能力锻造与实践创新活动类',
+        '4': '社会责任与领军意识活动类'
+      }
+      return typeMap[activityType] || activityType || '未分类'
+    },
+    
+    // 获取活动图片完整URL
+    getActivityImageUrl(pictureUrl) {
+      if (!pictureUrl) return ''
+
+      // 如果已经是完整URL，直接返回
+      if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+        return pictureUrl
+      }
+
+      // 如果以/profile/开头，说明是相对路径，需要拼接基础API路径
+      if (pictureUrl.startsWith('/profile/')) {
+        return `${process.env.VUE_APP_BASE_API}${pictureUrl}`
+      }
+
+      return pictureUrl
     }
   },
   mounted() {
@@ -871,6 +1084,167 @@ export default {
   color: #059669;
 }
 
+/* 活动详情弹窗样式 */
+.activity-detail-dialog >>> .el-dialog {
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.activity-detail-dialog >>> .el-dialog__header {
+  background: linear-gradient(to right, #409EFF, #3b82f6);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  padding: 20px 24px;
+}
+
+.activity-detail-dialog >>> .el-dialog__title {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.activity-detail-dialog >>> .el-dialog__close {
+  color: white;
+  font-size: 20px;
+}
+
+.activity-detail-dialog >>> .el-dialog__close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.activity-detail-dialog >>> .el-dialog__body {
+  padding: 24px;
+  background: #f8f9fa;
+}
+
+.activity-detail {
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(64, 158, 255, 0.1);
+  }
+
+  .detail-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .status-tags {
+    display: flex;
+    gap: 8px;
+  }
+
+  .status-tags .status-tag {
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .detail-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .detail-label {
+    font-weight: 600;
+    width: 120px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .detail-label i {
+    color: #409EFF;
+    font-size: 16px;
+  }
+
+  .detail-value {
+    flex: 1;
+    font-weight: 500;
+    color: #2c3e50;
+  }
+
+  .capacity-info {
+    color: #409EFF;
+    font-weight: 600;
+  }
+
+  .detail-section-content {
+    margin: 20px 0;
+  }
+
+  .detail-section-content .section-title {
+    display: flex;
+    align-items: center;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .detail-section-content .section-title i {
+    margin-right: 8px;
+    color: #409EFF;
+    font-size: 18px;
+  }
+
+  .detail-section-content .section-content {
+    line-height: 1.6;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #495057;
+    font-weight: 500;
+  }
+}
+
+/* 活动图片展示样式 */
+.activity-image-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.activity-image {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.activity-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .dashboard-container {
@@ -903,6 +1277,19 @@ export default {
 
   .updates-section {
     padding: 16px;
+  }
+  
+  .activity-detail .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .activity-detail-dialog >>> .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+  
+  .activity-detail .detail-header h2 {
+    font-size: 20px;
   }
 }
 </style>

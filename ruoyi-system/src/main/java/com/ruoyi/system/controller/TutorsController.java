@@ -49,7 +49,7 @@ public class TutorsController extends BaseController
     /**
      * 导出导师信息列表
      */
-    @PreAuthorize("@ss.hasPermi('system:tutors:export')")
+    // @PreAuthorize("@ss.hasPermi('system:tutors:export')")
     @Log(title = "导师信息", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(HttpServletResponse response, Tutors tutors)
@@ -62,7 +62,7 @@ public class TutorsController extends BaseController
     /**
      * 获取导师信息详细信息
      */
-    @PreAuthorize("@ss.hasPermi('system:tutors:query')")
+    // @PreAuthorize("@ss.hasPermi('system:tutors:query')")
     @GetMapping(value = "/{tutorId}")
     public AjaxResult getInfo(@PathVariable("tutorId") String tutorId)
     {

@@ -2,7 +2,7 @@
   <div class="questionnaire-list">
     <div class="questionnaire-grid">
       <div
-        v-for="questionnaire in questionnaires"
+        v-for="questionnaire in filteredQuestionnaires"
         :key="questionnaire.id"
         class="questionnaire-card"
       >
@@ -153,6 +153,21 @@
             <p class="subtitle">请选择签名方式并完成签名后进入问卷</p>
           </div>
 
+          <!-- 诚信说明 -->
+          <div class="integrity-notice">
+            <div class="notice-icon">
+              <i class="el-icon-warning"></i>
+            </div>
+            <div class="notice-content">
+              <ul class="notice-list">
+                <li>真实性保障：签名可确保问卷由本人真实填写，防止他人代填</li>
+                <li>诚信承诺：您的签名代表对问卷内容真实性的承诺</li>
+                <li>法律效力：电子签名与手写签名具有同等法律效力</li>
+                <li>责任担当：签名后您将对评价内容负责，请客观公正填写</li>
+              </ul>
+            </div>
+          </div>
+
           <!-- 签名方式选择 -->
           <div class="signature-type-selector">
             <el-radio-group v-model="signatureType">
@@ -253,8 +268,8 @@ export default {
         },
         {
           id: 4,
-          title: '问卷4',
-          description: '大工书院育人导师工作评价问卷（学生版）',
+          title: '问卷1',
+          description: '大工书院育人导师工作评价问卷',
           type: '大工书院育人导师工作评价问卷',
           completed: false,
           start_time: '2025-10-21T00:00:00',
@@ -262,8 +277,8 @@ export default {
         },
         {
           id: 5,
-          title: '问卷5',
-          description: '大工书院育人导师工作评价问卷（辅导员/执行院长版）',
+          title: '问卷1',
+          description: '大工书院育人导师工作评价问卷',
           type: '大工书院育人导师工作评价问卷',
           completed: false,
           start_time: '2025-10-21T06:00:00',
@@ -294,12 +309,30 @@ export default {
 
       this.selectedQuestionnaireId = questionnaireId;
       
-      // 问卷4和5显示签名弹窗
-      if (questionnaireId === 4 || questionnaireId === 5) {
+      // 判断是否是特殊用户（userName >= '20001' && userName <= '20020'）
+      const isSpecialUser = this.userName >= '20001' && this.userName <= '20020';
+      
+      // 问卷4需要签名弹窗
+      // 问卷5：普通学生需要签名，特殊用户不需要签名直接进入
+      if (questionnaireId === 4) {
+        // 问卷4所有用户都需要签名
         this.showSignatureDialog = true;
         this.signatureImg = '';
         this.canvasSignature = null;
         this.signatureType = 'upload';
+        return;
+      } else if (questionnaireId === 5 && !isSpecialUser) {
+        // 问卷5：只有非特殊用户需要签名
+        this.showSignatureDialog = true;
+        this.signatureImg = '';
+        this.canvasSignature = null;
+        this.signatureType = 'upload';
+        return;
+      } else if (questionnaireId === 5 && isSpecialUser) {
+        // 问卷5：特殊用户不需要签名，直接进入问卷
+        this.$router.push({
+          path: `/Questionnaires/Questionnaire${questionnaireId}`
+        });
         return;
       }
 
@@ -393,9 +426,15 @@ export default {
         const totalTutors = tutorResponse.rows.length;
 
         // 3. 查询该用户对问卷5的所有评价记录
+        // 根据账号奇偶性判断查询哪个 quesType
+        // 奇数账号：quesType=5（执行副院长）
+        // 偶数账号：quesType=6（执行院长）
+        const userNumber = parseInt(this.userName);
+        const quesType = (userNumber % 2 === 0) ? 6 : 5;
+        
         const scoreResponse = await listScore({
           userName: this.userName,
-          quesType: 5
+          quesType: quesType
         });
         const evaluatedCount = scoreResponse && scoreResponse.rows ? scoreResponse.rows.length : 0;
 
@@ -506,10 +545,10 @@ export default {
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
         
-        // 触摸事件（移动端）
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
+        // 触摸事件（移动端）- 使用 passive: false 因为需要 preventDefault
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing, { passive: false });
       });
     },
     
@@ -661,6 +700,27 @@ export default {
         return `确认（${this.countdown}秒）`;
       }
       return this.hasUploadedImage ? '确认' : '请上传签字图片';
+    },
+    // 根据用户类型过滤问卷
+    filteredQuestionnaires() {
+      const userName = this.userName;
+      
+      // 判断用户名是否在 20001-20020 范围内（辅导员/执行院长）
+      const isSpecialUser = userName >= '20001' && userName <= '20020';
+      
+      // 判断是否是指定的学生账号
+      const isDesignatedStudent = userName === '20210000000';
+      
+      if (isSpecialUser) {
+        // userName >= '20001' && userName <= '20020' 只显示id:5的问卷1（辅导员/执行院长版）
+        return this.questionnaires.filter(q => q.id === 5);
+      } else if (isDesignatedStudent) {
+        // 只有账号 20210000000 显示id:4的问卷1（学生版）
+        return this.questionnaires.filter(q => q.id === 4);
+      } else {
+        // 其他账号不显示任何问卷
+        return [];
+      }
     }
   },
 };
@@ -1183,11 +1243,104 @@ export default {
 .signature-dialog {
   background: #ffffff;
   border-radius: 12px;
-  width: 600px;
+  width: 680px;
   max-width: 90%;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
   position: relative;
   overflow: hidden;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+/* 诚信说明区域 */
+.integrity-notice {
+  margin: 24px 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff9e6 0%, #fff4d9 100%);
+  border: 1px solid #ffe4a3;
+  border-left: 4px solid #f39c12;
+  border-radius: 8px;
+  display: flex;
+  gap: 16px;
+}
+
+.notice-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  background: #f39c12;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+
+.notice-content {
+  flex: 1;
+  text-align: left;
+}
+
+.notice-content h4 {
+  font-size: 16px;
+  color: #333;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+  text-align: left;
+}
+
+.notice-list {
+  padding-left: 0;
+  margin: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.notice-list li {
+  padding: 6px 0;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.6;
+  position: relative;
+  padding-left: 20px;
+  text-align: left;
+}
+
+.notice-list li::before {
+  content: "•";
+  position: absolute;
+  left: 4px;
+  color: #f39c12;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.notice-list .highlight {
+  color: #e67e22;
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.notice-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #ffe4a3;
+  color: #666;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.notice-footer i {
+  color: #3498db;
+  font-size: 14px;
 }
 
 .signature-type-selector {
@@ -1266,6 +1419,40 @@ export default {
   .signature-canvas {
     width: 100%;
     height: 150px;
+  }
+  
+  .integrity-notice {
+    flex-direction: column;
+    padding: 16px;
+  }
+  
+  .notice-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+  
+  .notice-content {
+    text-align: left;
+  }
+  
+  .notice-content h4 {
+    font-size: 15px;
+    text-align: left;
+  }
+  
+  .notice-list {
+    text-align: left;
+  }
+  
+  .notice-list li {
+    font-size: 12px;
+    text-align: left;
+  }
+  
+  .notice-footer {
+    font-size: 11px;
+    text-align: left;
   }
 }
 

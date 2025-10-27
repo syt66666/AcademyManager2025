@@ -32,18 +32,18 @@ import Layout from '@/layout'
 // 公共路由
 export const constantRoutes = [
   //配置问卷路由
-  {
-    path: '/Questionnaires/Questionnaire4',
-    component: () => import('@/views/Questionnaires/Questionnaire4'),
-    name: 'Questionnaire4',
-    hidden: true
-  },
-  {
-    path: '/Questionnaires/Questionnaire5',
-    component: () => import('@/views/Questionnaires/Questionnaire5'),
-    name: 'Questionnaire5',
-    hidden: true
-  },
+  // {
+  //   path: '/Questionnaires/Questionnaire4',
+  //   component: () => import('@/views/Questionnaires/Questionnaire4'),
+  //   name: 'Questionnaire4',
+  //   hidden: true
+  // },
+  // {
+  //   path: '/Questionnaires/Questionnaire5',
+  //   component: () => import('@/views/Questionnaires/Questionnaire5'),
+  //   name: 'Questionnaire5',
+  //   hidden: true
+  // },
   {
     path: '/redirect',
     component: Layout,

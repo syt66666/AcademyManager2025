@@ -1,66 +1,102 @@
 <template>
   <div class="app-container">
-    <div class="summary-header">
-      <h1 class="page-title">问卷评价统计</h1>
-      <p class="page-subtitle">大工书院育人导师工作评价统计表</p>
-      
-      <!-- 筛选区域 -->
-      <div class="filter-section">
-        <el-form :inline="true" :model="queryParams">
-          <el-form-item label="书院">
-            <el-select v-model="queryParams.tutorDepartment" placeholder="请选择书院" clearable @change="handleQuery">
-              <el-option label="大煜书院" value="大煜书院" />
-              <el-option label="伯川书院" value="伯川书院" />
-              <el-option label="令希书院" value="令希书院" />
-              <el-option label="厚德书院" value="厚德书院" />
-              <el-option label="知行书院" value="知行书院" />
-              <el-option label="笃学书院" value="笃学书院" />
-              <el-option label="求实书院" value="求实书院" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="el-icon-search" @click="handleQuery">查询</el-button>
-            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
-            <el-button type="success" icon="el-icon-download" @click="exportData">导出统计表</el-button>
-            <el-button type="warning" icon="el-icon-download" @click="exportUnfinishedStudents">导出未填写学生</el-button>
-          </el-form-item>
-        </el-form>
+    <!-- 页面头部 -->
+    <div class="page-header fade-in">
+      <div class="header-content">
+        <div class="title-section">
+          <h1 class="page-title">
+            <i class="el-icon-data-analysis"></i>
+            问卷评价统计
+          </h1>
+          <p class="page-subtitle">大工书院育人导师工作评价统计表</p>
+        </div>
+        <div class="action-section">
+          <el-button 
+            type="success" 
+            icon="el-icon-download" 
+            @click="exportData"
+            class="action-btn"
+          >
+            导出统计表
+          </el-button>
+          <el-button 
+            type="warning" 
+            icon="el-icon-download" 
+            @click="exportUnfinishedStudents"
+            class="action-btn"
+          >
+            导出未填写学生
+          </el-button>
+        </div>
       </div>
+    </div>
 
-      <!-- 统计概览 -->
-      <div class="statistics-overview">
-        <div class="stat-card">
-          <div class="stat-label">导师总数</div>
-          <div class="stat-value">{{ statisticsData.length }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">学生评价数</div>
-          <div class="stat-value">{{ totalStudentEvaluations }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">未填写学生数</div>
-          <div class="stat-value">{{ unfinishedStudentCount }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">辅导员评价数</div>
-          <div class="stat-value">{{ totalCounselorEvaluations }}</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">平均综合得分</div>
-          <div class="stat-value">{{ averageOverallScore }}</div>
+    <!-- 各书院数据一览 -->
+    <div class="colleges-overview fade-in" style="animation-delay: 0.1s">
+      <h2 class="section-title">
+        <i class="el-icon-office-building"></i>
+        各书院评价数据
+      </h2>
+      <p class="section-hint">点击书院卡片查看该书院的详细数据</p>
+      <div class="colleges-grid">
+        <div
+          v-for="college in collegeList"
+          :key="college.value"
+          class="college-card"
+          :class="{ 'active': queryParams.tutorDepartment === college.value }"
+          @click="filterByCollege(college.value)"
+        >
+          <div class="college-header">
+            <i class="el-icon-school college-icon"></i>
+            <span class="college-name">{{ college.label }}</span>
+          </div>
+          <div class="college-stats">
+            <div class="stat-row">
+              <span class="label">
+                <i class="el-icon-user"></i>
+                导师数
+              </span>
+              <span class="value">{{ getCollegeTutorCount(college.value) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="label">
+                <i class="el-icon-edit"></i>
+                学生评价
+              </span>
+              <span class="value">{{ getCollegeStudentEvaluations(college.value) }}</span>
+            </div>
+            <div class="stat-row">
+              <span class="label">
+                <i class="el-icon-star-on"></i>
+                综合得分
+              </span>
+              <span class="value highlight">{{ getCollegeAverageScore(college.value) }}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 统计表格 -->
-    <div class="table-container">
+    <div class="table-container fade-in" style="animation-delay: 0.2s">
+      <div class="table-header">
+        <h2 class="table-title">
+          <i class="el-icon-s-data"></i>
+          导师评价详细数据
+        </h2>
+        <div class="filter-tag" v-if="queryParams.tutorDepartment">
+          <el-tag type="primary" effect="plain" closable @close="resetQuery">
+            <i class="el-icon-school"></i>
+            {{ queryParams.tutorDepartment }}
+          </el-tag>
+        </div>
+      </div>
       <el-table
         v-loading="loading"
         :data="displayedData"
         border
         stripe
         style="width: 100%"
-        :default-sort="{prop: 'overallAverage', order: 'descending'}"
       >
         <el-table-column label="排名" width="80" align="center">
           <template slot-scope="scope">
@@ -74,28 +110,34 @@
         <el-table-column prop="tutorDepartment" label="所属书院" min-width="120" align="center" />
 
         <el-table-column label="学生评价" align="center">
-          <el-table-column prop="studentAverage" label="平均分" min-width="100" align="center" sortable>
+          <el-table-column prop="studentAverage" label="平均分" min-width="100" align="center">
             <template slot-scope="scope">
               <span :class="getScoreClass(scope.row.studentAverage)">
                 {{ scope.row.studentAverage || '-' }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="studentCount" label="评价人数" min-width="100" align="center" sortable />
+          <el-table-column prop="studentCount" label="评价人数" min-width="100" align="center" />
         </el-table-column>
 
-        <el-table-column label="辅导员/执行院长评价" align="center">
-          <el-table-column prop="counselorAverage" label="平均分" min-width="100" align="center" sortable>
+        <el-table-column label="执行院长/执行副院长评价" align="center">
+          <el-table-column prop="counselorScore2" label="执行院长评分" min-width="120" align="center">
             <template slot-scope="scope">
-              <span :class="getScoreClass(scope.row.counselorAverage)">
-                {{ scope.row.counselorAverage || '-' }}
+              <span :class="getScoreClass(scope.row.counselorScore2)">
+                {{ scope.row.counselorScore2 || '-' }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column prop="counselorCount" label="评价人数" min-width="100" align="center" sortable />
+          <el-table-column prop="counselorScore1" label="执行副院长评分" min-width="120" align="center">
+            <template slot-scope="scope">
+              <span :class="getScoreClass(scope.row.counselorScore1)">
+                {{ scope.row.counselorScore1 || '-' }}
+              </span>
+            </template>
+          </el-table-column>
         </el-table-column>
 
-        <el-table-column prop="overallAverage" label="综合平均分" min-width="120" align="center" sortable>
+        <el-table-column prop="overallAverage" label="综合平均分" min-width="120" align="center">
           <template slot-scope="scope">
             <span :class="getScoreClass(scope.row.overallAverage)">
               {{ scope.row.overallAverage || '-' }}
@@ -103,13 +145,13 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" width="100" align="center" fixed="right">
+        <!-- <el-table-column label="操作" width="100" align="center" fixed="right">
           <template slot-scope="scope">
             <el-button type="text" size="small" @click="viewDetail(scope.row)">
               <i class="el-icon-view"></i> 详情
             </el-button>
           </template>
-        </el-table-column>
+        </el-table-column> -->
       </el-table>
 
       <!-- 分页组件 -->
@@ -144,7 +186,13 @@
           <el-table :data="studentEvaluations" border size="small">
             <el-table-column type="index" label="序号" min-width="60" align="center" />
             <el-table-column prop="userName" label="学生学号" min-width="150" align="center" />
-            <el-table-column prop="quesScore" label="评分" min-width="100" align="center" />
+            <el-table-column prop="quesScore" label="评分" min-width="100" align="center">
+              <template slot-scope="scope">
+                <span :class="getScoreClass(scope.row.quesScore)">
+                  {{ scope.row.quesScore }}
+                </span>
+              </template>
+            </el-table-column>
             <el-table-column label="电子签名" min-width="150" align="center">
               <template slot-scope="scope">
                 <el-image
@@ -168,8 +216,21 @@
           <h3>辅导员/执行院长评价列表 ({{ currentTutor.counselorCount }} 条)</h3>
           <el-table :data="counselorEvaluations" border size="small">
             <el-table-column type="index" label="序号" min-width="60" align="center" />
-            <el-table-column prop="userName" label="评价人" min-width="150" align="center" />
-            <el-table-column prop="quesScore" label="评分" min-width="100" align="center" />
+            <el-table-column label="角色" min-width="120" align="center">
+              <template slot-scope="scope">
+                <el-tag :type="scope.$index === 0 ? 'warning' : 'danger'" size="small">
+                  {{ scope.$index === 0 ? '执行副院长' : '执行院长' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="userName" label="评价人账号" min-width="120" align="center" />
+            <el-table-column prop="quesScore" label="评分" min-width="100" align="center">
+              <template slot-scope="scope">
+                <span :class="getScoreClass(scope.row.quesScore)">
+                  {{ scope.row.quesScore }}
+                </span>
+              </template>
+            </el-table-column>
             <el-table-column label="电子签名" min-width="150" align="center">
               <template slot-scope="scope">
                 <el-image
@@ -198,6 +259,7 @@ import { listTutors } from "@/api/student/tutor";
 import { listScore } from "@/api/system/questionnaire";
 import { listRelation } from "@/api/system/relation";
 import { listStudent } from "@/api/system/student";
+import { parseTime } from "@/utils/ruoyi";
 
 export default {
   name: "QuestionnaireSummary",
@@ -211,28 +273,25 @@ export default {
       },
       total: 0,
       statisticsData: [],
+      allStatisticsData: [], // 保存所有书院的完整数据
       detailDialogVisible: false,
       currentTutor: null,
       studentEvaluations: [],
       counselorEvaluations: [],
-      unfinishedStudentCount: 0
+      unfinishedStudentCount: 0,
+      collegeList: [
+        { label: '大煜书院', value: '大煜书院' },
+        { label: '伯川书院', value: '伯川书院' },
+        { label: '令希书院', value: '令希书院' },
+        { label: '厚德书院', value: '厚德书院' },
+        { label: '知行书院', value: '知行书院' },
+        { label: '笃学书院', value: '笃学书院' },
+        { label: '求实书院', value: '求实书院' }
+      ],
+      parseTime // 导入的工具函数
     };
   },
   computed: {
-    // 学生评价总数
-    totalStudentEvaluations() {
-      return this.statisticsData.reduce((sum, item) => sum + (item.studentCount || 0), 0);
-    },
-    // 辅导员评价总数
-    totalCounselorEvaluations() {
-      return this.statisticsData.reduce((sum, item) => sum + (item.counselorCount || 0), 0);
-    },
-    // 平均综合得分
-    averageOverallScore() {
-      if (this.statisticsData.length === 0) return '0.00';
-      const sum = this.statisticsData.reduce((acc, item) => acc + parseFloat(item.overallAverage || 0), 0);
-      return (sum / this.statisticsData.length).toFixed(2);
-    },
     // 当前页显示的数据
     displayedData() {
       const start = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
@@ -249,18 +308,23 @@ export default {
     async loadStatistics() {
       this.loading = true;
       try {
-        // 1. 获取导师列表
-        const tutorResponse = await listTutors(this.queryParams);
+        // 1. 获取所有导师列表（不传查询参数，获取全部数据）
+        const tutorResponse = await listTutors({ pageNum: 1, pageSize: 1000 });
         const tutors = tutorResponse.rows || [];
 
         // 2. 获取所有评价记录
-        const [studentScoresResponse, counselorScoresResponse] = await Promise.all([
+        const [studentScoresResponse, viceScoresResponse, deanScoresResponse] = await Promise.all([
           listScore({ quesType: 4 }), // 学生评价
-          listScore({ quesType: 5 })  // 辅导员/执行院长评价
+          listScore({ quesType: 5 }), // 执行副院长评价（奇数账号）
+          listScore({ quesType: 6 })  // 执行院长评价（偶数账号）
         ]);
 
         const studentScores = studentScoresResponse.rows || [];
-        const counselorScores = counselorScoresResponse.rows || [];
+        const viceScores = viceScoresResponse.rows || [];    // 执行副院长评价
+        const deanScores = deanScoresResponse.rows || [];    // 执行院长评价
+        
+        // 合并辅导员评价（用于综合平均分计算）
+        const counselorScores = [...viceScores, ...deanScores];
 
         // 3. 为每个导师计算统计数据
         this.statisticsData = tutors.map(tutor => {
@@ -270,11 +334,22 @@ export default {
           const studentTotal = studentEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
           const studentAverage = studentCount > 0 ? (studentTotal / studentCount).toFixed(2) : null;
 
-          // 辅导员评价（ques_type=5）
-          const counselorEvals = counselorScores.filter(score => score.tutorId === tutor.tutorId);
+          // 辅导员评价 - 分别获取执行副院长和执行院长的评分
+          // quesType=5: 执行副院长评价（奇数账号）
+          // quesType=6: 执行院长评价（偶数账号）
+          const viceEvals = viceScores.filter(score => score.tutorId === tutor.tutorId);
+          const deanEvals = deanScores.filter(score => score.tutorId === tutor.tutorId);
+          
+          // 获取执行副院长评分（quesType=5）
+          const counselorScore1 = viceEvals.length > 0 ? parseFloat(viceEvals[0].quesScore).toFixed(2) : null;
+          
+          // 获取执行院长评分（quesType=6）
+          const counselorScore2 = deanEvals.length > 0 ? parseFloat(deanEvals[0].quesScore).toFixed(2) : null;
+          
+          // 合并所有辅导员评价用于计算
+          const counselorEvals = [...viceEvals, ...deanEvals];
           const counselorCount = counselorEvals.length;
           const counselorTotal = counselorEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
-          const counselorAverage = counselorCount > 0 ? (counselorTotal / counselorCount).toFixed(2) : null;
 
           // 综合平均分（所有评价的平均）
           const allEvals = [...studentEvals, ...counselorEvals];
@@ -289,22 +364,30 @@ export default {
             tutorDepartment: tutor.tutorDepartment,
             studentAverage,
             studentCount,
-            counselorAverage,
+            counselorScore1,
+            counselorScore2,
             counselorCount,
             overallAverage
           };
         });
 
-        // 4. 按综合平均分降序排序
-        this.statisticsData.sort((a, b) => parseFloat(b.overallAverage) - parseFloat(a.overallAverage));
+        // 4. 按综合平均分从高到低排序
+        this.statisticsData.sort((a, b) => {
+          const scoreA = parseFloat(a.overallAverage) || 0;
+          const scoreB = parseFloat(b.overallAverage) || 0;
+          return scoreB - scoreA; // 降序：分数高的在前
+        });
 
-        // 5. 添加排名
+        // 5. 添加排名（按索引从1开始）
         this.statisticsData = this.statisticsData.map((item, index) => ({
           ...item,
           rank: index + 1
         }));
 
-        // 6. 设置总数
+        // 6. 保存所有书院的完整数据
+        this.allStatisticsData = [...this.statisticsData];
+
+        // 7. 设置总数
         this.total = this.statisticsData.length;
 
       } catch (error) {
@@ -344,13 +427,18 @@ export default {
 
       try {
         // 获取该导师的所有评价详情
-        const [studentResponse, counselorResponse] = await Promise.all([
-          listScore({ tutorId: tutor.tutorId, quesType: 4 }),
-          listScore({ tutorId: tutor.tutorId, quesType: 5 })
+        const [studentResponse, viceResponse, deanResponse] = await Promise.all([
+          listScore({ tutorId: tutor.tutorId, quesType: 4 }), // 学生评价
+          listScore({ tutorId: tutor.tutorId, quesType: 5 }), // 执行副院长评价
+          listScore({ tutorId: tutor.tutorId, quesType: 6 })  // 执行院长评价
         ]);
 
         this.studentEvaluations = studentResponse.rows || [];
-        this.counselorEvaluations = counselorResponse.rows || [];
+        
+        // 合并执行副院长和执行院长的评价，并确保顺序（先副院长，后院长）
+        const viceEvals = viceResponse.rows || [];
+        const deanEvals = deanResponse.rows || [];
+        this.counselorEvaluations = [...viceEvals, ...deanEvals];
       } catch (error) {
         console.error('加载评价详情失败:', error);
         this.$message.error('加载评价详情失败');
@@ -372,8 +460,8 @@ export default {
         '所属书院',
         '学生评价平均分',
         '学生评价人数',
-        '辅导员评价平均分',
-        '辅导员评价人数',
+        '执行副院长评分',
+        '执行院长评分',
         '综合平均分'
       ];
 
@@ -389,8 +477,8 @@ export default {
           item.tutorDepartment || '',
           item.studentAverage || '-',
           item.studentCount || 0,
-          item.counselorAverage || '-',
-          item.counselorCount || 0,
+          item.counselorScore1 || '-',
+          item.counselorScore2 || '-',
           item.overallAverage || '0.00'
         ];
         csvContent += row.join(',') + '\n';
@@ -539,14 +627,14 @@ export default {
       return '';
     },
 
-    // 获取分数样式
+    // 获取分数样式（满分100分）
     getScoreClass(score) {
       if (!score) return '';
       const s = parseFloat(score);
-      if (s >= 45) return 'score-excellent';
-      if (s >= 40) return 'score-good';
-      if (s >= 35) return 'score-medium';
-      return 'score-low';
+      if (s >= 90) return 'score-excellent';  // 90分以上 - 优秀
+      if (s >= 80) return 'score-good';       // 80-89分 - 良好
+      if (s >= 70) return 'score-medium';     // 70-79分 - 中等
+      return 'score-low';                     // 70分以下 - 较低
     },
 
     // 获取签名图片完整URL
@@ -566,154 +654,451 @@ export default {
       // 如果是相对路径，拼接baseURL
       const baseURL = process.env.VUE_APP_BASE_API;
       return baseURL + signature;
+    },
+
+    // 点击书院卡片进行筛选
+    filterByCollege(collegeName) {
+      if (this.queryParams.tutorDepartment === collegeName) {
+        // 如果已经选中该书院，则取消筛选，恢复全部数据（保持排序）
+        this.queryParams.tutorDepartment = '';
+        this.statisticsData = [...this.allStatisticsData];
+      } else {
+        // 选中该书院，筛选数据（保持原有排序，只需重新分配排名）
+        this.queryParams.tutorDepartment = collegeName;
+        // 从allStatisticsData中筛选指定书院的数据（过滤后的数据仍然按综合平均分从高到低排序）
+        const filteredData = this.allStatisticsData.filter(item => item.tutorDepartment === collegeName);
+        // 重新分配排名
+        this.statisticsData = filteredData.map((item, index) => ({
+          ...item,
+          rank: index + 1
+        }));
+      }
+      // 设置总数
+      this.total = this.statisticsData.length;
+      // 重置到第一页
+      this.queryParams.pageNum = 1;
+    },
+
+    // 获取指定书院的导师数量
+    getCollegeTutorCount(collegeName) {
+      return this.allStatisticsData.filter(item => item.tutorDepartment === collegeName).length;
+    },
+
+    // 获取指定书院的学生评价数量
+    getCollegeStudentEvaluations(collegeName) {
+      return this.allStatisticsData
+        .filter(item => item.tutorDepartment === collegeName)
+        .reduce((sum, item) => sum + (item.studentCount || 0), 0);
+    },
+
+    // 获取指定书院的平均综合得分
+    getCollegeAverageScore(collegeName) {
+      const collegeData = this.allStatisticsData.filter(item => item.tutorDepartment === collegeName);
+      if (collegeData.length === 0) return '0.00';
+      const sum = collegeData.reduce((acc, item) => acc + parseFloat(item.overallAverage || 0), 0);
+      return (sum / collegeData.length).toFixed(2);
     }
   }
 };
 </script>
 
 <style scoped>
-.summary-header {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+/* 全局容器 */
+.app-container {
+  margin-left: 100px;
+  padding: 20px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+/* 页面头部 */
+.page-header {
+  background: linear-gradient(135deg, #409EFF 0%, #3b82f6 100%);
+  border-radius: 12px;
+  padding: 32px 40px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(64, 158, 255, 0.25);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.title-section {
+  flex: 1;
 }
 
 .page-title {
-  font-size: 24px;
-  color: #2c3e50;
+  font-size: 28px;
+  color: white;
   margin: 0 0 8px 0;
-  font-weight: 600;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title i {
+  font-size: 32px;
 }
 
 .page-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.95);
+  margin: 0;
+  font-weight: 400;
+}
+
+.action-section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.action-btn {
   font-size: 14px;
-  color: #7f8c8d;
-  margin: 0 0 20px 0;
-}
-
-.filter-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #e4e7ed;
-}
-
-/* 统计概览卡片 */
-.statistics-overview {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: 12px 24px;
   border-radius: 8px;
-  color: white;
-  text-align: center;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
 }
 
-.stat-card:nth-child(2) {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
-.stat-card:nth-child(3) {
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+/* 各书院数据一览 */
+.colleges-overview {
+  margin-bottom: 32px;
 }
 
-.stat-card:nth-child(4) {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.stat-card:nth-child(5) {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+.section-title i {
+  color: #409EFF;
+  font-size: 24px;
 }
 
-.stat-label {
+.section-hint {
   font-size: 14px;
-  opacity: 0.9;
-  margin-bottom: 8px;
+  color: #6b7280;
+  margin: 0 0 20px 0;
+  padding-left: 34px;
 }
 
-.stat-value {
-  font-size: 28px;
+.colleges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.college-card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  will-change: transform;
+  cursor: pointer;
+  border: 2px solid #e5e7eb;
+  position: relative;
+}
+
+.college-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #409EFF 0%, #3b82f6 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.college-card:hover::before {
+  transform: scaleX(1);
+}
+
+.college-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #409EFF;
+}
+
+.college-card.active {
+  border-color: #409EFF;
+  box-shadow: 0 8px 24px rgba(64, 158, 255, 0.3);
+  transform: translateY(-4px);
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.03) 0%, rgba(59, 130, 246, 0.03) 100%);
+}
+
+.college-card.active::before {
+  transform: scaleX(1);
+}
+
+.college-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.college-icon {
+  font-size: 26px;
+  color: #409EFF;
+  transition: all 0.3s ease;
+}
+
+.college-card:hover .college-icon,
+.college-card.active .college-icon {
+  color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.college-name {
+  font-size: 15px;
   font-weight: 600;
+  color: #1f2937;
+  flex: 1;
+}
+
+.college-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.college-stats .stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.college-stats .label {
+  color: #6b7280;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.college-stats .label i {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.college-stats .value {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 16px;
+}
+
+.college-stats .value.highlight {
+  color: #409EFF;
+  font-size: 18px;
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-weight: 700;
 }
 
 /* 表格容器 */
 .table-container {
   background: white;
-  padding: 20px;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.table-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.table-title i {
+  color: #409EFF;
+  font-size: 22px;
+}
+
+.filter-tag {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-tag .el-tag {
+  font-size: 14px;
+  padding: 8px 16px;
+}
+
+.filter-tag .el-tag i {
+  margin-right: 6px;
+}
+
+.table-container >>> .el-table {
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table-container >>> .el-table th {
+  background: #f8fafc !important;
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 14px 0;
+}
+
+.table-container >>> .el-table td {
+  font-size: 14px;
+  padding: 12px 0;
+}
+
+.table-container >>> .el-table__row:hover {
+  background: #f9fafb !important;
 }
 
 .table-container >>> .pagination-container {
-  margin-top: 20px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
 }
 
 /* 排名样式 */
 .rank-first {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   color: white;
   border-radius: 50%;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
 }
 
 .rank-second {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #C0C0C0 0%, #A9A9A9 100%);
   color: white;
   border-radius: 50%;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
+  box-shadow: 0 4px 12px rgba(192, 192, 192, 0.4);
 }
 
 .rank-third {
-  display: inline-block;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #CD7F32 0%, #B87333 100%);
   color: white;
   border-radius: 50%;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
+  box-shadow: 0 4px 12px rgba(205, 127, 50, 0.4);
 }
 
 /* 分数样式 */
 .score-excellent {
-  color: #67C23A;
-  font-weight: 600;
+  color: #10b981;
+  font-weight: 700;
   font-size: 16px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 .score-good {
-  color: #409EFF;
-  font-weight: 600;
+  color: #3b82f6;
+  font-weight: 700;
   font-size: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 .score-medium {
-  color: #E6A23C;
-  font-weight: 600;
+  color: #f59e0b;
+  font-weight: 700;
   font-size: 16px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 .score-low {
-  color: #F56C6C;
-  font-weight: 600;
+  color: #ef4444;
+  font-weight: 700;
   font-size: 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
 }
 
 /* 详情弹窗 */
@@ -733,7 +1118,7 @@ export default {
   color: #2c3e50;
   margin: 0 0 16px 0;
   padding-bottom: 8px;
-  border-bottom: 2px solid #667eea;
+  border-bottom: 2px solid #409EFF;
 }
 
 .evaluation-list-section {
@@ -768,27 +1153,77 @@ export default {
   box-shadow: 0 2px 8px rgba(64, 158, 255, 0.2);
 }
 
-/* 响应式 */
-@media (max-width: 1400px) {
-  .statistics-overview {
-    grid-template-columns: repeat(3, 1fr);
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
   }
-}
-
-@media (max-width: 1000px) {
-  .statistics-overview {
-    grid-template-columns: repeat(2, 1fr);
+  
+  .action-section {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 
 @media (max-width: 768px) {
-  .statistics-overview {
-    grid-template-columns: 1fr;
+  .app-container {
+    padding: 12px 8px;
   }
 
-  .summary-header,
+  .page-header {
+    padding: 24px 20px;
+  }
+  
+  .page-title {
+    font-size: 22px;
+  }
+  
+  .page-title i {
+    font-size: 26px;
+  }
+  
+  .page-subtitle {
+    font-size: 13px;
+  }
+  
+  .action-section {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .table-container {
     padding: 16px;
+  }
+  
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .colleges-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  
+  .college-card {
+    padding: 14px 12px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+  }
+  
+  .section-hint {
+    font-size: 13px;
+    padding-left: 28px;
   }
 }
 </style>

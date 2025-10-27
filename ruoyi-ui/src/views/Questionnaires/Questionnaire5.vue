@@ -417,12 +417,18 @@ export default {
         return;
       }
       
+      // 根据账号奇偶性判断 quesType
+      // 账号是偶数：quesType=6（执行院长）
+      // 账号是奇数：quesType=5（执行副院长）
+      const userNumber = parseInt(this.userName);
+      const quesType = (userNumber % 2 === 0) ? 6 : 5;
+      
       // 准备提交数据到 evaluation_score 表
       const submitData = {
         userName: this.userName,
-        quesScore: this.totalScore, // 总得分（1-50分）
+        quesScore: this.totalScore * 2, // 总得分×2（满分100分）
         tutorId: this.selectedTutor.tutorId, // 使用选中的导师ID
-        quesType: 5, // 问卷类型：5表示问卷5（辅导员/执行院长版评价问卷）
+        quesType: quesType, // 问卷类型：5=执行副院长（奇数账号），6=执行院长（偶数账号）
         signature: this.signature // 签名数据（图片URL或base64）
       };
       
