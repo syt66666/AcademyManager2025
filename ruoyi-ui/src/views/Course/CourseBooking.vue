@@ -451,13 +451,13 @@ export default {
           { required: true, message: "课程总容量不能为空", trigger: "blur", type: "number" }
         ],
         courseCapacity: [
-          { required: true, message: "剩余容量不能为空", trigger: "blur", type: "number" },
+          { required: true, message: "已选人数不能为空", trigger: "blur", type: "number" },
           {
             validator: (rule, value, callback) => {
               if (this.form.courseTotalCapacity !== null && value > this.form.courseTotalCapacity) {
-                callback(new Error("剩余容量不能大于总容量"));
+                callback(new Error("已选人数不能大于总容量"));
               } else if (value < 0) {
-                callback(new Error("剩余容量不能为负数"));
+                callback(new Error("已选人数不能为负数"));
               } else {
                 callback();
               }
@@ -720,10 +720,10 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
       const typeMap = {
-        '1': '人格塑造与价值引领课程类',
-        '2': '知识融合与思维进阶课程类',
-        '3': '能力锻造与实践创新课程类',
-        '4': '社会责任与领军意识课程类'
+        1: '人格塑造与价值引领课程类',
+        2: '知识融合与思维进阶课程类',
+        3: '能力锻造与实践创新课程类',
+        4: '社会责任与领军意识课程类'
       };
       return typeMap[courseType] || courseType;
     },
@@ -731,10 +731,10 @@ export default {
     // 获取课程类型标签颜色
     getCourseTypeTagType(courseType) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领课程类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶课程类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新课程类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识课程类 - 红色
+        1: 'primary',   // 人格塑造与价值引领课程类 - 蓝色
+        2: 'success',   // 知识融合与思维进阶课程类 - 绿色
+        3: 'warning',   // 能力锻造与实践创新课程类 - 橙色
+        4: 'danger',    // 社会责任与领军意识课程类 - 红色
         '其他': ''        // 默认蓝色
       }
       return map[courseType] || 'info';

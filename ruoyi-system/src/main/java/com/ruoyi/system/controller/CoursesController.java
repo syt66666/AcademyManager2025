@@ -16,6 +16,7 @@ import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.system.domain.Courses;
 import com.ruoyi.system.service.ICoursesService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
@@ -135,8 +136,11 @@ public class CoursesController extends BaseController
             if (result > 0) {
                 return AjaxResult.success("选课成功");
             } else {
-                return AjaxResult.error("选课失败，可能容量已满或已选课过");
+                return AjaxResult.error("选课失败，请稍后重试");
             }
+        } catch (ServiceException e) {
+            // ServiceException 包含具体的业务错误信息
+            return AjaxResult.error(e.getMessage());
         } catch (Exception e) {
             return AjaxResult.error("选课失败: " + e.getMessage());
         }

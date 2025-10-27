@@ -25,8 +25,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectNotificationsList" parameterType="Notifications" resultMap="NotificationsResult">
         <include refid="selectNotificationsVo"/>
         <where>  
-            <if test="notiTitle != null  and notiTitle != ''"> and noti_title = #{notiTitle}</if>
-            <if test="notiContent != null  and notiContent != ''"> and noti_content = #{notiContent}</if>
+            <if test="notiTitle != null  and notiTitle != ''"> and (noti_title LIKE CONCAT('%', #{notiTitle}, '%') OR noti_content LIKE CONCAT('%', #{notiTitle}, '%'))</if>
+            <if test="notiContent != null  and notiContent != ''"> and noti_content LIKE CONCAT('%', #{notiContent}, '%')</if>
             <if test="notiType != null  and notiType != ''"> and noti_type = #{notiType}</if>
             <if test="searchFile != null and searchFile != ''">
                 and JSON_CONTAINS(file_attachments, JSON_QUOTE(#{searchFile}))

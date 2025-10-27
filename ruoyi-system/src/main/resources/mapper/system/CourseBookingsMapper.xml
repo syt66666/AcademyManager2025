@@ -416,7 +416,7 @@
 
     <!-- 原子性选课操作 - 解决并发问题 -->
     <insert id="signUpWithTransaction" parameterType="map">
-        INSERT INTO course_bookings (course_id, student_id, booking_time, status)
+        INSERT INTO course_bookings (course_id, student_id, book_at, status)
         SELECT #{courseId}, #{studentId}, NOW(), '未提交'
         WHERE NOT EXISTS (
             SELECT 1 FROM course_bookings
@@ -427,19 +427,19 @@
             SELECT 1 FROM courses
             WHERE course_id = #{courseId}
             AND version = #{version}
-            AND course_capacity > 0
+            AND course_capacity &lt; course_total_capacity
         )
     </insert>
 
     <!-- 原子性更新课程容量 -->
     <update id="updateCapacityAfterSignUp" parameterType="map">
         UPDATE courses
-        SET course_capacity = GREATEST(0, course_total_capacity - (
+        SET course_capacity = (
             SELECT COUNT(*)
             FROM course_bookings
             WHERE course_id = #{courseId}
             AND status IN ('approved', 'submitted', '未提交')
-        )),
+        ),
         version = version + 1
         WHERE course_id = #{courseId}
         AND version = #{version}
@@ -460,12 +460,12 @@
     <!-- 原子性更新课程容量（取消选课后） -->
     <update id="updateCapacityAfterCancelSignUp" parameterType="map">
         UPDATE courses
-        SET course_capacity = GREATEST(0, course_total_capacity - (
+        SET course_capacity = (
             SELECT COUNT(*)
             FROM course_bookings
             WHERE course_id = #{courseId}
             AND status IN ('approved', 'submitted', '未提交')
-        )),
+        ),
         version = version + 1
         WHERE course_id = #{courseId}
         AND version = #{version}

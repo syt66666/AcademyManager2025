@@ -139,22 +139,24 @@
         </foreach>
     </delete>
 
+    <!-- course_capacity 现在表示已选人数，选课时增加 -->
     <update id="decreaseCapacity">
-        UPDATE courses 
-        SET course_capacity = GREATEST(0, course_capacity - 1),
-            version = version + 1
-        WHERE course_id = #{courseId} 
-          AND version = #{version}
-          AND course_capacity &gt; 0
-    </update>
-
-    <update id="increaseCapacity">
         UPDATE courses 
         SET course_capacity = LEAST(course_total_capacity, course_capacity + 1),
             version = version + 1
         WHERE course_id = #{courseId} 
           AND version = #{version}
           AND course_capacity &lt; course_total_capacity
+    </update>
+
+    <!-- course_capacity 现在表示已选人数，退课时减少 -->
+    <update id="increaseCapacity">
+        UPDATE courses 
+        SET course_capacity = GREATEST(0, course_capacity - 1),
+            version = version + 1
+        WHERE course_id = #{courseId} 
+          AND version = #{version}
+          AND course_capacity &gt; 0
     </update>
 
     <!-- 更新为选课中状态 -->

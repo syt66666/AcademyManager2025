@@ -727,9 +727,9 @@ export default {
         const { value: scoreValue } = await this.$prompt('请输入学生成绩', '审核通过 - 成绩录入', {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
-          inputPattern: /^[0-9]+(\.[0-9]+)?$|^[A-F]$/,
-          inputErrorMessage: '请输入有效的成绩（数字或A-F等级）',
-          inputPlaceholder: '请输入成绩（如：85 或 A）'
+          inputPattern: /^(100(\.0)?|[0-9]?\d(\.\d+)?)$|^(通过|不通过)$/,
+          inputErrorMessage: '请输入0-100的数字成绩，或输入"通过"、"不通过"',
+          inputPlaceholder: '请输入成绩（如：85 或 通过）'
         });
 
         await this.$confirm('确认通过该课程的审核并录入成绩吗？', '审核确认', {
@@ -899,20 +899,20 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
       const typeMap = {
-        '1': '人格塑造与价值引领课程类',
-        '2': '知识融合与思维进阶课程类',
-        '3': '能力锻造与实践创新课程类',
-        '4': '社会责任与领军意识课程类'
+        1: '人格塑造与价值引领课程类',
+        2: '知识融合与思维进阶课程类',
+        3: '能力锻造与实践创新课程类',
+        4: '社会责任与领军意识课程类'
       };
       return typeMap[courseType] || courseType;
     },
 
     getCourseTypeTagType(courseType) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领课程类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶课程类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新课程类 - 橙色
-        '4': 'info'       // 社会责任与领军意识课程类 - 灰色
+        1: 'primary',   // 人格塑造与价值引领课程类 - 蓝色
+        2: 'success',   // 知识融合与思维进阶课程类 - 绿色
+        3: 'warning',   // 能力锻造与实践创新课程类 - 橙色
+        4: 'info'       // 社会责任与领军意识课程类 - 灰色
       };
       return map[courseType] || 'info';
     },

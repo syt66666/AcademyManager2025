@@ -174,12 +174,31 @@ public class CoursesServiceImpl implements ICoursesService
     @Transactional(rollbackFor = Exception.class)
     public int signUpWithTransaction(Long courseId, String studentId, Integer version) {
         try {
+            // 先检查是否已经选过课
+            int existingBookings = courseBookingsMapper.checkCourseBookingExists(courseId, studentId);
+            if (existingBookings > 0) {
+                throw new ServiceException("您已经选过这门课程了");
+            }
+            
+            // 检查课程容量
+            Courses course = coursesMapper.selectCoursesByCourseId(courseId);
+            if (course == null) {
+                throw new ServiceException("课程不存在");
+            }
+            if (course.getCourseTotalCapacity() == null || course.getCourseCapacity() == null) {
+                throw new ServiceException("课程容量信息异常");
+            }
+            // course_capacity 现在是已选人数，course_total_capacity 是总容量
+            if (course.getCourseCapacity() >= course.getCourseTotalCapacity()) {
+                throw new ServiceException("课程容量已满，无法选课");
+            }
+            
             // 1. 原子性插入选课记录（包含重复检查和容量检查）
             int insertResult = courseBookingsMapper.signUpWithTransaction(courseId, studentId, version);
             
             if (insertResult <= 0) {
-                // 插入失败，可能是重复选课或容量不足
-                return 0;
+                // 插入失败，可能是并发导致的容量不足
+                throw new ServiceException("选课失败，课程可能已满员");
             }
             
             // 2. 原子性更新课程容量
@@ -187,10 +206,13 @@ public class CoursesServiceImpl implements ICoursesService
             
             if (updateResult <= 0) {
                 // 容量更新失败，抛出异常触发回滚
-                throw new ServiceException("课程容量更新失败");
+                throw new ServiceException("课程容量更新失败，请重试");
             }
             
             return 1; // 成功
+        } catch (ServiceException e) {
+            // 直接抛出业务异常，保留原始错误信息
+            throw e;
         } catch (Exception e) {
             System.err.println("事务性选课失败: " + e.getMessage());
             throw new ServiceException("选课失败: " + e.getMessage());

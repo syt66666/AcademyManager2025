@@ -562,10 +562,10 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(courseType) {
       const typeMap = {
-        '1': '人格塑造与价值引领课程类',
-        '2': '知识融合与思维进阶课程类',
-        '3': '能力锻造与实践创新课程类',
-        '4': '社会责任与领军意识课程类'
+        1: '人格塑造与价值引领课程类',
+        2: '知识融合与思维进阶课程类',
+        3: '能力锻造与实践创新课程类',
+        4: '社会责任与领军意识课程类'
       };
       return typeMap[courseType] || courseType;
     },
@@ -580,10 +580,10 @@ export default {
 
     getCourseTypeTagType(courseType) {
       const map = {
-        '1': 'primary',   // 必修课程 - 蓝色
-        '2': 'success',   // 选修课程 - 绿色
-        '3': 'warning',   // 实践课程 - 橙色
-        '4': 'danger',    // 其他课程 - 红色
+        1: 'primary',   // 必修课程 - 蓝色
+        2: 'success',   // 选修课程 - 绿色
+        3: 'warning',   // 实践课程 - 橙色
+        4: 'danger',    // 其他课程 - 红色
         '其他': ''        // 默认蓝色
       }
       return map[courseType] || 'info';

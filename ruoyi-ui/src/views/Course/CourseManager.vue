@@ -18,16 +18,7 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="课程状态" prop="status">
-            <el-select v-model="queryParams.status" clearable placeholder="请选择课程状态" class="search-input" @change="handleQuery">
-              <el-option
-                v-for="status in courseStatusOptions"
-                :key="status.value"
-                :label="status.label"
-                :value="status.value"
-              />
-            </el-select>
-          </el-form-item>
+
           <el-form-item label="课程种类" prop="courseType">
             <el-select
               v-model="queryParams.courseType"
@@ -45,7 +36,22 @@
               </el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="课程类型" prop="courseCategory">
+          <el-form-item label="课程状态" prop="status">
+            <el-select
+              v-model="queryParams.status"
+              clearable
+              placeholder="请选择课程状态"
+              class="search-input"
+              @change="handleQuery">
+              <el-option
+                v-for="status in courseStatusOptions"
+                :key="status.value"
+                :label="status.label"
+                :value="status.value"
+              />
+            </el-select>
+          </el-form-item>
+          <!-- <el-form-item label="课程类型" prop="courseCategory">
             <el-select v-model="queryParams.courseCategory" clearable placeholder="请选择课程类型" class="search-input" @change="handleQuery">
               <el-option
                 v-for="category in courseCategoryOptions"
@@ -54,7 +60,7 @@
                 :value="category.value"
               />
             </el-select>
-          </el-form-item>
+          </el-form-item> -->
           <el-form-item class="search-actions">
             <el-button-group class="action-buttons">
               <el-button
@@ -140,19 +146,19 @@
             <span class="credit-text">{{ (scope.row.courseCredit || 0).toFixed(1) }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="课程类型" align="center" prop="courseCategory" width="100">
+        <el-table-column label="课程类型" align="center" prop="courseCategory" width="80">
           <template slot-scope="scope">
             <el-tag :type="getCourseCategoryTagType(scope.row.courseCategory)" effect="plain" class="category-tag">
               {{ getCourseCategoryName(scope.row.courseCategory) || '未设置' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="课程地点" align="center" prop="courseLocation" width="150">
+        <el-table-column label="课程地点" align="center" prop="courseLocation" width="100">
           <template slot-scope="scope">
             <span class="location-text">{{ scope.row.courseLocation || '未设置' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="时间安排" align="center" min-width="320">
+        <el-table-column label="时间安排" align="center" min-width="300">
           <template slot-scope="scope">
             <div class="time-schedule-inline">
               <!-- 选课时间 -->
@@ -355,7 +361,6 @@
                       controls-position="right"
                       class="form-number">
                     </el-input-number>
-                    <span class="unit-text">学分</span>
                   </div>
                 </el-form-item>
 
@@ -374,7 +379,6 @@
                       class="form-number"
                       @change="handleCapacityChange">
                     </el-input-number>
-                    <span class="unit-text">人</span>
                   </div>
                 </el-form-item>
               </div>
@@ -388,79 +392,61 @@
               <span>时间安排</span>
             </div>
             <div class="section-content">
-              <div class="time-grid">
-                <el-form-item prop="courseStart" class="time-item">
-                  <template slot="label">
-                      <span class="required-label">
-                        <span class="required-asterisk">*</span>选课开始
-                      </span>
-                  </template>
-                  <el-date-picker
-                    v-model="form.courseStart"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择选课开始时间"
-                    class="form-datetime"
-                    style="width: 100%"
-                    @change="validateTimeOrder">
-                  </el-date-picker>
-                </el-form-item>
+              <el-form-item prop="courseStart">
+                <template slot="label">
+                  <span class="required-label">选课开始</span>
+                </template>
+                <el-date-picker
+                  v-model="form.courseStart"
+                  type="datetime"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  placeholder="选择选课开始时间"
+                  prefix-icon="el-icon-time"
+                  class="form-datetime">
+                </el-date-picker>
+              </el-form-item>
 
-                <el-form-item prop="courseDeadline" class="time-item">
-                  <template slot="label">
-                      <span class="required-label">
-                        <span class="required-asterisk">*</span>选课截止
-                      </span>
-                  </template>
-                  <el-date-picker
-                    v-model="form.courseDeadline"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择选课截止时间"
-                    class="form-datetime"
-                    style="width: 100%"
-                    @change="validateTimeOrder">
-                  </el-date-picker>
-                </el-form-item>
+              <el-form-item prop="courseDeadline">
+                <template slot="label">
+                  <span class="required-label">选课截止</span>
+                </template>
+                <el-date-picker
+                  v-model="form.courseDeadline"
+                  type="datetime"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  placeholder="选择选课截止时间"
+                  prefix-icon="el-icon-time"
+                  class="form-datetime">
+                </el-date-picker>
+              </el-form-item>
 
-                <el-form-item prop="startTime" class="time-item">
-                  <template slot="label">
-                      <span class="required-label">
-                        课程开始
-                      </span>
-                  </template>
-                  <el-date-picker
-                    v-model="form.startTime"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择课程开始时间"
-                    class="form-datetime"
-                    style="width: 100%"
-                    @change="validateTimeOrder">
-                  </el-date-picker>
-                </el-form-item>
+              <el-form-item prop="startTime">
+                <template slot="label">
+                  <span class="required-label">课程开始</span>
+                </template>
+                <el-date-picker
+                  v-model="form.startTime"
+                  type="datetime"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  placeholder="选择课程开始时间"
+                  prefix-icon="el-icon-time"
+                  class="form-datetime">
+                </el-date-picker>
+              </el-form-item>
 
-                <el-form-item prop="endTime" class="time-item">
-                  <template slot="label">
-                      <span class="required-label">
-                        课程结束
-                      </span>
-                  </template>
-                  <el-date-picker
-                    v-model="form.endTime"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择课程结束时间"
-                    class="form-datetime"
-                    style="width: 100%"
-                    @change="validateTimeOrder">
-                  </el-date-picker>
-                </el-form-item>
-              </div>
-              <!-- 时间验证提示 -->
-              <div class="time-validation-hint">
-                需要选课开始 &lt; 选课结束 &lt; 课程开始 &lt; 课程结束的规则限制
-              </div>
+              <el-form-item prop="endTime">
+                <template slot="label">
+                  <span class="required-label">课程结束</span>
+                </template>
+                <el-date-picker
+                  v-model="form.endTime"
+                  type="datetime"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  placeholder="选择课程结束时间"
+                  prefix-icon="el-icon-time"
+                  class="form-datetime">
+                </el-date-picker>
+              </el-form-item>
             </div>
           </div>
 
@@ -478,7 +464,7 @@
                   :rows="4"
                   placeholder="请输入课程描述"
                   class="form-textarea"
-                  maxlength="100"
+                  maxlength="200"
                   show-word-limit
                 />
               </el-form-item>
@@ -752,10 +738,10 @@ export default {
       ],
       // 课程类型选项
       courseTypeOptions: [
-        { value: '1', label: '人格塑造与价值引领课程类' },
-        { value: '2', label: '知识融合与思维进阶课程类' },
-        { value: '3', label: '能力锻造与实践创新课程类' },
-        { value: '4', label: '社会责任与领军意识课程类' }
+        { value: 1, label: '人格塑造与价值引领课程类' },
+        { value: 2, label: '知识融合与思维进阶课程类' },
+        { value: 3, label: '能力锻造与实践创新课程类' },
+        { value: 4, label: '社会责任与领军意识课程类' }
       ],
       // 课程种类选项
       courseCategoryOptions: [
@@ -788,11 +774,16 @@ export default {
       // 表单校验
       rules: {
         courseName: [
-          { required: true, message: "课程名称不能为空", trigger: "blur" },
-          { validator: this.validateCourseUniqueness, trigger: "blur" }
+          { required: true, message: "课程名称不能为空", trigger: "blur" }
         ],
         courseLocation: [
           { required: true, message: "课程地点不能为空", trigger: "blur" }
+        ],
+        courseStart: [
+          { required: true, message: "选课开始时间不能为空", trigger: "blur" }
+        ],
+        courseDeadline: [
+          { required: true, message: "选课截止时间不能为空", trigger: "blur" }
         ],
         startTime: [
           { required: true, message: "课程开始时间不能为空", trigger: "blur" }
@@ -809,8 +800,8 @@ export default {
         courseDescription: [
           {
             validator: (rule, value, callback) => {
-              if (value && value.length > 100) {
-                callback(new Error("课程描述不能超过100字"));
+              if (value && value.length > 200) {
+                callback(new Error("课程描述不能超过200字"));
               } else {
                 callback();
               }
@@ -835,9 +826,11 @@ export default {
   async created() {
     // 获取服务器时间
     await this.getServerTime();
-    this.getCurrentUserAcademy();
+    // 获取当前用户所属书院（必须等待完成，确保organizer被设置）
+    await this.getCurrentUserAcademy();
     // 测试状态计算逻辑
     this.testStatusComputation();
+    // 在获取书院信息后再查询课程列表，确保只显示当前书院的课程
     this.getList().then(() => {
       // 数据加载完成后再检查路由参数
       this.checkRouteParams();
@@ -877,28 +870,25 @@ export default {
     },
 
     // 获取当前用户所属书院
-    getCurrentUserAcademy() {
-      getNickName()
-        .then(response => {
-          if (response && response.msg) {
-            this.currentUserAcademy = response.msg;
-            // 设置查询参数中的organizer字段
-            this.queryParams.organizer = this.currentUserAcademy;
-            // 强制刷新课程列表
-            this.$nextTick(() => {
-              this.getList();
-            });
-          } else {
-            console.error('获取用户书院信息失败:', response);
-            this.currentUserAcademy = '';
-            this.getList();
-          }
-        })
-        .catch(error => {
-          console.error('获取用户书院信息异常:', error);
+    async getCurrentUserAcademy() {
+      try {
+        const response = await getNickName();
+        if (response && response.msg) {
+          this.currentUserAcademy = response.msg;
+          // 设置查询参数中的organizer字段，只显示当前书院的课程
+          this.queryParams.organizer = this.currentUserAcademy;
+          console.log('当前用户书院:', this.currentUserAcademy);
+          console.log('已设置课程过滤条件 - organizer:', this.queryParams.organizer);
+        } else {
+          console.error('获取用户书院信息失败:', response);
           this.currentUserAcademy = '';
-          this.getList();
-        });
+          this.queryParams.organizer = '';
+        }
+      } catch (error) {
+        console.error('获取用户书院信息异常:', error);
+        this.currentUserAcademy = '';
+        this.queryParams.organizer = '';
+      }
     },
     // 测试状态计算逻辑
     testStatusComputation() {
@@ -1285,11 +1275,16 @@ export default {
     /** 查询书院选课列表 */
     getList() {
       this.loading = true;
+      // 确保organizer过滤条件始终存在（只显示当前书院的课程）
+      if (this.currentUserAcademy && !this.queryParams.organizer) {
+        this.queryParams.organizer = this.currentUserAcademy;
+      }
+      console.log('查询课程列表，过滤条件:', this.queryParams);
       return listCourses(this.queryParams).then(response => {
         const rows = response.rows || [];
         // 若后端未按状态过滤，则在前端按需过滤
         const selectedStatus = (this.queryParams.status || '').trim();
-        const selectedType = (this.queryParams.courseType || '').trim();
+        const selectedType = this.queryParams.courseType; // courseType 是数字类型，不需要 trim()
         const selectedCategory = (this.queryParams.courseCategory || '').trim();
 
         const withStatus = rows.map(item => {
@@ -1303,8 +1298,8 @@ export default {
         // 按状态过滤
         let filteredList = selectedStatus ? withStatus.filter(r => r.status === selectedStatus) : withStatus;
 
-        // 按课程类型过滤
-        if (selectedType) {
+        // 按课程类型过滤（courseType 是数字类型）
+        if (selectedType != null && selectedType !== '') {
           filteredList = filteredList.filter(r => r.courseType === selectedType);
         }
 
@@ -1455,10 +1450,10 @@ export default {
     // 课程类型映射函数：将数字转换为对应的类型名称
     getCourseTypeName(coursetype) {
       const typeMap = {
-        '1': '人格塑造与价值引领课程类',
-        '2': '知识融合与思维进阶课程类',
-        '3': '能力锻造与实践创新课程类',
-        '4': '社会责任与领军意识课程类'
+        1: '人格塑造与价值引领课程类',
+        2: '知识融合与思维进阶课程类',
+        3: '能力锻造与实践创新课程类',
+        4: '社会责任与领军意识课程类'
       };
       return typeMap[coursetype] || coursetype;
     },
@@ -1480,10 +1475,10 @@ export default {
 
     getCourseTypeTagType(coursetype) {
       const map = {
-        '1': 'primary',   // 人格塑造与价值引领课程类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶课程类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新课程类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识课程类 - 红色
+        1: 'primary',   // 人格塑造与价值引领课程类 - 蓝色
+        2: 'success',   // 知识融合与思维进阶课程类 - 绿色
+        3: 'warning',   // 能力锻造与实践创新课程类 - 橙色
+        4: 'danger',    // 社会责任与领军意识课程类 - 红色
         '其他': ''        // 默认蓝色
       }
       return map[coursetype] || 'info';
@@ -1567,7 +1562,7 @@ export default {
     handleAdd() {
       this.reset();
       this.open = true;
-      this.title = "添加书院选课";
+      this.title = "添加书院课程";
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
@@ -1588,7 +1583,7 @@ export default {
           this.form.courseCapacity = 0;
         }
         this.open = true;
-        this.title = "修改书院选课";
+        this.title = "修改书院课程";
       });
     },
     /** 提交按钮 */
@@ -1765,6 +1760,22 @@ export default {
   font-size: 18px;
   font-weight: 600;
   color: #303133;
+}
+
+.card-header .academy-tag {
+  margin-left: 16px;
+  padding: 6px 12px;
+  font-weight: 500;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 1px solid #90caf9;
+  color: #1976d2;
+}
+
+.card-header .academy-tag i {
+  margin-right: 6px;
+  font-size: 14px;
+  color: #1976d2;
 }
 
 .record-count {
@@ -2407,6 +2418,22 @@ export default {
   font-size: 18px;
   font-weight: 600;
   color: #303133;
+}
+
+.card-header .academy-tag {
+  margin-left: 16px;
+  padding: 6px 12px;
+  font-weight: 500;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  border: 1px solid #90caf9;
+  color: #1976d2;
+}
+
+.card-header .academy-tag i {
+  margin-right: 6px;
+  font-size: 14px;
+  color: #1976d2;
 }
 
 .record-count {
@@ -3231,60 +3258,6 @@ export default {
   }
 }
 
-/* 对话框主体 */
-.dialog-body {
-  padding: 32px;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* 课程表单 */
-.course-form {
-  .form-section {
-    background: white;
-    border-radius: 12px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e4e7ed;
-    overflow: hidden;
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      padding: 16px 20px;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-bottom: 1px solid #e4e7ed;
-
-      i {
-        font-size: 16px;
-        color: #409EFF;
-        margin-right: 8px;
-      }
-
-      span {
-        font-size: 16px;
-        font-weight: 600;
-        color: #303133;
-      }
-    }
-
-    .section-content {
-      padding: 24px;
-    }
-  }
-}
-
-/* 时间网格布局 */
-.time-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-
-  .time-item {
-    margin-bottom: 0;
-  }
-}
-
 /* 表单输入框样式 */
 .form-input {
   .el-input__inner {
@@ -3313,8 +3286,6 @@ export default {
 }
 
 .form-datetime {
-  width: 100%;
-
   .el-input__inner {
     border-radius: 8px;
     border: 1px solid #dcdfe6;
@@ -3484,11 +3455,6 @@ export default {
     padding: 20px;
   }
 
-  .time-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
   .dialog-footer {
     flex-direction: column;
     gap: 16px;
@@ -3583,19 +3549,6 @@ export default {
 
 .required-validation-error .el-message__closeBtn:hover {
   color: #ffebee !important;
-}
-
-/* 时间验证提示样式 */
-.time-validation-hint {
-  margin-top: 12px;
-  padding: 8px 12px;
-  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-  border: 1px solid #b3e5fc;
-  border-radius: 6px;
-  color: #0277bd;
-  font-size: 13px;
-  font-weight: 500;
-  text-align: center;
 }
 
 /* 字段错误样式 */
@@ -3897,12 +3850,12 @@ export default {
   flex-direction: column;
   gap: 6px;
   padding: 4px 0;
-}
 
-.time-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  .time-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 }
 
 .time-icon {
@@ -4102,87 +4055,6 @@ export default {
         white-space: nowrap;
         flex-shrink: 0;
       }
-
-      .time-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-
-        .time-item {
-          margin-bottom: 0;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-
-          .el-form-item__content {
-            flex: 1;
-            margin-left: 0;
-            min-width: 0;
-          }
-
-          .el-form-item__label {
-            font-size: 12px;
-            line-height: 1.2;
-            white-space: nowrap;
-            flex-shrink: 0;
-            width: auto;
-            min-width: 60px;
-            max-width: 70px;
-            margin-right: 0;
-            padding-right: 0;
-            text-align: left;
-          }
-
-          .el-date-editor {
-            width: 100% !important;
-            min-width: 0;
-            background: white;
-            border: 1px solid #dcdfe6;
-            border-radius: 4px;
-
-            .el-input__inner {
-              font-size: 11px;
-              padding: 6px 10px;
-              height: 32px;
-              line-height: 1.2;
-              white-space: nowrap;
-              overflow: visible;
-              text-overflow: unset;
-              background: white;
-              border: none;
-              border-radius: 4px;
-              color: #606266;
-            }
-
-            .el-input__prefix {
-              left: 8px;
-
-              .el-input__icon {
-                font-size: 11px;
-                color: #c0c4cc;
-              }
-            }
-
-            .el-input__suffix {
-              right: 8px;
-
-              .el-input__icon {
-                font-size: 11px;
-                color: #c0c4cc;
-              }
-            }
-
-            &:hover {
-              border-color: #c0c4cc;
-            }
-
-            &:focus-within {
-              border-color: #409EFF;
-              box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-            }
-          }
-        }
-      }
     }
   }
 }
@@ -4260,71 +4132,6 @@ export default {
 
   .dialog-body {
     padding: 20px;
-  }
-
-  .course-form .form-section .section-content .time-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-
-    .time-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      .el-form-item__label {
-        font-size: 11px;
-        white-space: nowrap;
-        flex-shrink: 0;
-        width: auto;
-        min-width: 60px;
-        max-width: 70px;
-        text-align: left;
-      }
-
-      .el-form-item__content {
-        flex: 1;
-        margin-left: 0;
-        min-width: 0;
-      }
-
-      .el-date-editor {
-        width: 100% !important;
-        min-width: 0;
-        background: white;
-        border: 1px solid #dcdfe6;
-        border-radius: 4px;
-
-        .el-input__inner {
-          font-size: 10px;
-          height: 28px;
-          padding: 5px 8px;
-          white-space: nowrap;
-          overflow: visible;
-          text-overflow: unset;
-          background: white;
-          border: none;
-          border-radius: 4px;
-          color: #606266;
-        }
-
-        .el-input__prefix .el-input__icon {
-          color: #c0c4cc;
-        }
-
-        .el-input__suffix .el-input__icon {
-          color: #c0c4cc;
-        }
-
-        &:hover {
-          border-color: #c0c4cc;
-        }
-
-        &:focus-within {
-          border-color: #409EFF;
-          box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
-        }
-      }
-    }
   }
 
   .course-form .form-section .section-content .form-row {
