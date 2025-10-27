@@ -128,7 +128,7 @@ export function getAuditCount(organizer) {
   return request({
     url: '/system/courseBookings/auditCount',
     method: 'get',
-    params: organizer ? { organizer } : {}
+    params: { organizer }
   })
 }
 

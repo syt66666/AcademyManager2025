@@ -48,12 +48,10 @@
       <!-- 问卷标题 -->
       <div class="questionnaire-header">
         <h1 class="questionnaire-title">大工书院育人导师工作评价问卷</h1>
-        <p class="questionnaire-subtitle">（辅导员/执行院长版）</p>
         <!-- 被评价导师信息 -->
         <div class="evaluated-tutor-info">
           <span class="evaluated-label">正在评价：</span>
           <span class="evaluated-name">{{ selectedTutor.tutorName }}</span>
-          <span class="evaluated-title" v-if="selectedTutor.tutorTitle">（{{ selectedTutor.tutorTitle }}）</span>
         </div>
       </div>
 

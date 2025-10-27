@@ -257,15 +257,17 @@
 
     <select id="countCourseBookingAuditStatus" parameterType="String" resultType="Map">
         SELECT 
-            COUNT(CASE WHEN cb.status IN ('未考核', '未审核') THEN 1 END) as pending,
-            COUNT(CASE WHEN cb.status = '已通过' THEN 1 END) as approved,
-            COUNT(CASE WHEN cb.status = '未通过' THEN 1 END) as rejected,
+            COUNT(CASE WHEN status IN ('未考核', '未审核') THEN 1 END) as pending,
+            COUNT(CASE WHEN status = '已通过' THEN 1 END) as approved,
+            COUNT(CASE WHEN status = '未通过' THEN 1 END) as rejected,
             COUNT(*) as total
-        FROM course_bookings cb
-        LEFT JOIN courses c ON cb.course_id = c.course_id
+        FROM course_bookings
         <where>
+            status IN ('未考核', '未审核', '已通过', '未通过')
             <if test="organizer != null and organizer != ''">
-                AND c.organizer = #{organizer}
+                AND course_id IN (
+                    SELECT course_id FROM courses WHERE organizer = #{organizer}
+                )
             </if>
         </where>
     </select>

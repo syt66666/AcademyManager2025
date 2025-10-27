@@ -89,11 +89,11 @@ export function deleteBookingsByActivityAndStudent(activityId, studentId) {
   })
 }
 //查询不同审核状态数量
-export function getAuditCount(query) {
+export function getAuditCount(organizer) {
   return request({
     url: '/system/bookings/auditCount',
     method: 'get',
-    params: query
+    params: { organizer }
   })
 }
 /**

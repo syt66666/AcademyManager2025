@@ -486,7 +486,8 @@ export default {
       // 服务器时间
       serverTime: null,
       total: 0,
-      activitiesList: [],
+      activitiesList: [], // 活动列表（仅当月）
+      allActivitiesList: [], // 所有活动（用于日历视图）
       // 详情弹窗相关
       detailDialogVisible: false,
       selectedActivity: null,
@@ -648,18 +649,26 @@ export default {
             console.error('=== API未返回活动数据 ===');
             console.error('查找的活动ID:', activityId);
 
-            // 如果API方式失败，尝试在当前活动列表中查找
-            console.log('尝试在当前活动列表中查找...');
-            if (this.activitiesList.length === 0) {
+            // 如果API方式失败，尝试在所有活动列表中查找
+            console.log('尝试在所有活动列表中查找...');
+            if (this.allActivitiesList.length === 0) {
               await this.getList();
             }
 
-            let targetActivity = this.activitiesList.find(activity =>
+            // 先在所有活动列表中查找
+            let targetActivity = this.allActivitiesList.find(activity =>
               activity.activityId == activityId
             );
 
+            // 如果在所有活动列表中也没找到，再在当月活动列表中查找
+            if (!targetActivity) {
+              targetActivity = this.activitiesList.find(activity =>
+                activity.activityId == activityId
+              );
+            }
+
             if (targetActivity) {
-              console.log('在当前列表中找到活动:', targetActivity.activityName);
+              console.log('在列表中找到活动:', targetActivity.activityName);
               await new Promise(resolve => setTimeout(resolve, 1000));
               this.handleDetail(targetActivity);
             } else {
@@ -781,7 +790,10 @@ export default {
       };
 
       listActivities(allParams).then(response => {
-        // 过滤出本月的活动
+        // 保存所有活动（用于日历视图）
+        this.allActivitiesList = response.rows || [];
+
+        // 过滤出本月的活动（用于列表视图）
         let filteredActivities = this.filterActivitiesByMonth(response.rows);
 
         // 如果选择了"只显示可报名活动"，进一步过滤
@@ -796,7 +808,7 @@ export default {
         this.total = filteredActivities.length;
 
         this.loading = false;
-        // 获取活动列表后检查报名状态
+        // 获取活动列表后检查报名状态（包括所有活动）
         this.checkBookingStatus();
       });
     },
@@ -855,19 +867,33 @@ export default {
 
     // 检查报名状态
     async checkBookingStatus() {
-      if (!this.activitiesList || this.activitiesList.length === 0) return;
+      // 检查列表视图的活动
+      if (this.activitiesList && this.activitiesList.length > 0) {
+        const listPromises = this.activitiesList.map(activity =>
+          checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
+            // 使用 Vue.set 确保响应式更新
+            this.$set(activity, 'isBooked', res.data.isBooked);
+          }).catch(error => {
+            console.error(`检查活动 ${activity.activityId} 报名状态失败:`, error);
+            this.$set(activity, 'isBooked', false);
+          })
+        );
+        await Promise.all(listPromises);
+      }
 
-      const checkPromises = this.activitiesList.map(activity =>
-        checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
-          // 使用 Vue.set 确保响应式更新
-          this.$set(activity, 'isBooked', res.data.isBooked);
-        }).catch(error => {
-          console.error(`检查活动 ${activity.activityId} 报名状态失败:`, error);
-          this.$set(activity, 'isBooked', false);
-        })
-      );
-
-      await Promise.all(checkPromises);
+      // 检查日历视图的所有活动
+      if (this.allActivitiesList && this.allActivitiesList.length > 0) {
+        const allPromises = this.allActivitiesList.map(activity =>
+          checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
+            // 使用 Vue.set 确保响应式更新
+            this.$set(activity, 'isBooked', res.data.isBooked);
+          }).catch(error => {
+            console.error(`检查活动 ${activity.activityId} 报名状态失败:`, error);
+            this.$set(activity, 'isBooked', false);
+          })
+        );
+        await Promise.all(allPromises);
+      }
     },
 
     // 根据数据库中的实际报名记录更新所有活动状态
@@ -878,8 +904,14 @@ export default {
         if (response.code === 200) {
           const bookedActivityIds = response.data || [];
 
-          // 更新所有活动的报名状态
+          // 更新列表视图的活动报名状态
           this.activitiesList.forEach(activity => {
+            const isBooked = bookedActivityIds.includes(activity.activityId);
+            this.$set(activity, 'isBooked', isBooked);
+          });
+
+          // 更新日历视图的所有活动报名状态
+          this.allActivitiesList.forEach(activity => {
             const isBooked = bookedActivityIds.includes(activity.activityId);
             this.$set(activity, 'isBooked', isBooked);
           });
@@ -1196,7 +1228,12 @@ export default {
       try {
         // 0. 先刷新活动数据以确保使用最新版本号
         await this.getList();
-        const latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
+        // 先在所有活动列表中查找
+        let latestActivity = this.allActivitiesList.find(a => a.activityId === activity.activityId);
+        // 如果没找到，再在当月活动列表中查找
+        if (!latestActivity) {
+          latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
+        }
         if (latestActivity) {
           activity.version = latestActivity.version;
           activity.activityCapacity = latestActivity.activityCapacity; // 更新已选人数
@@ -1287,9 +1324,9 @@ export default {
       this.calendarDate = new Date();
     },
 
-    // 获取日期内的事件
+    // 获取日期内的事件（日历视图使用所有活动）
     getDateEvents(dateString) {
-      return this.activitiesList.filter(activity => {
+      return this.allActivitiesList.filter(activity => {
         // 只显示活动开始日期当天的活动
         const activityStartDate = this.formatDate(activity.startTime);
         return activityStartDate === dateString;

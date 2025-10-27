@@ -249,9 +249,9 @@ public class BookingsServiceImpl implements IBookingsService {
         }
     }
 
-    public Map<String, Integer> countAuditStatus() {
+    public Map<String, Integer> countAuditStatus(String organizer) {
         try {
-            return bookingsMapper.countAuditStatus();
+            return bookingsMapper.countAuditStatus(organizer);
         } catch (Exception e) {
             return new HashMap<String, Integer>() {{
                 put("pending", 0);

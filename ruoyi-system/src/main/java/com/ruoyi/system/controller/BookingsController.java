@@ -198,8 +198,8 @@ public class BookingsController extends BaseController {
         util.exportExcel(response, list, "预约学生名单");
     }
     @GetMapping("/auditCount")
-    public AjaxResult getAuditStatusCount() {
-        Map<String, Integer> countMap = bookingsService.countAuditStatus();
+    public AjaxResult getAuditStatusCount(@RequestParam(required = false) String organizer) {
+        Map<String, Integer> countMap = bookingsService.countAuditStatus(organizer);
         return AjaxResult.success(countMap);
     }
 

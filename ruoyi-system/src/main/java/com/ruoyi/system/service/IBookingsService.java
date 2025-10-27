@@ -62,7 +62,7 @@ public interface IBookingsService {
     List<BookingDTO> selectBookingsList2(BookingDTO bookings);
     List<BookingDTO> selectBookingsList3(BookingDTO bookings);
 
-    Map<String, Integer> countAuditStatus();
+    Map<String, Integer> countAuditStatus(String organizer);
 
     boolean checkIfBooked(Long activityId, String studentId);
 

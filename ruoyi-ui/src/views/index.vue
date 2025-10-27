@@ -19,6 +19,10 @@ export default {
       if (userName >= '10001' && userName <= '10007') {
         return 'AcademicTeacherHome';
       }
+
+      if (userName >= '20001' && userName <= '20020') {
+        return 'AcademicTeacherHome';
+      }
       // 账号为10000以及学生账号默认显示学生首页
       return 'StudentHome';
     }

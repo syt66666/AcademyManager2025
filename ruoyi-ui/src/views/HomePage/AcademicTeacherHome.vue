@@ -1751,36 +1751,60 @@ export default {
         const nickName = await getNickName();
         const organizer = nickName.msg;
 
-        const response = await getAuditCount({ organizer });
+        console.log("🔍 首页获取活动审核统计，组织者:", organizer);
+        const response = await getAuditCount(organizer);
         if (response.code === 200 && response.data) {
           this.activityAuditStats = response.data;
+          console.log("📊 首页活动审核统计数据:", response.data);
         }
       } catch (error) {
         console.error('获取活动审核统计数据失败:', error);
-        // 如果获取失败，使用默认数据
-        this.activityAuditStats = {
-          pending: 1,
-          approved: 181,
-          rejected: 0
-        };
+        // 如果获取失败，尝试不传参数
+        try {
+          const response = await getAuditCount();
+          if (response.code === 200 && response.data) {
+            this.activityAuditStats = response.data;
+          }
+        } catch (fallbackError) {
+          console.error('获取活动审核统计数据失败（回退方案）:', fallbackError);
+          this.activityAuditStats = {
+            pending: 0,
+            approved: 0,
+            rejected: 0
+          };
+        }
       }
     },
 
     // 获取课程考核统计数据
     async getCourseAuditStats() {
       try {
-        const response = await getCourseAuditCount();
+        // 先获取组织者名称
+        const nickName = await getNickName();
+        const organizer = nickName.msg;
+
+        console.log("🔍 首页获取课程考核统计，组织者:", organizer);
+        const response = await getCourseAuditCount(organizer);
         if (response.code === 200 && response.data) {
           this.courseAuditStats = response.data;
+          console.log("📊 首页课程考核统计数据:", response.data);
         }
       } catch (error) {
         console.error('获取课程考核统计数据失败:', error);
-        // 如果获取失败，使用默认数据
-        this.courseAuditStats = {
-          pending: 0,
-          approved: 0,
-          rejected: 0
-        };
+        // 如果获取失败，尝试不传参数
+        try {
+          const response = await getCourseAuditCount();
+          if (response.code === 200 && response.data) {
+            this.courseAuditStats = response.data;
+          }
+        } catch (fallbackError) {
+          console.error('获取课程考核统计数据失败（回退方案）:', fallbackError);
+          this.courseAuditStats = {
+            pending: 0,
+            approved: 0,
+            rejected: 0
+          };
+        }
       }
     },
 

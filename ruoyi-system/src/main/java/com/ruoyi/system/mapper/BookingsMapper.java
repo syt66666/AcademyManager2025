@@ -80,7 +80,7 @@ public interface BookingsMapper {
 
     List<BookingDTO> selectBookingsList3(BookingDTO bookings);
 
-    Map<String, Integer> countAuditStatus();
+    Map<String, Integer> countAuditStatus(String organizer);
 
     /**
      * 检查学生是否预约了指定活动
