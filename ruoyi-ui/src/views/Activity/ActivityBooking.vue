@@ -437,7 +437,26 @@
             class="signup-alert"
           >
             该活动报名人数已满，无法继续报名
+            <div v-if="expandRequestCount > 0" style="margin-top: 8px; font-size: 14px;">
+              已有 <strong style="color: #409EFF;">{{ expandRequestCount }}</strong> 人申请扩容
+            </div>
           </el-alert>
+          
+          <!-- 申请扩容按钮 -->
+          <el-button
+            v-if="showFullCapacityAlert"
+            type="warning"
+            :loading="requestingExpand"
+            :disabled="hasRequestedExpand"
+            @click="handleRequestExpand"
+            class="expand-button"
+          >
+            <i class="el-icon-plus"></i>
+            {{ hasRequestedExpand ? '已申请扩容' : '申请扩容' }}
+          </el-button>
+          <div v-if="hasRequestedExpand && showFullCapacityAlert" style="margin-top: 8px; font-size: 13px; color: #909399;">
+            <i class="el-icon-success"></i> 您已申请过扩容，每个活动只能申请一次
+          </div>
           <el-alert
             v-if="selectedActivity.isBooked && !showCancelButton"
             title="您已成功报名该活动"
@@ -466,7 +485,7 @@
 </template>
 
 <script>
-import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities } from "@/api/system/activities";
+import { listActivities, signUpCapacity, cancelSignUpCapacity, getActivities, requestExpandCapacity, getExpandRequestCount, checkExpandRequest } from "@/api/system/activities";
 import { addBooking, deleteBookingsByActivityAndStudent, signUpActivity, getBookedActivities, cancelSignUpActivity } from "@/api/system/bookings";
 import { parseTime } from "@/utils/ruoyi";
 import { checkBookingSimple } from "@/api/system/bookings";
@@ -491,6 +510,9 @@ export default {
       // 详情弹窗相关
       detailDialogVisible: false,
       selectedActivity: null,
+      expandRequestCount: 0, // 扩容申请数量
+      requestingExpand: false, // 是否正在申请扩容
+      hasRequestedExpand: false, // 当前用户是否已申请扩容
       // 图片预览相关
       imagePreviewVisible: false,
       previewImageUrl: '',
@@ -1061,13 +1083,85 @@ export default {
 
       // 加载最新的取消限制信息
       await this.loadCancelLimitInfo();
+      
+      // 获取扩容申请数量
+      await this.loadExpandRequestCount(row.activityId);
+      
+      // 检查当前用户是否已申请扩容
+      await this.checkUserExpandRequest(row.activityId);
+    },
+    
+    // 加载扩容申请数量
+    async loadExpandRequestCount(activityId) {
+      if (!activityId) return;
+      try {
+        const response = await getExpandRequestCount(activityId);
+        if (response && response.code === 200) {
+          this.expandRequestCount = response.data || 0;
+        }
+      } catch (error) {
+        console.error('获取扩容申请数量失败:', error);
+        this.expandRequestCount = 0;
+      }
+    },
+    
+    // 检查当前用户是否已申请扩容
+    async checkUserExpandRequest(activityId) {
+      if (!activityId) return;
+      try {
+        const response = await checkExpandRequest(activityId);
+        if (response && response.code === 200) {
+          this.hasRequestedExpand = response.data === true;
+        } else {
+          this.hasRequestedExpand = false;
+        }
+      } catch (error) {
+        console.error('检查申请状态失败:', error);
+        this.hasRequestedExpand = false;
+      }
+    },
+    
+    // 处理申请扩容
+    async handleRequestExpand() {
+      if (!this.selectedActivity || !this.selectedActivity.activityId) {
+        this.$message.error('活动信息不完整');
+        return;
+      }
+      
+      try {
+        this.requestingExpand = true;
+        const response = await requestExpandCapacity(this.selectedActivity.activityId);
+        
+        if (response && response.code === 200) {
+          this.$message.success('申请扩容成功！');
+          // 更新扩容申请数量
+          await this.loadExpandRequestCount(this.selectedActivity.activityId);
+          // 更新用户申请状态
+          this.hasRequestedExpand = true;
+        } else {
+          this.$message.error(response?.msg || '申请扩容失败');
+          // 如果是重复申请，更新状态
+          if (response?.msg && response.msg.includes('已经申请过')) {
+            this.hasRequestedExpand = true;
+          }
+        }
+      } catch (error) {
+        console.error('申请扩容失败:', error);
+        this.$message.error('申请扩容失败，请稍后重试');
+      } finally {
+        this.requestingExpand = false;
+      }
     },
 
     // 处理详情弹窗关闭
     handleDetailClose(done) {
       this.detailDialogVisible = false;
       this.selectedActivity = null;
-      done();
+      this.expandRequestCount = 0; // 重置扩容申请数量
+      this.hasRequestedExpand = false; // 重置申请状态
+      if (done) {
+        done();
+      }
     },
 
     // // 处理报名
@@ -1384,6 +1478,12 @@ export default {
 
       // 加载最新的取消限制信息
       await this.loadCancelLimitInfo();
+      
+      // 获取扩容申请数量
+      await this.loadExpandRequestCount(activity.activityId);
+      
+      // 检查当前用户是否已申请扩容
+      await this.checkUserExpandRequest(activity.activityId);
 
       this.detailDialogVisible = true;
     },
@@ -1949,6 +2049,34 @@ export default {
       &:active {
         transform: translateY(0);
         box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+      }
+    }
+
+    .expand-button {
+      width: 200px;
+      height: 44px;
+      font-size: 16px;
+      font-weight: 600;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      border: none;
+      border-radius: 22px;
+      color: white;
+      box-shadow: 0 4px 16px rgba(243, 156, 18, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4);
+        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+      }
+
+      i {
+        margin-right: 6px;
       }
     }
 

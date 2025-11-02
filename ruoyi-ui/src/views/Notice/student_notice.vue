@@ -44,17 +44,6 @@
           <i class="el-icon-bell"></i>
           <span>通知列表</span>
         </div>
-        <div class="header-right">
-          <el-button
-            type="primary"
-            icon="el-icon-plus"
-            @click="showPublishDialog"
-            v-if="canManageNotifications"
-            class="add-button"
-          >
-            发布通知
-          </el-button>
-        </div>
       </div>
 
       <!-- 通知内容 -->

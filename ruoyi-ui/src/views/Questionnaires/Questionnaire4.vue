@@ -1,15 +1,59 @@
 <template>
   <div class="questionnaire-container">
-    <!-- 问卷标题 -->
-    <div class="questionnaire-header">
-      <h1 class="questionnaire-title">大工书院育人导师工作评价问卷</h1>
-      <!-- 导师信息显示 -->
-      <div class="tutor-info" v-if="tutorInfo">
-        <span class="tutor-label">我的导师：</span>
-        <span class="tutor-name">{{ tutorInfo.tutorName }}</span>
-       
+    <!-- 导师选择界面 -->
+    <div v-if="!selectedTutor" class="tutor-selection-container">
+      <div class="selection-header">
+        <h1 class="selection-title">选择要评价的导师</h1>
+        <p class="selection-subtitle">请选择您要评价的导师</p>
+      </div>
+
+      <!-- 加载状态 -->
+      <div v-if="loadingTutors" class="loading-state">
+        <i class="el-icon-loading"></i>
+        <p>正在加载导师列表...</p>
+      </div>
+
+      <!-- 导师列表 -->
+      <div v-else-if="tutorList.length > 0" class="tutor-grid">
+        <div 
+          v-for="tutor in tutorList" 
+          :key="tutor.tutorId" 
+          class="tutor-grid-item"
+          :class="{ 'evaluated': isEvaluated(tutor.tutorId) }"
+          @click="selectTutor(tutor)"
+        >
+          <!-- 已评价标记 -->
+          <div v-if="isEvaluated(tutor.tutorId)" class="evaluated-badge">
+            <i class="el-icon-check"></i>
+          </div>
+          <div class="tutor-name">{{ tutor.tutorName }}</div>
+          <div class="tutor-id">{{ tutor.tutorId }}</div>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else class="empty-state">
+        <i class="el-icon-folder-opened"></i>
+        <p>暂无可评价的导师</p>
+      </div>
+
+      <!-- 返回按钮 -->
+      <div class="back-section">
+        <button @click="goBack" class="back-btn">返回问卷列表</button>
       </div>
     </div>
+
+    <!-- 问卷界面 -->
+    <div v-else class="questionnaire-main">
+      <!-- 问卷标题 -->
+      <div class="questionnaire-header">
+        <h1 class="questionnaire-title">大工书院育人导师工作评价问卷</h1>
+        <!-- 被评价导师信息 -->
+        <div class="evaluated-tutor-info">
+          <span class="evaluated-label">正在评价：</span>
+          <span class="evaluated-name">{{ selectedTutor.tutorName }}</span>
+        </div>
+      </div>
 
     <!-- 问卷内容 -->
     <div class="questionnaire-content">
@@ -79,6 +123,14 @@
       </div>
     </div>
 
+      <!-- 返回选择导师按钮 -->
+      <div class="reselect-section">
+        <button @click="backToSelection" class="reselect-btn">
+          <i class="el-icon-back"></i> 返回选择其他导师
+        </button>
+      </div>
+    </div>
+
     <!-- 提交成功弹窗 -->
     <div v-if="showEndMessage" class="dialog-overlay">
       <div class="dialog-box success-dialog">
@@ -89,8 +141,11 @@
           </svg>
         </div>
         <h3 class="success-title">提交成功！</h3>
-        <p class="success-text">感谢您的评价，您的反馈对我们非常重要</p>
-        <button @click="goBack" class="back-button">返回问卷列表</button>
+        <p class="success-text">感谢您对 {{ selectedTutor ? selectedTutor.tutorName : '' }} 的评价</p>
+        <div class="success-actions">
+          <button @click="backToSelection" class="continue-button">继续评价其他导师</button>
+          <button @click="goBack" class="back-button">返回问卷列表</button>
+        </div>
       </div>
     </div>
   </div>
@@ -98,7 +153,7 @@
 
 <script>
 import store from "@/store";
-import { addScore } from "@/api/system/questionnaire";
+import { addScore, listScore } from "@/api/system/questionnaire";
 import { listRelation } from "@/api/system/relation";
 import { getTutors } from "@/api/student/tutor";
 
@@ -107,8 +162,11 @@ export default {
   data() {
     return {
       userName: store.state.user.name,
-      studentId: store.state.user.userId, // 当前学生ID
-      tutorInfo: null, // 导师信息
+      studentId: store.state.user.name, // 当前学生ID（学号）
+      tutorList: [], // 可评价的导师列表
+      selectedTutor: null, // 当前选择的导师
+      loadingTutors: false, // 加载状态
+      evaluatedTutorIds: [], // 已评价的导师ID列表
       selectedAnswers: [], // 存储用户选择的答案（1-5分）
       showConfirmDialogFlag: false,
       showEndMessage: false,
@@ -252,27 +310,78 @@ export default {
     }
   },
   methods: {
-    // 加载导师信息
-    loadTutorInfo() {
-      // 使用 listRelation API 查询该学生的导师关系
-      listRelation({ studentId: this.studentId })
-        .then(response => {
-          if (response.rows && response.rows.length > 0) {
-            const tutorId = response.rows[0].tutorId;
-            // 根据导师ID获取导师详细信息
-            return getTutors(tutorId);
-          } else {
-            return null;
-          }
-        })
-        .then(response => {
-          if (response && response.data) {
-            this.tutorInfo = response.data;
-          }
-        })
-        .catch(error => {
-          this.$message.error('获取导师信息失败，请刷新页面重试');
+    // 加载导师列表
+    async loadTutorList() {
+      this.loadingTutors = true;
+      try {
+        // 使用 listRelation API 查询该学生的所有导师关系
+        const response = await listRelation({ studentId: this.studentId });
+        
+        if (response.rows && response.rows.length > 0) {
+          // 获取所有导师的详细信息
+          const tutorPromises = response.rows.map(relation => 
+            getTutors(relation.tutorId)
+          );
+          
+          const tutorResponses = await Promise.all(tutorPromises);
+          
+          // 提取导师信息
+          this.tutorList = tutorResponses
+            .filter(res => res && res.data)
+            .map(res => res.data);
+          
+          // 加载已评价记录
+          await this.loadEvaluatedRecords();
+        } else {
+          this.$message.warning('您暂未分配导师');
+        }
+      } catch (error) {
+        this.$message.error('加载导师列表失败，请刷新页面重试');
+      } finally {
+        this.loadingTutors = false;
+      }
+    },
+
+    // 加载已评价记录
+    async loadEvaluatedRecords() {
+      try {
+        // 查询当前用户在问卷4中的所有评价记录
+        const response = await listScore({
+          userName: this.userName,
+          quesType: 4 // 问卷类型4
         });
+        
+        if (response && response.rows) {
+          // 提取已评价的导师ID列表
+          this.evaluatedTutorIds = response.rows.map(record => record.tutorId);
+        }
+      } catch (error) {
+        console.error('加载已评价记录失败:', error);
+      }
+    },
+
+    // 选择导师
+    selectTutor(tutor) {
+      this.selectedTutor = tutor;
+      // 重置问卷答案
+      this.selectedAnswers = new Array(this.questions.length).fill(null);
+      this.showConfirmDialogFlag = false;
+      this.showEndMessage = false;
+    },
+
+    // 返回导师选择界面
+    async backToSelection() {
+      this.selectedTutor = null;
+      this.selectedAnswers = new Array(this.questions.length).fill(null);
+      this.showConfirmDialogFlag = false;
+      this.showEndMessage = false;
+      // 重新加载已评价记录，确保显示最新状态
+      await this.loadEvaluatedRecords();
+    },
+
+    // 判断导师是否已被评价
+    isEvaluated(tutorId) {
+      return this.evaluatedTutorIds.includes(tutorId);
     },
     
     // 选择选项
@@ -291,17 +400,17 @@ export default {
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false;
       
-      // 检查是否已获取导师信息
-      if (!this.tutorInfo || !this.tutorInfo.tutorId) {
-        this.$message.error('未获取到导师信息，无法提交问卷！');
+      // 检查是否选择了导师
+      if (!this.selectedTutor || !this.selectedTutor.tutorId) {
+        this.$message.error('未选择评价的导师');
         return;
       }
       
       // 准备提交数据到 evaluation_score 表
       const submitData = {
-        userName: this.userName, // 使用 data 中定义的 userName
+        userName: this.userName,
         quesScore: this.totalScore * 2, // 总得分×2（满分100分）
-        tutorId: this.tutorInfo.tutorId, // 使用实际获取到的导师ID
+        tutorId: this.selectedTutor.tutorId, // 使用选中的导师ID
         quesType: 4, // 问卷类型：4表示问卷4（学生版评价问卷）
         signature: this.signature // 签名数据（图片URL或base64）
       };
@@ -309,11 +418,14 @@ export default {
       // 调用后端API提交数据
       addScore(submitData)
         .then(response => {
+          // 标记该导师已被评价
+          if (!this.evaluatedTutorIds.includes(this.selectedTutor.tutorId)) {
+            this.evaluatedTutorIds.push(this.selectedTutor.tutorId);
+          }
           this.showEndMessage = true;
         })
         .catch(error => {
           this.$message.error('提交失败，请重试！' + (error.msg || ''));
-          // 即使失败也关闭确认弹窗
           this.showConfirmDialogFlag = false;
         });
     },
@@ -337,8 +449,8 @@ export default {
       this.signature = this.$route.query.signature;
     }
 
-    // 获取导师信息
-    this.loadTutorInfo();
+    // 加载导师列表
+    this.loadTutorList();
   }
 };
 </script>
@@ -376,8 +488,168 @@ export default {
   margin: 0 0 15px 0;
 }
 
-/* 导师信息 */
-.tutor-info {
+/* 导师选择界面样式 */
+.tutor-selection-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.selection-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.selection-title {
+  font-size: 28px;
+  color: #2c3e50;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.selection-subtitle {
+  font-size: 16px;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+/* 加载和空状态 */
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.loading-state i,
+.empty-state i {
+  font-size: 48px;
+  color: #667eea;
+  margin-bottom: 20px;
+  display: block;
+}
+
+.loading-state p,
+.empty-state p {
+  font-size: 16px;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+/* 导师网格列表 */
+.tutor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.tutor-grid-item {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 16px;
+  text-align: center;
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.tutor-grid-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
+  border-color: #667eea;
+}
+
+/* 已评价状态 */
+.tutor-grid-item.evaluated {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-color: #52c41a;
+}
+
+.tutor-grid-item.evaluated:hover {
+  border-color: #52c41a;
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.25);
+}
+
+/* 已评价徽章 */
+.evaluated-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(82, 196, 26, 0.4);
+  animation: checkBounce 0.5s ease;
+}
+
+@keyframes checkBounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.tutor-name {
+  font-size: 16px;
+  color: #2c3e50;
+  font-weight: 600;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tutor-id {
+  font-size: 13px;
+  color: #7f8c8d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.back-section {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.back-btn {
+  background: #ecf0f1;
+  color: #7f8c8d;
+  border: none;
+  padding: 12px 40px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: #bdc3c7;
+  transform: translateY(-2px);
+}
+
+/* 被评价导师信息 */
+.evaluated-tutor-info {
   margin-top: 15px;
   padding: 12px 20px;
   background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
@@ -389,21 +661,67 @@ export default {
   gap: 8px;
 }
 
-.tutor-label {
+.evaluated-label {
   font-size: 14px;
   color: #7f8c8d;
   font-weight: 500;
 }
 
-.tutor-name {
+.evaluated-name {
   font-size: 16px;
   color: #667eea;
   font-weight: 600;
 }
 
-.tutor-title {
+/* 返回选择导师按钮 */
+.reselect-section {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.reselect-btn {
+  background: #ecf0f1;
+  color: #7f8c8d;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 50px;
   font-size: 14px;
-  color: #95a5a6;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reselect-btn:hover {
+  background: #bdc3c7;
+  transform: translateY(-2px);
+}
+
+/* 成功弹窗按钮组 */
+.success-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.continue-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.continue-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 /* 问卷内容 */
@@ -808,6 +1126,24 @@ export default {
   .submit-btn {
     padding: 12px 40px;
     font-size: 15px;
+  }
+
+  /* 导师网格响应式 */
+  .tutor-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+
+  .tutor-grid-item {
+    padding: 12px;
+  }
+
+  .tutor-name {
+    font-size: 14px;
+  }
+
+  .tutor-id {
+    font-size: 12px;
   }
 }
 </style>

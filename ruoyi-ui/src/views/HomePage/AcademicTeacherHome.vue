@@ -6,7 +6,7 @@
         <div class="welcome-text">
           <h1 class="welcome-title">
             <i class="el-icon-sunny"></i>
-            {{ getGreeting() }}，书院教务员！
+            {{ getFullGreeting() }}
           </h1>
           <p class="welcome-subtitle">{{ getCurrentDate() }}</p>
         </div>
@@ -352,6 +352,9 @@ export default {
       notificationsLoading: false,
       notificationDialogVisible: false,
       currentNotification: null,
+      
+      // 用户所属书院
+      userCollege: null,
 
       // 近期活动数据
       recentActivities: [],
@@ -429,6 +432,8 @@ export default {
     });
   },
   created() {
+    // 初始化用户书院信息
+    this.initUserCollege();
     // 获取通知数据
     this.loadNotifications();
     // 获取近期活动数据
@@ -460,6 +465,59 @@ export default {
       return '夜深了';
     },
 
+    // 获取完整的问候语（包含书院和姓名）
+    getFullGreeting() {
+      const greeting = this.getGreeting();
+      const userName = this.$store.state.user.nickName;
+      const college = this.userCollege;
+      
+      if (college) {
+        return `${greeting}，${college}`+"教务员";
+      } else {
+        return `${greeting}，`+"教务员";
+      }
+    },
+
+    // 初始化用户书院信息
+    async initUserCollege() {
+      try {
+        // 使用 getNickName API 获取书院信息
+        const nickNameResponse = await getNickName();
+        if (nickNameResponse && nickNameResponse.msg) {
+          this.userCollege = nickNameResponse.msg;
+        } else {
+          // 如果API没有返回，使用用户名映射
+          this.userCollege = this.getCollegeByUserName();
+        }
+      } catch (error) {
+        // 如果API调用失败，使用用户名映射
+        this.userCollege = this.getCollegeByUserName();
+      }
+    },
+
+    // 根据用户名获取书院（备用方案）
+    getCollegeByUserName() {
+      const userName = this.$store.state.user.name;
+      
+      // 10000是总管理员
+      if (userName === '10000') {
+        return '系统管理员';
+      }
+      
+      // 其他管理员账户书院映射
+      const adminCollegeMap = {
+        '10001': '大煜书院',
+        '10002': '伯川书院', 
+        '10003': '令希书院',
+        '10004': '厚德书院',
+        '10005': '知行书院',
+        '10006': '笃学书院',
+        '10007': '求实书院'
+      };
+      
+      return adminCollegeMap[userName] || null;
+    },
+
     // 获取当前日期
     getCurrentDate() {
       const date = new Date();
@@ -467,125 +525,80 @@ export default {
       return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日 ${weekDays[date.getDay()]}`;
     },
 
+    // 统一获取用户书院信息（带缓存）
+    async getUserCollege() {
+      if (this.userCollege) {
+        return this.userCollege;
+      }
+      try {
+        const nickNameResponse = await getNickName();
+        if (nickNameResponse && nickNameResponse.msg) {
+          return nickNameResponse.msg;
+        }
+      } catch (error) {
+        // 静默失败，使用备用方案
+      }
+      return this.getCollegeByUserName();
+    },
+
+    // 统一处理API错误
+    handleApiError(error, defaultMsg) {
+      if (error.response) {
+        this.$message.error(`${defaultMsg}: HTTP ${error.response.status} - ${error.response.statusText}`);
+      } else if (error.request) {
+        this.$message.error(`${defaultMsg}: 网络请求失败，请检查网络连接`);
+      } else {
+        this.$message.error(`${defaultMsg}: ${error.message}`);
+      }
+    },
+
+    // 统一路由跳转方法
+    navigateToRoute(path, query = {}, errorMsg = '') {
+      try {
+        this.$router.push({ path, query });
+      } catch (error) {
+        if (errorMsg) {
+          this.$message.error(errorMsg);
+        }
+      }
+    },
+
     // 加载通知数据
     async loadNotifications() {
       this.notificationsLoading = true;
       try {
-        console.log('=== 开始加载通知数据 ===');
-        console.log('当前用户信息:', this.$store.state.user);
-        console.log('API基础URL:', process.env.VUE_APP_BASE_API);
-        console.log('请求URL:', '/system/notifications/public/list');
-
-        // 使用公开接口
         const response = await listNotificationsPublic({
           pageNum: 1,
-          pageSize: 20  // 增加页面大小以显示更多数据
+          pageSize: 20
         });
 
-        console.log('通知API响应:', response);
-        console.log('响应类型:', typeof response);
-        console.log('响应码:', response?.code);
-        console.log('响应数据:', response?.rows);
-        console.log('数据长度:', response?.rows?.length);
-        console.log('总记录数:', response?.total);
-
         if (response && response.code === 200) {
-          // 获取所有通知数据
           const allNotifications = response.rows || response.data || [];
-          console.log('所有通知数据:', allNotifications);
-
+          
           // 获取当前用户的书院信息
-          let userCollege = '';
-          try {
-            const nickNameResponse = await getNickName();
-            if (nickNameResponse && nickNameResponse.msg) {
-              userCollege = nickNameResponse.msg;
-              console.log('当前用户书院（nickName）:', userCollege);
-            }
-          } catch (error) {
-            console.error('获取用户书院信息失败:', error);
-          }
+          const userCollege = await this.getUserCollege();
 
           // 根据用户书院过滤通知（匹配noti_type字段）
           if (userCollege) {
             this.notifications = allNotifications.filter(notification => {
-              // 如果通知的noti_type与用户书院匹配，则显示
               const notificationCollege = notification.noti_type || notification.notiType;
               return notificationCollege === userCollege;
             });
-            console.log('过滤后的书院通知:', this.notifications);
           } else {
-            // 如果没有书院信息，显示所有通知
             this.notifications = allNotifications;
-            console.log('未找到用户书院信息，显示所有通知');
           }
 
-          // 确保按创建时间降序排序（最新的在前）
-          console.log('排序前的通知时间:', this.notifications.map(n => ({
-            id: n.notiId,
-            title: n.notiTitle,
-            createdAt: n.createdAt
-          })));
-
+          // 按创建时间降序排序（最新的在前）
           this.notifications.sort((a, b) => {
             const timeA = new Date(a.createdAt).getTime();
             const timeB = new Date(b.createdAt).getTime();
-            return timeB - timeA; // 降序排序
+            return timeB - timeA;
           });
-
-          console.log('排序后的通知时间:', this.notifications.map(n => ({
-            id: n.notiId,
-            title: n.notiTitle,
-            createdAt: n.createdAt
-          })));
-
-          console.log('成功加载通知数据:', this.notifications);
-          console.log('通知数量:', this.notifications.length);
-
-          // 检查每个通知的字段
-          this.notifications.forEach((notification, index) => {
-            console.log(`通知${index + 1}:`, {
-              id: notification.notiId,
-              title: notification.notiTitle,
-              type: notification.notiType,
-              noti_type: notification.noti_type,
-              content: notification.notiContent?.substring(0, 50) + '...',
-              creator: notification.creatorId,
-              createdAt: notification.createdAt
-            });
-          });
-
-          // 如果没有数据，显示提示
-          if (this.notifications.length === 0) {
-            console.log('没有找到通知数据');
-          }
         } else {
-          console.log('API返回非200状态码:', response?.code, response?.msg);
           this.$message.error('加载通知失败: ' + (response?.msg || '服务器返回错误'));
         }
-
       } catch (error) {
-        console.error('=== 通知加载失败 ===');
-        console.error('错误对象:', error);
-        console.error('错误类型:', typeof error);
-        console.error('错误值:', error);
-
-        if (error.response) {
-          console.error('HTTP响应错误:');
-          console.error('状态码:', error.response.status);
-          console.error('状态文本:', error.response.statusText);
-          console.error('响应数据:', error.response.data);
-          console.error('响应头:', error.response.headers);
-
-          this.$message.error(`加载通知失败: HTTP ${error.response.status} - ${error.response.statusText}`);
-        } else if (error.request) {
-          console.error('网络请求错误:');
-          console.error('请求对象:', error.request);
-          this.$message.error('加载通知失败: 网络请求失败，请检查网络连接');
-        } else {
-          console.error('其他错误:', error.message);
-          this.$message.error('加载通知失败: ' + error.message);
-        }
+        this.handleApiError(error, '加载通知失败');
       } finally {
         this.notificationsLoading = false;
       }
@@ -638,27 +651,19 @@ export default {
 
     // 格式化日期
     formatDate(date) {
-      console.log('formatDate 输入:', date, '类型:', typeof date);
       if (!date) return '';
-
-      // 如果已经是字符串格式，直接返回
       if (typeof date === 'string') {
-        return date.substring(0, 10); // 只返回日期部分
+        return date.substring(0, 10);
       }
-
       return parseTime(date, '{y}-{m}-{d}');
     },
 
     // 格式化日期时间
     formatDateTime(date) {
-      console.log('formatDateTime 输入:', date, '类型:', typeof date);
       if (!date) return '';
-
-      // 如果已经是字符串格式，直接返回
       if (typeof date === 'string') {
-        return date; // 直接返回完整的时间字符串
+        return date;
       }
-
       return parseTime(date, '{y}-{m}-{d} {h}:{i}:{s}');
     },
 
@@ -698,43 +703,20 @@ export default {
         if (valid) {
           this.editSubmitting = true;
           try {
-            console.log('=== 开始编辑通知 ===');
-            console.log('编辑的通知数据:', this.editForm);
-
             const response = await updateNotifications(this.editForm);
-
-            console.log('通知编辑响应:', response);
-
             if (response.code === 200) {
               this.$message.success('通知编辑成功');
               this.editDialogVisible = false;
-              // 重新加载通知列表
               this.loadNotifications();
             } else {
-              console.error('通知编辑失败，响应码:', response.code, '错误信息:', response.msg);
               this.$message.error('通知编辑失败: ' + (response.msg || '未知错误'));
             }
           } catch (error) {
-            console.error('=== 编辑通知失败 ===');
-            console.error('错误对象:', error);
-
-            if (error.response) {
-              console.error('HTTP响应错误:');
-              console.error('状态码:', error.response.status);
-              console.error('响应数据:', error.response.data);
-              this.$message.error(`编辑通知失败: HTTP ${error.response.status}`);
-            } else if (error.request) {
-              console.error('网络请求错误:', error.request);
-              this.$message.error('编辑通知失败: 网络请求失败');
-            } else {
-              console.error('其他错误:', error.message);
-              this.$message.error('编辑通知失败: ' + error.message);
-            }
+            this.handleApiError(error, '编辑通知失败');
           } finally {
             this.editSubmitting = false;
           }
         } else {
-          console.warn('表单验证失败');
           this.$message.warning('请检查表单填写是否完整');
         }
       });
@@ -748,37 +730,15 @@ export default {
         type: 'warning'
       }).then(async () => {
         try {
-          console.log('=== 开始删除通知 ===');
-          console.log('删除的通知ID:', notification.notiId);
-
           const response = await delNotifications(notification.notiId);
-
-          console.log('通知删除响应:', response);
-
           if (response.code === 200) {
             this.$message.success('通知删除成功');
-            // 重新加载通知列表
             this.loadNotifications();
           } else {
-            console.error('通知删除失败，响应码:', response.code, '错误信息:', response.msg);
             this.$message.error('通知删除失败: ' + (response.msg || '未知错误'));
           }
         } catch (error) {
-          console.error('=== 删除通知失败 ===');
-          console.error('错误对象:', error);
-
-          if (error.response) {
-            console.error('HTTP响应错误:');
-            console.error('状态码:', error.response.status);
-            console.error('响应数据:', error.response.data);
-            this.$message.error(`删除通知失败: HTTP ${error.response.status}`);
-          } else if (error.request) {
-            console.error('网络请求错误:', error.request);
-            this.$message.error('删除通知失败: 网络请求失败');
-          } else {
-            console.error('其他错误:', error.message);
-            this.$message.error('删除通知失败: ' + error.message);
-          }
+          this.handleApiError(error, '删除通知失败');
         }
       }).catch(() => {
         this.$message.info('已取消删除');
@@ -810,7 +770,6 @@ export default {
         if (valid) {
           this.publishSubmitting = true;
           try {
-            // 确保使用当前时间，格式化为后端期望的格式（使用本地时间）
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -818,7 +777,6 @@ export default {
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
-
             const localTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
             const publishData = {
@@ -826,47 +784,20 @@ export default {
               createdAt: localTimeString
             };
 
-            console.log('=== 开始发布通知 ===');
-            console.log('当前时间对象:', now);
-            console.log('UTC时间:', now.toISOString());
-            console.log('本地时间字符串:', localTimeString);
-            console.log('发布的通知数据:', publishData);
-            console.log('发布时间:', publishData.createdAt);
-
             const response = await addNotifications(publishData);
-
-            console.log('通知发布响应:', response);
-
             if (response.code === 200) {
               this.$message.success('通知发布成功');
               this.publishDialogVisible = false;
-              // 重新加载通知列表
               this.loadNotifications();
             } else {
-              console.error('通知发布失败，响应码:', response.code, '错误信息:', response.msg);
               this.$message.error('通知发布失败: ' + (response.msg || '未知错误'));
             }
           } catch (error) {
-            console.error('=== 发布通知失败 ===');
-            console.error('错误对象:', error);
-
-            if (error.response) {
-              console.error('HTTP响应错误:');
-              console.error('状态码:', error.response.status);
-              console.error('响应数据:', error.response.data);
-              this.$message.error(`发布通知失败: HTTP ${error.response.status}`);
-            } else if (error.request) {
-              console.error('网络请求错误:', error.request);
-              this.$message.error('发布通知失败: 网络请求失败');
-            } else {
-              console.error('其他错误:', error.message);
-              this.$message.error('发布通知失败: ' + error.message);
-            }
+            this.handleApiError(error, '发布通知失败');
           } finally {
             this.publishSubmitting = false;
           }
         } else {
-          console.warn('表单验证失败');
           this.$message.warning('请检查表单填写是否完整');
         }
       });
@@ -1057,15 +988,10 @@ export default {
       // 添加点击事件
       chart.on('click', (params) => {
         if (params.data && params.data.month) {
-          console.log('点击月份:', params.data);
-          // 跳转到活动管理页面，按月份筛选
-          this.$router.push({
-            path: '/Activity/ActivityManager',
-            query: {
-              filterMode: 'month',
-              month: params.data.month,
-              year: new Date().getFullYear()
-            }
+          this.navigateToRoute('/Activity/ActivityManager', {
+            filterMode: 'month',
+            month: params.data.month,
+            year: new Date().getFullYear()
           });
         }
       });
@@ -1239,15 +1165,10 @@ export default {
       // 添加点击事件
       this.courseStatsChart.on('click', (params) => {
         if (params.data && params.data.month) {
-          console.log('点击课程月份:', params.data);
-          // 跳转到课程管理页面，按月份筛选
-          this.$router.push({
-            path: '/Course/CourseManager',
-            query: {
-              filterMode: 'month',
-              month: params.data.month,
-              year: new Date().getFullYear()
-            }
+          this.navigateToRoute('/Course/CourseManager', {
+            filterMode: 'month',
+            month: params.data.month,
+            year: new Date().getFullYear()
           });
         }
       });
@@ -1265,19 +1186,7 @@ export default {
     // 获取近期活动数据
     async getRecentActivities() {
       try {
-        // 获取当前用户的学院信息
-        let userCollege = '';
-        try {
-          const nickNameResponse = await getNickName();
-          if (nickNameResponse && nickNameResponse.msg) {
-            userCollege = nickNameResponse.msg;
-            console.log('当前用户书院（活动筛选）:', userCollege);
-          }
-        } catch (error) {
-          console.error('获取用户书院信息失败:', error);
-        }
-
-        // 构建查询参数，如果获取到学院信息则按学院筛选
+        const userCollege = await this.getUserCollege();
         const queryParams = {
           pageNum: 1,
           pageSize: 10
@@ -1285,15 +1194,11 @@ export default {
         
         if (userCollege) {
           queryParams.organizer = userCollege;
-          console.log('按学院筛选活动:', userCollege);
-        } else {
-          console.log('未获取到学院信息，显示所有活动');
         }
 
         const response = await listActivities(queryParams);
 
         if (response.code === 200 && response.rows) {
-          // 按活动开始时间降序排序，获取最近的5个活动
           const sortedActivities = response.rows
             .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
             .slice(0, 5);
@@ -1316,27 +1221,10 @@ export default {
               description: activity.activityDescription
             };
           });
-          
-          console.log('筛选后的活动数据:', this.recentActivities);
         }
       } catch (error) {
-        console.error('获取近期活动失败:', error);
-        // 如果获取失败，使用默认数据
-        this.recentActivities = [
-          {
-            activityId: 1,
-            title: '学术讲座：机器学习前沿技术',
-            location: '学术报告厅',
-            time: '14:00-16:00',
-            day: '20',
-            month: '1月',
-            status: 'upcoming',
-            statusText: '报名进行中',
-            organizer: '计算机学院',
-            activityType: '2',
-            description: '介绍机器学习的最新发展'
-          }
-        ];
+        this.handleApiError(error, '获取近期活动失败');
+        this.recentActivities = [];
       }
     },
 
@@ -1386,25 +1274,16 @@ export default {
 
     // 跳转到活动管理页面
     goToActivityManager(activity) {
-      // 跳转到活动管理页面
       if (activity && activity.activityId) {
-        // 如果点击了具体活动，传递活动信息进行筛选
-        this.$router.push({
-          path: '/Activity/ActivityManager',
-          query: {
-            activityId: activity.activityId,
-            activityName: activity.title,
-            activityType: activity.activityType,
-            filterMode: 'single' // 标记为单个活动筛选模式
-          }
+        this.navigateToRoute('/Activity/ActivityManager', {
+          activityId: activity.activityId,
+          activityName: activity.title,
+          activityType: activity.activityType,
+          filterMode: 'single'
         });
       } else {
-        // 如果点击了"查看全部"按钮，显示近期活动（未结束的活动）
-        this.$router.push({
-          path: '/Activity/ActivityManager',
-          query: {
-            filterMode: 'recent' // 标记为近期活动筛选模式
-          }
+        this.navigateToRoute('/Activity/ActivityManager', {
+          filterMode: 'recent'
         });
       }
     },
@@ -1412,19 +1291,7 @@ export default {
     // 获取近期课程数据
     async getCurrentCourses() {
       try {
-        // 获取当前用户的学院信息
-        let userCollege = '';
-        try {
-          const nickNameResponse = await getNickName();
-          if (nickNameResponse && nickNameResponse.msg) {
-            userCollege = nickNameResponse.msg;
-            console.log('当前用户书院（课程筛选）:', userCollege);
-          }
-        } catch (error) {
-          console.error('获取用户书院信息失败:', error);
-        }
-
-        // 构建查询参数，如果获取到学院信息则按学院筛选
+        const userCollege = await this.getUserCollege();
         const queryParams = {
           pageNum: 1,
           pageSize: 10
@@ -1432,15 +1299,11 @@ export default {
         
         if (userCollege) {
           queryParams.organizer = userCollege;
-          console.log('按学院筛选课程:', userCollege);
-        } else {
-          console.log('未获取到学院信息，显示所有课程');
         }
 
         const response = await listCourses(queryParams);
 
         if (response.code === 200 && response.rows) {
-          // 按课程开始时间降序排序，获取最近的5个课程
           const sortedCourses = response.rows
             .sort((a, b) => new Date(b.courseStart) - new Date(a.courseStart))
             .slice(0, 5);
@@ -1456,41 +1319,18 @@ export default {
               courseCode: course.courseId ? `C${course.courseId}` : '待定',
               courseCategory: course.courseCategory || '待定',
               credit: course.courseCredit || 0,
-              courseHours: 0, // Courses实体中没有此字段
+              courseHours: 0,
               courseCapacity: course.courseTotalCapacity || 0,
-              // courseCapacity 就是已选人数
               enrolledStudent: course.courseCapacity || 0,
               status: this.computeCourseStatus(course),
-              // 保留原始时间字段用于日期显示
               courseStart: course.courseStart,
               courseDeadline: course.courseDeadline
             };
           });
-          
-          console.log('筛选后的课程数据:', this.currentCourses);
         }
       } catch (error) {
-        console.error('获取近期课程失败:', error);
-        // 如果获取失败，使用默认数据
-        this.currentCourses = [
-          {
-            courseId: 1,
-            name: '高等数学',
-            teacher: '张教授',
-            schedule: '周一 8:00-10:00',
-            location: '数学学院',
-            progress: 75,
-            courseCode: 'MATH101',
-            courseCategory: '必修',
-            credit: 4,
-            courseHours: 64,
-            courseCapacity: 100,
-            enrolledStudent: 75,
-            status: '选课进行中',
-            courseStart: new Date().toISOString(),
-            courseDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-          }
-        ];
+        this.handleApiError(error, '获取近期课程失败');
+        this.currentCourses = [];
       }
     },
 
@@ -1562,111 +1402,69 @@ export default {
 
     // 跳转到课程管理页面
     goToCourseManager(course) {
-      // 跳转到课程管理页面
       if (course && course.courseId) {
-        // 如果点击了具体课程，传递课程信息进行筛选
-        this.$router.push({
-          path: '/Course/CourseManager',
-          query: {
-            courseId: course.courseId,
-            courseName: course.name,
-            courseCategory: course.courseCategory,
-            status: course.status,
-            filterMode: 'single' // 标记为单个课程筛选模式
-          }
+        this.navigateToRoute('/Course/CourseManager', {
+          courseId: course.courseId,
+          courseName: course.name,
+          courseCategory: course.courseCategory,
+          status: course.status,
+          filterMode: 'single'
         });
       } else {
-        // 如果点击了"查看全部"按钮，显示近期课程（未结束的课程）
-        this.$router.push({
-          path: '/Course/CourseManager',
-          query: {
-            filterMode: 'current' // 标记为近期课程筛选模式
-          }
+        this.navigateToRoute('/Course/CourseManager', {
+          filterMode: 'current'
         });
       }
     },
 
     // 跳转到通知管理页面
     goToNoticeManager() {
-      this.$router.push('/Notice/admin_notice');
+      this.navigateToRoute('/Notice/admin_notice');
     },
 
     // 跳转到活动审核页面
     goToActivityAudit(status) {
-      console.log('跳转到活动审核页面，状态:', status);
       if (status) {
-        this.$router.push({
-          path: '/Activity/ActivityAudit',
-          query: {
-            status: status
-          }
-        });
+        this.navigateToRoute('/Activity/ActivityAudit', { status });
       } else {
-        this.$router.push({
-          path: '/Activity/ActivityAudit'
-        });
+        this.navigateToRoute('/Activity/ActivityAudit');
       }
     },
 
     // 跳转到课程审核页面
     goToCourseAudit(status) {
-      console.log('跳转到课程审核页面，状态:', status);
       if (status) {
-        this.$router.push({
-          path: '/Course/CourseAudit',
-          query: {
-            status: status
-          }
-        });
+        this.navigateToRoute('/Course/CourseAudit', { status });
       } else {
-        this.$router.push({
-          path: '/Course/CourseAudit'
-        });
+        this.navigateToRoute('/Course/CourseAudit');
       }
     },
 
     // 处理活动统计图表点击事件
     handleActivityChartClick(statusName) {
-      // 根据状态名称映射到活动审核页面的状态
       const statusMap = {
         '未审核': 'pending',
         '已通过': 'approved',
         '未通过': 'rejected'
       };
-
       const status = statusMap[statusName];
       if (status) {
-        // 跳转到活动审核页面并传递状态参数
-        this.$router.push({
-          path: '/Activity/ActivityAudit',
-          query: {
-            status: status
-          }
-        });
+        this.navigateToRoute('/Activity/ActivityAudit', { status });
       }
     },
 
     // 获取活动统计数据
     async getActivityStats() {
       try {
-        // 先获取组织者名称，与活动审核界面保持一致
-        const nickName = await getNickName();
-        const organizer = nickName.msg;
-
+        const organizer = await this.getUserCollege();
         const response = await getAuditCount({ organizer });
         if (response.code === 200 && response.data) {
           this.activityStats = response.data;
-          // 更新图表数据
           this.updateStatsChart();
         }
       } catch (error) {
-        console.error('获取活动统计数据失败:', error);
-        // 如果获取失败，使用默认数据
-        this.activityStats = {
-          pending: 0,
-          approved: 180,
-          rejected: 0
-        };
+        this.handleApiError(error, '获取活动统计数据失败');
+        this.activityStats = { pending: 0, approved: 0, rejected: 0 };
         this.updateStatsChart();
       }
     },
@@ -1674,14 +1472,10 @@ export default {
     // 获取课程统计数据
     async getCourseStats() {
       try {
-        // 先获取组织者名称
-        const nickName = await getNickName();
-        const organizer = nickName.msg;
-
-        // 获取课程数据，与课程管理界面保持一致
+        const organizer = await this.getUserCollege();
         const response = await listCourses({
           organizer: organizer,
-          pageSize: 10000 // 获取所有数据
+          pageSize: 10000
         });
 
         if (response.code === 200) {
@@ -1689,8 +1483,7 @@ export default {
           this.processCourseStats(courses);
         }
       } catch (error) {
-        console.error('获取课程统计数据失败:', error);
-        this.$message.error('获取课程统计数据失败');
+        this.handleApiError(error, '获取课程统计数据失败');
       }
     },
 
@@ -1747,31 +1540,19 @@ export default {
     // 获取活动审核统计数据
     async getActivityAuditStats() {
       try {
-        // 先获取组织者名称
-        const nickName = await getNickName();
-        const organizer = nickName.msg;
-
-        console.log("🔍 首页获取活动审核统计，组织者:", organizer);
+        const organizer = await this.getUserCollege();
         const response = await getAuditCount(organizer);
         if (response.code === 200 && response.data) {
           this.activityAuditStats = response.data;
-          console.log("📊 首页活动审核统计数据:", response.data);
         }
       } catch (error) {
-        console.error('获取活动审核统计数据失败:', error);
-        // 如果获取失败，尝试不传参数
         try {
           const response = await getAuditCount();
           if (response.code === 200 && response.data) {
             this.activityAuditStats = response.data;
           }
         } catch (fallbackError) {
-          console.error('获取活动审核统计数据失败（回退方案）:', fallbackError);
-          this.activityAuditStats = {
-            pending: 0,
-            approved: 0,
-            rejected: 0
-          };
+          this.activityAuditStats = { pending: 0, approved: 0, rejected: 0 };
         }
       }
     },
@@ -1779,31 +1560,19 @@ export default {
     // 获取课程考核统计数据
     async getCourseAuditStats() {
       try {
-        // 先获取组织者名称
-        const nickName = await getNickName();
-        const organizer = nickName.msg;
-
-        console.log("🔍 首页获取课程考核统计，组织者:", organizer);
+        const organizer = await this.getUserCollege();
         const response = await getCourseAuditCount(organizer);
         if (response.code === 200 && response.data) {
           this.courseAuditStats = response.data;
-          console.log("📊 首页课程考核统计数据:", response.data);
         }
       } catch (error) {
-        console.error('获取课程考核统计数据失败:', error);
-        // 如果获取失败，尝试不传参数
         try {
           const response = await getCourseAuditCount();
           if (response.code === 200 && response.data) {
             this.courseAuditStats = response.data;
           }
         } catch (fallbackError) {
-          console.error('获取课程考核统计数据失败（回退方案）:', fallbackError);
-          this.courseAuditStats = {
-            pending: 0,
-            approved: 0,
-            rejected: 0
-          };
+          this.courseAuditStats = { pending: 0, approved: 0, rejected: 0 };
         }
       }
     },
@@ -1811,19 +1580,14 @@ export default {
     // 获取月度活动数据
     async getMonthlyActivityData() {
       try {
-        // 先获取组织者名称，与活动管理保持一致
-        const nickName = await getNickName();
-        const organizer = nickName.msg;
-
-        // 获取所有活动数据，与活动管理使用相同的查询方式
+        const organizer = await this.getUserCollege();
         const response = await listActivities({
           pageNum: 1,
-          pageSize: 10000, // 获取所有数据
+          pageSize: 10000,
           organizer: organizer
         });
 
         if (response.code === 200 && response.rows) {
-          // 按月份分组活动数据
           const monthlyGroups = {};
 
           response.rows.forEach(activity => {
@@ -1835,7 +1599,6 @@ export default {
               monthlyGroups[month] = [];
             }
 
-            // 获取报名人数，使用实际数据
             const participants = activity.registrationCount || activity.participantCount || 0;
 
             monthlyGroups[month].push({
@@ -1852,7 +1615,6 @@ export default {
             });
           });
 
-          // 转换为数组格式并按月份排序
           this.monthlyActivityData = Object.keys(monthlyGroups)
             .sort((a, b) => {
               const monthA = parseInt(a.replace('月', ''));
@@ -1868,12 +1630,10 @@ export default {
               })
             }));
 
-          // 更新图表
           this.updateStatsChart();
         }
       } catch (error) {
-        console.error('获取月度活动数据失败:', error);
-        // 如果获取失败，使用空数据
+        this.handleApiError(error, '获取月度活动数据失败');
         this.monthlyActivityData = [];
         this.updateStatsChart();
       }
@@ -1882,22 +1642,14 @@ export default {
 
     // 处理课程统计图表点击事件
     handleCourseChartClick(statusName) {
-      // 根据状态名称映射到课程审核页面的状态
       const statusMap = {
         '未考核': 'pending',
         '已通过': 'approved',
         '未通过': 'rejected'
       };
-
       const status = statusMap[statusName];
       if (status) {
-        // 跳转到课程审核页面并传递状态参数
-        this.$router.push({
-          path: '/Course/CourseAudit',
-          query: {
-            status: status
-          }
-        });
+        this.navigateToRoute('/Course/CourseAudit', { status });
       }
     },
 

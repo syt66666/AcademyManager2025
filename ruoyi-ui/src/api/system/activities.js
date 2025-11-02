@@ -81,3 +81,30 @@ export function checkActivityUnique(params) {
   })
 }
 
+// 申请扩容
+export function requestExpandCapacity(activityId) {
+  return request({
+    url: '/system/activities/requestExpand',
+    method: 'post',
+    data: {
+      activityId: activityId
+    }
+  })
+}
+
+// 获取扩容申请数量
+export function getExpandRequestCount(activityId) {
+  return request({
+    url: '/system/activities/expandRequestCount/' + activityId,
+    method: 'get'
+  })
+}
+
+// 检查当前用户是否已申请扩容
+export function checkExpandRequest(activityId) {
+  return request({
+    url: '/system/activities/checkExpandRequest/' + activityId,
+    method: 'get'
+  })
+}
+

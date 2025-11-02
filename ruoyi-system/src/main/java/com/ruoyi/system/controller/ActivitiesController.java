@@ -20,9 +20,11 @@ import com.ruoyi.system.domain.Activities;
 import com.ruoyi.system.service.IActivitiesService;
 import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.core.redis.RedisCache;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 活动信息 Controller
@@ -32,6 +34,9 @@ import javax.servlet.http.HttpServletResponse;
 public class ActivitiesController extends BaseController {
     @Autowired
     private IActivitiesService activityService;
+    
+    @Autowired
+    private RedisCache redisCache;
 
     /**
      * 查询活动列表
@@ -77,6 +82,16 @@ public class ActivitiesController extends BaseController {
     @Log(title = "活动信息", businessType = BusinessType.UPDATE)
     @PostMapping("/update")
     public AjaxResult edit(@RequestBody Activities activity) {
+        // 检查容量是否增加，如果增加则清空扩容申请数据
+        if (activity.getActivityId() != null && activity.getActivityTotalCapacity() != null) {
+            Activities oldActivity = activityService.selectActivityById(activity.getActivityId());
+            if (oldActivity != null && oldActivity.getActivityTotalCapacity() != null) {
+                // 如果新容量大于旧容量（扩容了），清空扩容申请数据
+                if (activity.getActivityTotalCapacity() > oldActivity.getActivityTotalCapacity()) {
+                    clearExpandRequestData(activity.getActivityId());
+                }
+            }
+        }
         return toAjax(activityService.updateActivity(activity));
     }
     /**
@@ -85,6 +100,16 @@ public class ActivitiesController extends BaseController {
     @Log(title = "活动信息", businessType = BusinessType.UPDATE)
     @PostMapping("/updateActivity")
     public AjaxResult edit2(@RequestBody Activities activity) {
+        // 检查容量是否增加，如果增加则清空扩容申请数据
+        if (activity.getActivityId() != null && activity.getActivityTotalCapacity() != null) {
+            Activities oldActivity = activityService.selectActivityById(activity.getActivityId());
+            if (oldActivity != null && oldActivity.getActivityTotalCapacity() != null) {
+                // 如果新容量大于旧容量（扩容了），清空扩容申请数据
+                if (activity.getActivityTotalCapacity() > oldActivity.getActivityTotalCapacity()) {
+                    clearExpandRequestData(activity.getActivityId());
+                }
+            }
+        }
         return toAjax(activityService.updateActivity2(activity));
     }
     /**
@@ -93,6 +118,12 @@ public class ActivitiesController extends BaseController {
     @Log(title = "活动信息", businessType = BusinessType.DELETE)
     @DeleteMapping("/{activityIds}")
     public AjaxResult remove(@PathVariable Integer[] activityIds) {
+        // 删除活动时，清空所有相关活动的扩容申请数据
+        if (activityIds != null) {
+            for (Integer activityId : activityIds) {
+                clearExpandRequestData(activityId);
+            }
+        }
         return toAjax(activityService.deleteActivityByIds(activityIds));
     }
 
@@ -197,6 +228,159 @@ public class ActivitiesController extends BaseController {
         
         boolean isUnique = activityService.checkActivityUnique(activityName, organizer, activityId);
         return AjaxResult.success(isUnique);
+    }
+
+    /**
+     * 申请扩容 - 使用Redis原子性操作增加扩容申请数量
+     * 每个用户对于同一活动只能申请一次
+     *
+     * @param params 包含activityId的Map
+     * @return 扩容申请成功后的数量
+     */
+    @PostMapping("/requestExpand")
+    public AjaxResult requestExpand(@RequestBody Map<String, Integer> params) {
+        Integer activityId = params.get("activityId");
+        if (activityId == null) {
+            return AjaxResult.error("活动ID不能为空");
+        }
+        
+        try {
+            // 获取当前登录用户
+            String username = getUsername();
+            if (username == null || username.isEmpty()) {
+                return AjaxResult.error("获取用户信息失败，请先登录");
+            }
+            
+            // 构建用户申请记录的Redis键：activity:expand:user:{activityId}
+            String userSetKey = "activity:expand:user:" + activityId;
+            
+            // 检查用户是否已经申请过扩容
+            @SuppressWarnings("unchecked")
+            Boolean isMember = redisCache.redisTemplate.opsForSet().isMember(userSetKey, username);
+            if (Boolean.TRUE.equals(isMember)) {
+                return AjaxResult.error("您已经申请过扩容，每个活动只能申请一次");
+            }
+            
+            // 构建扩容申请总数的Redis键：activity:expand:request:{activityId}
+            String countKey = "activity:expand:request:" + activityId;
+            
+            // 检查计数key是否存在，用于判断是否需要设置过期时间
+            Boolean countKeyExists = redisCache.hasKey(countKey);
+            
+            // 检查用户集合是否存在，用于判断是否需要设置过期时间
+            Boolean userSetExists = redisCache.hasKey(userSetKey);
+            
+            // 使用Redis INCR原子性操作增加计数
+            @SuppressWarnings("unchecked")
+            Long count = redisCache.redisTemplate.opsForValue().increment(countKey);
+            
+            // 将用户添加到申请集合中（原子性操作，防止重复申请）
+            @SuppressWarnings({"unchecked", "unused"})
+            Long added = redisCache.redisTemplate.opsForSet().add(userSetKey, username);
+            
+            // 设置过期时间为365天（可根据需要调整）
+            // 如果countKey不存在（新创建的），设置过期时间
+            if (count != null && (countKeyExists == null || !countKeyExists)) {
+                redisCache.expire(countKey, 365, TimeUnit.DAYS);
+            }
+            // 如果用户集合不存在（新创建的），设置过期时间
+            if (userSetExists == null || !userSetExists) {
+                redisCache.expire(userSetKey, 365, TimeUnit.DAYS);
+            }
+            
+            return AjaxResult.success("申请扩容成功", count);
+        } catch (Exception e) {
+            return AjaxResult.error("申请扩容失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取扩容申请数量
+     *
+     * @param activityId 活动ID
+     * @return 扩容申请数量
+     */
+    @GetMapping("/expandRequestCount/{activityId}")
+    public AjaxResult getExpandRequestCount(@PathVariable Integer activityId) {
+        if (activityId == null) {
+            return AjaxResult.error("活动ID不能为空");
+        }
+        
+        try {
+            String redisKey = "activity:expand:request:" + activityId;
+            Object countObj = redisCache.getCacheObject(redisKey);
+            
+            // 如果不存在，返回0
+            Long count = 0L;
+            if (countObj != null) {
+                if (countObj instanceof Number) {
+                    count = ((Number) countObj).longValue();
+                } else if (countObj instanceof String) {
+                    count = Long.parseLong((String) countObj);
+                }
+            }
+            
+            return AjaxResult.success(count);
+        } catch (Exception e) {
+            return AjaxResult.error("获取扩容申请数量失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 检查当前用户是否已申请扩容
+     *
+     * @param activityId 活动ID
+     * @return 是否已申请（true表示已申请，false表示未申请）
+     */
+    @GetMapping("/checkExpandRequest/{activityId}")
+    public AjaxResult checkExpandRequest(@PathVariable Integer activityId) {
+        if (activityId == null) {
+            return AjaxResult.error("活动ID不能为空");
+        }
+        
+        try {
+            // 获取当前登录用户
+            String username = getUsername();
+            if (username == null || username.isEmpty()) {
+                return AjaxResult.success(false); // 未登录视为未申请
+            }
+            
+            // 构建用户申请记录的Redis键：activity:expand:user:{activityId}
+            String userSetKey = "activity:expand:user:" + activityId;
+            
+            // 检查用户是否在申请集合中
+            @SuppressWarnings("unchecked")
+            Boolean isMember = redisCache.redisTemplate.opsForSet().isMember(userSetKey, username);
+            
+            return AjaxResult.success(Boolean.TRUE.equals(isMember));
+        } catch (Exception e) {
+            return AjaxResult.error("检查申请状态失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 清空活动的扩容申请数据
+     * 当管理员扩容活动时调用此方法清空之前的申请记录
+     *
+     * @param activityId 活动ID
+     */
+    private void clearExpandRequestData(Integer activityId) {
+        if (activityId == null) {
+            return;
+        }
+        
+        try {
+            // 清空扩容申请数量
+            String countKey = "activity:expand:request:" + activityId;
+            redisCache.deleteObject(countKey);
+            
+            // 清空申请扩容的用户集合
+            String userSetKey = "activity:expand:user:" + activityId;
+            redisCache.deleteObject(userSetKey);
+        } catch (Exception e) {
+            // 清空失败不影响活动更新，只记录日志
+            // 这里可以选择记录日志或者忽略错误
+        }
     }
 }
 

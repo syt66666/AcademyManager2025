@@ -126,7 +126,7 @@
         </el-table-column>
         <el-table-column label="活动名称" align="center" prop="activityName" width="300">
           <template slot-scope="scope">
-            <div class="activity-name" :title="scope.row.activityName">
+            <div class="activity-name" :title="scope.row.activityName" @click="viewActivityDetail(scope.row)" style="cursor: pointer;">
               <span :title="scope.row.activityName">{{ truncateText(scope.row.activityName, 18) }}</span>
             </div>
           </template>
@@ -191,6 +191,18 @@
           </template>
         </el-table-column>
 
+        <el-table-column label="扩容申请" align="center" width="120">
+          <template #default="scope">
+            <div class="expand-request">
+              <el-tag v-if="scope.row.expandRequestCount && scope.row.expandRequestCount > 0" type="warning" size="small" effect="plain">
+                <i class="el-icon-warning"></i>
+                {{ scope.row.expandRequestCount }}人
+              </el-tag>
+              <span v-else class="no-request">-</span>
+            </div>
+          </template>
+        </el-table-column>
+
         <el-table-column label="操作" width="200">
           <template slot-scope="scope">
             <div class="action-buttons">
@@ -211,35 +223,6 @@
                 :class="{ 'disabled-button': isActivityEnded(scope.row) }">
                 编辑活动
               </el-button>
-            </div>
-          </template>
-        </el-table-column>
-
-        <!-- 活动详细信息 -->
-        <el-table-column type="expand" width="60" align="center">
-          <template slot-scope="props">
-            <div class="expand-card">
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-location"></i> 活动地点:</div>
-                <div class="expand-content">{{ props.row.activityLocation || "未设置地点" }}</div>
-              </div>
-              <div class="expand-row">
-                <div class="expand-label"><i class="el-icon-document"></i> 活动描述:</div>
-                <div class="expand-content">{{ props.row.activityDescription || "无描述信息" }}</div>
-              </div>
-              <div class="expand-row" v-if="props.row.pictureUrl">
-                <div class="expand-label"><i class="el-icon-picture"></i> 活动图片:</div>
-                <div class="expand-content">
-                  <div class="activity-image-container">
-                    <el-image
-                      :src="getActivityImageUrl(props.row.pictureUrl)"
-                      :preview-src-list="[getActivityImageUrl(props.row.pictureUrl)]"
-                      fit="cover"
-                      class="activity-image"
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           </template>
         </el-table-column>
@@ -656,6 +639,96 @@
       </div>
     </el-dialog>
 
+    <!-- 活动详情弹窗 -->
+    <el-dialog
+      title="活动详情"
+      :visible.sync="detailDialogVisible"
+      width="800px"
+      :before-close="handleDetailClose"
+      class="activity-detail-dialog"
+    >
+      <div class="activity-detail" v-if="selectedActivity">
+        <!-- 活动详情展示 -->
+        <div class="detail-header">
+          <h2>{{ selectedActivity.activityName }}</h2>
+          <div class="status-tags">
+            <el-tag :type="getActivityStatusTag(selectedActivity)" size="medium" class="status-tag">
+              {{ getActivityStatusText(selectedActivity) }}
+            </el-tag>
+          </div>
+        </div>
+        <el-divider></el-divider>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-location"></i> 活动地点：</div>
+            <div class="detail-value">{{ selectedActivity.activityLocation || '未设置' }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 活动类型：</div>
+            <div class="detail-value">{{ getActivityTypeName(selectedActivity.activityType) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-office-building"></i> 组织单位：</div>
+            <div class="detail-value">{{ selectedActivity.organizer || '未设置' }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-user"></i> 活动容量：</div>
+            <div class="detail-value">
+            <span :class="getCapacityClass(selectedActivity)">
+              {{ selectedActivity.activityCapacity || 0 }}/{{ selectedActivity.activityTotalCapacity }}人
+            </span>
+            </div>
+          </div>
+          <div class="detail-item" v-if="selectedActivity.expandRequestCount && selectedActivity.expandRequestCount > 0">
+            <div class="detail-label"><i class="el-icon-warning"></i> 扩容申请：</div>
+            <div class="detail-value">
+              <el-tag type="warning" size="small" effect="plain">
+                {{ selectedActivity.expandRequestCount }}人已申请扩容
+              </el-tag>
+            </div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.activityStart) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名截止：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.activityDeadline) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 活动开始：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.startTime) }}</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label"><i class="el-icon-time"></i> 活动结束：</div>
+            <div class="detail-value">{{ formatDateTime(selectedActivity.endTime) }}</div>
+          </div>
+        </div>
+        <el-divider></el-divider>
+        <div class="detail-section-content">
+          <h4 class="section-title"><i class="el-icon-document"></i> 活动描述</h4>
+          <div class="section-content">
+            <div class="rich-text-content" v-html="selectedActivity.activityDescription || '暂无描述信息'"></div>
+          </div>
+        </div>
+
+        <!-- 活动图片展示 -->
+        <div class="detail-section-content" v-if="selectedActivity.pictureUrl">
+          <h4 class="section-title"><i class="el-icon-picture"></i> 活动图片</h4>
+          <div class="section-content">
+            <div class="activity-image-container">
+              <el-image
+                :src="getActivityImageUrl(selectedActivity.pictureUrl)"
+                :preview-src-list="[getActivityImageUrl(selectedActivity.pictureUrl)]"
+                fit="cover"
+                class="activity-image"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
     <!-- 图片预览对话框 -->
     <el-dialog
       title="图片预览"
@@ -672,7 +745,7 @@
 
 
 <script>
- import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique} from "@/api/system/activities";
+ import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique, getExpandRequestCount} from "@/api/system/activities";
  import {getToken} from "@/utils/auth";
  import {listBookingsWithActivity, importBookingsStudents} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
@@ -729,6 +802,9 @@ export default {
       uploadHeaders: {
         'Authorization': 'Bearer ' + getToken()
       },
+      // 活动详情弹窗
+      detailDialogVisible: false,
+      selectedActivity: null,
       // 遮罩层
       loading: true,
       // 选中数组
@@ -1178,6 +1254,41 @@ export default {
 
       this.dialogVisibleStudents = false; // 导出后自动关闭对话框
     },
+
+    /** 查看活动详情 */
+    async viewActivityDetail(row) {
+      this.selectedActivity = { ...row };
+      this.detailDialogVisible = true;
+      // 如果还没有加载扩容申请数量，则加载
+      if (!this.selectedActivity.expandRequestCount && this.selectedActivity.activityId) {
+        await this.loadExpandRequestCountForActivity(this.selectedActivity);
+      }
+    },
+
+    /** 为单个活动加载扩容申请数量 */
+    async loadExpandRequestCountForActivity(activity) {
+      if (!activity || !activity.activityId) return;
+      try {
+        const response = await getExpandRequestCount(activity.activityId);
+        if (response && response.code === 200) {
+          this.$set(activity, 'expandRequestCount', response.data || 0);
+        } else {
+          this.$set(activity, 'expandRequestCount', 0);
+        }
+      } catch (error) {
+        this.$set(activity, 'expandRequestCount', 0);
+      }
+    },
+
+    /** 关闭详情弹窗 */
+    handleDetailClose(done) {
+      this.detailDialogVisible = false;
+      this.selectedActivity = null;
+      if (done) {
+        done();
+      }
+    },
+
     // 查看选课学生
     async handleViewStudents(row) {
       this.studentLoading = true;
@@ -1299,6 +1410,8 @@ export default {
           this.loading = false;
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
+          // 为每个活动加载扩容申请数量
+          this.loadExpandRequestCounts(paginatedList);
         }).catch(error => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
@@ -1351,6 +1464,8 @@ export default {
           this.loading = false;
           // 更新可用的活动类型列表
           this.updateAvailableActivityTypes();
+          // 为每个活动加载扩容申请数量
+          this.loadExpandRequestCounts(paginatedList);
         }).catch(listError => {
           this.loading = false;
           this.$message.error("获取活动列表失败");
@@ -1600,6 +1715,30 @@ export default {
       if (!text) return '';
       if (text.length <= maxLength) return text;
       return text.substring(0, maxLength) + '...';
+    },
+
+    /** 为活动列表加载扩容申请数量 */
+    async loadExpandRequestCounts(activities) {
+      if (!activities || activities.length === 0) return;
+      
+      // 并行加载所有活动的扩容申请数量
+      const promises = activities.map(async (activity) => {
+        if (!activity.activityId) return;
+        try {
+          const response = await getExpandRequestCount(activity.activityId);
+          if (response && response.code === 200) {
+            // 使用Vue.set或直接赋值来确保响应式更新
+            this.$set(activity, 'expandRequestCount', response.data || 0);
+          } else {
+            this.$set(activity, 'expandRequestCount', 0);
+          }
+        } catch (error) {
+          // 静默失败，不影响列表显示
+          this.$set(activity, 'expandRequestCount', 0);
+        }
+      });
+      
+      await Promise.all(promises);
     },
 
     // ========== 学生列表相关方法 ==========
@@ -2254,16 +2393,27 @@ export default {
 .activity-name {
   font-size: 15px;
   font-weight: 600;
-  color: #303133;
-  cursor: help;
+  color: #409EFF;
+  cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  padding: 4px 0;
+  
+  span {
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+  }
 }
 
 .activity-name:hover {
-  color: #409EFF;
+  color: #66b1ff;
+  
+  span {
+    border-bottom-color: #66b1ff;
+  }
 }
 
 /* 时间安排样式 */
@@ -2414,6 +2564,26 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 5px;
+}
+
+.expand-request {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+}
+
+.expand-request .el-tag {
+  cursor: default;
+}
+
+.expand-request .el-tag i {
+  margin-right: 4px;
+}
+
+.expand-request .no-request {
+  color: #909399;
+  font-size: 14px;
 }
 
 .progress-bar {
@@ -3355,6 +3525,197 @@ export default {
   &:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* 活动详情弹窗样式 */
+.activity-detail-dialog {
+  .el-dialog {
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+
+  .el-dialog__header {
+    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
+    color: white;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 24px;
+
+    .el-dialog__title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .el-dialog__close {
+      color: white;
+      font-size: 20px;
+
+      &:hover {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .el-dialog__body {
+    padding: 24px;
+    background: #f8f9fa;
+  }
+
+  .el-dialog__footer {
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+    padding: 16px 24px;
+    text-align: right;
+  }
+}
+
+.activity-detail {
+  .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #2c3e50;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-tags {
+      display: flex;
+      gap: 8px;
+
+      .status-tag {
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+
+    .detail-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .detail-label {
+        font-weight: 600;
+        width: 120px;
+        color: #495057;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        i {
+          color: #667eea;
+          font-size: 16px;
+        }
+      }
+
+      .detail-value {
+        flex: 1;
+        font-weight: 500;
+
+        .capacity-high {
+          color: #e74c3c;
+          font-weight: 600;
+          background: rgba(231, 76, 60, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+
+        .capacity-medium {
+          color: #f39c12;
+          font-weight: 600;
+          background: rgba(243, 156, 18, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+
+        .capacity-low {
+          color: #27ae60;
+          font-weight: 600;
+          background: rgba(39, 174, 96, 0.1);
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+      }
+    }
+  }
+
+  .detail-section-content {
+    margin: 20px 0;
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      color: #2c3e50;
+      margin-bottom: 12px;
+      font-weight: 600;
+      font-size: 16px;
+
+      i {
+        margin-right: 8px;
+        color: #667eea;
+        font-size: 18px;
+      }
+    }
+
+    .section-content {
+      line-height: 1.6;
+      padding: 16px 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #495057;
+      font-weight: 500;
+
+      .rich-text-content {
+        word-wrap: break-word;
+        white-space: pre-wrap;
+      }
+    }
+  }
+
+  .activity-image-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+
+    .activity-image {
+      max-width: 400px;
+      max-height: 300px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+    }
   }
 }
 

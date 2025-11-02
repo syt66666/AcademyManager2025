@@ -6,7 +6,7 @@
         <div class="welcome-text">
           <h1 class="welcome-title">
             <i class="el-icon-sunny"></i>
-            {{ getGreeting() }}，{{ $store.state.user.nickName || $store.state.user.name }}！
+            {{ getFullGreeting() }}
           </h1>
           <p class="welcome-subtitle">{{ getCurrentDate() }}</p>
         </div>
@@ -391,11 +391,41 @@
 <script>
 import { listNotificationsPublic } from "@/api/system/notifications";
 import { listActivities } from "@/api/system/activities";
-import { listActivity } from "@/api/system/activity";
 import { listBookingsWithActivity } from "@/api/system/bookings";
 import { listBookingsWithCourse } from "@/api/system/courseBookings";
 import { getStudent } from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
+
+// 活动/课程类型映射常量
+const ACTIVITY_TYPE_MAP = {
+  '1': { 
+    key: 'personality', 
+    name: '人格塑造与价值引领活动类',
+    tagType: 'primary'
+  },
+  '2': { 
+    key: 'knowledge', 
+    name: '知识融合与思维进阶活动类',
+    tagType: 'success'
+  },
+  '3': { 
+    key: 'ability', 
+    name: '能力锻造与实践创新活动类',
+    tagType: 'warning'
+  },
+  '4': { 
+    key: 'social', 
+    name: '社会责任与领军意识活动类',
+    tagType: 'danger'
+  }
+};
+
+const TYPE_KEY_TO_NUMBER = {
+  'personality': '1',
+  'knowledge': '2',
+  'ability': '3',
+  'social': '4'
+};
 
 export default {
   name: "StudentHome",
@@ -517,22 +547,15 @@ export default {
      // 初始化用户书院信息
      async initUserCollege() {
        try {
-         console.log('=== 开始获取学生书院信息 ===');
-         console.log('当前登录用户:', this.$store.state.user.name);
-
          // 直接调用获取学生信息的API
          const response = await getStudent(this.$store.state.user.name);
-         console.log('学生信息API响应:', response);
 
          if (response && response.studentInfo && response.studentInfo.academy) {
            this.userCollege = response.studentInfo.academy;
-           console.log('✅ 学生书院信息获取成功:', this.userCollege);
          } else {
-           console.warn('⚠️ 未找到学生书院信息:', response);
            this.userCollege = null;
          }
        } catch (error) {
-         console.error('❌ 获取学生书院信息失败:', error);
          this.userCollege = null;
          this.$message.warning('获取书院信息失败，请联系管理员');
        }
@@ -598,89 +621,58 @@ export default {
           this.loadSelectedCourses()
         ]);
       } catch (error) {
-        console.error('加载数据失败:', error);
         this.$message.error('加载数据失败');
       } finally {
         this.loading = false;
       }
     },
 
+     // 统一错误处理方法
+     handleApiError(error, defaultMsg) {
+       if (error.response) {
+         this.$message.error(`${defaultMsg}: HTTP ${error.response.status} - ${error.response.statusText}`);
+       } else if (error.request) {
+         this.$message.error(`${defaultMsg}: 网络请求失败，请检查网络连接`);
+       } else {
+         this.$message.error(`${defaultMsg}: ${error.message}`);
+       }
+     },
+
      // 加载通知数据
      async loadNotifications() {
        this.notificationsLoading = true;
        try {
-         console.log('=== 开始加载通知数据 ===');
-         console.log('当前用户信息:', this.$store.state.user);
-         console.log('当前用户书院（已获取）:', this.userCollege);
-
          // 使用公开接口，获取所有通知
          const response = await listNotificationsPublic({
            pageNum: 1,
            pageSize: 10  // 增加页面大小以显示所有通知
          });
 
-         console.log('通知API响应:', response);
-
          if (response && response.code === 200) {
            // 获取所有通知数据
            const allNotifications = response.rows || [];
-           console.log('所有通知数据:', allNotifications);
 
            // 根据用户书院过滤通知（匹配noti_type字段）
            if (this.userCollege) {
              const filteredNotifications = allNotifications.filter(notification => {
                // 检查通知的noti_type字段
                const notificationCollege = notification.noti_type || notification.notiType;
-               const isMatch = notificationCollege === this.userCollege;
-
-               console.log('通知过滤检查:', {
-                 title: notification.notiTitle,
-                 noti_type: notification.noti_type,
-                 notiType: notification.notiType,
-                 userCollege: this.userCollege,
-                 isMatch: isMatch
-               });
-
-               return isMatch;
+               return notificationCollege === this.userCollege;
              });
 
              // 限制显示数量为5条，与近期活动保持一致
              this.notifications = filteredNotifications.slice(0, 5);
-             console.log(`✅ 过滤后的书院通知 (${this.userCollege}):`, this.notifications);
-             console.log(`原始通知数: ${allNotifications.length}, 过滤后通知数: ${filteredNotifications.length}, 显示数量: ${this.notifications.length}`);
            } else {
              // 如果没有书院信息，不显示任何通知（安全考虑）
              this.notifications = [];
-             console.warn('⚠️ 未找到用户书院信息，不显示任何通知');
              this.$message.warning('未找到您的书院信息，请联系管理员');
            }
          } else {
-           console.log('API返回非200状态码:', response?.code, response?.msg);
            this.$message.error('加载通知失败: ' + (response?.msg || '服务器返回错误'));
          }
 
        } catch (error) {
-         console.error('=== 通知加载失败 ===');
-         console.error('错误对象:', error);
-         console.error('错误类型:', typeof error);
-         console.error('错误值:', error);
-
-         if (error.response) {
-           console.error('HTTP响应错误:');
-           console.error('状态码:', error.response.status);
-           console.error('状态文本:', error.response.statusText);
-           console.error('响应数据:', error.response.data);
-           console.error('响应头:', error.response.headers);
-
-           this.$message.error(`加载通知失败: HTTP ${error.response.status} - ${error.response.statusText}`);
-         } else if (error.request) {
-           console.error('网络请求错误:');
-           console.error('请求对象:', error.request);
-           this.$message.error('加载通知失败: 网络请求失败，请检查网络连接');
-         } else {
-           console.error('其他错误:', error.message);
-           this.$message.error('加载通知失败: ' + error.message);
-         }
+         this.handleApiError(error, '加载通知失败');
        } finally {
          this.notificationsLoading = false;
        }
@@ -690,43 +682,21 @@ export default {
      async loadRecentActivities() {
        this.activitiesLoading = true;
        try {
-         console.log('=== 开始加载近期活动数据 ===');
-         console.log('当前用户书院（已获取）:', this.userCollege);
-
          // 获取所有活动
          const response = await listActivities({
            pageNum: 1,
            pageSize: 1000 // 获取所有数据
          });
 
-         console.log('活动API响应:', response);
-
          if (response.code === 200) {
            const allActivities = response.rows || [];
-           console.log('所有活动数据:', allActivities);
 
            // 根据用户书院过滤活动（匹配organizer字段）
            let filteredActivities = allActivities;
            if (this.userCollege) {
-             filteredActivities = allActivities.filter(activity => {
-               // 检查活动的organizer字段
-               const activityOrganizer = activity.organizer;
-               const isMatch = activityOrganizer === this.userCollege;
-
-               console.log('活动过滤检查:', {
-                 activityName: activity.activityName,
-                 organizer: activity.organizer,
-                 userCollege: this.userCollege,
-                 isMatch: isMatch
-               });
-
-               return isMatch;
-             });
-
-             console.log(`✅ 过滤后的书院活动 (${this.userCollege}):`, filteredActivities);
-             console.log(`原始活动数: ${allActivities.length}, 过滤后活动数: ${filteredActivities.length}`);
-           } else {
-             console.warn('⚠️ 未找到用户书院信息，显示所有活动');
+             filteredActivities = allActivities.filter(activity => 
+               activity.organizer === this.userCollege
+             );
            }
 
            // 按活动开始时间降序排序，获取最近的5个活动（与AcademicTeacherHome.vue保持一致）
@@ -734,34 +704,25 @@ export default {
              .sort((a, b) => new Date(b.startTime) - new Date(a.startTime))
              .slice(0, 5);
 
-           this.recentActivities = sortedActivities.map(activity => {
-             const startTime = new Date(activity.startTime);
-             const endTime = new Date(activity.endTime);
-
-             return {
-               activityId: activity.activityId,
-               activityName: activity.activityName,
-               activityLocation: activity.activityLocation,
-               startTime: activity.startTime,
-               endTime: activity.endTime,
-               activityStart: activity.activityStart,
-               activityDeadline: activity.activityDeadline,
-               organizer: activity.organizer,
-               activityType: activity.activityType,
-               activityDescription: activity.activityDescription,
-               status: this.getActivityStatus(activity),
-               statusText: this.getActivityStatusText(activity)
-             };
-           });
-           
-           console.log('筛选后的活动数据:', this.recentActivities);
+           this.recentActivities = sortedActivities.map(activity => ({
+             activityId: activity.activityId,
+             activityName: activity.activityName,
+             activityLocation: activity.activityLocation,
+             startTime: activity.startTime,
+             endTime: activity.endTime,
+             activityStart: activity.activityStart,
+             activityDeadline: activity.activityDeadline,
+             organizer: activity.organizer,
+             activityType: activity.activityType,
+             activityDescription: activity.activityDescription,
+             status: this.getActivityStatus(activity),
+             statusText: this.getActivityStatusText(activity)
+           }));
          } else {
-           console.error('API响应错误:', response);
            this.$message.error('加载近期活动失败');
          }
        } catch (error) {
-         console.error('获取近期活动失败:', error);
-         this.$message.error('加载近期活动失败');
+         this.handleApiError(error, '加载近期活动失败');
        } finally {
          this.activitiesLoading = false;
        }
@@ -779,30 +740,6 @@ export default {
 
         if (response.code === 200) {
           const bookingRecords = response.rows || [];
-          console.log('=== 活动预约记录数据 ===');
-          console.log('API响应:', response);
-          console.log('总记录数:', bookingRecords.length);
-          console.log('预约记录详情:', bookingRecords);
-          console.log('当前用户:', this.$store.state.user.name);
-
-          if (bookingRecords.length === 0) {
-            console.warn('⚠️ bookings表中没有数据！');
-            console.warn('请检查：');
-            console.warn('1. 学生是否已预约活动');
-            console.warn('2. bookings表中是否有该学生的记录');
-            console.warn('3. API接口是否正确');
-          } else {
-            console.log('✅ 找到预约记录，开始处理数据...');
-            bookingRecords.forEach((record, index) => {
-              console.log(`记录 ${index + 1}:`, {
-                activityId: record.activityId,
-                activityName: record.activityName,
-                activityType: record.activityType,
-                status: record.status,
-                studentId: record.studentId
-              });
-            });
-          }
 
           // 按活动类型分类统计
           this.activityCategories.forEach(category => {
@@ -824,13 +761,6 @@ export default {
               activityId: record.activityId,
               completedTime: record.updatedAt || record.createdAt
             }));
-
-            console.log(`分类 ${category.name} 统计:`, {
-              completed: category.completed,
-              total: category.total,
-              progress: category.progress,
-              completedActivities: category.completedActivities
-            });
           });
 
           // 更新活动状态筛选的计数
@@ -839,7 +769,6 @@ export default {
           this.$message.error('加载活动进度失败');
         }
       } catch (error) {
-        console.error('加载活动进度失败:', error);
         this.$message.error('加载活动进度失败');
       }
     },
@@ -865,14 +794,11 @@ export default {
 
           // 更新课程状态筛选的计数
           this.updateCourseStatusCounts(allCourses);
-
-          console.log('按course_start时间倒序排列的选课记录:', this.selectedCourses);
         } else {
           this.$message.error('加载选课记录失败');
         }
       } catch (error) {
-        console.error('加载选课记录失败:', error);
-        this.$message.error('加载选课记录失败');
+        this.handleApiError(error, '加载选课记录失败');
       } finally {
         this.coursesLoading = false;
       }
@@ -888,13 +814,18 @@ export default {
       return parseTime(date, '{y}-{m}-{d} {h}:{i}:{s}');
     },
 
-    // 格式化活动日期（显示为"月 日"格式）
-    formatActivityDate(date) {
+    // 格式化日期（显示为"月 日"格式）- 通用方法
+    formatMonthDay(date) {
       if (!date) return '';
       const d = new Date(date);
       const day = d.getDate();
       const month = d.getMonth() + 1;
       return `${month}月${day}`;
+    },
+
+    // 格式化活动日期（显示为"月 日"格式）
+    formatActivityDate(date) {
+      return this.formatMonthDay(date);
     },
 
     // 格式化活动时间范围（显示为"HH:MM-HH:MM"格式）
@@ -914,11 +845,7 @@ export default {
 
     // 格式化课程日期（显示为"月 日"格式）
     formatCourseDate(date) {
-      if (!date) return '';
-      const d = new Date(date);
-      const day = d.getDate();
-      const month = d.getMonth() + 1;
-      return `${month}月${day}`;
+      return this.formatMonthDay(date);
     },
 
     // 格式化课程时间范围（显示为"MM/DD HH:MM - MM/DD HH:MM"格式）
@@ -996,36 +923,17 @@ export default {
 
     // 获取活动类型（基于activityType字段）
     getActivityType(activityType) {
-      const typeMap = {
-        '1': 'personality',  // 人格塑造与价值引领活动类
-        '2': 'knowledge',    // 知识融合与思维进阶活动类
-        '3': 'ability',      // 能力锻造与实践创新活动类
-        '4': 'social'        // 社会责任与领军意识活动类
-      };
-      return typeMap[activityType] || 'personality';
+      return ACTIVITY_TYPE_MAP[activityType]?.key || 'personality';
     },
 
     // 获取活动类型名称
     getActivityTypeName(activityType) {
-      const typeMap = {
-        '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
-        '3': '能力锻造与实践创新活动类',
-        '4': '社会责任与领军意识活动类'
-      };
-      return typeMap[activityType] || activityType;
+      return ACTIVITY_TYPE_MAP[activityType]?.name || activityType;
     },
 
     // 获取活动类型标签类型
     getActivityTypeTagType(activityType) {
-      const map = {
-        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
-        '其他': ''        // 默认蓝色
-      }
-      return map[activityType] || 'info';
+      return ACTIVITY_TYPE_MAP[activityType]?.tagType || 'info';
     },
 
     // 获取课程状态标签类型
@@ -1044,8 +952,6 @@ export default {
       const map = {
         '必修': 'danger',    // 必修 - 红色
         '选修': 'success',   // 选修 - 绿色
-        '实践': 'warning',   // 实践 - 橙色
-        '其他': 'info'       // 其他 - 蓝色
       }
       return map[category] || 'info';
     },
@@ -1063,25 +969,12 @@ export default {
 
     // 获取课程类型标签类型
     getCourseTypeTagType(courseType) {
-      const map = {
-        '1': 'primary',   // 人格塑造与价值引领活动类 - 蓝色
-        '2': 'success',   // 知识融合与思维进阶活动类 - 绿色
-        '3': 'warning',   // 能力锻造与实践创新活动类 - 橙色
-        '4': 'danger',    // 社会责任与领军意识活动类 - 红色
-        '其他': ''        // 默认蓝色
-      }
-      return map[courseType] || 'info';
+      return ACTIVITY_TYPE_MAP[courseType]?.tagType || 'info';
     },
 
     // 获取课程类型名称
     getCourseTypeName(courseType) {
-      const typeMap = {
-        '1': '人格塑造与价值引领活动类',
-        '2': '知识融合与思维进阶活动类',
-        '3': '能力锻造与实践创新活动类',
-        '4': '社会责任与领军意识活动类'
-      };
-      return typeMap[courseType] || courseType;
+      return ACTIVITY_TYPE_MAP[courseType]?.name || courseType;
     },
 
     // 获取成绩来源标签类型
@@ -1101,68 +994,44 @@ export default {
       return new Date(endTime) < new Date();
     },
 
+    // 通用路由跳转方法
+    navigateToRoute(path, query = {}, errorMsg = '跳转失败，请检查路由配置') {
+      this.$router.push({ path, query }).catch(() => {
+        this.$message.error(errorMsg);
+      });
+    },
+
     // 根据状态筛选
     filterByStatus(status) {
-      this.$router.push({
-        path: '/Activity/ActivityParticipate',
-        query: {
-          status: status,
-          autoFilter: 'true'
-        }
-      }).catch(error => {
-        console.error('跳转到活动参与页面失败:', error);
-        this.$message.error('跳转到活动参与页面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Activity/ActivityParticipate', {
+        status: status,
+        autoFilter: 'true'
+      }, '跳转到活动参与页面失败，请检查路由配置');
     },
 
     // 清除状态筛选
     clearStatusFilter() {
-      this.$router.push({
-        path: '/Activity/ActivityParticipate'
-      }).catch(error => {
-        console.error('跳转到活动参与页面失败:', error);
-        this.$message.error('跳转到活动参与页面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Activity/ActivityParticipate', {}, '跳转到活动参与页面失败，请检查路由配置');
     },
 
     // 根据课程状态筛选
     filterByCourseStatus(status) {
-      this.$router.push({
-        path: '/Course/CourseParticipate',
-        query: {
-          status: status,
-          autoFilter: 'true'
-        }
-      }).catch(error => {
-        console.error('跳转到课程参与页面失败:', error);
-        this.$message.error('跳转到课程参与页面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Course/CourseParticipate', {
+        status: status,
+        autoFilter: 'true'
+      }, '跳转到课程参与页面失败，请检查路由配置');
     },
 
     // 清除课程状态筛选
     clearCourseStatusFilter() {
-      this.$router.push({
-        path: '/Course/CourseParticipate'
-      }).catch(error => {
-        console.error('跳转到课程参与页面失败:', error);
-        this.$message.error('跳转到课程参与页面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Course/CourseParticipate', {}, '跳转到课程参与页面失败，请检查路由配置');
     },
 
     // 跳转到活动预约界面
     goToActivityBooking(activity) {
-      console.log('准备跳转到活动预约界面，活动ID:', activity.activityId);
-      console.log('活动信息:', activity);
-
-      this.$router.push({
-        path: '/Activity/ActivityBooking',
-        query: { activityId: activity.activityId }
-      }).then(() => {
-        console.log('成功跳转到活动预约界面');
-      }).catch(error => {
-        console.error('跳转失败:', error);
-        this.$message.error('跳转到活动预约界面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Activity/ActivityBooking', {
+        activityId: activity.activityId
+      }, '跳转到活动预约界面失败，请检查路由配置');
     },
 
 
@@ -1201,11 +1070,7 @@ export default {
 
     // 格式化通知日期
     formatNotificationDate(date) {
-      if (!date) return '';
-      const d = new Date(date);
-      const day = d.getDate();
-      const month = d.getMonth() + 1;
-      return `${month}月${day}`;
+      return this.formatMonthDay(date);
     },
 
     // 判断是否为新通知（3天内）
@@ -1235,6 +1100,7 @@ export default {
       return `已完成的活动：\n${activityNames.join('\n')}`;
     },
 
+
     // 获取问候语
     getGreeting() {
       const hour = new Date().getHours();
@@ -1248,6 +1114,19 @@ export default {
       return '夜深了';
     },
 
+    // 获取完整的问候语（包含书院和姓名）
+    getFullGreeting() {
+      const greeting = this.getGreeting();
+      const userName = this.$store.state.user.nickName || this.$store.state.user.name;
+      const college = this.userCollege;
+      
+      if (college) {
+        return `${greeting}，${college}${userName}！`;
+      } else {
+        return `${greeting}，${userName}！`;
+      }
+    },
+
     // 获取当前日期
     getCurrentDate() {
       const date = new Date();
@@ -1257,22 +1136,22 @@ export default {
 
     // 快捷入口 - 活动预约
     goToActivityBookingPage() {
-      this.$router.push('/Activity/ActivityBooking');
+      this.navigateToRoute('/Activity/ActivityBooking');
     },
 
     // 快捷入口 - 课程选课
     goToCourseBookingPage() {
-      this.$router.push('/Course/CourseBooking');
+      this.navigateToRoute('/Course/CourseBooking');
     },
 
     // 快捷入口 - 我的活动
     goToActivityParticipatePage() {
-      this.$router.push('/Activity/ActivityParticipate');
+      this.navigateToRoute('/Activity/ActivityParticipate');
     },
 
     // 快捷入口 - 我的课程
     goToCourseParticipatePage() {
-      this.$router.push('/Course/CourseParticipate');
+      this.navigateToRoute('/Course/CourseParticipate');
     },
 
     // 跳转到所有通知页面
@@ -1281,84 +1160,38 @@ export default {
     },
 
     goToNoticeManager() {
-      this.$router.push('/Notice/student_notice');
+      this.navigateToRoute('/Notice/student_notice');
     },
 
     // 跳转到所有活动页面（活动预约界面）
     goToAllActivities() {
-      console.log('跳转到活动预约界面 - 活动列表视图');
-      this.$router.push({
-        path: '/Activity/ActivityBooking',
-        query: {
-          view: 'list',  // 指定跳转到活动列表视图
-          tab: 'activity-list'  // 指定活动列表标签页
-        }
-      }).then(() => {
-        console.log('成功跳转到活动预约界面 - 活动列表视图');
-      }).catch(error => {
-        console.error('跳转到活动预约界面失败:', error);
-        this.$message.error('跳转到活动预约界面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Activity/ActivityBooking', {
+        view: 'list',  // 指定跳转到活动列表视图
+        tab: 'activity-list'  // 指定活动列表标签页
+      }, '跳转到活动预约界面失败，请检查路由配置');
     },
 
     // 根据活动类型跳转到活动参与界面
     goToActivityParticipateByType(activityType) {
-      console.log('准备跳转到活动参与界面，活动类型:', activityType);
-
-      // 将类型映射为数字
-      const typeMap = {
-        'personality': '1',  // 人格塑造与价值引领活动类
-        'knowledge': '2',    // 知识融合与思维进阶活动类
-        'ability': '3',      // 能力锻造与实践创新活动类
-        'social': '4'        // 社会责任与领军意识活动类
-      };
-
-      const typeValue = typeMap[activityType] || activityType;
-
-      this.$router.push({
-        path: '/Activity/ActivityParticipate',
-        query: {
-          activityType: typeValue,
-          autoFilter: 'true'
-        }
-      }).then(() => {
-        console.log('成功跳转到活动参与界面，类型筛选:', typeValue);
-      }).catch(error => {
-        console.error('跳转到活动参与界面失败:', error);
-        this.$message.error('跳转到活动参与界面失败，请检查路由配置');
-      });
+      const typeValue = TYPE_KEY_TO_NUMBER[activityType] || activityType;
+      this.navigateToRoute('/Activity/ActivityParticipate', {
+        activityType: typeValue,
+        autoFilter: 'true'
+      }, '跳转到活动参与界面失败，请检查路由配置');
     },
 
     // 跳转到课程参与界面
     goToCourseParticipate(course) {
-      console.log('准备跳转到课程参与界面，课程信息:', course);
-
-      this.$router.push({
-        path: '/Course/CourseParticipate',
-        query: {
-          courseId: course.id || course.courseId,
-          courseName: course.courseName,
-          autoFilter: 'true'
-        }
-      }).then(() => {
-        console.log('成功跳转到课程参与界面，课程ID:', course.id || course.courseId);
-      }).catch(error => {
-        console.error('跳转到课程参与界面失败:', error);
-        this.$message.error('跳转到课程参与界面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Course/CourseParticipate', {
+        courseId: course.id || course.courseId,
+        courseName: course.courseName,
+        autoFilter: 'true'
+      }, '跳转到课程参与界面失败，请检查路由配置');
     },
 
     // 跳转到所有课程页面
     goToAllCourses() {
-      console.log('跳转到所有课程页面');
-      this.$router.push({
-        path: '/Course/CourseParticipate'
-      }).then(() => {
-        console.log('成功跳转到所有课程页面');
-      }).catch(error => {
-        console.error('跳转到所有课程页面失败:', error);
-        this.$message.error('跳转到所有课程页面失败，请检查路由配置');
-      });
+      this.navigateToRoute('/Course/CourseParticipate', {}, '跳转到所有课程页面失败，请检查路由配置');
     }
   }
 };
