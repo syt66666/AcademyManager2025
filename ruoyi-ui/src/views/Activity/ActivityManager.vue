@@ -95,6 +95,13 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
+        <el-button
+          type="success"
+          plain
+          icon="el-icon-upload2"
+          size="mini"
+          @click="openImportDialog"
+        >导入名单</el-button>
       </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </div>
@@ -476,6 +483,46 @@
         </div>
       </div>
     </el-dialog>
+
+    <!-- 导入学生名单对话框 -->
+    <el-dialog
+      title="导入指定活动学生名单"
+      :visible.sync="importDialogVisible"
+      width="560px"
+      append-to-body
+      :before-close="() => { if (!importSubmitting) importDialogVisible = false }">
+      <div class="dialog-body">
+        <el-form :model="importForm" label-width="120px">
+          <el-form-item label="选择活动">
+            <el-select v-model="importForm.activityId" filterable placeholder="请选择活动" style="width:100%">
+              <el-option
+                v-for="a in activitiesList"
+                :key="a.activityId"
+                :label="a.activityName"
+                :value="a.activityId"/>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="审核状态">
+            <el-radio-group v-model="importForm.status">
+              <el-radio label="未提交">未提交</el-radio>
+              <el-radio label="已通过">已通过</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="学生学号">
+            <el-input
+              type="textarea"
+              :rows="8"
+              v-model="importForm.studentIdsText"
+              placeholder="粘贴学号，支持换行、逗号或分号分隔"/>
+            <div style="color:#909399;font-size:12px;margin-top:6px;">仅导入在 stu_info 表中已存在的学号；已报名的将跳过。</div>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="importDialogVisible=false" :disabled="importSubmitting">取 消</el-button>
+        <el-button type="primary" @click="submitImport" :loading="importSubmitting">确 定</el-button>
+      </span>
+    </el-dialog>
     <!-- 学生预约活动对话框 -->
     <el-dialog
       title="预约活动学生列表"
@@ -625,9 +672,9 @@
 
 
 <script>
-import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique} from "@/api/system/activities";
-import {getToken} from "@/utils/auth";
-import {listBookingsWithActivity} from "@/api/system/bookings";
+ import {listActivities, getActivities, delActivities, addActivities, updateActivities2, checkActivityUnique} from "@/api/system/activities";
+ import {getToken} from "@/utils/auth";
+ import {listBookingsWithActivity, importBookingsStudents} from "@/api/system/bookings";
 import {getNickName} from "@/api/system/student";
 import { parseTime } from "@/utils/ruoyi";
 import { getServerTime } from "@/api/common/time";
@@ -644,6 +691,14 @@ export default {
   },
   data() {
     return {
+      // 导入名单对话框
+      importDialogVisible: false,
+      importSubmitting: false,
+      importForm: {
+        activityId: null,
+        status: '未提交',
+        studentIdsText: ''
+      },
 
       // 新增状态
       dialogVisibleStudents: false,
@@ -858,6 +913,44 @@ export default {
     });
   },
   methods: {
+    // 打开导入对话框
+    openImportDialog() {
+      this.importForm = {
+        activityId: null,
+        status: '未提交',
+        studentIdsText: ''
+      };
+      this.importDialogVisible = true;
+    },
+    // 提交导入
+    async submitImport() {
+      if (this.importSubmitting) return;
+      const { activityId, status, studentIdsText } = this.importForm;
+      if (!activityId) {
+        this.$message.warning('请选择活动');
+        return;
+      }
+      const ids = (studentIdsText || '')
+        .split(/[\s,;\n\r]+/g)
+        .map(s => s && s.trim())
+        .filter(Boolean);
+      if (ids.length === 0) {
+        this.$message.warning('请输入学生学号');
+        return;
+      }
+      this.importSubmitting = true;
+      try {
+        const res = await importBookingsStudents({ activityId, status, studentIds: Array.from(new Set(ids)) });
+        const d = (res && res.data) || {};
+        this.$message.success(`导入完成：新增 ${d.inserted || 0}，不存在 ${d.skippedNotFound || 0}，重复 ${d.skippedDuplicate || 0}`);
+        this.importDialogVisible = false;
+        await this.getList();
+      } catch (e) {
+        this.$message.error(`导入失败：${(e && (e.msg || e.message)) || '未知错误'}`);
+      } finally {
+        this.importSubmitting = false;
+      }
+    },
     /** 获取服务器时间 */
     async getServerTime() {
       try {
@@ -1384,7 +1477,6 @@ export default {
       }
     },
 
-    /** 提交按钮 */
     /** 提交按钮 */
     async submitForm() {
       // 防止重复提交

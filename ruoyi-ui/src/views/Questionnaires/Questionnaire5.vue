@@ -174,116 +174,84 @@ export default {
       questions: [
         {
           id: 1,
-          category: '一、基本履职与师德师风',
-          text: '该导师在政治素养、职业操守、教书育人、为人师表等方面的表现如何？',
+          category: '一、导师基本职责考核',
+          text: '思想引领：该导师在加强学生思想政治教育，引领树立崇高理想信念，深化家国情怀等方面表现是否合格？',
           options: [
-            { value: 1, label: 'A', text: '存在不足' },
-            { value: 2, label: 'B', text: '表现一般，需提升' },
-            { value: 3, label: 'C', text: '符合基本要求' },
-            { value: 4, label: 'D', text: '表现良好' },
-            { value: 5, label: 'E', text: '师德典范' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 2,
-          text: '该导师在完成指导学生发展、定期见面、学期初计划与期末小结等基础职责方面的表现如何？',
+          text: '学业指导：该导师在引导学生明确学习目标，掌握正确学习方法，培养学生自主学习能力和良好的学习习惯方面表现是否合格？',
           options: [
-            { value: 1, label: 'A', text: '未能有效履行' },
-            { value: 2, label: 'B', text: '履行情况不佳，时有缺漏' },
-            { value: 3, label: 'C', text: '基本履行' },
-            { value: 4, label: 'D', text: '较好履行，记录完整' },
-            { value: 5, label: 'E', text: '超额、主动且高质量完成' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 3,
-          category: '二、育人过程与书院参与',
-          text: '您认为该导师对学生的指导是否深入且系统，能否有效回应学生成长需求？',
+          text: '专业引导：该导师在指导学生积极开展读书活动、科学研究及其他学术活动方面表现是否合格？',
           options: [
-            { value: 1, label: 'A', text: '流于形式，缺乏深度' },
-            { value: 2, label: 'B', text: '深度不够，系统性差' },
-            { value: 3, label: 'C', text: '达到基本预期' },
-            { value: 4, label: 'D', text: '过程扎实，有一定系统性，效果较好' },
-            { value: 5, label: 'E', text: '非常系统、深入，能精准对接学生需求' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 4,
-          text: '该导师在学生价值塑造、思想引导、学术诚信教育方面的工作是否扎实有效？',
+          text: '能力培养：该导师在引导或指导学生参加各类项目、竞赛、活动，培养学生能力等方面表现是否合格？',
           options: [
-            { value: 1, label: 'A', text: '未见成效' },
-            { value: 2, label: 'B', text: '成效不显，方法单一' },
-            { value: 3, label: 'C', text: '有一定成效' },
-            { value: 4, label: 'D', text: '成效良好，方法得当' },
-            { value: 5, label: 'E', text: '成效显著，有可推广的典型案例' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 5,
-          text: '该导师在促进学生学业进步、专业认知深化和学术兴趣培养方面的成效如何？',
+          text: '人生规划：该导师在引导学生树立人生目标、规划大学生活、职业规划、价值观培养及其他能力培养方面表现是否合格？',
           options: [
-            { value: 1, label: 'A', text: '无明显作用' },
-            { value: 2, label: 'B', text: '作用有限' },
-            { value: 3, label: 'C', text: '达到基本效果' },
-            { value: 4, label: 'D', text: '效果较为明显' },
-            { value: 5, label: 'E', text: '效果突出，学生反馈积极' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 6,
-          text: '该导师在参与书院课程建设、活动组织、公共服务及资源引入等方面的积极性与贡献如何？',
+          category: '二、导师工作量及整体考核',
+          text: '该导师所指导的学生数量是否符合内设书院要求？',
           options: [
-            { value: 1, label: 'A', text: '消极，未参与或极少参与' },
-            { value: 2, label: 'B', text: '被动参与，贡献度低' },
-            { value: 3, label: 'C', text: '参与1-2项，达到基本要求' },
-            { value: 4, label: 'D', text: '主动参与多项，贡献较大' },
-            { value: 5, label: 'E', text: '深度参与并发挥核心作用，积极引入资源' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 7,
-          text: '该导师在遵守书院管理制度、按时提交材料、配合书院工作安排等方面的表现如何？',
+          text: '该导师是否达到了大工书院要求的每4周进行1次面对面指导的基本要求？',
           options: [
-            { value: 1, label: 'A', text: '配合度差，规范性不足' },
-            { value: 2, label: 'B', text: '配合度与规范性一般' },
-            { value: 3, label: 'C', text: '基本符合要求' },
-            { value: 4, label: 'D', text: '较好配合，工作规范' },
-            { value: 5, label: 'E', text: '主动配合，极为规范可靠' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 8,
-          category: '三、育人成效与协同合作',
-          text: '根据您的观察，该导师所指导的学生在综合素质、创新能力、精神面貌等方面是否有明显进步？',
+          text: '该导师是否按照规定向内设书院提交指导情况小结？',
           options: [
-            { value: 1, label: 'A', text: '进步不明显' },
-            { value: 2, label: 'B', text: '略有进步' },
-            { value: 3, label: 'C', text: '有明显进步' },
-            { value: 4, label: 'D', text: '进步非常显著' },
-            { value: 5, label: 'E', text: '成长卓越，有突出案例或成果' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 9,
-          text: '该导师在与辅导员、书院管理团队沟通协作，共同解决学生问题、形成育人合力方面的表现如何？',
+          text: '该导师是否符合内设书院对于导师日常管理的其他要求？',
           options: [
-            { value: 1, label: 'A', text: '缺乏沟通，疲于合作' },
-            { value: 2, label: 'B', text: '沟通不畅，协作困难' },
-            { value: 3, label: 'C', text: '保持基本沟通' },
-            { value: 4, label: 'D', text: '主动沟通，协作良好' },
-            { value: 5, label: 'E', text: '是协同育人的积极倡导者和践行者' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         },
         {
           id: 10,
-          category: '四、总体评价',
-          text: '综合考量，您对该导师本学年育人工作的总体评价是？',
+          text: '内设书院对于该导师的整体评价是否合格？',
           options: [
-            { value: 1, label: 'A', text: '不合格' },
-            { value: 2, label: 'B', text: '需要较大改进' },
-            { value: 3, label: 'C', text: '合格' },
-            { value: 4, label: 'D', text: '良好' },
-            { value: 5, label: 'E', text: '优秀' }
+            { value: 5, label: 'A', text: '是' },
+            { value: 0, label: 'B', text: '否' }
           ]
         }
       ]

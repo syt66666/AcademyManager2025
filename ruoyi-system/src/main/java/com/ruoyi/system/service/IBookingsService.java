@@ -66,6 +66,15 @@ public interface IBookingsService {
 
     boolean checkIfBooked(Long activityId, String studentId);
 
+    /**
+     * 批量导入指定活动的学生预约名单
+     * @param activityId 活动ID
+     * @param status 导入的审核状态（未提交/已通过）
+     * @param studentIds 学号列表
+     * @return 结果统计：inserted、skippedNotFound、skippedDuplicate
+     */
+    Map<String, Integer> importBookingsStudents(Long activityId, String status, List<String> studentIds);
+
     List<Long> getBookedActivityIds(String studentId);
 
     /**

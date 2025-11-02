@@ -138,13 +138,12 @@
             <if test="activityTotalCapacity != null">
                 activity_total_capacity = #{activityTotalCapacity},
             </if>
-            <!-- 🔥 总容量变化时重新计算剩余容量 -->
+            <!-- 总容量变化时重新计算剩余容量 -->
             <if test="activityTotalCapacity != null">
                 activity_capacity = GREATEST(0, #{activityTotalCapacity} - (
                 SELECT COALESCE(COUNT(*), 0)
                 FROM bookings
                 WHERE activity_id = #{activityId}
-                AND status IN ('approved', 'submitted')
                 )),
             </if>
             version = version + 1,
@@ -191,7 +190,6 @@
             SELECT COALESCE(COUNT(*), 0)
             FROM bookings 
             WHERE activity_id = #{activityId}
-            AND status IN ('approved', 'submitted', '未提交')
         ),
         version = version + 1
         WHERE activity_id = #{activityId}
@@ -204,7 +202,6 @@
             SELECT COALESCE(COUNT(*), 0)
             FROM bookings 
             WHERE activity_id = #{activityId}
-            AND status IN ('approved', 'submitted', '未提交')
         )) as remaining_capacity
         FROM activities 
         WHERE activity_id = #{activityId}
@@ -215,7 +212,6 @@
         SELECT COALESCE(COUNT(*), 0)
         FROM bookings 
         WHERE activity_id = #{activityId}
-        AND status IN ('approved', 'submitted', '未提交')
     </select>
 
 

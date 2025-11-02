@@ -147,3 +147,14 @@ export function getBookedActivities(studentId) {
   })
 }
 
+/**
+ * 批量导入指定活动的学生名单
+ */
+export function importBookingsStudents(data) {
+  return request({
+    url: '/system/bookings/importStudents',
+    method: 'post',
+    data
+  })
+}
+

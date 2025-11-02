@@ -37,6 +37,8 @@ public class BookingsServiceImpl implements IBookingsService {
     private ISysUserService userService;
     @Autowired
     private IActivitiesService activitiesService;
+    @Autowired
+    private com.ruoyi.system.mapper.StuInfoMapper stuInfoMapper;
     /**
      * 查询预约列表
      * @param bookings 查询条件
@@ -335,6 +337,81 @@ public class BookingsServiceImpl implements IBookingsService {
             System.err.println("事务性报名失败: " + e.getMessage());
             throw new ServiceException("报名失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 批量导入学生预约：校验学号存在性与重复，插入后根据实际预约人数自动调整活动容量与已选人数
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Integer> importBookingsStudents(Long activityId, String status, List<String> studentIds) {
+        Map<String, Integer> result = new HashMap<>();
+        int inserted = 0, skippedNotFound = 0, skippedDuplicate = 0;
+
+        if (activityId == null || studentIds == null || studentIds.isEmpty()) {
+            throw new ServiceException("参数不完整：活动ID或学号列表为空");
+        }
+
+        // 去重并清洗
+        Set<String> uniqueIds = new LinkedHashSet<>();
+        for (String s : studentIds) {
+            if (s != null) {
+                String trimmed = s.trim();
+                if (!trimmed.isEmpty()) uniqueIds.add(trimmed);
+            }
+        }
+        if (uniqueIds.isEmpty()) {
+            throw new ServiceException("学号列表为空");
+        }
+
+        // 校验活动是否存在
+        com.ruoyi.system.domain.Activities activity = activitiesService.selectActivityById(activityId.intValue());
+        if (activity == null) {
+            throw new ServiceException("活动不存在");
+        }
+
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        for (String studentId : uniqueIds) {
+            // 学号存在性校验
+            if (stuInfoMapper.selectStuInfoById(studentId) == null) {
+                skippedNotFound++;
+                continue;
+            }
+            // 重复校验
+            if (checkIfBooked(activityId, studentId)) {
+                skippedDuplicate++;
+                continue;
+            }
+
+            // 插入预约
+            Bookings bookings = new Bookings();
+            bookings.setActivityId(activityId);
+            bookings.setStudentId(studentId);
+            bookings.setBookAt(now);
+            bookings.setStatus(status == null || status.isEmpty() ? "未提交" : status);
+            bookingsMapper.insertBookings(bookings);
+            inserted++;
+        }
+
+        // 导入完成后：统计实际预约人数并更新活动容量与已选人数
+        int currentCount = activitiesService.getCurrentBookingCount(activity.getActivityId());
+        boolean needUpdate = false;
+        if (currentCount > (activity.getActivityTotalCapacity() == null ? 0 : activity.getActivityTotalCapacity())) {
+            activity.setActivityTotalCapacity(currentCount);
+            needUpdate = true;
+        }
+        if (activity.getActivityCapacity() == null || activity.getActivityCapacity() != currentCount) {
+            activity.setActivityCapacity(currentCount);
+            needUpdate = true;
+        }
+        if (needUpdate) {
+            activitiesService.updateActivity2(activity);
+        }
+
+        result.put("inserted", inserted);
+        result.put("skippedNotFound", skippedNotFound);
+        result.put("skippedDuplicate", skippedDuplicate);
+        return result;
     }
 
     /**

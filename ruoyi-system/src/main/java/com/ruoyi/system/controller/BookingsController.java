@@ -5,20 +5,16 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
 import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.core.page.TableDataInfo;
-import com.ruoyi.common.utils.poi.ExcelUtil;
 import com.ruoyi.system.domain.Bookings;
-import com.ruoyi.system.domain.StuActivityRecord;
 import com.ruoyi.system.domain.dto.BookingDTO;
 import com.ruoyi.system.domain.dto.BookingExportDTO;
 import com.ruoyi.system.service.IBookingsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.ruoyi.common.utils.poi.ExcelUtil;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -71,6 +67,29 @@ public class BookingsController extends BaseController {
     @PostMapping
     public AjaxResult add(@RequestBody Bookings bookings) {
         return toAjax(bookingsService.insertBookings(bookings));
+    }
+
+    /**
+     * 批量导入指定活动学生名单
+     * body: { activityId: Long, status: String, studentIds: [String] }
+     */
+    @Log(title = "预约信息", businessType = BusinessType.IMPORT)
+    @PostMapping("/importStudents")
+    public AjaxResult importStudents(@RequestBody Map<String, Object> body) {
+        Object actIdObj = body.get("activityId");
+        Object statusObj = body.get("status");
+        Object idsObj = body.get("studentIds");
+
+        if (!(actIdObj instanceof Number) || !(idsObj instanceof List)) {
+            return AjaxResult.error("参数错误：缺少活动ID或学号列表");
+        }
+        Long activityId = ((Number) actIdObj).longValue();
+        String status = statusObj == null ? "未提交" : String.valueOf(statusObj);
+        @SuppressWarnings("unchecked")
+        List<String> studentIds = (List<String>) idsObj;
+
+        Map<String, Integer> res = bookingsService.importBookingsStudents(activityId, status, studentIds);
+        return AjaxResult.success(res);
     }
 
     /**
