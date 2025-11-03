@@ -10,7 +10,10 @@ public class Tutors extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 导师工号（主键） */
+    /** 主键ID */
+    private Long id;
+
+    /** 导师工号 */
     private String tutorId;
 
     /** 姓名 */
@@ -28,6 +31,16 @@ public class Tutors extends BaseEntity
     /** 所属书院 */
     @Excel(name = "所属书院")
     private String tutorDepartment;
+
+    public void setId(Long id)
+    {
+        this.id = id;
+    }
+
+    public Long getId()
+    {
+        return id;
+    }
 
     public void setTutorId(String tutorId)
     {
@@ -78,6 +91,7 @@ public class Tutors extends BaseEntity
     @Override
     public String toString() {
         return new ToStringBuilder(this,ToStringStyle.MULTI_LINE_STYLE)
+                .append("id", getId())
                 .append("tutorId", getTutorId())
                 .append("tutorName", getTutorName())
                 .append("tutorGender", getTutorGender())

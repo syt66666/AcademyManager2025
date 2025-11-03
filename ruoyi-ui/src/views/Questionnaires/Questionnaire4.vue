@@ -325,10 +325,27 @@ export default {
           
           const tutorResponses = await Promise.all(tutorPromises);
           
-          // 提取导师信息
-          this.tutorList = tutorResponses
-            .filter(res => res && res.data)
-            .map(res => res.data);
+          // 提取导师信息，处理可能返回多条记录的情况
+          const tutorMap = new Map();
+          tutorResponses.forEach(res => {
+            if (res && res.data) {
+              // 如果返回的是数组
+              if (Array.isArray(res.data)) {
+                res.data.forEach(tutor => {
+                  if (!tutorMap.has(tutor.tutorId)) {
+                    tutorMap.set(tutor.tutorId, tutor);
+                  }
+                });
+              } else {
+                // 如果返回的是单个对象
+                if (!tutorMap.has(res.data.tutorId)) {
+                  tutorMap.set(res.data.tutorId, res.data);
+                }
+              }
+            }
+          });
+          
+          this.tutorList = Array.from(tutorMap.values());
           
           // 加载已评价记录
           await this.loadEvaluatedRecords();

@@ -60,13 +60,28 @@ public class TutorsController extends BaseController
     }
 
     /**
-     * 获取导师信息详细信息
+     * 获取导师信息详细信息（通过ID主键）
      */
     // @PreAuthorize("@ss.hasPermi('system:tutors:query')")
-    @GetMapping(value = "/{tutorId}")
-    public AjaxResult getInfo(@PathVariable("tutorId") String tutorId)
+    @GetMapping(value = "/{id}")
+    public AjaxResult getInfo(@PathVariable("id") Long id)
     {
-        return success(tutorsService.selectTutorsByTutorId(tutorId));
+        return success(tutorsService.selectTutorsById(id));
+    }
+
+    /**
+     * 获取导师信息详细信息（通过工号）
+     */
+    // @PreAuthorize("@ss.hasPermi('system:tutors:query')")
+    @GetMapping(value = "/tutorId/{tutorId}")
+    public AjaxResult getInfoByTutorId(@PathVariable("tutorId") String tutorId)
+    {
+        List<Tutors> tutors = tutorsService.selectTutorsByTutorId(tutorId);
+        // 如果只有一条记录，返回单条；如果有多条，返回列表
+        if (tutors != null && tutors.size() == 1) {
+            return success(tutors.get(0));
+        }
+        return success(tutors);
     }
 
     /**
@@ -96,9 +111,9 @@ public class TutorsController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:tutors:remove')")
     @Log(title = "导师信息", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{tutorIds}")
-    public AjaxResult remove(@PathVariable String[] tutorIds)
+    @DeleteMapping("/{ids}")
+    public AjaxResult remove(@PathVariable Long[] ids)
     {
-        return toAjax(tutorsService.deleteTutorsByTutorIds(tutorIds));
+        return toAjax(tutorsService.deleteTutorsByIds(ids));
     }
 }

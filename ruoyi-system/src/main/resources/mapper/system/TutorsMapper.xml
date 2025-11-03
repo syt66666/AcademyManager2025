@@ -5,6 +5,7 @@
 <mapper namespace="com.ruoyi.system.mapper.TutorsMapper">
 
     <resultMap type="Tutors" id="TutorsResult">
+        <id     property="id"          column="id"          />
         <result property="tutorId"    column="tutor_id"    />
         <result property="tutorName"    column="tutor_name"    />
         <result property="tutorGender"    column="tutor_gender"    />
@@ -13,7 +14,7 @@
     </resultMap>
 
     <sql id="selectTutorsVo">
-        select tutor_id, tutor_name, tutor_gender, tutor_title, tutor_department from tutors
+        select id, tutor_id, tutor_name, tutor_gender, tutor_title, tutor_department from tutors
     </sql>
 
     <select id="selectTutorsList" parameterType="Tutors" resultMap="TutorsResult">
@@ -26,12 +27,17 @@
         </where>
     </select>
 
+    <select id="selectTutorsById" parameterType="Long" resultMap="TutorsResult">
+        <include refid="selectTutorsVo"/>
+        where id = #{id}
+    </select>
+
     <select id="selectTutorsByTutorId" parameterType="String" resultMap="TutorsResult">
         <include refid="selectTutorsVo"/>
         where tutor_id = #{tutorId}
     </select>
 
-    <insert id="insertTutors" parameterType="Tutors">
+    <insert id="insertTutors" parameterType="Tutors" useGeneratedKeys="true" keyProperty="id">
         insert into tutors
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="tutorId != null">tutor_id,</if>
@@ -57,11 +63,22 @@
             <if test="tutorTitle != null">tutor_title = #{tutorTitle},</if>
             <if test="tutorDepartment != null">tutor_department = #{tutorDepartment},</if>
         </trim>
-        where tutor_id = #{tutorId}
+        where id = #{id}
     </update>
+
+    <delete id="deleteTutorsById" parameterType="Long">
+        delete from tutors where id = #{id}
+    </delete>
 
     <delete id="deleteTutorsByTutorId" parameterType="String">
         delete from tutors where tutor_id = #{tutorId}
+    </delete>
+
+    <delete id="deleteTutorsByIds" parameterType="Long">
+        delete from tutors where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
     </delete>
 
     <delete id="deleteTutorsByTutorIds" parameterType="String">

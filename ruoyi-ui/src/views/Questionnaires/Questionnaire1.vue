@@ -1,6 +1,82 @@
 <template>
   <div class="questionnaire">
-    <div class="questionnaire-form">
+    <!-- 过滤选择界面 -->
+    <div v-if="showFilterPage" class="filter-page">
+      <div class="filter-container">
+        <h2 class="filter-title">请选择以下信息</h2>
+
+        <!-- 书院选择 -->
+        <div class="filter-row">
+          <label class="filter-label">书院：</label>
+          <el-select
+            v-model="selectedAcademy"
+            placeholder="请选择书院"
+            class="filter-select"
+            @change="onAcademyChange"
+          >
+            <el-option
+              v-for="academy in academyOptions"
+              :key="academy"
+              :label="academy"
+              :value="academy"
+            />
+          </el-select>
+        </div>
+
+        <!-- 专业选择 -->
+        <div class="filter-row">
+          <label class="filter-label">专业：</label>
+          <el-select
+            v-model="selectedMajor"
+            placeholder="请选择专业"
+            class="filter-select"
+            :disabled="!selectedAcademy"
+            @change="onMajorChange"
+          >
+            <el-option
+              v-for="major in majorOptions"
+              :key="major"
+              :label="major"
+              :value="major"
+            />
+          </el-select>
+        </div>
+
+        <!-- 分流类型选择 -->
+        <div class="filter-row">
+          <label class="filter-label">分流类型：</label>
+          <el-select
+            v-model="selectedDivertForm"
+            placeholder="请选择分流类型"
+            class="filter-select"
+            :disabled="!selectedMajor"
+          >
+            <el-option
+              v-for="divertForm in divertFormOptions"
+              :key="divertForm"
+              :label="divertForm"
+              :value="divertForm"
+            />
+          </el-select>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="filter-actions">
+          <el-button @click="goBack" class="cancel-btn">返回问卷列表</el-button>
+          <el-button
+            type="primary"
+            @click="confirmFilters"
+            :disabled="!selectedDivertForm"
+            class="confirm-btn"
+          >
+            确认并进入问卷
+          </el-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 问卷界面 -->
+    <div v-else class="questionnaire-form">
       <div v-for="(question, index) in currentDisplay" :key="question.id" class="question-container">
         <div class="question-box">
           <h2>{{ index + 1 }}. {{ question.text }}</h2>
@@ -17,7 +93,7 @@
           </div>
         </div>
       </div>
-      <button v-if="completed" @click="showConfirmDialog" class="submit-button">提交</button>
+      <button v-if="completed" @click="submitQuestionnaire" class="submit-button">提交</button>
 
       <!-- 提交确认弹窗 -->
       <div v-if="showConfirmDialogFlag" class="dialog-container">
@@ -27,6 +103,48 @@
           <div class="dialog-footer">
             <el-button @click="handleCancel">取消</el-button>
             <el-button type="primary" @click="submitQuestionnaire" class="confirm-button">确认提交</el-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 提交预览弹窗 -->
+      <div v-if="showPreviewDialog" class="dialog-container">
+        <div class="dialog-box preview-dialog">
+          <span class="close-btn" @click="closePreviewDialog">&times;</span>
+          <h2>提交内容预览</h2>
+          <div class="preview-content">
+            <div class="preview-item">
+              <span class="preview-label">用户名：</span>
+              <span class="preview-value">{{ this.userName }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">当前书院：</span>
+              <span class="preview-value">{{ this.academy }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">选择的专业：</span>
+              <span class="preview-value">{{ this.filterText(this.finalAnswerText) }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">分流类型：</span>
+              <span class="preview-value">{{ this.finalAnswerText2 }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">转专业后的书院：</span>
+              <span class="preview-value">{{ this.academy2 }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">转专业后的专业：</span>
+              <span class="preview-value">{{ this.filterText(finalAnswerText3) }}</span>
+            </div>
+            <div class="preview-item">
+              <span class="preview-label">转专业后的分流类型：</span>
+              <span class="preview-value">{{ this.finalAnswerText4 }}</span>
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <el-button @click="closePreviewDialog">取消</el-button>
+            <el-button type="primary" @click="confirmSubmit">确认提交</el-button>
           </div>
         </div>
       </div>
@@ -46,7 +164,7 @@
 <script>
 import store from "@/store";
 import {submitQuestionnaireData} from "@/api/system/questionnaire";
-import {getStudent} from "@/api/system/student";
+import {getStudent, listStudent} from "@/api/system/student";
 
 export default {
   name: "Questionnaire",
@@ -59,6 +177,7 @@ export default {
       completed: false, // 是否已完成
       showEndMessage: false, // 弹窗显示状态
       showConfirmDialogFlag: false, // 提交确认弹窗的显示状态
+      showPreviewDialog: false, // 提交预览弹窗的显示状态
       finalAnswerText: '', // 分流的专业选择
       finalAnswerText2: 0,//分流类型记录
       userName: store.state.user.name, // 获取用户名
@@ -69,6 +188,15 @@ export default {
       num4: null, //转换创新班专业信息
       filter: null, //是否过滤
       userSelections: [],
+      // 过滤选择相关
+      showFilterPage: true, // 是否显示过滤选择页面
+      selectedAcademy: '', // 选中的书院
+      selectedMajor: '', // 选中的专业
+      selectedDivertForm: '', // 选中的分流类型
+      academyOptions: [], // 书院选项列表
+      majorOptions: [], // 专业选项列表
+      divertFormOptions: [], // 分流类型选项列表
+      allStudentData: [], // 所有学生数据
     };
   },
 
@@ -92,12 +220,12 @@ export default {
         {id: 6, text: '知行书院——信息技术学域（一）', next: 107},
         {id: 7, text: '求实书院——信息技术学域（二）', next: 108}
       ];
-      
+
       // 根据num3值过滤掉当前学域
       // num3 = 3: 大煜书院, num3 = 4: 伯川书院, num3 = 5: 笃学书院
       // num3 = 6: 令希书院, num3 = 7: 厚德书院, num3 = 8: 知行书院, num3 = 9: 求实书院
       // num3 = 11: 厚德书院人文社科, num3 = 12: 厚德书院英语日语, num3 = 13: 厚德书院建筑类
-      
+
       if (this.num3 === 3) {
         // 大煜书院学生，过滤掉大煜书院选项
         return allOptions.filter(option => option.id !== 1);
@@ -120,7 +248,7 @@ export default {
         // 求实书院学生，过滤掉求实书院选项
         return allOptions.filter(option => option.id !== 7);
       }
-      
+
       // 如果num3不匹配任何已知值，返回所有选项
       return allOptions;
     },
@@ -289,24 +417,22 @@ export default {
     loadQuestionnaireBySplitFlow() {
       if (this.specialClass === 0) {
         switch (this.splitFlow) {
-          case '仅可转专业':
-            this.questionnaire = this.getQuestionnaire();
-            break;
-          // case '可类内任选，并转专业':
-          //   this.questionnaire = this.getQuestionnaireB();
-          //   break;
-          case '可类内任选，不能转专业':
-            this.questionnaire = this.getQuestionnaireC();
-            break;
-          case '可域内任选，并转专业':
-            this.questionnaire = this.getQuestionnaireD();
-            break;
           case '不可变更专业':
             this.questionnaire = this.getQuestionnaire();
             break;
           case '不参与此次专业任选':
             this.questionnaire = this.getQuestionnaireA();
             break;
+          case '仅可转专业':
+            this.questionnaire = this.getQuestionnaireB();
+            break;
+          case '可类内任选，不能转专业':
+            this.questionnaire = this.getQuestionnaireC();
+            break;
+          case '可域内任选，并转专业':
+            this.questionnaire = this.getQuestionnaireD();
+            break;
+
         }
       } else if(this.splitFlow ==='不参与此次专业任选'){
         this.questionnaire = this.getQuestionnaireA();
@@ -351,110 +477,144 @@ export default {
         }
       ];
     },
-    //类内任选，并转专业的学生问卷
-    // getQuestionnaireB() {
-    //   this.filter = 2;
-    //   return [
-    //     {
-    //       id: 1,
-    //       text: '您的域内专业任选形式是 [单选题] ',
-    //       options: [
-    //         {id: 1, text: '类内任选专业', next: this.num2},
-    //       ]
-    //     },
-    //     {
-    //       id: 10,
-    //       text: '请您选择 材料类 内的意向专业 [单选题] ',
-    //       options: [
-    //         {id: 111, text: '金属材料工程', next: null},
-    //         {id: 222, text: '功能材料', next: null},
-    //         {id: 333, text: '材料成型及控制工程', next: null}
-    //       ]
-    //     },
-    //     {
-    //       id: 11,
-    //       text: '请您选择 管理科学与工程类 内的意向专业 [单选题] ',
-    //       options: [
-    //         {id: 111, text: '大数据管理与应用', next: null},
-    //         {id: 222, text: '信息管理与信息系统', next: null},
-    //         {id: 333, text: '国际经济与贸易', next: null},
-    //         {id: 444, text: '金融学', next: null},
-    //         {id: 555, text: '知识产权', next: null},
-    //         {id: 666, text: '工商管理', next: null},
-    //         {id: 777, text: '物流管理', next: null}
-    //       ]
-    //     },
-    //     {
-    //       id: 12,
-    //       text: '请您选择 化工与制药类 内的意向专业 [单选题] ',
-    //       options: [
-    //         {id: 111, text: '化学工程与工艺', next: null},
-    //         {id: 222, text: '精细化工', next: null},
-    //         {id: 333, text: '制药工程', next: null},
-    //         {id: 444, text: '高分子材料与工程', next: null},
-    //         {id: 555, text: '安全工程', next: null}
-    //       ]
-    //     },
-    //     {
-    //       id: 14,
-    //       text: '请您选择 新闻传播学类 内的意向专业 [单选题] ',
-    //       options: [
-    //         {id: 111, text: '广播电视学', next: null},
-    //         {id: 222, text: '汉语言文学', next: null}
-    //       ]
-    //     },
-    //     {
-    //       id: 15,
-    //       text: ' 请您选择 智能建造 内的意向专业 [单选题] ',
-    //       options: [
-    //         {id: 111, text: '智能建造', next: null},
-    //         {id: 222, text: '水利水电工程', next: null},
-    //         {id: 333, text: '港口航道与海岸工程', next: null},
-    //         {id: 444, text: '海洋资源开发技术', next: null},
-    //         {id: 555, text: '交通工程', next: null},
-    //         {id: 666, text: '工程管理', next: null},
-    //         {id: 777, text: '建筑环境与能源应用工程', next: null},
-    //         {id: 888, text: '土木工程', next: null}
-    //       ]
-    //     },
-    //     {
-    //       id: 16,
-    //       text: '请您选择 智能制造工程 内的意向专业 [单选题] ',
-    //       options: [
-    //         {id: 111, text: '智能制造工程', next: null},
-    //         {id: 222, text: '机械设计制造及其自动化', next: null},
-    //         {id: 333, text: '智能车辆工程', next: null},
-    //         {id: 444, text: '测控技术与仪器', next: null}
-    //       ]
-    //     },
-    //     {
-    //       id: 17,
-    //       text: '请您选择 设计学类 内的意向专业 [单选题]',
-    //       options: [
-    //         {id: 1, text: '视觉传达设计', next: null},
-    //         {id: 2, text: '环境设计', next: null},
-    //         {id: 3, text: '雕塑', next: null},
-    //       ]
-    //     },
-    //     {
-    //       id: 999,
-    //       text: '问卷结束，感谢您的参与！',
-    //       options: []
-    //     }
-    //   ];
-    // },
-    //类内任选，并转专业的学生问卷
+    // 仅可转专业的学生问卷
+    getQuestionnaireB() {
+      return [
+        {
+          id: 100,
+          text: '是否要转专业 [单选题]',
+          options: [
+            {id: 1, text: '是', next: 101},
+            {id: 2, text: '否', next: null},
+          ]
+        },
+        {
+          id: 101,
+          text: '请选择要转入的学域 [单选题]',
+          options: this.getFilteredDomainOptions()
+        },
+        {
+          id: 102,
+          text: '请在 大煜书院——物质创造学域 选择专业 [单选题]',
+          options: [
+            {id: 1, text: '化学工程与工艺', next: null},
+            {id: 2, text: '精细化工', next: null},
+            {id: 3, text: '制药工程', next: null},
+            {id: 4, text: '高分子材料与工程', next: null},
+            {id: 5, text: '安全工程', next: null},
+            {id: 6, text: '过程装备与控制工程', next: null},
+            {id: 7, text: '环境工程', next: null},
+            {id: 8, text: '生物工程', next: null}
+          ]
+        },
+        {
+          id: 103,
+          text: '请在 伯川书院——智能制造学域 选择专业 [单选题]',
+          options: [
+            {id: 1, text: '智能制造工程', next: null},
+            {id: 2, text: '机械设计制造及其自动化', next: null},
+            {id: 3, text: '智能车辆工程', next: null},
+            {id: 4, text: '测控技术与仪器', next: null},
+            {id: 5, text: '电子信息材料', next: null},
+            {id: 6, text: '金属材料工程', next: null},
+            {id: 7, text: '功能材料', next: null},
+            {id: 8, text: '材料成型及控制工程', next: null},
+            {id: 9, text: '能源与动力工程', next: null},
+            {id: 10, text: '生物医学工程', next: null}
+          ]
+        },
+        {
+          id: 104,
+          text: '请在 笃学书院——理科强基学域 选择专业 [单选题]',
+          options: [
+            {id: 1, text: '数学与应用数学', next: null},
+            {id: 2, text: '信息与计算科学', next: null}
+          ]
+        },
+        {
+          id: 105,
+          text: '请在 令希书院——智能建造学域 选择专业[单选题]',
+          options: [
+            {id: 1, text: '工程力学', next: null},
+            {id: 2, text: '飞行器设计与工程', next: null},
+            {id: 3, text: '船舶与海洋工程', next: null},
+            {id: 4, text: '智能建造', next: null},
+            {id: 5, text: '水利水电工程', next: null},
+            {id: 6, text: '港口航道与海岸工程', next: null},
+            {id: 7, text: '海洋资源开发技术', next: null},
+            {id: 8, text: '交通工程', next: null},
+            {id: 9, text: '工程管理', next: null},
+            {id: 10, text: '建筑环境与能源应用工程', next: null},
+            {id: 11, text: '土木工程', next: null}
+          ]
+        },
+        {
+          id: 106,
+          text: '请在 厚德书院——人文社科学域 选择专业 [单选题]',
+          options: [
+            {id: 1, text: '知识产权', next: null},
+            {id: 2, text: '公共事业管理', next: null},
+            {id: 3, text: '马克思主义理论', next: null},
+            {id: 4, text: '哲学', next: null},
+            {id: 5, text: '广播电视学', next: null},
+            {id: 6, text: '汉语言文学', next: null},
+            {id: 7, text: '英语', next: null},
+            {id: 8, text: '翻译', next: null},
+            {id: 9, text: '日语', next: null},
+            {id: 10, text: '建筑学', next: null},
+            {id: 11, text: '城乡规划', next: null},
+            {id: 12, text: '工业设计', next: null},
+            {id: 13, text: '视觉传达设计', next: null},
+            {id: 14, text: '环境设计', next: null},
+            {id: 15, text: '雕塑', next: null}
+          ]
+        },
+        {
+          id: 107,
+          text: '请在 知行书院——信息技术学域（一） 选择专业 [单选题]',
+          options: [
+            {id: 1, text: '电子信息工程', next: null},
+            {id: 2, text: '计算机科学与技术', next: null},
+            {id: 3, text: '未来机器人', next: null},
+            {id: 4, text: '自动化', next: null},
+            {id: 5, text: '电气工程及其自动化', next: null},
+            {id: 6, text: '光电信息科学与工程', next: null},
+            {id: 7, text: '生物医学工程', next: null},
+            {id: 8, text: '大数据管理与应用', next: null},
+            {id: 9, text: '信息管理与信息系统', next: null}
+          ]
+        },
+        {
+          id: 108,
+          text: '请在 求实书院——信息技术学域（二） 选择专业 [单选题]',
+          options: [
+            {id: 1, text: '智能无人系统技术', next: null},
+            {id: 2, text: '软件工程', next: null},
+            {id: 3, text: '集成电路设计与集成系统', next: null},
+            {id: 4, text: '电子科学与技术', next: null},
+            {id: 5, text: '电子信息材料', next: null}
+          ]
+        },
+        {
+          id: 999,
+          text: '问卷结束，感谢您的参与！',
+          options: []
+        }
+      ];
+
+    },
+    //类内任选，不可转专业的学生问卷
     getQuestionnaireC() {
       this.filter = 2;
       return [
         {
           id: 1,
-          text: '您的域内专业任选形式是 [单选题] ',
+          text: '您的类内专业任选形式是 [单选题] ',
           options: [
             {id: 1, text: '类内任选专业，不可转专业', next: this.num2},
           ]
         },
-         {
+        {
           id: 10,
           text: '请您选择 材料类 内的意向专业 [单选题] ',
           options: [
@@ -533,7 +693,7 @@ export default {
           id: 1,
           text: '您的域内专业任选形式是 [单选题]',
           options: [
-            {id: 1, text: '域内任选专业', next: this.num3},
+            {id: 1, text: '域内任选专业，并转专业', next: this.num3},
           ]
         },
         {
@@ -809,7 +969,7 @@ export default {
           id: 1,
           text: '您的域内专业任选形式是 [单选题]',
           options: [
-            {id: 1, text: '域内任选专业', next: 50},
+            {id: 1, text: '域内任选专业，并转专业', next: 50},
           ]
         },
         {
@@ -1141,6 +1301,13 @@ export default {
           ]
         },
         {
+          id: 200,
+          text: '请选择 ' + this.major + ' 的内设专业 [单选题]',
+          options: [
+            {id: 111, text: this.major, next: 100},
+          ]
+        },
+        {
           id: 999,
           text: '问卷结束，感谢您的参与！',
           options: []
@@ -1152,8 +1319,8 @@ export default {
       //记录最后一次点击的内容
       this.finalAnswerText = option.text;
       if (this.finalAnswerText === '保持现有专业') {//只有不可变更专业的
-          this.finalAnswerText = this.major;
-          console.log(this.finalAnswerText);
+        this.finalAnswerText = this.major;
+        console.log(this.finalAnswerText);
       }
       if (this.finalAnswerText === '不参与此次专业任选') {
         this.finalAnswerText = '不参与此次专业任选';
@@ -1181,46 +1348,97 @@ export default {
     // 提交问卷
     submitQuestionnaire() {
       this.showConfirmDialogFlag = false; // 关闭确认弹窗
-      this.showEndMessage = true; // 显示结束弹窗
       //不可+仅可转专业，均为保持当前专业
-      if (this.splitFlow === "不可变更专业" || this.splitFlow === "仅可转专业") {
+      if (this.splitFlow === "不可变更专业") {
         this.finalAnswerText2 = 1;
+        this.finalAnswerText3 = this.major;
+        this.finalAnswerText4 = 1;
+        this.academy2 = this.academy;
       }
       //不参与此次专业任选
       else if (this.splitFlow === "不参与此次专业任选") {
         this.finalAnswerText2 = 0;
+        this.finalAnswerText3 = this.major;
+        this.finalAnswerText4 = 0;
+        this.academy2 = this.academy;
+      }
+
+      //仅可转专业
+      else if (this.splitFlow === "仅可转专业") {
+        if (this.getLastAnswerForQuestion(100).selectedOptionText === "是") {
+          this.finalAnswerText2 = 1;//要转专业
+          this.finalAnswerText3 = this.finalAnswerText;
+          this.finalAnswerText4 = 5;
+          this.finalAnswerText = this.major;
+          this.academy2 = this.getLastAnswerForQuestion(101).selectedOptionText;
+        } else if (this.getLastAnswerForQuestion(100).selectedOptionText === "否") {
+          this.finalAnswerText2 = 1;//不转专业，保持现有专业
+          this.finalAnswerText3 = this.major;
+          this.finalAnswerText4 = 1;
+          this.academy2 = this.academy;
+        }
       }
       //类内任选
       else if (this.splitFlow === "可类内任选，不能转专业") {
-        // this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
-        this.finalAnswerText2 = 2;
+        this.finalAnswerText2 = 3;//类内任选
+        this.finalAnswerText3 = this.finalAnswerText;
+        this.finalAnswerText4 = 3;
+        this.academy2 = this.academy;
       }
-      //类内任选
-      // else if (this.splitFlow === "可类内任选，并转专业") {
-      //   // this.finalAnswerText = this.getLastAnswerForQuestion(this.num2).selectedOptionText;
-      //   this.finalAnswerText2 = 3;
-      // }
 
       //域内非创新班
       else if (this.splitFlow === "可域内任选，并转专业" && this.specialClass === 0) {
         //不转专业
-        // this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-        this.finalAnswerText2 = 2;
+        if (this.getLastAnswerForQuestion(100).selectedOptionText === "是") {
+          this.finalAnswerText2 = 2;
+          this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
+          this.finalAnswerText3 = this.finalAnswerText;
+          this.finalAnswerText4 = 5;
+          this.academy2 = this.getLastAnswerForQuestion(101).selectedOptionText;
+        } else if (this.getLastAnswerForQuestion(100).selectedOptionText === "否") {
+          this.finalAnswerText2 = 2;
+          this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
+          this.finalAnswerText3 = this.finalAnswerText;
+          this.finalAnswerText4 = 2;
+          this.academy2 = this.academy;
+        }
       }
 
       //域内创新班
       else if (this.specialClass === 1) {
         if (this.getLastAnswerForQuestion(50).selectedOptionText === "是") {
           //放弃创新班
-          // this.finalAnswerText = this.getLastAnswerForQuestion(this.num3).selectedOptionText;
-          this.finalAnswerText2 = 2;
-        } else if (this.getLastAnswerForQuestion(50).selectedOptionText === "否") {
+          if (this.getLastAnswerForQuestion(100).selectedOptionText === "是") {
+          this.finalAnswerText2 = 2;//要转专业
+          this.finalAnswerText3 = this.finalAnswerText;
+          this.finalAnswerText4 = 5;
+          this.finalAnswerText = this.getLastAnswerForQuestion(this.num).selectedOptionText;
+          this.academy2 = this.getLastAnswerForQuestion(101).selectedOptionText;
+        } else if (this.getLastAnswerForQuestion(100).selectedOptionText === "否") {
+          this.finalAnswerText2 = 2;//不转专业，保持现有专业
+          this.finalAnswerText3 = this.getLastAnswerForQuestion(this.num).selectedOptionText;
+          this.finalAnswerText = this.finalAnswerText3;
+          this.finalAnswerText4 = 2;
+          this.academy2 = this.academy;
+        }
+         } else if (this.getLastAnswerForQuestion(50).selectedOptionText === "否") {
           //不放弃创新班
-          //   this.finalAnswerText = this.getLastAnswerForQuestion(this.num4).selectedOptionText;
-          this.finalAnswerText2 = 4;
+        if (this.getLastAnswerForQuestion(100).selectedOptionText === "是") {
+          this.finalAnswerText2 = 4;//要转专业
+          this.finalAnswerText3 = this.getLastAnswerForQuestion(this.num4).selectedOptionText;
+          this.finalAnswerText4 = 5;
+          this.academy2 = this.getLastAnswerForQuestion(101).selectedOptionText;
+        } else if (this.getLastAnswerForQuestion(100).selectedOptionText === "否") {
+          this.finalAnswerText2 = 4;//不转专业，保持现有专业
+          this.finalAnswerText3 = this.getLastAnswerForQuestion(this.num4).selectedOptionText;
+          this.finalAnswerText = this.finalAnswerText3;
+          this.finalAnswerText4 = 4;
+          this.academy2 = this.academy;
+        }
         }
       }
-      this.submitData();
+      // 显示预览弹窗，而不是直接提交
+      this.showPreviewDialog = true;
     },
     // 过滤问卷答案
     getLastAnswerForQuestion(questionId) {
@@ -1238,6 +1456,15 @@ export default {
     // 取消提交
     handleCancel() {
       this.showConfirmDialogFlag = false;
+    },
+    // 关闭预览弹窗
+    closePreviewDialog() {
+      this.showPreviewDialog = false;
+    },
+    // 确认提交
+    confirmSubmit() {
+      this.showPreviewDialog = false;
+      this.submitData();
     },
     //过滤书院
     academyFilter() {
@@ -1274,9 +1501,11 @@ export default {
         changeAdress: this.academy,
         changeMajor: this.filterText(this.finalAnswerText),
         changeMajorType: this.finalAnswerText2,
-        afterChangeAdress: this.academy,
-        afterChangeMajor: this.finalAnswerText,//没过滤的
-        afterChangeMajorType: this.finalAnswerText2
+
+        //转专业后的书院、专业、分流类型
+        afterChangeAdress: this.academy2,
+        afterChangeMajor: this.finalAnswerText3,//没过滤的
+        afterChangeMajorType: this.finalAnswerText4
       };
 
       submitQuestionnaireData(answer)
@@ -1293,9 +1522,124 @@ export default {
           console.error('提交失败:', error);
         });
     },
+    // 加载过滤选项数据
+    async loadFilterOptions() {
+      try {
+        const response = await listStudent({
+          pageNum: 1,
+          pageSize: 10000,
+          enrollmentYear: '2025'
+        });
+
+        if (response && response.rows) {
+          this.allStudentData = response.rows;
+
+          // 提取书院选项（去重）
+          const academies = new Set();
+          response.rows.forEach(student => {
+            if (student.academy) {
+              academies.add(student.academy);
+            }
+          });
+          this.academyOptions = Array.from(academies).sort();
+        }
+      } catch (error) {
+        console.error('加载过滤选项失败:', error);
+        this.$message.error('加载选项数据失败，请刷新页面重试');
+      }
+    },
+    // 书院选择变化
+    onAcademyChange() {
+      this.selectedMajor = '';
+      this.majorOptions = [];
+      this.selectedDivertForm = '';
+      this.divertFormOptions = [];
+
+      if (!this.selectedAcademy) return;
+
+      // 过滤出该书院的数据
+      const academyData = this.allStudentData.filter(
+        student => student.academy === this.selectedAcademy
+      );
+
+      // 提取专业选项（去重）
+      const majors = new Set();
+      academyData.forEach(student => {
+        if (student.major) {
+          majors.add(student.major);
+        }
+      });
+      this.majorOptions = Array.from(majors).sort();
+    },
+    // 专业选择变化
+    onMajorChange() {
+      this.selectedDivertForm = '';
+      this.divertFormOptions = [];
+
+      if (!this.selectedAcademy || !this.selectedMajor) return;
+
+      // 过滤出该书院该专业的数据
+      const majorData = this.allStudentData.filter(
+        student => student.academy === this.selectedAcademy &&
+          student.major === this.selectedMajor
+      );
+
+      // 提取分流类型选项（去重）
+      const divertForms = new Set();
+      majorData.forEach(student => {
+        if (student.divertForm) {
+          divertForms.add(student.divertForm);
+        }
+      });
+      this.divertFormOptions = Array.from(divertForms).sort();
+    },
+    // 确认过滤器
+    confirmFilters() {
+      // 设置选中的值并初始化问卷
+      this.academy = this.selectedAcademy;
+      this.major = this.selectedMajor;
+      this.splitFlow = this.selectedDivertForm;
+
+      // 从学生数据中获取innovationClass（创新班状态）
+      const matchedStudent = this.allStudentData.find(
+        student =>
+          student.academy === this.selectedAcademy &&
+          student.major === this.selectedMajor &&
+          student.divertForm === this.selectedDivertForm
+      );
+      if (matchedStudent) {
+        this.specialClass = matchedStudent.innovationClass || 0;
+        this.systemMajor = matchedStudent.originalSystemMajor || '';
+        this.studentName = matchedStudent.studentName || '';
+      } else {
+        this.specialClass = 0;
+        this.systemMajor = '';
+        this.studentName = '';
+      }
+
+      // 切换显示状态
+      this.showFilterPage = false;
+
+      // 初始化问卷（设置一些默认值）
+      this.setNumBasedOnAcademy(this.academy);
+      this.setNumBasedOnMajor(this.major);
+      this.setNumBasedOnSpecialty(this.major);
+      this.setNumBasedOnClass(this.major);
+
+      // 加载问卷
+      this.loadQuestionnaireBySplitFlow();
+      this.academyFilter();
+    },
+    // 返回问卷列表
+    goBack() {
+      this.$router.go(-1);
+    },
   },
   created() {
-    this.initializeQuestionnaire();
+    // 首先加载过滤选项
+    this.loadFilterOptions();
+    // 注释掉原来的自动初始化，改为通过过滤选择触发
+    // this.initializeQuestionnaire();
   }
 };
 </script>
@@ -1533,6 +1877,42 @@ export default {
   background-color: #2b76de;
 }
 
+/* 预览弹窗样式 */
+.preview-dialog {
+  max-width: 600px;
+}
+
+.preview-content {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.preview-item {
+  display: flex;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.preview-item:last-child {
+  border-bottom: none;
+}
+
+.preview-label {
+  font-weight: bold;
+  color: #333;
+  min-width: 150px;
+  display: inline-block;
+}
+
+.preview-value {
+  color: #666;
+  flex: 1;
+}
+
 .confirm-button:active {
   background-color: #1f5bb5;
 }
@@ -1552,5 +1932,85 @@ export default {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* 过滤选择页面样式 */
+.filter-page {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #f4f7fc;
+  border-radius: 12px;
+}
+
+.filter-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-title {
+  font-size: 24px;
+  color: #395cdc;
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: bold;
+}
+
+.filter-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.filter-label {
+  width: 100px;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.filter-select {
+  flex: 1;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+.filter-actions .el-button {
+  flex: 1;
+  height: 45px;
+  font-size: 16px;
+  border-radius: 6px;
+}
+
+.cancel-btn {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #d9d9d9;
+}
+
+.cancel-btn:hover {
+  background-color: #e8e8e8;
+}
+
+.confirm-btn {
+  background-color: #395cdc;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #2b76de;
+}
+
+.confirm-btn:disabled {
+  background-color: #d9d9d9;
+  cursor: not-allowed;
 }
 </style>

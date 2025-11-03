@@ -9,10 +9,18 @@ export function listTutors(query) {
   })
 }
 
-// 查询导师信息详细
+// 查询导师信息详细（通过ID主键）
+export function getTutorsById(id) {
+  return request({
+    url: '/system/tutors/' + id,
+    method: 'get'
+  })
+}
+
+// 查询导师信息详细（通过工号）
 export function getTutors(tutorId) {
   return request({
-    url: '/system/tutors/' + tutorId,
+    url: '/system/tutors/tutorId/' + tutorId,
     method: 'get'
   })
 }

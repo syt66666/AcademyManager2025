@@ -709,7 +709,7 @@ export default {
       const isSpecialUser = userName >= '20001' && userName <= '20020';
       
       // 判断是否是指定的学生账号
-      const isDesignatedStudent = userName === '20210000000';
+      const isDesignatedStudent = userName === '20210000000'||userName === '20211234567';
       
       if (isSpecialUser) {
         // userName >= '20001' && userName <= '20020' 只显示id:5的问卷1（辅导员/执行院长版）

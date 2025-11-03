@@ -306,7 +306,9 @@ export default {
         
         // 查询同一书院的所有导师
         const response = await listTutors({ 
-          tutorDepartment: this.currentAcademy 
+          tutorDepartment: this.currentAcademy,
+          pageNum: 1,
+          pageSize: 1000 // 增大页面大小以确保显示所有导师
         });
         
         if (response && response.rows) {

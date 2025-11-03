@@ -12,12 +12,20 @@ import com.ruoyi.system.domain.Tutors;
 public interface ITutorsService
 {
     /**
-     * 查询导师信息
+     * 查询导师信息（通过ID主键）
      *
-     * @param tutorId 导师信息主键
+     * @param id 导师信息主键
      * @return 导师信息
      */
-    public Tutors selectTutorsByTutorId(String tutorId);
+    public Tutors selectTutorsById(Long id);
+
+    /**
+     * 查询导师信息（通过工号）
+     *
+     * @param tutorId 导师工号
+     * @return 导师信息列表（可能有多条，因为同一导师可能属于多个书院）
+     */
+    public List<Tutors> selectTutorsByTutorId(String tutorId);
 
     /**
      * 查询导师信息列表
@@ -44,18 +52,34 @@ public interface ITutorsService
     public int updateTutors(Tutors tutors);
 
     /**
-     * 批量删除导师信息
+     * 删除导师信息（通过ID主键）
      *
-     * @param tutorIds 需要删除的导师信息主键集合
+     * @param id 导师信息主键
      * @return 结果
      */
-    public int deleteTutorsByTutorIds(String[] tutorIds);
+    public int deleteTutorsById(Long id);
 
     /**
-     * 删除导师信息信息
+     * 删除导师信息（通过工号）
      *
-     * @param tutorId 导师信息主键
+     * @param tutorId 导师工号
      * @return 结果
      */
     public int deleteTutorsByTutorId(String tutorId);
+
+    /**
+     * 批量删除导师信息（通过ID主键）
+     *
+     * @param ids 需要删除的导师信息主键集合
+     * @return 结果
+     */
+    public int deleteTutorsByIds(Long[] ids);
+
+    /**
+     * 批量删除导师信息（通过工号）
+     *
+     * @param tutorIds 需要删除的导师工号集合
+     * @return 结果
+     */
+    public int deleteTutorsByTutorIds(String[] tutorIds);
 }

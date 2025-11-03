@@ -304,6 +304,29 @@ export default {
     this.loadUnfinishedStudentCount();
   },
   methods: {
+    // 根据评价账号获取所属书院
+    getAcademyByAccount(userName) {
+      // 账号与书院的映射关系
+      const accountAcademyMap = {
+        '20001': '大煜书院',  // 大煜书院院长（奇数）
+        '20002': '大煜书院',  // 大煜书院副院长（偶数）
+        '20003': '伯川书院',  // 伯川书院院长（奇数）
+        '20004': '伯川书院',  // 伯川书院副院长（偶数）
+        '20005': '令希书院',  // 令希书院院长（奇数）
+        '20006': '令希书院',  // 令希书院副院长（偶数）
+        '20007': '厚德书院',  // 厚德书院院长（奇数）
+        '20008': '厚德书院',  // 厚德书院副院长（偶数）
+        '20009': '知行书院',  // 知行书院院长（奇数）
+        '20010': '知行书院',  // 知行书院副院长（偶数）
+        '20011': '笃学书院',  // 笃学书院院长（奇数）
+        '20012': '笃学书院',  // 笃学书院副院长（偶数）
+        '20013': '求实书院',  // 求实书院院长（奇数）
+        '20014': '求实书院'   // 求实书院副院长（偶数）
+      };
+      
+      return accountAcademyMap[userName] || null;
+    },
+
     // 加载统计数据
     async loadStatistics() {
       this.loading = true;
@@ -312,82 +335,111 @@ export default {
         const tutorResponse = await listTutors({ pageNum: 1, pageSize: 1000 });
         const tutors = tutorResponse.rows || [];
 
-        // 2. 获取所有评价记录
-        const [studentScoresResponse, viceScoresResponse, deanScoresResponse] = await Promise.all([
+        // 2. 获取所有评价记录和学生信息
+        const [studentScoresResponse, viceScoresResponse, deanScoresResponse, studentsResponse] = await Promise.all([
           listScore({ quesType: 4 }), // 学生评价
-          listScore({ quesType: 5 }), // 执行副院长评价（奇数账号）
-          listScore({ quesType: 6 })  // 执行院长评价（偶数账号）
+          listScore({ quesType: 5 }), // 执行副院长评价
+          listScore({ quesType: 6 }), // 执行院长评价
+          listStudent({ pageNum: 1, pageSize: 10000 }) // 获取所有学生信息
         ]);
 
         const studentScores = studentScoresResponse.rows || [];
-        const viceScores = viceScoresResponse.rows || [];    // 执行副院长评价
-        const deanScores = deanScoresResponse.rows || [];    // 执行院长评价
-        
-        // 合并辅导员评价（用于综合平均分计算）
-        const counselorScores = [...viceScores, ...deanScores];
+        const viceScores = viceScoresResponse.rows || [];
+        const deanScores = deanScoresResponse.rows || [];
+        const allStudents = studentsResponse.rows || [];
 
-        // 3. 为每个导师计算统计数据
-        this.statisticsData = tutors.map(tutor => {
-          // 学生评价（ques_type=4）
-          const studentEvals = studentScores.filter(score => score.tutorId === tutor.tutorId);
-          const studentCount = studentEvals.length;
-          const studentTotal = studentEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
-          const studentAverage = studentCount > 0 ? (studentTotal / studentCount).toFixed(2) : null;
-
-          // 辅导员评价 - 分别获取执行副院长和执行院长的评分
-          // quesType=5: 执行副院长评价（奇数账号）
-          // quesType=6: 执行院长评价（偶数账号）
-          const viceEvals = viceScores.filter(score => score.tutorId === tutor.tutorId);
-          const deanEvals = deanScores.filter(score => score.tutorId === tutor.tutorId);
-          
-          // 获取执行副院长评分（quesType=5）
-          const counselorScore1 = viceEvals.length > 0 ? parseFloat(viceEvals[0].quesScore).toFixed(2) : null;
-          
-          // 获取执行院长评分（quesType=6）
-          const counselorScore2 = deanEvals.length > 0 ? parseFloat(deanEvals[0].quesScore).toFixed(2) : null;
-          
-          // 合并所有辅导员评价用于计算
-          const counselorEvals = [...viceEvals, ...deanEvals];
-          const counselorCount = counselorEvals.length;
-          const counselorTotal = counselorEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
-
-          // 综合平均分（所有评价的平均）
-          const allEvals = [...studentEvals, ...counselorEvals];
-          const totalCount = allEvals.length;
-          const totalSum = allEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
-          const overallAverage = totalCount > 0 ? (totalSum / totalCount).toFixed(2) : '0.00';
-
-          return {
-            tutorId: tutor.tutorId,
-            tutorName: tutor.tutorName,
-            tutorTitle: tutor.tutorTitle,
-            tutorDepartment: tutor.tutorDepartment,
-            studentAverage,
-            studentCount,
-            counselorScore1,
-            counselorScore2,
-            counselorCount,
-            overallAverage
-          };
+        // 3. 创建学生学号到书院的映射
+        const studentAcademyMap = new Map();
+        allStudents.forEach(student => {
+          if (student.studentId && student.academy) {
+            studentAcademyMap.set(student.studentId, student.academy);
+          }
         });
 
-        // 4. 按综合平均分从高到低排序
+        // 4. 为每个导师的每个书院组合计算统计数据
+        const statisticsMap = new Map();
+        
+        tutors.forEach(tutor => {
+          const departments = tutor.tutorDepartment ? tutor.tutorDepartment.split(',') : [tutor.tutorDepartment];
+          
+          departments.forEach(department => {
+            const dept = department ? department.trim() : '';
+            if (!dept) return;
+            
+            const key = `${tutor.tutorId}_${dept}`;
+            
+            // 学生评价（ques_type=4）- 根据学生所属书院过滤，只计算当前书院学生的评价
+            const studentEvals = studentScores.filter(score => {
+              if (score.tutorId !== tutor.tutorId) return false;
+              const studentAcademy = studentAcademyMap.get(score.userName);
+              return studentAcademy === dept;
+            });
+            const studentCount = studentEvals.length;
+            const studentTotal = studentEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
+            const studentAverage = studentCount > 0 ? (studentTotal / studentCount).toFixed(2) : null;
+
+            // 辅导员评价 - 根据评价人所属书院过滤，只计算当前书院的评分
+            const viceEvals = viceScores.filter(score => {
+              const evaluatorAcademy = this.getAcademyByAccount(score.userName);
+              return score.tutorId === tutor.tutorId && evaluatorAcademy === dept;
+            });
+            
+            const deanEvals = deanScores.filter(score => {
+              const evaluatorAcademy = this.getAcademyByAccount(score.userName);
+              return score.tutorId === tutor.tutorId && evaluatorAcademy === dept;
+            });
+            
+            // 获取执行副院长评分（quesType=5）
+            const counselorScore1 = viceEvals.length > 0 ? parseFloat(viceEvals[0].quesScore).toFixed(2) : null;
+            
+            // 获取执行院长评分（quesType=6）
+            const counselorScore2 = deanEvals.length > 0 ? parseFloat(deanEvals[0].quesScore).toFixed(2) : null;
+            
+            // 合并所有辅导员评价用于计算
+            const counselorEvals = [...viceEvals, ...deanEvals];
+            const counselorCount = counselorEvals.length;
+
+            // 综合平均分（所有评价的平均）
+            const allEvals = [...studentEvals, ...counselorEvals];
+            const totalCount = allEvals.length;
+            const totalSum = allEvals.reduce((sum, s) => sum + (parseFloat(s.quesScore) || 0), 0);
+            const overallAverage = totalCount > 0 ? (totalSum / totalCount).toFixed(2) : '0.00';
+
+            statisticsMap.set(key, {
+              tutorId: tutor.tutorId,
+              tutorName: tutor.tutorName,
+              tutorTitle: tutor.tutorTitle,
+              tutorDepartment: dept,
+              studentAverage,
+              studentCount,
+              counselorScore1,
+              counselorScore2,
+              counselorCount,
+              overallAverage
+            });
+          });
+        });
+
+        // 5. 转换为数组
+        this.statisticsData = Array.from(statisticsMap.values());
+
+        // 6. 按综合平均分从高到低排序
         this.statisticsData.sort((a, b) => {
           const scoreA = parseFloat(a.overallAverage) || 0;
           const scoreB = parseFloat(b.overallAverage) || 0;
           return scoreB - scoreA; // 降序：分数高的在前
         });
 
-        // 5. 添加排名（按索引从1开始）
+        // 7. 添加排名（按索引从1开始）
         this.statisticsData = this.statisticsData.map((item, index) => ({
           ...item,
           rank: index + 1
         }));
 
-        // 6. 保存所有书院的完整数据
+        // 8. 保存所有书院的完整数据
         this.allStatisticsData = [...this.statisticsData];
 
-        // 7. 设置总数
+        // 9. 设置总数
         this.total = this.statisticsData.length;
 
       } catch (error) {
@@ -426,18 +478,40 @@ export default {
       this.detailDialogVisible = true;
 
       try {
-        // 获取该导师的所有评价详情
-        const [studentResponse, viceResponse, deanResponse] = await Promise.all([
+        // 获取该导师的所有评价详情和学生信息
+        const [studentResponse, viceResponse, deanResponse, studentsResponse] = await Promise.all([
           listScore({ tutorId: tutor.tutorId, quesType: 4 }), // 学生评价
           listScore({ tutorId: tutor.tutorId, quesType: 5 }), // 执行副院长评价
-          listScore({ tutorId: tutor.tutorId, quesType: 6 })  // 执行院长评价
+          listScore({ tutorId: tutor.tutorId, quesType: 6 }), // 执行院长评价
+          listStudent({ pageNum: 1, pageSize: 10000 }) // 获取所有学生信息
         ]);
 
-        this.studentEvaluations = studentResponse.rows || [];
+        // 创建学生学号到书院的映射
+        const studentAcademyMap = new Map();
+        if (studentsResponse && studentsResponse.rows) {
+          studentsResponse.rows.forEach(student => {
+            if (student.studentId && student.academy) {
+              studentAcademyMap.set(student.studentId, student.academy);
+            }
+          });
+        }
         
-        // 合并执行副院长和执行院长的评价，并确保顺序（先副院长，后院长）
-        const viceEvals = viceResponse.rows || [];
-        const deanEvals = deanResponse.rows || [];
+        // 根据当前书院过滤学生评价
+        const allStudentEvals = studentResponse.rows || [];
+        this.studentEvaluations = allStudentEvals.filter(score => {
+          const studentAcademy = studentAcademyMap.get(score.userName);
+          return studentAcademy === tutor.tutorDepartment;
+        });
+        
+        // 合并执行副院长和执行院长的评价，并根据当前书院过滤
+        const viceEvals = (viceResponse.rows || []).filter(score => {
+          const evaluatorAcademy = this.getAcademyByAccount(score.userName);
+          return evaluatorAcademy === tutor.tutorDepartment;
+        });
+        const deanEvals = (deanResponse.rows || []).filter(score => {
+          const evaluatorAcademy = this.getAcademyByAccount(score.userName);
+          return evaluatorAcademy === tutor.tutorDepartment;
+        });
         this.counselorEvaluations = [...viceEvals, ...deanEvals];
       } catch (error) {
         console.error('加载评价详情失败:', error);

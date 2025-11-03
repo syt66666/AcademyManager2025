@@ -565,9 +565,14 @@ export default {
       try {
         const response = await getTutors(this.formData.tutorId);
         if (response.code === 200 && response.data) {
-          this.formData.tutorName = response.data.tutorName || '未知导师';
-          // 自动填充导师姓名到表格显示字段（如果需要）
-          this.formData.tutorName = response.data.tutorName;
+          // 处理可能返回数组或单个对象的情况
+          const tutor = Array.isArray(response.data) ? response.data[0] : response.data;
+          if (tutor) {
+            this.formData.tutorName = tutor.tutorName || '未知导师';
+          } else {
+            this.$message.warning('未找到该导师信息');
+            this.formData.tutorName = '';
+          }
         } else {
           this.$message.warning('未找到该导师信息');
           this.formData.tutorName = '';
