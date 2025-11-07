@@ -29,9 +29,10 @@ public class ResourcesConfig implements WebMvcConfigurer
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry)
     {
-        /** 本地文件上传路径 */
+        /** 本地文件上传路径 - 图片资源缓存优化 */
         registry.addResourceHandler(Constants.RESOURCE_PREFIX + "/**")
-                .addResourceLocations("file:" + RuoYiConfig.getProfile() + "/");
+                .addResourceLocations("file:" + RuoYiConfig.getProfile() + "/")
+                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS).cachePublic());
 
         /** swagger配置 */
         registry.addResourceHandler("/swagger-ui/**")

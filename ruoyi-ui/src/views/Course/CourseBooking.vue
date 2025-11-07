@@ -1649,4 +1649,345 @@ export default {
   font-weight: 500;
 }
 
+/* 确保表格在移动端可以横向滚动 */
+.modern-table .el-table {
+  min-width: 800px;
+}
+
+.modern-table .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
+.modern-table .el-table__header-wrapper {
+  overflow-x: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .course-detail .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 平板适配 */
+@media (max-width: 992px) {
+  .app-container {
+    margin-left: 50px;
+    padding: 15px;
+  }
+
+  .search-card, .table-card {
+    padding: 20px;
+  }
+
+  .search-row {
+    gap: 12px;
+  }
+
+  .search-input, .search-select {
+    width: 180px;
+  }
+
+  .modern-table {
+    font-size: 13px;
+  }
+}
+
+/* 手机端适配 */
+@media (max-width: 768px) {
+  .app-container {
+    margin-left: 0;
+    padding: 10px;
+  }
+
+  .search-card, .table-card {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+  }
+
+  .card-header span {
+    font-size: 16px;
+    margin-right: 10px;
+  }
+
+  .academy-info {
+    margin-left: 0;
+    margin-right: 10px;
+    margin-top: 8px;
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+
+  .record-count {
+    margin-left: 0;
+    margin-top: 8px;
+    font-size: 12px;
+    width: 100%;
+  }
+
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .search-input, .search-select {
+    width: 100%;
+  }
+
+  .el-form-item {
+    margin-bottom: 12px;
+    width: 100%;
+  }
+
+  .search-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .action-buttons .el-button {
+    flex: 1;
+    margin: 0 4px;
+  }
+
+  .modern-table {
+    font-size: 12px;
+  }
+
+  .modern-table .el-table {
+    min-width: 600px;
+  }
+
+  .modern-table .el-table__body-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modern-table .el-table__header-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .index-badge {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+  }
+
+  .course-type-tag {
+    padding: 0 10px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 11px;
+  }
+
+  .category-tag {
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 11px;
+  }
+
+  .status-tag {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .credit-value {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .time-schedule-inline {
+    gap: 6px;
+  }
+
+  .time-inline-item {
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+
+  .time-inline-label {
+    font-size: 11px;
+    margin-right: 4px;
+  }
+
+  .time-inline-content {
+    font-size: 11px;
+    word-break: break-all;
+  }
+
+  .participants {
+    gap: 4px;
+  }
+
+  .count {
+    font-size: 11px;
+  }
+
+  .action-button {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .custom-pagination {
+    padding: 15px 0;
+  }
+
+  .custom-pagination .el-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .custom-pagination .el-pagination .el-pagination__total,
+  .custom-pagination .el-pagination .el-pagination__sizes,
+  .custom-pagination .el-pagination .el-pager,
+  .custom-pagination .el-pagination .btn-prev,
+  .custom-pagination .el-pagination .btn-next,
+  .custom-pagination .el-pagination .el-pagination__jump {
+    margin: 5px 2px;
+  }
+
+  .custom-pagination .el-pagination .el-pagination__jump {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* 课程详情弹窗 */
+  .course-detail-dialog .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+
+  .course-detail .detail-header h2 {
+    font-size: 18px;
+  }
+
+  .course-detail .signup-status .signup-button,
+  .course-detail .signup-status .cancel-button {
+    width: 100%;
+    margin: 5px 0;
+  }
+
+  .course-image {
+    max-width: 100%;
+    max-height: 200px;
+  }
+
+  /* 图片预览弹窗 */
+  .image-preview-dialog .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+
+  .preview-container {
+    padding: 15px;
+  }
+
+  .preview-image {
+    max-width: 100%;
+    max-height: 60vh;
+  }
+}
+
+/* 小屏手机适配 */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 8px;
+  }
+
+  .search-card, .table-card {
+    padding: 12px;
+  }
+
+  .card-header span {
+    font-size: 14px;
+  }
+
+  .modern-table {
+    font-size: 11px;
+  }
+
+  .modern-table .el-table {
+    min-width: 500px;
+  }
+
+  .el-table-column {
+    min-width: 80px;
+  }
+
+  .index-badge {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 11px;
+  }
+
+  .course-type-tag {
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 10px;
+  }
+
+  .category-tag {
+    padding: 0 6px;
+    height: 22px;
+    line-height: 22px;
+    font-size: 10px;
+  }
+
+  .status-tag {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+
+  .credit-value {
+    font-size: 10px;
+    padding: 2px 5px;
+  }
+
+  .time-inline-item {
+    font-size: 10px;
+  }
+
+  .action-button {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+
+  .custom-pagination .el-pagination {
+    font-size: 11px;
+  }
+
+  .custom-pagination .el-pagination .el-pagination__total {
+    display: none;
+  }
+
+  /* 图片预览弹窗 */
+  .image-preview-dialog .el-dialog {
+    width: 98% !important;
+  }
+
+  .preview-image {
+    max-height: 50vh;
+  }
+}
+
 </style>

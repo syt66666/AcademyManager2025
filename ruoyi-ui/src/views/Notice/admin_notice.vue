@@ -308,7 +308,7 @@
         if (userName === 'admin') return true;
   
         const n = parseInt(userName, 10);
-        const inAdminRange = !isNaN(n) && n >= 10000 && n <= 10007;
+        const inAdminRange = !isNaN(n) && n >= 10000 && n <= 10020;
         return inAdminRange;
       }
     },

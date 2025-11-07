@@ -123,23 +123,23 @@
             </div>
             <div class="preview-item">
               <span class="preview-label">选择的专业：</span>
-              <span class="preview-value">{{ this.filterText(this.finalAnswerText) }}</span>
+              <span class="preview-value">{{ this.finalAnswerText}}</span>
             </div>
             <div class="preview-item">
               <span class="preview-label">分流类型：</span>
-              <span class="preview-value">{{ this.finalAnswerText2 }}</span>
+              <span class="preview-value">{{ this.getMajorTypeName(this.finalAnswerText2) }}</span>
             </div>
             <div class="preview-item">
               <span class="preview-label">转专业后的书院：</span>
-              <span class="preview-value">{{ this.academy2 }}</span>
+              <span class="preview-value">{{ this.academy2}}</span>
             </div>
             <div class="preview-item">
               <span class="preview-label">转专业后的专业：</span>
-              <span class="preview-value">{{ this.filterText(finalAnswerText3) }}</span>
+              <span class="preview-value">{{ this.finalAnswerText3}}</span>
             </div>
             <div class="preview-item">
               <span class="preview-label">转专业后的分流类型：</span>
-              <span class="preview-value">{{ this.finalAnswerText4 }}</span>
+              <span class="preview-value">{{ this.getMajorTypeName(this.finalAnswerText4) }}</span>
             </div>
           </div>
           <div class="dialog-footer">
@@ -1437,6 +1437,7 @@ export default {
         }
         }
       }
+      this.academyFilter();
       // 显示预览弹窗，而不是直接提交
       this.showPreviewDialog = true;
     },
@@ -1466,29 +1467,40 @@ export default {
       this.showPreviewDialog = false;
       this.submitData();
     },
+    // 专业类型映射函数：将数字转换为对应的类型名称
+    getMajorTypeName(majorType) {
+      const typeMap = {
+        '1': '保持当前专业',
+        '2': '域内任选专业',
+        '3': '类内任选专业',
+        '4': '域内任选专业（创新班）',
+        '5': '转专业'
+      };
+      return typeMap[majorType] || majorType;
+    },
     //过滤书院
     academyFilter() {
-      switch (this.finalAnswerText2) {
+      switch (this.academy2) {
         case '大煜书院——物质创造学域':
-          this.finalAnswerText2 = '大煜书院';
+          this.academy2 = '大煜书院';
           break;
         case '伯川书院——智能制造学域':
-          this.finalAnswerText2 = '伯川书院';
+          this.academy2 = '伯川书院';
           break;
         case '笃学书院——理科强基学域':
-          this.finalAnswerText2 = '笃学书院';
+          this.academy2 = '笃学书院';
           break;
         case '令希书院——智能建造学域':
-          this.finalAnswerText2 = '令希书院';
+          this.academy2 = '令希书院';
           break;
         case '厚德书院——人文社科学域':
-          this.finalAnswerText2 = '厚德书院';
+          this.academy2 = '厚德书院';
           break;
         case '知行书院——信息技术学域（一）':
-          this.finalAnswerText2 = '知行书院';
+          this.academy2 = '知行书院';
           break;
         case '求实书院——信息技术学域（二）':
-          this.finalAnswerText2 = '求实书院';
+          this.academy2 = '求实书院';
           break;
       }
     },
@@ -2012,5 +2024,86 @@ export default {
 .confirm-btn:disabled {
   background-color: #d9d9d9;
   cursor: not-allowed;
+}
+
+/* 移动端弹窗适配 */
+@media (max-width: 768px) {
+  .dialog-box {
+    max-width: 95%;
+    padding: 30px 20px;
+    margin: 10px;
+  }
+
+  .dialog-box h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .dialog-box p {
+    font-size: 14px;
+    margin-bottom: 20px;
+  }
+
+  .dialog-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .dialog-footer .el-button {
+    width: 100%;
+    margin: 0;
+  }
+
+  .preview-dialog {
+    max-width: 95%;
+  }
+
+  .preview-content {
+    max-height: 300px;
+    padding: 12px;
+  }
+
+  .preview-item {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .preview-label {
+    min-width: auto;
+    width: 100%;
+  }
+
+  .preview-value {
+    width: 100%;
+  }
+
+  .dialog-box .close-btn {
+    top: 8px;
+    right: 8px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dialog-box {
+    max-width: 98%;
+    padding: 20px 15px;
+    margin: 5px;
+  }
+
+  .dialog-box h2 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .dialog-box p {
+    font-size: 13px;
+    margin-bottom: 15px;
+  }
+
+  .preview-content {
+    max-height: 250px;
+    padding: 10px;
+  }
 }
 </style>

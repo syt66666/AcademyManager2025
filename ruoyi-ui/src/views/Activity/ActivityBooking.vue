@@ -1,112 +1,6 @@
 <template>
   <div class="app-container">
-    <!-- 视图切换标签 -->
-    <el-tabs v-model="activeView" class="view-tabs">
-      <!-- 日历视图 -->
-      <el-tab-pane label="日历视图" name="calendar">
-        <!-- 自定义日历头部 -->
-        <div class="custom-calendar-header">
-          <div class="header-left">
-            <span class="calendar-title">{{ currentMonthTitle }} - {{ currentAcademy || '加载中...' }}</span>
-          </div>
-          <div class="header-right">
-            <el-button-group>
-              <el-button size="mini" @click="prevMonth">上个月</el-button>
-              <el-button size="mini" @click="goCurrentMonth">本月</el-button>
-              <el-button size="mini" @click="nextMonth">下个月</el-button>
-            </el-button-group>
-          </div>
-        </div>
-
-        <el-calendar
-          v-model="calendarDate"
-          class="calendar-view"
-          style="--calendar-day-height: 120px;"
-          :range="null"
-        >
-          <template #dateCell="{ data }">
-            <div
-              v-if="isCurrentMonth(data.day)"
-              class="calendar-cell"
-            >
-              <div class="date-header">
-                <span>{{ data.day.split('-')[2] }}</span>
-              </div>
-              <div class="events-container">
-                <div
-                  v-for="(event, index) in getDateEvents(data.day)"
-                  :key="index"
-                  :class="['calendar-event', 'status-' + getActivityStatusType(event), { 'booked': event.isBooked }]"
-                  @click="handleEventClick(event)"
-                >
-                  <div class="event-summary">
-                    <span class="event-name" :title="event.activityName">{{ truncate(event.activityName, 18) }}</span>
-                    <span class="event-org">({{ truncate(event.organizer, 5) }})</span>
-                    <el-button
-                      v-if="getActivityStatusType(event) === 'signup-active'"
-                      type="text"
-                      size="mini"
-                      class="detail-btn"
-                    >
-                      详细
-                    </el-button>
-                    <el-button
-                      v-else-if="getActivityStatusType(event) === 'not-started'"
-                      type="text"
-                      size="mini"
-                      disabled
-                      class="detail-btn disabled-btn"
-                    >
-                      未开始
-                    </el-button>
-                    <el-button
-                      v-else
-                      type="text"
-                      size="mini"
-                      disabled
-                      class="detail-btn disabled-btn"
-                    >
-                      已截止
-                    </el-button>
-                  </div>
-                  <div class="event-time-range">
-                    {{ formatTimeRange(event.startTime, event.endTime) }}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div v-else class="calendar-cell empty-cell">
-              <!-- 非当月日期显示为空 -->
-            </div>
-          </template>
-        </el-calendar>
-
-        <!-- 活动状态图例 -->
-        <div class="activity-legend">
-          <h4 class="legend-title">活动状态图例</h4>
-          <div class="legend-items">
-            <div class="legend-item">
-              <div class="legend-color status-not-started"></div>
-              <span class="legend-text">报名未开始</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color status-signup-active"></div>
-              <span class="legend-text">报名进行中</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color status-signup-ended"></div>
-              <span class="legend-text">报名已截止</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color status-booked"></div>
-              <span class="legend-text">已报名</span>
-            </div>
-          </div>
-        </div>
-      </el-tab-pane>
-
-      <!-- 活动列表视图 -->
-      <el-tab-pane label="活动列表" name="list">
+    <!-- 活动列表视图 -->
         <div class="search-card">
       <div class="card-header">
         <i class="el-icon-search"></i>
@@ -280,14 +174,14 @@
               v-else-if="isActivityFull(scope.row)"
               type="text"
               size="mini"
-              class="action-button detail-button"
+              class="action-button full-button"
               @click="handleDetail(scope.row)"
             >已满</el-button>
             <el-button
               v-else
               type="text"
               size="mini"
-              class="action-button detail-button"
+              class="action-button not-available-button"
               @click="handleDetail(scope.row)"
             >不可报名</el-button>
           </template>
@@ -308,8 +202,6 @@
         </el-pagination>
       </div>
     </div>
-      </el-tab-pane>
-    </el-tabs>
 
     <!-- 活动详情弹窗 -->
     <el-dialog
@@ -497,8 +389,6 @@ export default {
   name: "ActivitiesSignUp",
   data() {
     return {
-      activeView: 'calendar', // 当前视图: list/calendar，默认显示日历视图
-      calendarDate: new Date(), // 日历当前日期
       remainingCancels: 3,
       loading: true,
       showSearch: true,
@@ -506,7 +396,6 @@ export default {
       serverTime: null,
       total: 0,
       activitiesList: [], // 活动列表（仅当月）
-      allActivitiesList: [], // 所有活动（用于日历视图）
       // 详情弹窗相关
       detailDialogVisible: false,
       selectedActivity: null,
@@ -541,10 +430,6 @@ export default {
     // 动态页面标题
     pageTitle() {
       return '活动预约';
-    },
-    currentMonthTitle() {
-      const d = new Date(this.calendarDate);
-      return `${d.getFullYear()}年${(d.getMonth() + 1).toString().padStart(2, '0')}月`;
     },
 
     // 修复计算属性
@@ -598,29 +483,6 @@ export default {
   async mounted() {
     // 检查报名状态
     await this.checkBookingStatus();
-    // 初始化日历相关功能
-    this.hideEmptyCalendarRows();
-    this.forceCalendarDayHeight();
-    this.hideTodayButton();
-  },
-  watch: {
-    calendarDate() {
-      this.$nextTick(() => {
-        this.hideEmptyCalendarRows();
-        this.forceCalendarDayHeight();
-        this.hideTodayButton();
-      });
-    },
-    activeView(newView) {
-      // 当切换到日历视图时，刷新数据
-      if (newView === 'calendar') {
-        this.$nextTick(() => {
-          this.hideEmptyCalendarRows();
-          this.forceCalendarDayHeight();
-          this.hideTodayButton();
-        });
-      }
-    }
   },
   methods: {
     /** 获取服务器时间 */
@@ -641,13 +503,7 @@ export default {
 
     /** 检查路由参数，处理从首页跳转过来的活动详情请求 */
     async checkRouteParams() {
-      const { activityId, view, tab } = this.$route.query;
-
-      // 处理视图切换参数
-      if (view === 'list' || tab === 'activity-list') {
-        console.log('检测到活动列表视图参数，切换到活动列表标签页');
-        this.activeView = 'list';
-      }
+      const { activityId } = this.$route.query;
 
       if (activityId) {
         console.log('=== 开始处理路由参数 ===');
@@ -671,23 +527,16 @@ export default {
             console.error('=== API未返回活动数据 ===');
             console.error('查找的活动ID:', activityId);
 
-            // 如果API方式失败，尝试在所有活动列表中查找
-            console.log('尝试在所有活动列表中查找...');
-            if (this.allActivitiesList.length === 0) {
+            // 如果API方式失败，尝试在活动列表中查找
+            console.log('尝试在活动列表中查找...');
+            if (this.activitiesList.length === 0) {
               await this.getList();
             }
 
-            // 先在所有活动列表中查找
-            let targetActivity = this.allActivitiesList.find(activity =>
+            // 在活动列表中查找
+            let targetActivity = this.activitiesList.find(activity =>
               activity.activityId == activityId
             );
-
-            // 如果在所有活动列表中也没找到，再在当月活动列表中查找
-            if (!targetActivity) {
-              targetActivity = this.activitiesList.find(activity =>
-                activity.activityId == activityId
-              );
-            }
 
             if (targetActivity) {
               console.log('在列表中找到活动:', targetActivity.activityName);
@@ -812,9 +661,6 @@ export default {
       };
 
       listActivities(allParams).then(response => {
-        // 保存所有活动（用于日历视图）
-        this.allActivitiesList = response.rows || [];
-
         // 过滤出本月的活动（用于列表视图）
         let filteredActivities = this.filterActivitiesByMonth(response.rows);
 
@@ -835,11 +681,27 @@ export default {
       });
     },
 
-    // 过滤活动：只显示活动开始时间在本月的活动
+    // 过滤活动：显示当前月、前一个月和后一个月，共三个月的活动
     filterActivitiesByMonth(activities) {
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth(); // 0-11
+
+      // 计算前一个月
+      let prevYear = currentYear;
+      let prevMonth = currentMonth - 1;
+      if (prevMonth < 0) {
+        prevMonth = 11;
+        prevYear = currentYear - 1;
+      }
+
+      // 计算后一个月
+      let nextYear = currentYear;
+      let nextMonth = currentMonth + 1;
+      if (nextMonth > 11) {
+        nextMonth = 0;
+        nextYear = currentYear + 1;
+      }
 
       const filteredActivities = activities.filter(activity => {
         if (!activity.startTime) {
@@ -850,9 +712,12 @@ export default {
         const activityYear = activityDate.getFullYear();
         const activityMonth = activityDate.getMonth();
 
-        const isInRange = (activityYear === currentYear && activityMonth === currentMonth); // 只显示本月
+        // 检查是否在当前月、前一个月或后一个月
+        const isCurrentMonth = (activityYear === currentYear && activityMonth === currentMonth);
+        const isPrevMonth = (activityYear === prevYear && activityMonth === prevMonth);
+        const isNextMonth = (activityYear === nextYear && activityMonth === nextMonth);
 
-        return isInRange;
+        return isCurrentMonth || isPrevMonth || isNextMonth;
       });
 
       return filteredActivities;
@@ -889,7 +754,7 @@ export default {
 
     // 检查报名状态
     async checkBookingStatus() {
-      // 检查列表视图的活动
+      // 检查活动列表的报名状态
       if (this.activitiesList && this.activitiesList.length > 0) {
         const listPromises = this.activitiesList.map(activity =>
           checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
@@ -902,20 +767,6 @@ export default {
         );
         await Promise.all(listPromises);
       }
-
-      // 检查日历视图的所有活动
-      if (this.allActivitiesList && this.allActivitiesList.length > 0) {
-        const allPromises = this.allActivitiesList.map(activity =>
-          checkBookingSimple(activity.activityId, this.$store.state.user.name).then(res => {
-            // 使用 Vue.set 确保响应式更新
-            this.$set(activity, 'isBooked', res.data.isBooked);
-          }).catch(error => {
-            console.error(`检查活动 ${activity.activityId} 报名状态失败:`, error);
-            this.$set(activity, 'isBooked', false);
-          })
-        );
-        await Promise.all(allPromises);
-      }
     },
 
     // 根据数据库中的实际报名记录更新所有活动状态
@@ -926,14 +777,8 @@ export default {
         if (response.code === 200) {
           const bookedActivityIds = response.data || [];
 
-          // 更新列表视图的活动报名状态
+          // 更新活动列表的报名状态
           this.activitiesList.forEach(activity => {
-            const isBooked = bookedActivityIds.includes(activity.activityId);
-            this.$set(activity, 'isBooked', isBooked);
-          });
-
-          // 更新日历视图的所有活动报名状态
-          this.allActivitiesList.forEach(activity => {
             const isBooked = bookedActivityIds.includes(activity.activityId);
             this.$set(activity, 'isBooked', isBooked);
           });
@@ -1061,7 +906,7 @@ export default {
       return parseTime(datetime, "{y}-{m}-{d} {h}:{i}");
     },
 
-    // 获取时间范围文本
+    // 获取时间范围文本（显示三个月）
     getTimeRangeText() {
       const now = new Date();
       const currentYear = now.getFullYear();
@@ -1072,11 +917,29 @@ export default {
         '7月', '8月', '9月', '10月', '11月', '12月'
       ];
 
-      const currentMonthText = `${currentYear}年${monthNames[currentMonth]}`;
+      // 计算前一个月
+      let prevYear = currentYear;
+      let prevMonth = currentMonth - 1;
+      if (prevMonth < 0) {
+        prevMonth = 11;
+        prevYear = currentYear - 1;
+      }
 
-      return `${currentMonthText}`;
+      // 计算后一个月
+      let nextYear = currentYear;
+      let nextMonth = currentMonth + 1;
+      if (nextMonth > 11) {
+        nextMonth = 0;
+        nextYear = currentYear + 1;
+      }
+
+      const prevMonthText = `${prevYear}年${monthNames[prevMonth]}`;
+      const currentMonthText = `${currentYear}年${monthNames[currentMonth]}`;
+      const nextMonthText = `${nextYear}年${monthNames[nextMonth]}`;
+
+      return `${prevMonthText} - ${nextMonthText}`;
     },
-// 修复：处理详情
+    // 修复：处理详情
     async handleDetail(row) {
       this.selectedActivity = { ...row };
       this.detailDialogVisible = true;
@@ -1322,12 +1185,8 @@ export default {
       try {
         // 0. 先刷新活动数据以确保使用最新版本号
         await this.getList();
-        // 先在所有活动列表中查找
-        let latestActivity = this.allActivitiesList.find(a => a.activityId === activity.activityId);
-        // 如果没找到，再在当月活动列表中查找
-        if (!latestActivity) {
-          latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
-        }
+        // 在活动列表中查找
+        let latestActivity = this.activitiesList.find(a => a.activityId === activity.activityId);
         if (latestActivity) {
           activity.version = latestActivity.version;
           activity.activityCapacity = latestActivity.activityCapacity; // 更新已选人数
@@ -1402,92 +1261,6 @@ export default {
       return text.substring(0, maxLength) + '...';
     },
 
-
-    // 日历相关方法
-    prevMonth() {
-      const d = new Date(this.calendarDate);
-      d.setMonth(d.getMonth() - 1);
-      this.calendarDate = d;
-    },
-    nextMonth() {
-      const d = new Date(this.calendarDate);
-      d.setMonth(d.getMonth() + 1);
-      this.calendarDate = d;
-    },
-    goCurrentMonth() {
-      this.calendarDate = new Date();
-    },
-
-    // 获取日期内的事件（日历视图使用所有活动）
-    getDateEvents(dateString) {
-      return this.allActivitiesList.filter(activity => {
-        // 只显示活动开始日期当天的活动
-        const activityStartDate = this.formatDate(activity.startTime);
-        return activityStartDate === dateString;
-      });
-    },
-
-    // 添加日期格式化方法
-    formatDate(date) {
-      if (!date) return '';
-      const d = new Date(date);
-      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
-    },
-
-    // 格式化时间范围
-    formatTimeRange(startTime, endTime) {
-      return `${parseTime(startTime, "{h}:{i}")} - ${parseTime(endTime, "{h}:{i}")}`;
-    },
-
-    // 判断日期是否属于当前月份
-    isCurrentMonth(dateString) {
-      const date = new Date(dateString);
-      const currentDate = new Date(this.calendarDate);
-
-      return date.getMonth() === currentDate.getMonth() &&
-        date.getFullYear() === currentDate.getFullYear();
-    },
-
-    // 获取活动状态类型（用于颜色判断）
-    getActivityStatusType(activity) {
-      // 已报名的活动优先显示为booked状态
-      if (activity.isBooked) {
-        return "booked";
-      }
-
-      // 使用服务器时间，如果服务器时间不可用则使用本地时间
-      const now = this.serverTime || new Date();
-      const deadline = new Date(activity.activityDeadline);
-      const activityStart = new Date(activity.activityStart);
-
-      if (now < activityStart) return "not-started"; // 报名未开始
-      if (now < deadline && now >= activityStart) return "signup-active"; // 报名进行中
-      if (now >= deadline) return "signup-ended"; // 报名已截止
-      return "signup-ended"; // 默认显示为报名已截止
-    },
-
-    // 字符串截断
-    truncate(str, maxLength) {
-      if (!str) return '';
-      return str.length > maxLength ? str.substring(0, maxLength) + '...' : str;
-    },
-
-    // 处理事件点击
-    async handleEventClick(activity) {
-      this.selectedActivity = { ...activity };
-
-      // 加载最新的取消限制信息
-      await this.loadCancelLimitInfo();
-      
-      // 获取扩容申请数量
-      await this.loadExpandRequestCount(activity.activityId);
-      
-      // 检查当前用户是否已申请扩容
-      await this.checkUserExpandRequest(activity.activityId);
-
-      this.detailDialogVisible = true;
-    },
-
     // 获取最新活动信息
     async getLatestActivityInfo(activityId) {
       try {
@@ -1497,78 +1270,6 @@ export default {
         console.error("获取活动信息失败:", error);
         return null;
       }
-    },
-
-    // 隐藏多余的空行
-    hideEmptyCalendarRows() {
-      this.$nextTick(() => {
-        const calendarTable = document.querySelector('.calendar-view .el-calendar-table tbody');
-        if (calendarTable) {
-          const rows = calendarTable.querySelectorAll('tr');
-          rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const hasCurrentMonthCell = Array.from(cells).some(cell =>
-              cell.classList.contains('is-current-month')
-            );
-
-            if (!hasCurrentMonthCell) {
-              row.classList.add('hide-row');
-            } else {
-              row.classList.remove('hide-row');
-            }
-          });
-        }
-      });
-    },
-
-    // 强制设置日历格子高度
-    forceCalendarDayHeight() {
-      this.$nextTick(() => {
-        const calendarDays = document.querySelectorAll('.el-calendar-table .el-calendar-day');
-        calendarDays.forEach(day => {
-          day.style.height = '120px';
-          day.style.minHeight = '120px';
-          day.style.maxHeight = '120px';
-        });
-      });
-    },
-
-    // 隐藏"今天"按钮
-    hideTodayButton() {
-      this.$nextTick(() => {
-        // 隐藏Element UI默认的日历头部
-        const defaultHeader = document.querySelector('.calendar-view .el-calendar__header');
-        if (defaultHeader) {
-          defaultHeader.style.display = 'none';
-        }
-
-        // 隐藏所有包含"今天"文字的按钮，但排除自定义头部的按钮
-        const buttons = document.querySelectorAll('.calendar-view .el-button');
-        buttons.forEach(button => {
-          if (button.textContent && button.textContent.includes('今天') &&
-            !button.closest('.custom-calendar-header')) {
-            button.style.display = 'none';
-          }
-        });
-
-        // 隐藏默认的按钮组，但保留自定义的按钮组
-        const defaultButtonGroup = document.querySelector('.calendar-view .el-calendar__header .el-calendar__button-group');
-        if (defaultButtonGroup) {
-          defaultButtonGroup.style.display = 'none';
-        }
-      });
-
-      // 使用定时器重复检查，确保"今天"按钮被隐藏
-      setTimeout(() => {
-        const buttons = document.querySelectorAll('.calendar-view .el-button');
-        buttons.forEach(button => {
-          if (button.textContent && button.textContent.includes('今天') &&
-            !button.closest('.custom-calendar-header')) {
-            button.style.display = 'none';
-            button.style.visibility = 'hidden';
-          }
-        });
-      }, 100);
     }
   }
 };
@@ -1693,6 +1394,15 @@ export default {
   max-height: none;
 }
 
+/* 确保表格在移动端可以横向滚动 */
+.modern-table .el-table {
+  min-width: 800px;
+}
+
+.modern-table .el-table__body-wrapper {
+  overflow-x: auto;
+}
+
 .index-badge {
   display: inline-block;
   width: 36px;
@@ -1806,11 +1516,22 @@ export default {
 
 .full-button {
   color: #F56C6C;
-  cursor: not-allowed;
+  font-weight: 500;
 }
 
 .full-button:hover {
   background-color: rgba(245, 108, 108, 0.1);
+  color: #F56C6C;
+}
+
+.not-available-button {
+  color: #E6A23C;
+  font-weight: 500;
+}
+
+.not-available-button:hover {
+  background-color: rgba(230, 162, 60, 0.1);
+  color: #E6A23C;
 }
 
 .disabled-button {
@@ -2096,19 +1817,315 @@ export default {
   }
 }
 
+/* 平板适配 */
+@media (max-width: 992px) {
+  .app-container {
+    margin-left: 50px;
+    padding: 15px;
+  }
+
+  .search-card, .table-card {
+    padding: 20px;
+  }
+
+  .search-row {
+    gap: 12px;
+  }
+
+  .search-input {
+    width: 180px;
+  }
+
+  .modern-table {
+    font-size: 13px;
+  }
+}
+
+/* 手机端适配 */
 @media (max-width: 768px) {
+  .app-container {
+    margin-left: 0;
+    padding: 10px;
+  }
+
+  .search-card, .table-card {
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+  }
+
+  .card-header {
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+  }
+
+  .card-header span {
+    font-size: 16px;
+    margin-right: 10px;
+  }
+
+  .academy-info {
+    margin-left: 0;
+    margin-right: 10px;
+    margin-top: 8px;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .time-range-info {
+    margin-left: 0;
+    margin-top: 8px;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .record-count {
+    margin-left: 0;
+    margin-top: 8px;
+    font-size: 12px;
+    width: 100%;
+  }
+
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .el-form-item {
+    margin-bottom: 12px;
+    width: 100%;
+  }
+
+  .search-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .action-buttons .el-button {
+    flex: 1;
+    margin: 0 4px;
+  }
+
+  .modern-table {
+    font-size: 12px;
+  }
+
+  .modern-table .el-table {
+    min-width: 600px;
+  }
+
+  .modern-table .el-table__body-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modern-table .el-table__header-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .index-badge {
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 12px;
+  }
+
+  .activity-name {
+    font-size: 13px;
+  }
+
+  .activity-type-tag {
+    padding: 0 10px;
+    height: 28px;
+    line-height: 28px;
+    font-size: 11px;
+  }
+
+  .status-tag {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .time-schedule-inline {
+    gap: 6px;
+  }
+
+  .time-inline-item {
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+
+  .time-inline-label {
+    font-size: 11px;
+    margin-right: 4px;
+  }
+
+  .time-inline-content {
+    font-size: 11px;
+    word-break: break-all;
+  }
+
+  .participants {
+    gap: 4px;
+  }
+
+  .count {
+    font-size: 11px;
+  }
+
+  .action-button {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .custom-pagination {
+    padding: 15px 0;
+  }
+
+  .custom-pagination .el-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .custom-pagination .el-pagination .el-pagination__total,
+  .custom-pagination .el-pagination .el-pagination__sizes,
+  .custom-pagination .el-pagination .el-pager,
+  .custom-pagination .el-pagination .btn-prev,
+  .custom-pagination .el-pagination .btn-next,
+  .custom-pagination .el-pagination .el-pagination__jump {
+    margin: 5px 2px;
+  }
+
+  .custom-pagination .el-pagination .el-pagination__jump {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* 活动详情弹窗 */
   .activity-detail-dialog .el-dialog {
     width: 95% !important;
     margin: 0 auto;
   }
 
   .activity-detail .detail-header h2 {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .activity-detail .signup-status .signup-button,
-  .activity-detail .signup-status .cancel-button {
+  .activity-detail .signup-status .cancel-button,
+  .activity-detail .signup-status .expand-button {
     width: 100%;
+    margin: 5px 0;
+  }
+
+  .activity-image {
+    max-width: 100%;
+    max-height: 200px;
+  }
+
+  /* 图片预览弹窗 */
+  .image-preview-dialog .el-dialog {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+
+  .preview-container {
+    padding: 15px;
+  }
+
+  .preview-image {
+    max-width: 100%;
+    max-height: 60vh;
+  }
+}
+
+/* 小屏手机适配 */
+@media (max-width: 480px) {
+  .app-container {
+    padding: 8px;
+  }
+
+  .search-card, .table-card {
+    padding: 12px;
+  }
+
+  .card-header span {
+    font-size: 14px;
+  }
+
+  .modern-table {
+    font-size: 11px;
+  }
+
+  .modern-table .el-table {
+    min-width: 500px;
+  }
+
+  .el-table-column {
+    min-width: 80px;
+  }
+
+  .index-badge {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 11px;
+  }
+
+  .activity-name {
+    font-size: 12px;
+  }
+
+  .activity-type-tag {
+    padding: 0 8px;
+    height: 24px;
+    line-height: 24px;
+    font-size: 10px;
+  }
+
+  .status-tag {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+
+  .time-inline-item {
+    font-size: 10px;
+  }
+
+  .action-button {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+
+  .custom-pagination .el-pagination {
+    font-size: 12px;
+  }
+
+  .custom-pagination .el-pagination .el-pagination__total {
+    display: none;
+  }
+
+  /* 图片预览弹窗 */
+  .image-preview-dialog .el-dialog {
+    width: 98% !important;
+  }
+
+  .preview-image {
+    max-height: 50vh;
   }
 }
 
@@ -2320,580 +2337,6 @@ export default {
   font-weight: 500;
 }
 
-/* 视图切换标签样式 */
-.view-tabs {
-  flex: 1;
-  margin: 0;
-  background: transparent;
-  backdrop-filter: none;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
-  border: none;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: auto;
-
-  .el-tabs__header {
-    margin: 0 0 15px 0;
-    flex-shrink: 0;
-  }
-
-  .el-tabs__nav-wrap {
-    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-    border-radius: 8px;
-    padding: 4px;
-  }
-
-  .el-tabs__nav {
-    border: none;
-  }
-
-  .el-tabs__item {
-    color: rgba(255, 255, 255, 0.8);
-    border: none;
-    background: transparent;
-    border-radius: 6px;
-    margin: 0 2px;
-    transition: all 0.3s ease;
-
-    &:hover {
-      color: white;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    &.is-active {
-      color: white;
-      background: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-  }
-
-  .el-tabs__active-bar {
-    display: none;
-  }
-
-  .el-tabs__content {
-    flex: 1;
-    overflow: visible;
-    padding: 0;
-    width: 100%;
-    box-sizing: border-box;
-    min-height: auto;
-  }
-}
-
-/* 日历视图样式 */
-.calendar-view {
-  height: calc(100vh - 200px);
-  overflow: visible;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  border-radius: 0;
-  padding: 15px;
-  box-shadow: none;
-}
-
-.calendar-cell {
-  height: calc(100% - 2px);
-  width: calc(100% - 2px);
-  max-height: 150px;
-  overflow: hidden;
-  padding: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  position: relative;
-  margin: 1px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    background: rgba(255, 255, 255, 0.95);
-  }
-
-  .date-header {
-    font-weight: bold;
-    margin: 0 0 2px 0;
-    width: 100%;
-    text-align: center;
-    padding: 2px 4px;
-    line-height: 1.2;
-    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-    color: white;
-    border-radius: 6px;
-    font-size: 10px;
-    box-shadow: 0 2px 8px rgba(69, 127, 202, 0.3);
-    flex-shrink: 0;
-  }
-
-  .events-container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    flex: 1;
-    min-width: 0;
-    overflow-y: auto;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0;
-    padding-right: 2px;
-  }
-
-  .calendar-event {
-    display: flex;
-    align-items: center;
-    padding: 4px 8px;
-    background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-    border: none;
-    border-radius: 6px;
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 0;
-    height: 24px;
-    overflow: hidden;
-    color: white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 2px;
-    flex-shrink: 0;
-
-    /* 报名未开始 - 灰色 */
-    &.status-not-started {
-      background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-      box-shadow: 0 2px 8px rgba(149, 165, 166, 0.2);
-    }
-
-    /* 报名进行中 - 蓝色 */
-    &.status-signup-active {
-      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-      box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
-    }
-
-    /* 报名已截止 - 橙色 */
-    &.status-signup-ended {
-      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-      box-shadow: 0 2px 8px rgba(230, 126, 34, 0.2);
-    }
-
-    /* 已报名状态 - 绿色条和特殊标识 */
-    &.booked {
-      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
-      border: 2px solid #27ae60;
-      box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
-      position: relative;
-
-      &::after {
-        content: '✓';
-        position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 16px;
-        height: 16px;
-        background: #27ae60;
-        color: white;
-        border-radius: 50%;
-        font-size: 10px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 4px rgba(39, 174, 96, 0.4);
-      }
-    }
-
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(69, 127, 202, 0.4);
-      background: linear-gradient(to right, rgb(59, 107, 182), rgb(76, 125, 180));
-    }
-
-    /* 已报名状态的hover效果 */
-    &.booked:hover {
-      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%) !important;
-      box-shadow: 0 4px 16px rgba(39, 174, 96, 0.4);
-    }
-
-    .event-summary {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      min-width: 0;
-      flex: 1;
-      z-index: 1;
-      width: 100%;
-
-      .event-name {
-        font-weight: 600;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        flex: 1;
-        font-size: 10px;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-        min-width: 0;
-        margin-right: 6px;
-      }
-
-      .event-org {
-        color: rgba(255, 255, 255, 0.8);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        flex: 0 0 auto;
-        font-size: 9px;
-        max-width: 45px;
-        margin-right: 6px;
-      }
-
-      .detail-btn {
-        padding: 2px 6px;
-        font-size: 9px;
-        margin-left: auto;
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        border-radius: 4px;
-        transition: all 0.2s ease;
-        flex: 0 0 auto;
-        white-space: nowrap;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.3);
-          border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        &.disabled-btn {
-          background: rgba(255, 255, 255, 0.1);
-          color: rgba(255, 255, 255, 0.5);
-          cursor: not-allowed;
-          border-color: rgba(255, 255, 255, 0.1);
-        }
-      }
-    }
-
-    .event-time-range {
-      display: none;
-    }
-  }
-}
-
-/* 自定义日历头部样式 */
-.custom-calendar-header {
-  display: flex !important;
-  justify-content: space-between;
-  align-items: center;
-  background: linear-gradient(to right, rgb(69, 127, 202), rgb(86, 145, 200));
-  color: white;
-  border-radius: 8px 8px 0 0;
-  padding: 15px 20px;
-  margin-bottom: 0;
-  width: 100%;
-  box-sizing: border-box;
-
-  .header-left {
-    display: flex !important;
-    align-items: center;
-
-    .calendar-title {
-      font-size: 18px;
-      font-weight: 600;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      white-space: nowrap;
-    }
-  }
-
-  .header-right {
-    display: flex !important;
-    align-items: center;
-
-    .el-button-group {
-      display: flex !important;
-
-      .el-button {
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        font-size: 12px;
-        padding: 6px 12px;
-        display: inline-block !important;
-
-        &:hover {
-          background: rgba(255, 255, 255, 0.3);
-          border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        &:active {
-          background: rgba(255, 255, 255, 0.4);
-        }
-      }
-    }
-  }
-}
-
-/* 隐藏Element UI默认的日历头部 */
-.calendar-view .el-calendar__header {
-  display: none !important;
-}
-
-/* 活动状态图例样式 */
-.activity-legend {
-  position: absolute;
-  bottom: 80px;
-  right: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  min-width: 200px;
-  z-index: 10;
-
-  .legend-title {
-    margin: 0 0 12px 0;
-    font-size: 14px;
-    font-weight: 600;
-    color: #2c3e50;
-    text-align: center;
-  }
-
-  .legend-items {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
-      flex-shrink: 0;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-
-      &.status-not-started {
-        background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-      }
-
-      &.status-signup-active {
-        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-      }
-
-      &.status-signup-ended {
-        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
-      }
-
-      &.status-booked {
-        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
-        border: 2px solid #27ae60 !important;
-        position: relative;
-        box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3) !important;
-        z-index: 10;
-
-        &::after {
-          content: '✓';
-          position: absolute;
-          top: -2px;
-          right: -2px;
-          width: 12px;
-          height: 12px;
-          background: #27ae60;
-          color: white;
-          border-radius: 50%;
-          font-size: 8px;
-          font-weight: bold;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-      }
-    }
-
-    .legend-text {
-      font-size: 12px;
-      color: #495057;
-      font-weight: 500;
-    }
-  }
-}
-
-/* 覆盖 Element UI 的日历格子高度 */
-.calendar-view .el-calendar-table .el-calendar-day {
-  height: var(--calendar-day-height, 120px) !important;
-  padding: 8px !important;
-  min-height: var(--calendar-day-height, 120px) !important;
-  max-height: var(--calendar-day-height, 120px) !important;
-}
-
-/* 隐藏非当月日期 */
-.calendar-view .el-calendar-table td:not(.is-current-month) {
-  display: none;
-}
-
-/* 确保当月日期正常显示 */
-.calendar-view .el-calendar-table td.is-current-month {
-  display: table-cell;
-}
-
-/* 隐藏多余的空行 */
-.calendar-view .el-calendar-table tbody tr.hide-row {
-  display: none !important;
-}
-
-/* 确保日历表格完整显示 */
-.calendar-view .el-calendar__body {
-  overflow: visible;
-  height: 600px;
-  padding: 0;
-}
-
-.calendar-view .el-calendar-table {
-  table-layout: fixed;
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.calendar-view .el-calendar-table tbody {
-  display: table-row-group;
-}
-
-.calendar-view .el-calendar-table tr {
-  display: table-row;
-  height: 155px;
-}
-
-.calendar-view .el-calendar-table td {
-  display: table-cell;
-  vertical-align: top;
-  height: 155px;
-  padding: 0;
-  position: relative;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.calendar-view .el-calendar-table td .cell {
-  height: 100%;
-  width: 100%;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  position: relative;
-  overflow: hidden;
-}
-
-/* 美化今天的日期 */
-.calendar-view .el-calendar__day.is-today {
-  .calendar-cell {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 193, 7, 0.05) 100%);
-    border: 2px solid #ffc107;
-    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.2);
-
-    .date-header {
-      background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
-      box-shadow: 0 2px 8px rgba(255, 193, 7, 0.4);
-    }
-  }
-}
-
-/* 美化周末日期 */
-.calendar-view .el-calendar__day.is-weekend {
-  .calendar-cell {
-    background: linear-gradient(135deg, rgba(255, 87, 34, 0.05) 0%, rgba(255, 87, 34, 0.02) 100%);
-  }
-}
-
-/* 美化星期标题 */
-.calendar-view .el-calendar__body {
-  .el-calendar-table {
-    thead {
-      th {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        color: #495057;
-        font-weight: 600;
-        border: none;
-        padding: 12px 0;
-      }
-    }
-  }
-}
-
-/* 隐藏非当月日期的单元格 */
-.calendar-view .empty-cell {
-  visibility: hidden;
-  pointer-events: none;
-}
-
-/* 滚动条美化 */
-.calendar-view .events-container::-webkit-scrollbar {
-  width: 4px;
-}
-.calendar-view .events-container::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-.calendar-view .events-container::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.4);
-  border-radius: 2px;
-  transition: background 0.3s ease;
-}
-.calendar-view .events-container:hover::-webkit-scrollbar-thumb {
-  background: rgba(102, 126, 234, 0.6);
-}
-
-/* 入场动画 */
-@keyframes fadeSlideIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.calendar-view .calendar-event {
-  animation: fadeSlideIn 0.2s ease both;
-}
-
-/* 焦点可达性优化 */
-.calendar-view .detail-btn:focus {
-  outline: 2px solid rgba(102, 126, 234, 0.6);
-  outline-offset: 2px;
-}
-
-/* 标签激活时的轻微放大反馈 */
-.view-tabs .el-tabs__item.is-active {
-  transform: translateY(-1px);
-}
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .activity-legend {
-    position: relative;
-    bottom: auto;
-    right: auto;
-    margin: 20px auto 0;
-    width: 90%;
-    max-width: 300px;
-  }
-
-  .calendar-view {
-    height: calc(100vh - 250px);
-    padding: 10px;
-  }
-}
 
 
 </style>

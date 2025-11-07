@@ -71,26 +71,6 @@
                 <div class="notification-content">{{ notification.notiContent }}</div>
               </div>
             </div>
-            <div class="notification-actions">
-              <el-button
-                type="text"
-                size="small"
-                icon="el-icon-edit"
-                @click.stop="editNotification(notification)"
-                title="编辑通知"
-                v-if="canManageNotifications"
-                class="action-btn edit-btn"
-              ></el-button>
-              <el-button
-                type="text"
-                size="small"
-                icon="el-icon-delete"
-                @click.stop="deleteNotification(notification)"
-                title="删除通知"
-                v-if="canManageNotifications"
-                class="action-btn delete-btn"
-              ></el-button>
-            </div>
           </div>
         </div>
       </div>
@@ -288,17 +268,6 @@ export default {
       const sidebarWidth = screenWidth > 1200 ? 200 : (screenWidth > 768 ? 64 : 0);
       const availableWidth = screenWidth - sidebarWidth - 40; // 预留边距
       return Math.max(availableWidth, 800) + 'px';
-    },
-    // 管理按钮可见性：账号 username 为 admin 或 10000-10007 视为管理员
-    canManageNotifications() {
-      const userName = (this.$store.state.user && this.$store.state.user.name) || '';
-      if (!userName) return false;
-
-      if (userName === 'admin') return true;
-
-      const n = parseInt(userName, 10);
-      const inAdminRange = !isNaN(n) && n >= 10000 && n <= 10007;
-      return inAdminRange;
     }
   },
   created() {
@@ -311,7 +280,7 @@ export default {
       const startTime = Date.now();
       
       try {
-        // 获取当前用户的书院信息
+        // 获取当前学生用户的书院信息（仅学生可访问）
         let userCollege = '';
         try {
           // 1) 优先：从学生信息API获取 academy
@@ -329,56 +298,30 @@ export default {
             }
           }
 
-          // 3) 兜底：部分管理端将 nickName 用作书院名
+          // 如果获取不到学生书院信息，提示并返回
           if (!userCollege) {
-            try {
-              const nn = await getNickName();
-              if (nn && nn.msg) {
-                userCollege = nn.msg;
-                console.log('当前用户书院（nickName 兜底）:', userCollege);
-              }
-            } catch (e) {
-              console.warn('获取 nickName 兜底失败:', e);
-            }
-          }
-
-          // 4) 硬编码映射（管理员账户）
-          if (!userCollege) {
-            const userName = this.$store.state.user.name;
-            const adminCollegeMap = {
-              'admin': '系统管理员',
-              '10001': '大煜书院',
-              '10002': '伯川书院', 
-              '10003': '令希书院',
-              '10004': '厚德书院',
-              '10005': '知行书院',
-              '10006': '笃学书院',
-              '10007': '求实书院'
-            };
-            
-            if (adminCollegeMap[userName]) {
-              userCollege = adminCollegeMap[userName];
-              console.log('从硬编码映射获取到书院:', userCollege);
-            }
+            console.warn('无法获取学生书院信息，该页面仅限学生访问');
+            this.$message.warning('无法获取您的书院信息，请确保您已登录学生账号');
+            this.notifications = [];
+            this.total = 0;
+            return;
           }
 
           this.currentUserCollege = userCollege;
         } catch (error) {
           console.error('获取用户书院信息失败:', error);
+          this.$message.error('获取书院信息失败，该页面仅限学生访问');
           this.currentUserCollege = '';
+          this.notifications = [];
+          this.total = 0;
+          return;
         }
         
-        // 构建查询参数，包含书院筛选
+        // 构建查询参数，包含书院筛选（学生只能看到自己书院的通知）
         const queryParams = {
           ...this.queryParams,
           notiType: userCollege // 添加书院筛选条件
         };
-        
-        // 10000总管理员不添加筛选条件，可以看到所有通知
-        if (userCollege === '系统管理员' && this.$store.state.user.name === '10000') {
-          delete queryParams.notiType;
-          console.log('10000总管理员，不添加书院筛选条件');
-        }
         
         console.log('开始加载通知列表，查询参数:', queryParams);
         
@@ -529,10 +472,9 @@ export default {
             const seconds = String(now.getSeconds()).padStart(2, '0');
             const localTimeString = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             
-            // 获取当前用户的书院信息
+            // 获取当前学生用户的书院信息（仅学生可发布通知）
             let userCollege = '';
-            console.log('开始获取用户书院信息，当前用户名:', this.$store.state.user.name);
-            console.log('Vuex store中的用户信息:', this.$store.state.user);
+            console.log('开始获取学生书院信息，当前用户名:', this.$store.state.user.name);
             
             try {
               // 优先从学生信息API获取
@@ -552,75 +494,13 @@ export default {
               console.error('获取用户书院信息失败:', error);
             }
             
-            // 如果还是没有书院信息，尝试从getNickName获取（管理员账户）
+            // 如果获取不到学生书院信息，不允许发布
             if (!userCollege) {
-              console.log('尝试从getNickName API获取书院信息...');
-              try {
-                const nickNameResponse = await getNickName();
-                console.log('getNickName API响应:', nickNameResponse);
-                if (nickNameResponse && nickNameResponse.msg) {
-                  userCollege = nickNameResponse.msg;
-                  console.log('从nickName获取到书院:', userCollege);
-                }
-              } catch (error) {
-                console.error('获取用户昵称失败作为书院信息:', error);
-              }
+              this.$message.warning('无法获取您的书院信息，该功能仅限学生使用');
+              return;
             }
             
-            // 如果还是没有书院信息，使用硬编码的管理员账户书院映射
-            if (!userCollege) {
-              const userName = this.$store.state.user.name;
-              console.log('尝试使用硬编码映射获取书院信息，用户名:', userName);
-              
-              // 10000是总管理员，可以管理所有书院，默认设置为"系统管理员"
-              if (userName === '10000') {
-                userCollege = '系统管理员';
-                console.log('10000总管理员，设置为系统管理员');
-              } else {
-                // 其他管理员账户书院映射
-                const adminCollegeMap = {
-                  'admin': '系统管理员',
-                  '10001': '大煜书院',
-                  '10002': '伯川书院', 
-                  '10003': '令希书院',
-                  '10004': '厚德书院',
-                  '10005': '知行书院',
-                  '10006': '笃学书院',
-                  '10007': '求实书院'
-                };
-                
-                if (adminCollegeMap[userName]) {
-                  userCollege = adminCollegeMap[userName];
-                  console.log('从硬编码映射获取到书院:', userCollege);
-                }
-              }
-            }
-            
-            console.log('最终确定的用户书院:', userCollege);
-            console.log('当前用户名:', this.$store.state.user.name);
-            
-            // 如果userCollege为空，再次尝试获取
-            if (!userCollege) {
-              const userName = this.$store.state.user.name;
-              console.log('userCollege为空，重新尝试获取书院信息，用户名:', userName);
-              
-              // 直接使用硬编码映射
-              const adminCollegeMap = {
-                'admin': '系统管理员',
-                '10001': '大煜书院',
-                '10002': '伯川书院', 
-                '10003': '令希书院',
-                '10004': '厚德书院',
-                '10005': '知行书院',
-                '10006': '笃学书院',
-                '10007': '求实书院'
-              };
-              
-              if (adminCollegeMap[userName]) {
-                userCollege = adminCollegeMap[userName];
-                console.log('重新获取到书院:', userCollege);
-              }
-            }
+            console.log('最终确定的学生书院:', userCollege);
             
             const publishData = {
               ...this.publishForm,

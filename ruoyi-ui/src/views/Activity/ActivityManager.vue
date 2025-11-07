@@ -95,13 +95,13 @@
           :disabled="multiple"
           @click="handleDelete"
         >删除</el-button>
-        <el-button
+        <!-- <el-button
           type="success"
           plain
           icon="el-icon-upload2"
           size="mini"
           @click="openImportDialog"
-        >导入名单</el-button>
+        >导入名单</el-button> -->
       </el-button-group>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
     </div>
@@ -138,7 +138,6 @@
             </el-tag>
           </template>
         </el-table-column>
-        <!-- <el-table-column label="组织单位" align="center" prop="organizer" width="120"/> -->
         <el-table-column label="时间安排" align="center" min-width="250">
           <template slot-scope="scope">
             <div class="time-schedule-inline">
@@ -479,7 +478,7 @@
           <el-form-item label="选择活动">
             <el-select v-model="importForm.activityId" filterable placeholder="请选择活动" style="width:100%">
               <el-option
-                v-for="a in activitiesList"
+                v-for="a in allActivitiesList"
                 :key="a.activityId"
                 :label="a.activityName"
                 :value="a.activityId"/>
@@ -679,14 +678,6 @@
             </span>
             </div>
           </div>
-          <div class="detail-item" v-if="selectedActivity.expandRequestCount && selectedActivity.expandRequestCount > 0">
-            <div class="detail-label"><i class="el-icon-warning"></i> 扩容申请：</div>
-            <div class="detail-value">
-              <el-tag type="warning" size="small" effect="plain">
-                {{ selectedActivity.expandRequestCount }}人已申请扩容
-              </el-tag>
-            </div>
-          </div>
           <div class="detail-item">
             <div class="detail-label"><i class="el-icon-alarm-clock"></i> 报名开始：</div>
             <div class="detail-value">{{ formatDateTime(selectedActivity.activityStart) }}</div>
@@ -819,8 +810,10 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 活动表格数据
+      // 活动表格数据（分页后的数据）
       activitiesList: [],
+      // 所有活动数据（用于下拉框等场景，不分页）
+      allActivitiesList: [],
       // 可用的活动类型列表
       availableActivityTypes: [],
       // 预定义的活动类型
@@ -990,12 +983,30 @@ export default {
   },
   methods: {
     // 打开导入对话框
-    openImportDialog() {
+    async openImportDialog() {
       this.importForm = {
         activityId: null,
         status: '未提交',
         studentIdsText: ''
       };
+      
+      // 如果所有活动列表为空，重新获取所有活动（确保下拉框有数据）
+      if (!this.allActivitiesList || this.allActivitiesList.length === 0) {
+        try {
+          const nickName = await getNickName();
+          const params = {
+            pageNum: 1,
+            pageSize: 10000,
+            organizer: nickName.msg
+          };
+          const response = await listActivities(params);
+          this.allActivitiesList = response.rows || [];
+        } catch (error) {
+          console.error('获取活动列表失败:', error);
+          this.allActivitiesList = [];
+        }
+      }
+      
       this.importDialogVisible = true;
     },
     // 提交导入
@@ -1400,6 +1411,9 @@ export default {
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
 
+          // 保存所有活动数据（用于下拉框等场景）
+          this.allActivitiesList = allActivities;
+
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;
           const endIndex = startIndex + this.queryParams.pageSize;
@@ -1453,6 +1467,9 @@ export default {
 
           // 按活动开始时间排序（从晚到早）
           allActivities = this.sortActivitiesByStartTime(allActivities);
+
+          // 保存所有活动数据（用于下拉框等场景）
+          this.allActivitiesList = allActivities;
 
           // 对筛选后的数据进行分页
           const startIndex = (this.queryParams.pageNum - 1) * this.queryParams.pageSize;

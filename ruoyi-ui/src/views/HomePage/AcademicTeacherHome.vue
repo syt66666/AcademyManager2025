@@ -413,7 +413,7 @@ export default {
       const userName = this.$store.state.user.name;
       if (userName === 'admin') return 'system-admin';
       if (userName === '10000') return 'super-admin';
-      if (userName >= '10001' && userName <= '10007') return 'academy-admin';
+      if (userName >= '10001' && userName <= '10020') return 'academy-admin';
       return 'student';
     },
 

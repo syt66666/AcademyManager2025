@@ -16,7 +16,7 @@ export default {
       if (userName === '10000') {
         return 'AdminTeacherHome';
       }
-      if (userName >= '10001' && userName <= '10007') {
+      if (userName >= '10001' && userName <= '10020') {
         return 'AcademicTeacherHome';
       }
 
